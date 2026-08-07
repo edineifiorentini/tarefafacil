@@ -1,5 +1,5 @@
+import { KanbanBoard } from "@/components/task/KanbanBoard";
 import { QuickAdd } from "@/components/task/QuickAdd";
-import { TaskList } from "@/components/task/TaskList";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function SectorPage({
@@ -16,13 +16,15 @@ export default async function SectorPage({
     .maybeSingle();
 
   return (
-    <div className="mx-auto max-w-[var(--max-width-read)] px-6 py-8">
-      <h2 className="mb-4 text-[length:var(--text-h2-size)] font-medium text-fg">
+    <div className="flex h-full flex-col gap-4 p-6">
+      <h2 className="text-[length:var(--text-h2-size)] font-medium text-fg">
         {sector?.name ?? "Setor"}
       </h2>
-      <QuickAdd defaultSectorId={id} />
-      <div className="mt-6">
-        <TaskList sectorId={id} />
+      <div className="max-w-[var(--max-width-read)]">
+        <QuickAdd defaultSectorId={id} />
+      </div>
+      <div className="min-h-0 flex-1">
+        <KanbanBoard sectorId={id} />
       </div>
     </div>
   );

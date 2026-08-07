@@ -90,7 +90,7 @@ regras auto-geradas do Next ficam em `AGENTS.md` (importado abaixo).
 - [x] E06 — Setores
 - [x] E07 — Tarefas e criação rápida
 - [x] E08 — Painel de detalhe
-- [ ] E09 — Board genérico e Kanban
+- [x] E09 — Board genérico e Kanban
 - [ ] E10 — Visão Hoje
 - [ ] E11 — Projetos
 - [ ] E12 — Calendário e peek

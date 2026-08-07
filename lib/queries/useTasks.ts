@@ -324,3 +324,59 @@ export function useUpdateTask(workspaceId: string) {
     onSettled: () => qc.invalidateQueries({ queryKey: [TASKS, workspaceId] }),
   });
 }
+
+// Move no Kanban: muda coluna + posição (fracionária). Soltar em coluna de
+// conclusão marca completed_at; sair dela reabre.
+export function useMoveTask(workspaceId: string) {
+  const supabase = createClient();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      id,
+      columnId,
+      position,
+      completed,
+    }: {
+      id: string;
+      columnId: string;
+      position: number;
+      completed: boolean;
+    }) => {
+      const { error } = await supabase
+        .from("task")
+        .update({
+          column_id: columnId,
+          position,
+          completed_at: completed ? new Date().toISOString() : null,
+        })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onMutate: async ({ id, columnId, position, completed }) => {
+      await qc.cancelQueries({ queryKey: [TASKS, workspaceId] });
+      const snapshots = qc.getQueriesData<Task[]>({
+        queryKey: [TASKS, workspaceId],
+      });
+      const completedAt = completed ? new Date().toISOString() : null;
+      qc.setQueriesData<Task[]>(
+        { queryKey: [TASKS, workspaceId] },
+        (data) =>
+          data?.map((t) =>
+            t.id === id
+              ? {
+                  ...t,
+                  column_id: columnId,
+                  position,
+                  completed_at: completedAt,
+                }
+              : t
+          )
+      );
+      return { snapshots };
+    },
+    onError: (_error, _input, ctx) => {
+      ctx?.snapshots.forEach(([key, data]) => qc.setQueryData(key, data));
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: [TASKS, workspaceId] }),
+  });
+}
