@@ -24,7 +24,7 @@ export default function RootLayout({
 }: Readonly<{ children: ReactNode }>) {
   return (
     <html lang="pt-BR" className={`${inter.variable} h-full`} suppressHydrationWarning>
-      <body className="min-h-full antialiased">
+      <body className="min-h-full antialiased" suppressHydrationWarning>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         {children}
       </body>
