@@ -93,3 +93,32 @@ body {
     scroll-behavior: auto !important;
   }
 }
+
+/* Animações do painel/sheet (Radix data-state). O bloco de reduced-motion
+   acima já zera a duração destas. */
+@keyframes tf-slide-in-right {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes tf-slide-in-left {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes tf-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

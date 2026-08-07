@@ -1,10 +1,12 @@
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 
+import { AppShell } from "@/components/shell/AppShell";
+import { ShellProvider } from "@/components/shell/shell-context";
 import { WorkspaceProvider } from "@/lib/queries/useWorkspace";
 import { createClient } from "@/lib/supabase/server";
 
-// Guarda de autenticação + workspace ativo para toda a área do app.
+// Guarda de autenticação + workspace ativo + casca de navegação (AppShell).
 export default async function AppLayout({ children }: { children: ReactNode }) {
   const supabase = await createClient();
   const {
@@ -31,5 +33,17 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
     );
   }
 
-  return <WorkspaceProvider workspace={workspace}>{children}</WorkspaceProvider>;
+  const { data: sectors } = await supabase
+    .from("sector")
+    .select("*")
+    .is("archived_at", null)
+    .order("position", { ascending: true });
+
+  return (
+    <WorkspaceProvider workspace={workspace}>
+      <ShellProvider>
+        <AppShell sectors={sectors ?? []}>{children}</AppShell>
+      </ShellProvider>
+    </WorkspaceProvider>
+  );
 }
