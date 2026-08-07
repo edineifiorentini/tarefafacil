@@ -66,6 +66,13 @@
   --dur-base: 180ms;
   --dur-slow: 240ms;
   --ease-out: cubic-bezier(0.2, 0, 0, 1);
+
+  /* Componente — botão danger. Vermelho + branco funciona nos dois modos,
+     então fica na camada global (independente de tema). Branco atinge >=4.5:1. */
+  --button-danger-bg: #c0392b;
+  --button-danger-bg-hover: #a93226;
+  --button-danger-bg-active: #922b21;
+  --button-danger-fg: #ffffff;
 }
 
 /* ---------------------------------------------------------------------
