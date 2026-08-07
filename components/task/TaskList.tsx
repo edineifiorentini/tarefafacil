@@ -15,6 +15,7 @@ import { useWorkspace } from "@/lib/queries/useWorkspace";
 import type { Task } from "@/types/database";
 
 import { ConfirmCompleteDialog } from "./ConfirmCompleteDialog";
+import { TaskDetailPanel } from "./TaskDetailPanel";
 import { TaskRow } from "./TaskRow";
 
 type StatusFilter = "abertas" | "concluidas" | "todas";
@@ -32,7 +33,7 @@ export function TaskList({ sectorId }: { sectorId?: string }) {
   const toggle = useToggleTaskComplete(workspace.id);
   const complete = useCompleteTask(workspace.id);
   const deleteTask = useDeleteTask(workspace.id);
-  const { openPanel, closePanel } = useShell();
+  const { openPanel } = useShell();
 
   const [filter, setFilter] = useState<StatusFilter>("abertas");
   const [confirm, setConfirm] = useState<{ task: Task; count: number } | null>(
@@ -100,19 +101,8 @@ export function TaskList({ sectorId }: { sectorId?: string }) {
                 onDelete={() => deleteTask(task)}
                 onOpen={() =>
                   openPanel({
-                    title: task.title,
-                    node: (
-                      <p className="text-fg-secondary">
-                        A edição completa da tarefa chega na E08.{" "}
-                        <button
-                          type="button"
-                          onClick={closePanel}
-                          className="text-fg-link underline"
-                        >
-                          Fechar
-                        </button>
-                      </p>
-                    ),
+                    title: "Tarefa",
+                    node: <TaskDetailPanel taskId={task.id} />,
                   })
                 }
               />

@@ -6,7 +6,7 @@ import { useCallback } from "react";
 import { useToast } from "@/components/ui/Toast";
 import { createClient } from "@/lib/supabase/client";
 import type { QuickAddInput } from "@/lib/validation/task";
-import type { Task } from "@/types/database";
+import type { Task, TablesUpdate } from "@/types/database";
 
 const TASKS = "tasks";
 
@@ -248,4 +248,79 @@ export function useDeleteTask(workspaceId: string) {
     },
     [qc, supabase, toast, workspaceId]
   );
+}
+
+function taskKey(workspaceId: string, taskId: string) {
+  return ["task", workspaceId, taskId] as const;
+}
+
+// Detalhe de uma tarefa. initialData vem da lista já em cache (sem flash).
+export function useTaskDetail(workspaceId: string, taskId: string) {
+  const supabase = createClient();
+  const qc = useQueryClient();
+  return useQuery({
+    queryKey: taskKey(workspaceId, taskId),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("task")
+        .select("*")
+        .eq("id", taskId)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    initialData: () => {
+      const lists = qc.getQueriesData<Task[]>({
+        queryKey: [TASKS, workspaceId],
+      });
+      for (const [, data] of lists) {
+        const found = data?.find((t) => t.id === taskId);
+        if (found) return found;
+      }
+      return undefined;
+    },
+  });
+}
+
+// Atualização parcial (autosave). Otimista na lista e no detalhe.
+export function useUpdateTask(workspaceId: string) {
+  const supabase = createClient();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      id,
+      patch,
+    }: {
+      id: string;
+      patch: TablesUpdate<"task">;
+    }) => {
+      const { error } = await supabase.from("task").update(patch).eq("id", id);
+      if (error) throw error;
+    },
+    onMutate: async ({ id, patch }) => {
+      await qc.cancelQueries({ queryKey: [TASKS, workspaceId] });
+      const snapshots = qc.getQueriesData<Task[]>({
+        queryKey: [TASKS, workspaceId],
+      });
+      qc.setQueriesData<Task[]>(
+        { queryKey: [TASKS, workspaceId] },
+        (data) => data?.map((t) => (t.id === id ? { ...t, ...patch } : t))
+      );
+      const prevDetail = qc.getQueryData<Task>(taskKey(workspaceId, id));
+      if (prevDetail) {
+        qc.setQueryData<Task>(taskKey(workspaceId, id), {
+          ...prevDetail,
+          ...patch,
+        });
+      }
+      return { snapshots, prevDetail };
+    },
+    onError: (_error, { id }, ctx) => {
+      ctx?.snapshots.forEach(([key, data]) => qc.setQueryData(key, data));
+      if (ctx?.prevDetail) {
+        qc.setQueryData(taskKey(workspaceId, id), ctx.prevDetail);
+      }
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: [TASKS, workspaceId] }),
+  });
 }

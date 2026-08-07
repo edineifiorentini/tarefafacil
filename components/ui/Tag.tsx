@@ -1,7 +1,13 @@
 import { IconX } from "@tabler/icons-react";
 import type { ReactNode } from "react";
 
-type TagColor = "neutral" | "violeta" | "azul" | "coral" | "rosa" | "grafite";
+export type TagColor =
+  | "neutral"
+  | "violeta"
+  | "azul"
+  | "coral"
+  | "rosa"
+  | "grafite";
 
 export interface TagProps {
   children: ReactNode;
