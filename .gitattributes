@@ -1,0 +1,14 @@
+# Normaliza fim de linha: git armazena e faz checkout com LF em todas as
+# plataformas. Evita ruído de conversão CRLF no Windows.
+* text=auto eol=lf
+
+# Binários — nunca converter
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.avif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
