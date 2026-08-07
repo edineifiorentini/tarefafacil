@@ -104,7 +104,7 @@ export type Database = {
           id: string;
           workspace_id: string;
           name: string;
-          color: SectorColor;
+          color: string; // hexadecimal livre (#RRGGBB) — ver migration 0005
           icon: string;
           position: number;
           archived_at: string | null;
@@ -113,7 +113,7 @@ export type Database = {
           id?: string;
           workspace_id: string;
           name: string;
-          color: SectorColor;
+          color: string;
           icon?: string;
           position?: number;
           archived_at?: string | null;
@@ -122,7 +122,7 @@ export type Database = {
           id?: string;
           workspace_id?: string;
           name?: string;
-          color?: SectorColor;
+          color?: string;
           icon?: string;
           position?: number;
           archived_at?: string | null;

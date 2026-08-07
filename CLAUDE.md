@@ -87,7 +87,7 @@ regras auto-geradas do Next ficam em `AGENTS.md` (importado abaixo).
 - [x] E03 — Autenticação e workspace
 - [x] E04 — AppShell
 - [x] E05 — Átomos
-- [ ] E06 — Setores
+- [x] E06 — Setores
 - [ ] E07 — Tarefas e criação rápida
 - [ ] E08 — Painel de detalhe
 - [ ] E09 — Board genérico e Kanban

@@ -1,4 +1,4 @@
-import type { InputHTMLAttributes } from "react";
+import type { InputHTMLAttributes, Ref } from "react";
 
 type Size = "sm" | "md";
 
@@ -6,6 +6,8 @@ export interface TextInputProps
   extends Omit<InputHTMLAttributes<HTMLInputElement>, "size"> {
   size?: Size;
   error?: boolean;
+  // React 19: ref é uma prop comum (permite RHF register).
+  ref?: Ref<HTMLInputElement>;
 }
 
 const sizes: Record<Size, string> = {
@@ -17,10 +19,12 @@ export function TextInput({
   size = "md",
   error = false,
   className,
+  ref,
   ...rest
 }: TextInputProps) {
   return (
     <input
+      ref={ref}
       aria-invalid={error || undefined}
       className={`w-full rounded-sm border bg-card text-fg transition-colors [transition-duration:var(--dur-fast)] placeholder:text-fg-muted disabled:cursor-not-allowed disabled:opacity-60 ${
         error ? "border-overdue" : "border-line hover:border-line-strong"

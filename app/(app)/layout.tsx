@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 
+import { Providers } from "@/components/providers";
 import { AppShell } from "@/components/shell/AppShell";
 import { ShellProvider } from "@/components/shell/shell-context";
 import { WorkspaceProvider } from "@/lib/queries/useWorkspace";
@@ -40,10 +41,12 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
     .order("position", { ascending: true });
 
   return (
-    <WorkspaceProvider workspace={workspace}>
-      <ShellProvider>
-        <AppShell sectors={sectors ?? []}>{children}</AppShell>
-      </ShellProvider>
-    </WorkspaceProvider>
+    <Providers>
+      <WorkspaceProvider workspace={workspace}>
+        <ShellProvider>
+          <AppShell sectors={sectors ?? []}>{children}</AppShell>
+        </ShellProvider>
+      </WorkspaceProvider>
+    </Providers>
   );
 }

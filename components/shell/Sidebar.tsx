@@ -11,6 +11,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { LogoutButton } from "@/components/auth/LogoutButton";
+import { SectorForm } from "@/components/sector/SectorForm";
+import { SectorNav } from "@/components/sector/SectorNav";
+import { useSectors } from "@/lib/queries/useSectors";
+import { useWorkspace } from "@/lib/queries/useWorkspace";
 import type { Sector } from "@/types/database";
 
 import { useShell } from "./shell-context";
@@ -21,9 +25,11 @@ const destinations = [
   { href: "/calendario", label: "Calendário", icon: IconCalendarMonth, hint: "3" },
 ] as const;
 
-export function Sidebar({ sectors }: { sectors: Sector[] }) {
+export function Sidebar({ sectors: initialSectors }: { sectors: Sector[] }) {
   const pathname = usePathname();
-  const { openPanel, setMobileNavOpen } = useShell();
+  const workspace = useWorkspace();
+  const { data: sectors = [] } = useSectors(workspace.id, initialSectors);
+  const { openPanel, closePanel, setMobileNavOpen } = useShell();
 
   function isActive(href: string) {
     return pathname === href || pathname.startsWith(`${href}/`);
@@ -73,11 +79,7 @@ export function Sidebar({ sectors }: { sectors: Sector[] }) {
             onClick={() =>
               openPanel({
                 title: "Novo setor",
-                node: (
-                  <p className="text-fg-secondary">
-                    A criação de setores chega na E06.
-                  </p>
-                ),
+                node: <SectorForm mode="create" onDone={closePanel} />,
               })
             }
             className="inline-flex h-6 w-6 items-center justify-center rounded-sm text-fg-secondary transition-colors [transition-duration:var(--dur-fast)] hover:bg-sunken hover:text-fg"
@@ -86,35 +88,7 @@ export function Sidebar({ sectors }: { sectors: Sector[] }) {
           </button>
         </div>
 
-        {sectors.length === 0 ? (
-          <p className="px-3 py-2 text-[length:var(--text-small-size)] text-fg-muted">
-            Nenhum setor ainda
-          </p>
-        ) : (
-          <ul className="space-y-1">
-            {sectors.map((sector) => (
-              <li key={sector.id}>
-                <Link
-                  href={`/setor/${sector.id}`}
-                  aria-current={isActive(`/setor/${sector.id}`) ? "page" : undefined}
-                  onClick={() => setMobileNavOpen(false)}
-                  className={`flex items-center gap-3 rounded-sm px-3 py-2 transition-colors [transition-duration:var(--dur-fast)] ${
-                    isActive(`/setor/${sector.id}`)
-                      ? "bg-selected text-fg"
-                      : "text-fg-secondary hover:bg-sunken hover:text-fg"
-                  }`}
-                >
-                  <span
-                    aria-hidden
-                    className="h-2 w-2 shrink-0 rounded-full"
-                    style={{ background: `var(--sector-${sector.color}-dot)` }}
-                  />
-                  <span className="truncate">{sector.name}</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
+        <SectorNav sectors={sectors} />
       </div>
 
       <div className="mt-auto space-y-1 border-t border-line p-2">
