@@ -6,6 +6,7 @@ import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { Dialog } from "radix-ui";
 
+import { QuickAdd } from "@/components/task/QuickAdd";
 import type { Sector } from "@/types/database";
 
 import { DetailPanel } from "./DetailPanel";
@@ -38,14 +39,7 @@ export function AppShell({
         case "n":
         case "N":
           e.preventDefault();
-          openPanel({
-            title: "Nova tarefa",
-            node: (
-              <p className="text-fg-secondary">
-                O formulário de criação rápida chega na E07.
-              </p>
-            ),
-          });
+          openPanel({ title: "Nova tarefa", node: <QuickAdd /> });
           break;
         case "/":
           e.preventDefault();

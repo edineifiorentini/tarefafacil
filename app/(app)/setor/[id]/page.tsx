@@ -1,3 +1,5 @@
+import { QuickAdd } from "@/components/task/QuickAdd";
+import { TaskList } from "@/components/task/TaskList";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function SectorPage({
@@ -15,12 +17,13 @@ export default async function SectorPage({
 
   return (
     <div className="mx-auto max-w-[var(--max-width-read)] px-6 py-8">
-      <h2 className="mb-2 text-[length:var(--text-h2-size)] font-medium text-fg">
+      <h2 className="mb-4 text-[length:var(--text-h2-size)] font-medium text-fg">
         {sector?.name ?? "Setor"}
       </h2>
-      <p className="text-fg-secondary">
-        O quadro Kanban deste setor chega na E09.
-      </p>
+      <QuickAdd defaultSectorId={id} />
+      <div className="mt-6">
+        <TaskList sectorId={id} />
+      </div>
     </div>
   );
 }

@@ -95,16 +95,18 @@ export function SectorForm({
             className="h-7 w-7 shrink-0 rounded-full border border-line"
             style={{ background: color }}
           />
-          <TextInput
-            size="sm"
-            aria-label="Cor hexadecimal"
-            value={color}
-            onChange={(e) =>
-              setValue("color", e.target.value, { shouldValidate: true })
-            }
-            error={!!errors.color}
-            className="w-28 font-mono"
-          />
+          <div className="w-28 shrink-0">
+            <TextInput
+              size="sm"
+              aria-label="Cor hexadecimal"
+              value={color}
+              onChange={(e) =>
+                setValue("color", e.target.value, { shouldValidate: true })
+              }
+              error={!!errors.color}
+              className="font-mono"
+            />
+          </div>
           <div className="flex flex-wrap gap-1">
             {sectorColorPresets.map((p) => (
               <button

@@ -3,6 +3,8 @@
 import { IconMenu2, IconPlus, IconSearch } from "@tabler/icons-react";
 import { usePathname } from "next/navigation";
 
+import { QuickAdd } from "@/components/task/QuickAdd";
+
 import { useShell } from "./shell-context";
 
 const staticTitles: Record<string, string> = {
@@ -57,16 +59,7 @@ export function TopBar() {
 
         <button
           type="button"
-          onClick={() =>
-            openPanel({
-              title: "Nova tarefa",
-              node: (
-                <p className="text-fg-secondary">
-                  O formulário de criação rápida chega na E07.
-                </p>
-              ),
-            })
-          }
+          onClick={() => openPanel({ title: "Nova tarefa", node: <QuickAdd /> })}
           className="inline-flex items-center gap-2 rounded-sm bg-[var(--button-primary-bg)] px-3 py-2 text-[length:var(--text-small-size)] text-[var(--button-primary-fg)] transition-colors [transition-duration:var(--dur-fast)] hover:bg-[var(--button-primary-bg-hover)]"
         >
           <IconPlus size={18} stroke={1.5} />
