@@ -28,7 +28,9 @@ export function consentUrl(state: string): string {
     scope: GCAL_SCOPES.join(" "),
     access_type: "offline",
     prompt: "consent", // força refresh_token mesmo em reconexão
-    include_granted_scopes: "true",
+    // Sem include_granted_scopes: mantém o token restrito só aos escopos de
+    // agenda (design 9.1 — escopo mínimo). Não herda drive/userinfo já
+    // concedidos à conta noutros contextos.
     state,
   });
   return `${AUTH_URL}?${params.toString()}`;
