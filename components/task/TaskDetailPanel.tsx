@@ -1,6 +1,6 @@
 "use client";
 
-import { IconCheck, IconLoader2 } from "@tabler/icons-react";
+import { IconCheck, IconClock, IconLoader2, IconPlus, IconX } from "@tabler/icons-react";
 import { useRef, useState } from "react";
 import type { ReactNode } from "react";
 
@@ -60,6 +60,8 @@ export function TaskDetailPanel({ taskId }: { taskId: string }) {
   const [dueEndTime, setDueEndTime] = useState(
     (task?.due_end_time ?? "").slice(0, 5)
   );
+  const [timeOpen, setTimeOpen] = useState(!!task?.due_time);
+  const [endOpen, setEndOpen] = useState(!!task?.due_end_time);
   const [priority, setPriority] = useState<string>(task?.priority ?? "media");
   const [projectId, setProjectId] = useState<string | null>(
     task?.project_id ?? null
@@ -175,35 +177,90 @@ export function TaskDetailPanel({ taskId }: { taskId: string }) {
               aria-label="Data do prazo"
             />
           </div>
-          <div className="w-28">
-            <TextInput
-              type="time"
-              value={dueTime}
-              onChange={(e) => {
-                setDueTime(e.target.value);
-                scheduleSave({ due_time: e.target.value || null });
-              }}
-              aria-label="Hora de início"
-            />
-          </div>
-          <span className="text-[length:var(--text-small-size)] text-fg-muted">
-            até
-          </span>
-          <div className="w-28">
-            <TextInput
-              type="time"
-              value={dueEndTime}
-              onChange={(e) => {
-                setDueEndTime(e.target.value);
-                scheduleSave({ due_end_time: e.target.value || null });
-              }}
-              aria-label="Hora de término"
-            />
-          </div>
+
+          {/* Horário é opt-in: só aparece quando há data e o usuário pede. */}
+          {dueDate && !timeOpen ? (
+            <button
+              type="button"
+              onClick={() => setTimeOpen(true)}
+              className="inline-flex items-center gap-1 rounded-sm px-2 py-1 text-[length:var(--text-small-size)] text-fg-secondary hover:bg-sunken hover:text-fg"
+            >
+              <IconClock size={16} stroke={1.5} />
+              Adicionar horário
+            </button>
+          ) : null}
+
+          {dueDate && timeOpen ? (
+            <>
+              <div className="w-28">
+                <TextInput
+                  type="time"
+                  value={dueTime}
+                  onChange={(e) => {
+                    setDueTime(e.target.value);
+                    scheduleSave({ due_time: e.target.value || null });
+                  }}
+                  aria-label="Hora de início"
+                />
+              </div>
+
+              {endOpen ? (
+                <>
+                  <span className="text-[length:var(--text-small-size)] text-fg-muted">
+                    até
+                  </span>
+                  <div className="w-28">
+                    <TextInput
+                      type="time"
+                      value={dueEndTime}
+                      onChange={(e) => {
+                        setDueEndTime(e.target.value);
+                        scheduleSave({ due_end_time: e.target.value || null });
+                      }}
+                      aria-label="Hora de término"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    aria-label="Remover término"
+                    onClick={() => {
+                      setEndOpen(false);
+                      setDueEndTime("");
+                      scheduleSave({ due_end_time: null });
+                    }}
+                    className="rounded-sm p-1 text-fg-muted hover:text-fg"
+                  >
+                    <IconX size={14} stroke={1.5} />
+                  </button>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setEndOpen(true)}
+                  className="inline-flex items-center gap-1 rounded-sm px-2 py-1 text-[length:var(--text-small-size)] text-fg-secondary hover:bg-sunken hover:text-fg"
+                >
+                  <IconPlus size={14} stroke={1.5} />
+                  Término
+                </button>
+              )}
+
+              <button
+                type="button"
+                onClick={() => {
+                  setTimeOpen(false);
+                  setEndOpen(false);
+                  setDueTime("");
+                  setDueEndTime("");
+                  scheduleSave({ due_time: null, due_end_time: null });
+                }}
+                className="inline-flex items-center gap-1 rounded-sm px-2 py-1 text-[length:var(--text-caption-size)] text-fg-muted hover:bg-sunken hover:text-fg"
+              >
+                <IconX size={14} stroke={1.5} />
+                Dia inteiro
+              </button>
+            </>
+          ) : null}
         </div>
-        <span className="text-[length:var(--text-caption-size)] text-fg-muted">
-          Sem hora, vira dia inteiro. Com início e fim, reserva o intervalo
-        </span>
       </Field>
 
       <TaskSyncToggle taskId={taskId} />
