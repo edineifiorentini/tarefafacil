@@ -93,7 +93,7 @@ regras auto-geradas do Next ficam em `AGENTS.md` (importado abaixo).
 - [x] E09 — Board genérico e Kanban
 - [x] E10 — Visão Hoje
 - [x] E11 — Projetos
-- [ ] E12 — Calendário e peek
+- [x] E12 — Calendário e peek
 - [ ] E13 — Anexos
 - [ ] E14 — Google Agenda (unidirecional)
 - [ ] E15 — Busca e filtros
