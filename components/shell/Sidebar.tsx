@@ -4,6 +4,7 @@ import {
   IconCalendarMonth,
   IconLayoutKanban,
   IconPlus,
+  IconSearch,
   IconSettings,
   IconSun,
 } from "@tabler/icons-react";
@@ -23,6 +24,7 @@ const destinations = [
   { href: "/hoje", label: "Hoje", icon: IconSun, hint: "1" },
   { href: "/quadro", label: "Quadro", icon: IconLayoutKanban, hint: "2" },
   { href: "/calendario", label: "Calendário", icon: IconCalendarMonth, hint: "3" },
+  { href: "/busca", label: "Buscar", icon: IconSearch, hint: "/" },
 ] as const;
 
 export function Sidebar({ sectors: initialSectors }: { sectors: Sector[] }) {

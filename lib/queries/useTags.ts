@@ -11,6 +11,22 @@ function taskTagsKey(workspaceId: string, taskId: string) {
   return ["taskTags", workspaceId, taskId] as const;
 }
 
+// Todas as tags do workspace (para filtros).
+export function useAllTags(workspaceId: string) {
+  const supabase = createClient();
+  return useQuery({
+    queryKey: ["tags", workspaceId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("tag")
+        .select("*")
+        .order("name", { ascending: true });
+      if (error) throw error;
+      return data;
+    },
+  });
+}
+
 export function useTaskTags(workspaceId: string, taskId: string) {
   const supabase = createClient();
   return useQuery({

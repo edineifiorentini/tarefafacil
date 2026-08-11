@@ -449,6 +449,18 @@ export type Database = {
         Args: { ws: string };
         Returns: boolean;
       };
+      search_tasks: {
+        Args: {
+          q?: string;
+          p_sectors?: string[] | null;
+          p_tags?: string[] | null;
+          p_priorities?: string[] | null;
+          p_status?: string | null;
+          p_due_from?: string | null;
+          p_due_to?: string | null;
+        };
+        Returns: Database["public"]["Tables"]["task"]["Row"][];
+      };
     };
     Enums: Record<never, never>;
     CompositeTypes: Record<never, never>;

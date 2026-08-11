@@ -1,7 +1,8 @@
 "use client";
 
 import { IconMenu2, IconPlus, IconSearch } from "@tabler/icons-react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useState } from "react";
 
 import { QuickAdd } from "@/components/task/QuickAdd";
 
@@ -11,6 +12,7 @@ const staticTitles: Record<string, string> = {
   "/hoje": "Hoje",
   "/quadro": "Quadro",
   "/calendario": "Calendário",
+  "/busca": "Buscar",
   "/config": "Configurações",
 };
 
@@ -23,7 +25,15 @@ function titleFor(path: string): string {
 
 export function TopBar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { openPanel, setMobileNavOpen } = useShell();
+  const [query, setQuery] = useState("");
+
+  function submitSearch(e: React.FormEvent) {
+    e.preventDefault();
+    const q = query.trim();
+    router.push(q ? `/busca?q=${encodeURIComponent(q)}` : "/busca");
+  }
 
   return (
     <header className="flex items-center gap-3 border-b border-line bg-card px-4 py-3">
@@ -41,7 +51,7 @@ export function TopBar() {
       </h1>
 
       <div className="ml-auto flex items-center gap-2">
-        <div className="relative hidden sm:block">
+        <form onSubmit={submitSearch} className="relative hidden sm:block">
           <IconSearch
             aria-hidden
             size={18}
@@ -53,9 +63,11 @@ export function TopBar() {
             type="search"
             aria-label="Buscar"
             placeholder="Buscar…"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
             className="w-56 rounded-sm border border-line bg-page py-2 pl-9 pr-3 text-[length:var(--text-small-size)] text-fg placeholder:text-fg-muted"
           />
-        </div>
+        </form>
 
         <button
           type="button"
