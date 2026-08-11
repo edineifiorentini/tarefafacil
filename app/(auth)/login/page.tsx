@@ -81,7 +81,7 @@ export default function LoginPage() {
         </form>
       )}
 
-      <div className="my-6 flex items-center gap-3 text-[length:var(--text-caption-size)] text-fg-muted">
+      <div className="my-6 flex items-center gap-3 text-[length:var(--text-caption-size)] text-fg-secondary">
         <span className="h-px flex-1 bg-[var(--border)]" />
         ou
         <span className="h-px flex-1 bg-[var(--border)]" />

@@ -45,9 +45,14 @@ export function BoardColumn({
           isOver ? "bg-selected" : ""
         }`}
       >
-        <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
-          {children}
-        </SortableContext>
+        <div role="list" aria-label={name} className="flex flex-col gap-2">
+          <SortableContext
+            items={itemIds}
+            strategy={verticalListSortingStrategy}
+          >
+            {children}
+          </SortableContext>
+        </div>
         {footer}
       </div>
     </section>

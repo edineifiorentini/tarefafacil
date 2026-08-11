@@ -104,7 +104,7 @@ regras auto-geradas do Next ficam em `AGENTS.md` (importado abaixo).
 - [x] E14 — Google Agenda (unidirecional)
 - [x] E15 — Busca e filtros
 - [x] E16 — Google Agenda (bidirecional)
-- [ ] E17 — Auditoria de acessibilidade
+- [x] E17 — Auditoria de acessibilidade
 - [ ] E18 — Preparação para SaaS
 
 @AGENTS.md

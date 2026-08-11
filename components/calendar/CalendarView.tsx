@@ -211,6 +211,8 @@ function DayCell({
   return (
     <div
       ref={setNodeRef}
+      role="gridcell"
+      aria-label={format(day, "EEEE, d 'de' MMMM 'de' yyyy", { locale: ptBR })}
       className={`flex min-h-24 flex-col gap-0.5 p-1 ${today ? "bg-today" : "bg-page"} ${inMonth ? "" : "opacity-40"} ${isOver ? "ring-1 ring-inset ring-[var(--focus-ring)]" : ""}`}
     >
       <span
@@ -370,13 +372,18 @@ export function CalendarView() {
       </div>
 
       <DndContext sensors={sensors} onDragEnd={onDragEnd}>
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-md border border-line">
+        <div
+          role="grid"
+          aria-label={`Calendário de ${format(month, "MMMM 'de' yyyy", { locale: ptBR })}`}
+          className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-md border border-line"
+        >
           {weeks.map((week, wi) => {
             const segments = layers.projects ? weekSegments(week, projects) : [];
             const maxRow = segments.reduce((m, s) => Math.max(m, s.row + 1), 0);
             return (
               <div
                 key={wi}
+                role="row"
                 className="grid flex-1 grid-cols-7 gap-px border-t border-line bg-line first:border-t-0"
               >
                 {week.map((day, col) => (

@@ -3,16 +3,22 @@
 import {
   DndContext,
   DragOverlay,
+  KeyboardSensor,
   PointerSensor,
   closestCorners,
   useSensor,
   useSensors,
+  type Announcements,
   type DragEndEvent,
   type DragStartEvent,
 } from "@dnd-kit/core";
-import { useSortable } from "@dnd-kit/sortable";
+import { sortableKeyboardCoordinates, useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { IconArrowRight, IconDotsVertical } from "@tabler/icons-react";
+import {
+  IconArrowRight,
+  IconDotsVertical,
+  IconGripVertical,
+} from "@tabler/icons-react";
 import { DropdownMenu } from "radix-ui";
 import { useState } from "react";
 import type { ReactNode } from "react";
@@ -31,6 +37,7 @@ export interface BoardProps<T> {
   getItemId: (item: T) => string;
   getColumnId: (item: T) => string;
   getPosition: (item: T) => number;
+  getItemLabel?: (item: T) => string;
   renderCard: (item: T) => ReactNode;
   onMove: (itemId: string, toColumnId: string, toPosition: number) => void;
   onColumnCreate?: (name: string) => void;
@@ -51,19 +58,28 @@ function fractionalPosition(positions: number[], index: number): number {
 
 function SortableCard({
   id,
+  label,
   columns,
   currentColumnId,
   onMoveToColumn,
   children,
 }: {
   id: string;
+  label: string;
   columns: BoardColumnData[];
   currentColumnId: string;
   onMoveToColumn: (toColumnId: string) => void;
   children: ReactNode;
 }) {
-  const { listeners, setNodeRef, transform, transition, isDragging } =
-    useSortable({ id });
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    setActivatorNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -76,11 +92,25 @@ function SortableCard({
     <div
       ref={setNodeRef}
       style={style}
+      role="listitem"
       className={`group relative ${isDragging ? "opacity-50" : ""}`}
     >
       <div {...listeners} className="cursor-grab touch-none">
         {children}
       </div>
+
+      {/* Handle de teclado: Tab foca, Espaço pega, setas movem, Espaço solta,
+          Esc cancela (dnd-kit KeyboardSensor). Também arrasta com o ponteiro. */}
+      <button
+        type="button"
+        ref={setActivatorNodeRef}
+        {...attributes}
+        {...listeners}
+        aria-label={`Mover ${label}`}
+        className="absolute left-1 top-1 inline-flex h-6 w-6 items-center justify-center rounded-sm bg-card text-fg-muted opacity-0 shadow-[var(--shadow-peek)] transition-opacity hover:text-fg group-hover:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100"
+      >
+        <IconGripVertical size={14} stroke={1.5} />
+      </button>
 
       {others.length > 0 ? (
         <div className="absolute right-1 top-1">
@@ -128,6 +158,7 @@ export function Board<T>({
   getItemId,
   getColumnId,
   getPosition,
+  getItemLabel,
   renderCard,
   onMove,
   emptyColumnSlot,
@@ -136,8 +167,33 @@ export function Board<T>({
   const [liveMessage, setLiveMessage] = useState("");
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 4 } })
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
   );
+
+  function labelFor(id: string): string {
+    const col = columns.find((c) => c.id === id);
+    if (col) return col.name;
+    const item = items.find((it) => getItemId(it) === id);
+    return item && getItemLabel ? getItemLabel(item) : "item";
+  }
+
+  // Anúncios em pt-BR para o leitor de tela durante o arraste por teclado.
+  const announcements: Announcements = {
+    onDragStart: ({ active }) => `Pegou ${labelFor(String(active.id))}`,
+    onDragOver: ({ active, over }) =>
+      over
+        ? `${labelFor(String(active.id))} sobre ${labelFor(String(over.id))}`
+        : "",
+    onDragEnd: ({ active, over }) =>
+      over
+        ? `${labelFor(String(active.id))} solto sobre ${labelFor(String(over.id))}`
+        : `Soltou ${labelFor(String(active.id))}`,
+    onDragCancel: ({ active }) =>
+      `Movimento de ${labelFor(String(active.id))} cancelado`,
+  };
 
   // Agrupa itens por coluna, ordenados por posição.
   const grouped = new Map<string, T[]>();
@@ -207,6 +263,7 @@ export function Board<T>({
     <DndContext
       sensors={sensors}
       collisionDetection={closestCorners}
+      accessibility={{ announcements }}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
       onDragCancel={() => setActiveId(null)}
@@ -229,6 +286,7 @@ export function Board<T>({
                   <SortableCard
                     key={itemId}
                     id={itemId}
+                    label={getItemLabel ? getItemLabel(item) : "item"}
                     columns={columns}
                     currentColumnId={col.id}
                     onMoveToColumn={(toColumnId) =>

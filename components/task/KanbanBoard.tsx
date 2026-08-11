@@ -32,6 +32,7 @@ export function KanbanBoard({ sectorId }: { sectorId: string }) {
       getItemId={(t) => t.id}
       getColumnId={(t) => t.column_id ?? firstColumnId}
       getPosition={(t) => t.position}
+      getItemLabel={(t) => t.title}
       renderCard={(t) => (
         <TaskCard
           task={t}
