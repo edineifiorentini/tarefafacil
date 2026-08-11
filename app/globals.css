@@ -75,6 +75,12 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+/* Cursor de ponteiro em clicáveis (o Tailwind v4 não faz isso por padrão). */
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]) {
+  cursor: pointer;
+}
+
 /* Foco visível padrão (11.2): anel 2px, offset 2px. Nunca outline:none sem
    substituto. Componentes podem sobrescrever a cor, nunca remover. */
 :focus-visible {

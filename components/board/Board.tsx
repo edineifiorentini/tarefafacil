@@ -211,7 +211,7 @@ export function Board<T>({
       onDragEnd={handleDragEnd}
       onDragCancel={() => setActiveId(null)}
     >
-      <div className="flex gap-3 overflow-x-auto pb-2">
+      <div className="flex h-full gap-3 overflow-x-auto pb-2">
         {columns.map((col) => {
           const colItems = grouped.get(col.id) ?? [];
           return (

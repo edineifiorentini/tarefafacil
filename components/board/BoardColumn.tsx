@@ -41,7 +41,7 @@ export function BoardColumn({
       </header>
       <div
         ref={setNodeRef}
-        className={`flex min-h-16 flex-1 flex-col gap-2 rounded-b-md p-2 transition-colors [transition-duration:var(--dur-fast)] ${
+        className={`flex min-h-16 flex-1 flex-col gap-2 overflow-y-auto rounded-b-md p-2 transition-colors [transition-duration:var(--dur-fast)] ${
           isOver ? "bg-selected" : ""
         }`}
       >

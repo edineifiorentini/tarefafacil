@@ -200,7 +200,7 @@ export function HojeView() {
   }
 
   return (
-    <div className="mx-auto max-w-[var(--max-width-read)] px-6 py-8">
+    <div className="max-w-[var(--max-width-read)] px-6 py-8">
       {(["atrasadas", "hoje", "proximos"] as const).map((g) =>
         groups[g].length > 0 ? (
           <Section key={g} title={GROUP_LABELS[g]} count={groups[g].length}>

@@ -37,7 +37,7 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="mx-auto flex min-h-full max-w-[400px] flex-col justify-center px-6 py-12">
+    <main className="mx-auto flex min-h-dvh max-w-[400px] flex-col justify-center px-6 py-12">
       <h1 className="mb-1 text-[length:var(--text-h2-size)] font-medium text-fg">
         Entrar no TarefaFácil
       </h1>

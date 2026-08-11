@@ -51,7 +51,7 @@ export function Sidebar({ sectors: initialSectors }: { sectors: Sector[] }) {
                 href={href}
                 aria-current={isActive(href) ? "page" : undefined}
                 onClick={() => setMobileNavOpen(false)}
-                className={`flex items-center gap-3 rounded-sm px-3 py-2 transition-colors [transition-duration:var(--dur-fast)] ${
+                className={`group flex items-center gap-3 rounded-sm px-3 py-2 transition-colors [transition-duration:var(--dur-fast)] ${
                   isActive(href)
                     ? "bg-selected text-fg"
                     : "text-fg-secondary hover:bg-sunken hover:text-fg"
@@ -59,7 +59,10 @@ export function Sidebar({ sectors: initialSectors }: { sectors: Sector[] }) {
               >
                 <Icon size={20} stroke={1.5} />
                 <span className="flex-1">{label}</span>
-                <kbd className="tnum rounded-sm border border-line px-1 text-[length:var(--text-caption-size)] text-fg-muted">
+                <kbd
+                  aria-hidden
+                  className="tnum rounded-sm border border-line px-1 text-[length:var(--text-caption-size)] text-fg-muted opacity-0 transition-opacity [transition-duration:var(--dur-fast)] group-hover:opacity-100 group-focus-within:opacity-100"
+                >
                   {hint}
                 </kbd>
               </Link>
