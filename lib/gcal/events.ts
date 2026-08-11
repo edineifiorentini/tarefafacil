@@ -64,7 +64,13 @@ export function taskToEvent(
   }
 
   const startLocal = `${task.due_date}T${task.due_time.slice(0, 8)}`;
-  const endLocal = addMinutesToLocal(startLocal, DEFAULT_DURATION_MIN);
+  // Fim explícito (reunião com intervalo) quando for depois do início; senão
+  // a duração padrão de 30min.
+  const hasValidEnd =
+    !!task.due_end_time && task.due_end_time.slice(0, 8) > task.due_time.slice(0, 8);
+  const endLocal = hasValidEnd
+    ? `${task.due_date}T${(task.due_end_time as string).slice(0, 8)}`
+    : addMinutesToLocal(startLocal, DEFAULT_DURATION_MIN);
   return {
     ...base,
     start: { dateTime: startLocal, timeZone: opts.timeZone },

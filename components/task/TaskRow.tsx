@@ -53,7 +53,9 @@ export function TaskRow({
           />
         ) : null}
         {sector ? <SectorDot color={sector.color} name={sector.name} /> : null}
-        {task.due_date ? <DueChip date={task.due_date} /> : null}
+        {task.due_date ? (
+          <DueChip date={task.due_date} time={task.due_time} />
+        ) : null}
         <DropdownMenu.Root>
           <DropdownMenu.Trigger asChild>
             <button

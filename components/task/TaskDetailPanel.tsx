@@ -56,6 +56,10 @@ export function TaskDetailPanel({ taskId }: { taskId: string }) {
   const [description, setDescription] = useState(task?.description ?? "");
   const [sectorId, setSectorId] = useState(task?.sector_id ?? "");
   const [dueDate, setDueDate] = useState(task?.due_date ?? "");
+  const [dueTime, setDueTime] = useState((task?.due_time ?? "").slice(0, 5));
+  const [dueEndTime, setDueEndTime] = useState(
+    (task?.due_end_time ?? "").slice(0, 5)
+  );
   const [priority, setPriority] = useState<string>(task?.priority ?? "media");
   const [projectId, setProjectId] = useState<string | null>(
     task?.project_id ?? null
@@ -159,17 +163,47 @@ export function TaskDetailPanel({ taskId }: { taskId: string }) {
       </Field>
 
       <Field label="Prazo">
-        <div className="w-44">
-          <TextInput
-            type="date"
-            value={dueDate ?? ""}
-            onChange={(e) => {
-              setDueDate(e.target.value);
-              scheduleSave({ due_date: e.target.value || null });
-            }}
-            aria-label="Prazo"
-          />
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="w-44">
+            <TextInput
+              type="date"
+              value={dueDate ?? ""}
+              onChange={(e) => {
+                setDueDate(e.target.value);
+                scheduleSave({ due_date: e.target.value || null });
+              }}
+              aria-label="Data do prazo"
+            />
+          </div>
+          <div className="w-28">
+            <TextInput
+              type="time"
+              value={dueTime}
+              onChange={(e) => {
+                setDueTime(e.target.value);
+                scheduleSave({ due_time: e.target.value || null });
+              }}
+              aria-label="Hora de início"
+            />
+          </div>
+          <span className="text-[length:var(--text-small-size)] text-fg-muted">
+            até
+          </span>
+          <div className="w-28">
+            <TextInput
+              type="time"
+              value={dueEndTime}
+              onChange={(e) => {
+                setDueEndTime(e.target.value);
+                scheduleSave({ due_end_time: e.target.value || null });
+              }}
+              aria-label="Hora de término"
+            />
+          </div>
         </div>
+        <span className="text-[length:var(--text-caption-size)] text-fg-muted">
+          Sem hora, vira dia inteiro. Com início e fim, reserva o intervalo
+        </span>
       </Field>
 
       <TaskSyncToggle taskId={taskId} />

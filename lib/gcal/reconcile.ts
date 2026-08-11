@@ -11,6 +11,7 @@ export type GcalEvent = {
   updated?: string; // ISO
   etag?: string;
   start?: { date?: string; dateTime?: string; timeZone?: string };
+  end?: { date?: string; dateTime?: string; timeZone?: string };
   extendedProperties?: { private?: Record<string, string> };
 };
 
@@ -20,6 +21,7 @@ export type ReconcileTask = {
   description: string | null;
   due_date: string | null;
   due_time: string | null;
+  due_end_time: string | null;
   gcal_event_id: string | null;
   gcal_synced_at: string | null;
 };
@@ -30,6 +32,7 @@ export type UndoSnapshot = {
   description: string | null;
   due_date: string | null;
   due_time: string | null;
+  due_end_time: string | null;
 };
 
 export type EventPatch = {
@@ -37,6 +40,7 @@ export type EventPatch = {
   description?: string | null;
   due_date?: string | null;
   due_time?: string | null;
+  due_end_time?: string | null;
 };
 
 export type ReconcileAction =
@@ -67,12 +71,17 @@ export function eventToPatch(event: GcalEvent): EventPatch {
 
   const start = event.start;
   if (start?.date) {
+    // Dia inteiro
     patch.due_date = start.date;
     patch.due_time = null;
+    patch.due_end_time = null;
   } else if (start?.dateTime) {
     // "2026-08-12T14:30:00-03:00" → data e hora de parede
     patch.due_date = start.dateTime.slice(0, 10);
     patch.due_time = start.dateTime.slice(11, 19);
+    patch.due_end_time = event.end?.dateTime
+      ? event.end.dateTime.slice(11, 19)
+      : null;
   }
   return patch;
 }
@@ -84,6 +93,7 @@ function snapshot(task: ReconcileTask, kind: UndoSnapshot["kind"]): UndoSnapshot
     description: task.description,
     due_date: task.due_date,
     due_time: task.due_time,
+    due_end_time: task.due_end_time,
   };
 }
 

@@ -39,7 +39,7 @@ async function applyEvent(
   const { data: task } = await admin
     .from("task")
     .select(
-      "id, title, description, due_date, due_time, gcal_event_id, gcal_synced_at"
+      "id, title, description, due_date, due_time, due_end_time, gcal_event_id, gcal_synced_at"
     )
     .eq("id", taskId)
     .eq("workspace_id", workspaceId)

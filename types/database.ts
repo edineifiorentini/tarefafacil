@@ -207,6 +207,7 @@ export type Database = {
           description: string | null;
           due_date: string | null;
           due_time: string | null;
+          due_end_time: string | null;
           priority: TaskPriority;
           assignee_id: string | null;
           completed_at: string | null;
@@ -232,6 +233,7 @@ export type Database = {
           description?: string | null;
           due_date?: string | null;
           due_time?: string | null;
+          due_end_time?: string | null;
           priority?: TaskPriority;
           assignee_id?: string | null;
           completed_at?: string | null;
@@ -257,6 +259,7 @@ export type Database = {
           description?: string | null;
           due_date?: string | null;
           due_time?: string | null;
+          due_end_time?: string | null;
           priority?: TaskPriority;
           assignee_id?: string | null;
           completed_at?: string | null;

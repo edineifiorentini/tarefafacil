@@ -23,7 +23,9 @@ export function TaskCard({ task, onOpen }: { task: Task; onOpen: () => void }) {
       </p>
       {hasMeta ? (
         <div className="mt-2 flex flex-wrap items-center gap-2">
-          {task.due_date ? <DueChip date={task.due_date} /> : null}
+          {task.due_date ? (
+            <DueChip date={task.due_date} time={task.due_time} />
+          ) : null}
           {task.priority === "alta" ? (
             <Badge variant="overdue">Alta</Badge>
           ) : null}

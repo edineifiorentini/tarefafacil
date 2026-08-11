@@ -15,6 +15,7 @@ const baseTask: ReconcileTask = {
   description: "descrição",
   due_date: "2026-08-10",
   due_time: null,
+  due_end_time: null,
   gcal_event_id: "evt-1",
   gcal_synced_at: "2026-08-10T12:00:00.000Z",
 };
@@ -58,6 +59,23 @@ describe("eventToPatch", () => {
     );
     expect(patch.due_date).toBe("2026-08-15");
     expect(patch.due_time).toBe("14:30:00");
+  });
+
+  it("reunião com início e fim → extrai due_end_time", () => {
+    const patch = eventToPatch(
+      event({
+        start: { dateTime: "2026-08-15T15:30:00-03:00" },
+        end: { dateTime: "2026-08-15T17:00:00-03:00" },
+      })
+    );
+    expect(patch.due_time).toBe("15:30:00");
+    expect(patch.due_end_time).toBe("17:00:00");
+  });
+
+  it("dia inteiro zera início e fim", () => {
+    const patch = eventToPatch(event({ start: { date: "2026-08-15" } }));
+    expect(patch.due_time).toBeNull();
+    expect(patch.due_end_time).toBeNull();
   });
 });
 

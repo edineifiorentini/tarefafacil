@@ -4,7 +4,13 @@ import { ptBR } from "date-fns/locale";
 
 // Chip de prazo — cor muda por proximidade (design 8.2). Reforço por ícone,
 // não só cor (11.6). Números tabulares (.tnum) para não dançar.
-export function DueChip({ date }: { date: string }) {
+export function DueChip({
+  date,
+  time,
+}: {
+  date: string;
+  time?: string | null;
+}) {
   const due = parseISO(date);
   const diff = differenceInCalendarDays(due, new Date());
   const overdue = diff < 0;
@@ -15,6 +21,8 @@ export function DueChip({ date }: { date: string }) {
   else if (diff === 1) label = "Amanhã";
   else if (diff === -1) label = "Ontem";
   else label = format(due, "d MMM", { locale: ptBR });
+
+  if (time) label = `${label} · ${time.slice(0, 5)}`;
 
   const tone = overdue
     ? "bg-overdue-bg text-overdue"

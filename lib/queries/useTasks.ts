@@ -45,6 +45,7 @@ function optimisticTask(input: {
     description: null,
     due_date: input.due_date,
     due_time: null,
+    due_end_time: null,
     priority: "media",
     assignee_id: null,
     completed_at: null,

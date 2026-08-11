@@ -47,6 +47,7 @@ export async function POST(request: Request) {
     description: undo.description,
     due_date: undo.due_date,
     due_time: undo.due_time,
+    due_end_time: undo.due_end_time,
     gcal_external_edit_at: null,
     gcal_undo: null,
   };

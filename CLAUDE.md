@@ -61,6 +61,12 @@ Mostre o plano de arquivos e as assinaturas antes da implementação.
 
 ## Decisões desta implementação (desvios registrados do plano)
 
+- **Horário de término na tarefa (`due_end_time`).** Extensão do schema além do
+  design (que só previa `due_time`): tarefa pode reservar um intervalo (ex.:
+  reunião 15:30–17:00). Sem hora = dia inteiro; só início = 30min; início+fim =
+  intervalo. Vale nos dois sentidos do sync com o Google. Pedido pelo dono
+  (ago/2026).
+
 - **Versões atuais em vez das fixadas no plano.** O plano (ago/2026) fixa
   Next.js 15 e Storybook 8. Como o tooling atual entrega Next.js 16.3, React 19 e
   Storybook 9 — e a arquitetura do plano não muda com isso — a base usa as
