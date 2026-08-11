@@ -18,6 +18,7 @@ export function useDatedSubtasks(workspaceId: string) {
       const { data, error } = await supabase
         .from("subtask")
         .select("*")
+        .eq("workspace_id", workspaceId)
         .not("due_date", "is", null)
         .is("completed_at", null)
         .order("due_date", { ascending: true });

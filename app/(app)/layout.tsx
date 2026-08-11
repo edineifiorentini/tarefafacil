@@ -1,3 +1,4 @@
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 
@@ -22,18 +23,22 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   const { data: workspaces } = await supabase
     .from("workspace")
     .select("*")
-    .order("created_at", { ascending: true })
-    .limit(1);
+    .order("created_at", { ascending: true });
 
-  const workspace = workspaces?.[0];
-
-  if (!workspace) {
+  if (!workspaces || workspaces.length === 0) {
     return <CreateWorkspace />;
   }
+
+  // Workspace ativo: preferência salva em cookie, senão o primeiro.
+  const cookieStore = await cookies();
+  const activeId = cookieStore.get("active_workspace")?.value;
+  const workspace =
+    workspaces.find((w) => w.id === activeId) ?? workspaces[0];
 
   const { data: sectors } = await supabase
     .from("sector")
     .select("*")
+    .eq("workspace_id", workspace.id)
     .is("archived_at", null)
     .order("position", { ascending: true });
 
@@ -41,7 +46,9 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
     <Providers>
       <WorkspaceProvider workspace={workspace}>
         <ShellProvider>
-          <AppShell sectors={sectors ?? []}>{children}</AppShell>
+          <AppShell sectors={sectors ?? []} workspaces={workspaces}>
+            {children}
+          </AppShell>
         </ShellProvider>
       </WorkspaceProvider>
     </Providers>

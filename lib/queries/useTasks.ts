@@ -71,6 +71,7 @@ export function useTasks(workspaceId: string, sectorId?: string) {
       let query = supabase
         .from("task")
         .select("*")
+        .eq("workspace_id", workspaceId)
         .order("created_at", { ascending: false });
       if (sectorId) query = query.eq("sector_id", sectorId);
       const { data, error } = await query;

@@ -16,9 +16,10 @@ import { SectorForm } from "@/components/sector/SectorForm";
 import { SectorNav } from "@/components/sector/SectorNav";
 import { useSectors } from "@/lib/queries/useSectors";
 import { useWorkspace } from "@/lib/queries/useWorkspace";
-import type { Sector } from "@/types/database";
+import type { Sector, Workspace } from "@/types/database";
 
 import { useShell } from "./shell-context";
+import { WorkspaceSwitcher } from "./WorkspaceSwitcher";
 
 const destinations = [
   { href: "/hoje", label: "Hoje", icon: IconSun, hint: "1" },
@@ -27,7 +28,13 @@ const destinations = [
   { href: "/busca", label: "Buscar", icon: IconSearch, hint: "/" },
 ] as const;
 
-export function Sidebar({ sectors: initialSectors }: { sectors: Sector[] }) {
+export function Sidebar({
+  sectors: initialSectors,
+  workspaces,
+}: {
+  sectors: Sector[];
+  workspaces: Workspace[];
+}) {
   const pathname = usePathname();
   const workspace = useWorkspace();
   const { data: sectors = [] } = useSectors(workspace.id, initialSectors);
@@ -40,9 +47,7 @@ export function Sidebar({ sectors: initialSectors }: { sectors: Sector[] }) {
   return (
     <div className="flex h-full flex-col">
       <div className="px-[var(--space-card-pad)] py-4">
-        <span className="text-[length:var(--text-h3-size)] font-medium text-fg">
-          TarefaFácil
-        </span>
+        <WorkspaceSwitcher workspaces={workspaces} />
       </div>
 
       <nav aria-label="Navegação principal" className="px-2">

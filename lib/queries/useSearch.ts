@@ -26,7 +26,9 @@ export function useSearch(workspaceId: string, filters: SearchFilters) {
         p_due_to: filters.dueTo,
       });
       if (error) throw error;
-      return data ?? [];
+      // A RPC roda sob RLS (pode abranger vários workspaces do usuário);
+      // limita ao workspace ativo.
+      return (data ?? []).filter((t) => t.workspace_id === workspaceId);
     },
   });
 }

@@ -10,7 +10,7 @@ import { GcalReconnectBanner } from "@/components/gcal/GcalReconnectBanner";
 import { QuickAdd } from "@/components/task/QuickAdd";
 import { useGcalPoller } from "@/lib/queries/useGcal";
 import { useWorkspace } from "@/lib/queries/useWorkspace";
-import type { Sector } from "@/types/database";
+import type { Sector, Workspace } from "@/types/database";
 
 import { DetailPanel } from "./DetailPanel";
 import { Sidebar } from "./Sidebar";
@@ -19,9 +19,11 @@ import { useShell } from "./shell-context";
 
 export function AppShell({
   sectors,
+  workspaces,
   children,
 }: {
   sectors: Sector[];
+  workspaces: Workspace[];
   children: ReactNode;
 }) {
   const router = useRouter();
@@ -73,7 +75,7 @@ export function AppShell({
     <div className="flex h-dvh">
       {/* Sidebar — desktop (>=1024px) */}
       <aside className="hidden w-[240px] shrink-0 border-r border-line bg-card lg:block">
-        <Sidebar sectors={sectors} />
+        <Sidebar sectors={sectors} workspaces={workspaces} />
       </aside>
 
       {/* Sidebar — mobile (sheet à esquerda com overlay) */}
@@ -85,7 +87,7 @@ export function AppShell({
             className="fixed inset-y-0 left-0 z-50 w-[240px] border-r border-line bg-card outline-none data-[state=closed]:[animation:tf-slide-out-left_var(--dur-base)_ease-in] data-[state=open]:[animation:tf-slide-in-left_var(--dur-slow)_var(--ease-out)] lg:hidden"
           >
             <Dialog.Title className="sr-only">Navegação</Dialog.Title>
-            <Sidebar sectors={sectors} />
+            <Sidebar sectors={sectors} workspaces={workspaces} />
           </Dialog.Content>
         </Dialog.Portal>
       </Dialog.Root>

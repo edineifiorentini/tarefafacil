@@ -25,6 +25,7 @@ export function useSectors(workspaceId: string, initialData?: Sector[]) {
       const { data, error } = await supabase
         .from("sector")
         .select("*")
+        .eq("workspace_id", workspaceId)
         .is("archived_at", null)
         .order("position", { ascending: true });
       if (error) throw error;

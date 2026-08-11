@@ -20,6 +20,7 @@ export function useAllTags(workspaceId: string) {
       const { data, error } = await supabase
         .from("tag")
         .select("*")
+        .eq("workspace_id", workspaceId)
         .order("name", { ascending: true });
       if (error) throw error;
       return data;

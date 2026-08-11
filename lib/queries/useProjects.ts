@@ -16,6 +16,7 @@ export function useProjects(workspaceId: string, sectorId?: string) {
       let query = supabase
         .from("project")
         .select("*")
+        .eq("workspace_id", workspaceId)
         .is("archived_at", null)
         .order("created_at", { ascending: false });
       if (sectorId) query = query.eq("sector_id", sectorId);
