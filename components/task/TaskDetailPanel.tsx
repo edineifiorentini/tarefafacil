@@ -13,6 +13,7 @@ import { useTaskDetail, useUpdateTask } from "@/lib/queries/useTasks";
 import { useWorkspace } from "@/lib/queries/useWorkspace";
 import type { TablesUpdate } from "@/types/database";
 
+import { AttachmentList } from "./AttachmentList";
 import { InsightLog } from "./InsightLog";
 import { SubtaskList } from "./SubtaskList";
 import { TagSelector } from "./TagSelector";
@@ -179,6 +180,10 @@ export function TaskDetailPanel({ taskId }: { taskId: string }) {
 
       <Field label="Subtarefas">
         <SubtaskList taskId={taskId} parentDue={dueDate || null} />
+      </Field>
+
+      <Field label="Anexos">
+        <AttachmentList taskId={taskId} />
       </Field>
 
       <Field label="Insights">
