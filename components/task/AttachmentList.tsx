@@ -12,11 +12,13 @@ import {
 } from "@tabler/icons-react";
 import { useRef, useState } from "react";
 import type { FormEvent } from "react";
+import { HoverCard } from "radix-ui";
 
 import { Button } from "@/components/ui/Button";
 import { TextInput } from "@/components/ui/TextInput";
 import {
   useAddAttachmentLink,
+  useAttachmentImageUrl,
   useAttachments,
   useDeleteAttachment,
   useSignedUrl,
@@ -26,12 +28,92 @@ import { useWorkspace } from "@/lib/queries/useWorkspace";
 import { formatBytes } from "@/lib/utils/file-type";
 import type { Attachment } from "@/types/database";
 
+function isImage(a: Attachment) {
+  return a.kind === "file" && (a.mime_type ?? "").startsWith("image/");
+}
+
 function iconFor(a: Attachment) {
   if (a.kind === "link") return IconLink;
   const mime = a.mime_type ?? "";
   if (mime.startsWith("image/")) return IconPhoto;
   if (mime === "application/pdf") return IconFileTypePdf;
   return IconFile;
+}
+
+function ImageAttachmentRow({
+  attachment,
+  onOpen,
+  onDelete,
+}: {
+  attachment: Attachment;
+  onOpen: () => void;
+  onDelete: () => void;
+}) {
+  const { data: url, isError } = useAttachmentImageUrl(
+    attachment.storage_key,
+    true
+  );
+
+  return (
+    <div className="group flex items-center gap-2">
+      <HoverCard.Root openDelay={300} closeDelay={120}>
+        <HoverCard.Trigger asChild>
+          <button
+            type="button"
+            onClick={onOpen}
+            className="flex min-w-0 flex-1 items-center gap-2 text-left"
+          >
+            {url && !isError ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={url}
+                alt=""
+                className="h-7 w-7 shrink-0 rounded-sm object-cover"
+              />
+            ) : isError ? (
+              <IconPhoto
+                size={16}
+                stroke={1.5}
+                className="mx-1.5 shrink-0 text-fg-muted"
+              />
+            ) : (
+              <span className="h-7 w-7 shrink-0 animate-pulse rounded-sm bg-sunken" />
+            )}
+            <span className="truncate text-[length:var(--text-small-size)] text-fg">
+              {attachment.filename}
+            </span>
+            {attachment.size_bytes ? (
+              <span className="shrink-0 text-[length:var(--text-caption-size)] text-fg-muted">
+                {formatBytes(attachment.size_bytes)}
+              </span>
+            ) : null}
+          </button>
+        </HoverCard.Trigger>
+        {url && !isError ? (
+          <HoverCard.Portal>
+            <HoverCard.Content side="right" sideOffset={8} className="z-50">
+              <div className="overflow-hidden rounded-md border border-line bg-card p-1 shadow-[var(--shadow-peek)]">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={url}
+                  alt={attachment.filename}
+                  className="max-h-64 max-w-xs rounded-sm object-contain"
+                />
+              </div>
+            </HoverCard.Content>
+          </HoverCard.Portal>
+        ) : null}
+      </HoverCard.Root>
+      <button
+        type="button"
+        onClick={onDelete}
+        aria-label={`Remover ${attachment.filename}`}
+        className="text-fg-muted opacity-0 transition-opacity hover:text-fg group-hover:opacity-100 focus-visible:opacity-100"
+      >
+        <IconTrash size={14} stroke={1.5} />
+      </button>
+    </div>
+  );
 }
 
 export function AttachmentList({ taskId }: { taskId: string }) {
@@ -114,6 +196,16 @@ export function AttachmentList({ taskId }: { taskId: string }) {
       }`}
     >
       {attachments.map((a) => {
+        if (isImage(a)) {
+          return (
+            <ImageAttachmentRow
+              key={a.id}
+              attachment={a}
+              onOpen={() => void openAttachment(a)}
+              onDelete={() => del.mutate(a.id)}
+            />
+          );
+        }
         const Icon = iconFor(a);
         return (
           <div key={a.id} className="group flex items-center gap-2">

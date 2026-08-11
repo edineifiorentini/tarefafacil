@@ -150,6 +150,28 @@ export function useDeleteAttachment(workspaceId: string, taskId: string) {
   });
 }
 
+// URL assinada de leitura para exibir a prévia de uma imagem. Cache com
+// staleTime abaixo dos 5 min de validade da URL, para renovar antes de expirar.
+export function useAttachmentImageUrl(
+  storageKey: string | null | undefined,
+  enabled: boolean
+) {
+  const supabase = createClient();
+  return useQuery({
+    queryKey: ["attachment-image", storageKey],
+    enabled: enabled && !!storageKey,
+    staleTime: 4 * 60 * 1000,
+    gcTime: 4 * 60 * 1000,
+    queryFn: async () => {
+      const { data, error } = await supabase.storage
+        .from(BUCKET)
+        .createSignedUrl(storageKey as string, 300);
+      if (error || !data) throw error ?? new Error("Falha ao carregar prévia");
+      return data.signedUrl;
+    },
+  });
+}
+
 // URL assinada de leitura (5 min) para abrir/baixar um anexo de arquivo.
 export function useSignedUrl() {
   const supabase = createClient();
