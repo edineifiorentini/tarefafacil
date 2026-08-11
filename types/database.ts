@@ -20,6 +20,7 @@ export type SectorColor = "violeta" | "azul" | "coral" | "rosa" | "grafite";
 export type ProjectStatus = "planejado" | "ativo" | "pausado" | "concluido";
 export type TaskPriority = "baixa" | "media" | "alta";
 export type AttachmentKind = "file" | "link";
+export type GcalStatus = "active" | "expired" | "revoked";
 
 export type Database = {
   public: {
@@ -402,6 +403,45 @@ export type Database = {
         };
         Relationships: [];
       };
+      google_connection: {
+        Row: {
+          workspace_id: string;
+          user_id: string;
+          google_email: string | null;
+          access_token: string | null;
+          refresh_token: string;
+          token_expiry: string | null;
+          scope: string | null;
+          status: GcalStatus;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          workspace_id: string;
+          user_id: string;
+          google_email?: string | null;
+          access_token?: string | null;
+          refresh_token: string;
+          token_expiry?: string | null;
+          scope?: string | null;
+          status?: GcalStatus;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          workspace_id?: string;
+          user_id?: string;
+          google_email?: string | null;
+          access_token?: string | null;
+          refresh_token?: string;
+          token_expiry?: string | null;
+          scope?: string | null;
+          status?: GcalStatus;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<never, never>;
     Functions: {
@@ -436,3 +476,4 @@ export type Insight = Tables<"insight">;
 export type Attachment = Tables<"attachment">;
 export type Tag = Tables<"tag">;
 export type TaskTag = Tables<"task_tag">;
+export type GoogleConnection = Tables<"google_connection">;

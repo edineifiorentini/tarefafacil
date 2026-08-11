@@ -7,6 +7,7 @@ import type { ReactNode } from "react";
 import { Select } from "@/components/ui/Select";
 import { TextInput } from "@/components/ui/TextInput";
 import { Textarea } from "@/components/ui/Textarea";
+import { useSyncTaskEvent } from "@/lib/queries/useGcal";
 import { useProjects } from "@/lib/queries/useProjects";
 import { useSectors } from "@/lib/queries/useSectors";
 import { useTaskDetail, useUpdateTask } from "@/lib/queries/useTasks";
@@ -17,6 +18,7 @@ import { AttachmentList } from "./AttachmentList";
 import { InsightLog } from "./InsightLog";
 import { SubtaskList } from "./SubtaskList";
 import { TagSelector } from "./TagSelector";
+import { TaskSyncToggle } from "./TaskSyncToggle";
 
 const PRIORITIES = [
   { value: "baixa", label: "Baixa" },
@@ -42,6 +44,7 @@ export function TaskDetailPanel({ taskId }: { taskId: string }) {
   const { data: task } = useTaskDetail(workspace.id, taskId);
   const { data: sectors = [] } = useSectors(workspace.id);
   const update = useUpdateTask(workspace.id);
+  const syncEvent = useSyncTaskEvent();
 
   const [status, setStatus] = useState<SaveStatus>("idle");
   const pending = useRef<TablesUpdate<"task">>({});
@@ -71,7 +74,11 @@ export function TaskDetailPanel({ taskId }: { taskId: string }) {
       update.mutate(
         { id: taskId, patch: p },
         {
-          onSuccess: () => setStatus("saved"),
+          onSuccess: () => {
+            setStatus("saved");
+            // Reflete a edição no evento do Google, se a tarefa sincroniza.
+            if (task?.gcal_sync) void syncEvent(taskId);
+          },
           onError: () => setStatus("idle"),
         }
       );
@@ -160,6 +167,8 @@ export function TaskDetailPanel({ taskId }: { taskId: string }) {
           />
         </div>
       </Field>
+
+      <TaskSyncToggle taskId={taskId} />
 
       <Field label="Tags">
         <TagSelector taskId={taskId} />

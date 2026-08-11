@@ -6,6 +6,7 @@ import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { Dialog } from "radix-ui";
 
+import { GcalReconnectBanner } from "@/components/gcal/GcalReconnectBanner";
 import { QuickAdd } from "@/components/task/QuickAdd";
 import type { Sector } from "@/types/database";
 
@@ -86,6 +87,7 @@ export function AppShell({
       {/* Conteúdo */}
       <div className="flex min-w-0 flex-1 flex-col">
         <TopBar />
+        <GcalReconnectBanner />
         <main className="min-h-0 flex-1 overflow-auto bg-page">{children}</main>
       </div>
 

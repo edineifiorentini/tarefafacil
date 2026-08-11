@@ -8,10 +8,24 @@ import { createClient } from "@/lib/supabase/client";
 import type { QuickAddInput } from "@/lib/validation/task";
 import type { Task, TablesUpdate } from "@/types/database";
 
+import { useSyncTaskEvent } from "./useGcal";
+
 const TASKS = "tasks";
 
 function tasksKey(workspaceId: string, sectorId?: string) {
   return [TASKS, workspaceId, sectorId ?? "all"] as const;
+}
+
+// Procura uma tarefa nas listas em cache (para saber se estava sincronizada).
+function findInSnapshots(
+  snapshots: [unknown, Task[] | undefined][],
+  id: string
+): Task | undefined {
+  for (const [, data] of snapshots) {
+    const found = data?.find((t) => t.id === id);
+    if (found) return found;
+  }
+  return undefined;
 }
 
 function optimisticTask(input: {
@@ -130,6 +144,7 @@ export function useCreateTask(workspaceId: string) {
 export function useToggleTaskComplete(workspaceId: string) {
   const supabase = createClient();
   const qc = useQueryClient();
+  const syncEvent = useSyncTaskEvent();
 
   return useMutation({
     mutationFn: async ({
@@ -150,6 +165,7 @@ export function useToggleTaskComplete(workspaceId: string) {
       const snapshots = qc.getQueriesData<Task[]>({
         queryKey: [TASKS, workspaceId],
       });
+      const hadSync = !!findInSnapshots(snapshots, id)?.gcal_sync;
       const completedAt = completed ? new Date().toISOString() : null;
       qc.setQueriesData<Task[]>(
         { queryKey: [TASKS, workspaceId] },
@@ -158,12 +174,15 @@ export function useToggleTaskComplete(workspaceId: string) {
             t.id === id ? { ...t, completed_at: completedAt } : t
           )
       );
-      return { snapshots };
+      return { snapshots, hadSync };
     },
     onError: (_error, _input, ctx) => {
       ctx?.snapshots.forEach(([key, data]) => qc.setQueryData(key, data));
     },
-    onSettled: () => qc.invalidateQueries({ queryKey: [TASKS, workspaceId] }),
+    onSettled: (_data, _error, { id }, ctx) => {
+      void qc.invalidateQueries({ queryKey: [TASKS, workspaceId] });
+      if (ctx?.hadSync) void syncEvent(id);
+    },
   });
 }
 
@@ -183,6 +202,7 @@ export async function countOpenSubtasks(taskId: string): Promise<number> {
 export function useCompleteTask(workspaceId: string) {
   const supabase = createClient();
   const qc = useQueryClient();
+  const syncEvent = useSyncTaskEvent();
 
   return useMutation({
     mutationFn: async ({
@@ -212,18 +232,22 @@ export function useCompleteTask(workspaceId: string) {
       const snapshots = qc.getQueriesData<Task[]>({
         queryKey: [TASKS, workspaceId],
       });
+      const hadSync = !!findInSnapshots(snapshots, id)?.gcal_sync;
       const now = new Date().toISOString();
       qc.setQueriesData<Task[]>(
         { queryKey: [TASKS, workspaceId] },
         (data) =>
           data?.map((t) => (t.id === id ? { ...t, completed_at: now } : t))
       );
-      return { snapshots };
+      return { snapshots, hadSync };
     },
     onError: (_error, _input, ctx) => {
       ctx?.snapshots.forEach(([key, data]) => qc.setQueryData(key, data));
     },
-    onSettled: () => qc.invalidateQueries({ queryKey: [TASKS, workspaceId] }),
+    onSettled: (_data, _error, { id }, ctx) => {
+      void qc.invalidateQueries({ queryKey: [TASKS, workspaceId] });
+      if (ctx?.hadSync) void syncEvent(id);
+    },
   });
 }
 
@@ -231,6 +255,7 @@ export function useDeleteTask(workspaceId: string) {
   const supabase = createClient();
   const qc = useQueryClient();
   const toast = useToast();
+  const syncEvent = useSyncTaskEvent();
 
   // Remove otimista + exclui no banco após 10s, a menos que desfaça.
   return useCallback(
@@ -246,11 +271,15 @@ export function useDeleteTask(workspaceId: string) {
       let undone = false;
       const timer = window.setTimeout(() => {
         if (undone) return;
-        void supabase
-          .from("task")
-          .delete()
-          .eq("id", task.id)
-          .then(() => qc.invalidateQueries({ queryKey: [TASKS, workspaceId] }));
+        void (async () => {
+          // Remove o evento no Google antes de apagar a linha (o servidor
+          // precisa da tarefa para achar o evento).
+          if (task.gcal_sync && task.gcal_event_id) {
+            await syncEvent(task.id, { remove: true });
+          }
+          await supabase.from("task").delete().eq("id", task.id);
+          void qc.invalidateQueries({ queryKey: [TASKS, workspaceId] });
+        })();
       }, 10_000);
 
       toast.show({
@@ -264,7 +293,7 @@ export function useDeleteTask(workspaceId: string) {
         },
       });
     },
-    [qc, supabase, toast, workspaceId]
+    [qc, supabase, toast, syncEvent, workspaceId]
   );
 }
 

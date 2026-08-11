@@ -95,7 +95,7 @@ regras auto-geradas do Next ficam em `AGENTS.md` (importado abaixo).
 - [x] E11 — Projetos
 - [x] E12 — Calendário e peek
 - [x] E13 — Anexos
-- [ ] E14 — Google Agenda (unidirecional)
+- [x] E14 — Google Agenda (unidirecional)
 - [ ] E15 — Busca e filtros
 - [ ] E16 — Google Agenda (bidirecional)
 - [ ] E17 — Auditoria de acessibilidade
