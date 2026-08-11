@@ -8,6 +8,7 @@ import { Select } from "@/components/ui/Select";
 import { TextInput } from "@/components/ui/TextInput";
 import { Textarea } from "@/components/ui/Textarea";
 import { useSyncTaskEvent } from "@/lib/queries/useGcal";
+import { useMembers } from "@/lib/queries/useMembers";
 import { useProjects } from "@/lib/queries/useProjects";
 import { useSectors } from "@/lib/queries/useSectors";
 import { useTaskDetail, useUpdateTask } from "@/lib/queries/useTasks";
@@ -66,7 +67,11 @@ export function TaskDetailPanel({ taskId }: { taskId: string }) {
   const [projectId, setProjectId] = useState<string | null>(
     task?.project_id ?? null
   );
+  const [assigneeId, setAssigneeId] = useState<string | null>(
+    task?.assignee_id ?? null
+  );
   const { data: projects = [] } = useProjects(workspace.id, sectorId);
+  const { data: members = [] } = useMembers(workspace.id);
 
   if (!task) {
     return <p className="text-fg-secondary">Carregando…</p>;
@@ -264,6 +269,25 @@ export function TaskDetailPanel({ taskId }: { taskId: string }) {
       </Field>
 
       <TaskSyncToggle taskId={taskId} />
+
+      <Field label="Responsável">
+        <Select
+          options={[
+            { value: "__none__", label: "Ninguém" },
+            ...members.map((m) => ({
+              value: m.user_id,
+              label: m.display_name ?? m.email,
+            })),
+          ]}
+          value={assigneeId ?? "__none__"}
+          onValueChange={(v) => {
+            const aid = v === "__none__" ? null : v;
+            setAssigneeId(aid);
+            scheduleSave({ assignee_id: aid });
+          }}
+          aria-label="Responsável"
+        />
+      </Field>
 
       <Field label="Tags">
         <TagSelector taskId={taskId} />

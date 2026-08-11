@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { Providers } from "@/components/providers";
 import { AppShell } from "@/components/shell/AppShell";
 import { ShellProvider } from "@/components/shell/shell-context";
+import { CreateWorkspace } from "@/components/workspace/CreateWorkspace";
 import { WorkspaceProvider } from "@/lib/queries/useWorkspace";
 import { createClient } from "@/lib/supabase/server";
 
@@ -27,11 +28,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   const workspace = workspaces?.[0];
 
   if (!workspace) {
-    return (
-      <div className="p-8 text-fg">
-        Nenhum workspace encontrado para esta conta.
-      </div>
-    );
+    return <CreateWorkspace />;
   }
 
   const { data: sectors } = await supabase

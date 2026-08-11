@@ -463,6 +463,42 @@ export type Database = {
         };
         Relationships: [];
       };
+      workspace_invite: {
+        Row: {
+          id: string;
+          workspace_id: string;
+          email: string | null;
+          role: Exclude<MemberRole, "owner">;
+          token: string;
+          invited_by: string | null;
+          status: "pending" | "accepted" | "revoked";
+          expires_at: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          workspace_id: string;
+          email?: string | null;
+          role?: Exclude<MemberRole, "owner">;
+          token?: string;
+          invited_by?: string | null;
+          status?: "pending" | "accepted" | "revoked";
+          expires_at?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          workspace_id?: string;
+          email?: string | null;
+          role?: Exclude<MemberRole, "owner">;
+          token?: string;
+          invited_by?: string | null;
+          status?: "pending" | "accepted" | "revoked";
+          expires_at?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<never, never>;
     Functions: {
@@ -481,6 +517,18 @@ export type Database = {
           p_due_to?: string | null;
         };
         Returns: Database["public"]["Tables"]["task"]["Row"][];
+      };
+      has_role: {
+        Args: { ws: string; roles: string[] };
+        Returns: boolean;
+      };
+      create_workspace: {
+        Args: { p_name: string };
+        Returns: string;
+      };
+      accept_invite: {
+        Args: { p_token: string };
+        Returns: string;
       };
     };
     Enums: Record<never, never>;
@@ -510,3 +558,4 @@ export type Attachment = Tables<"attachment">;
 export type Tag = Tables<"tag">;
 export type TaskTag = Tables<"task_tag">;
 export type GoogleConnection = Tables<"google_connection">;
+export type WorkspaceInvite = Tables<"workspace_invite">;

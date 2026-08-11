@@ -4,6 +4,7 @@ import { DropdownMenu } from "radix-ui";
 import { Checkbox } from "@/components/ui/Checkbox";
 import type { Sector, Task } from "@/types/database";
 
+import { AssigneeAvatar } from "./AssigneeAvatar";
 import { DueChip } from "./DueChip";
 import { SectorDot } from "./SectorDot";
 
@@ -56,6 +57,7 @@ export function TaskRow({
         {task.due_date ? (
           <DueChip date={task.due_date} time={task.due_time} />
         ) : null}
+        <AssigneeAvatar assigneeId={task.assignee_id} />
         <DropdownMenu.Root>
           <DropdownMenu.Trigger asChild>
             <button

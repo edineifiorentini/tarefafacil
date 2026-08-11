@@ -1,4 +1,5 @@
 import { GcalConnectCard } from "@/components/gcal/GcalConnectCard";
+import { WorkspaceSettings } from "@/components/workspace/WorkspaceSettings";
 
 const GCAL_MESSAGES: Record<string, string> = {
   ok: "Google Agenda conectado",
@@ -40,6 +41,8 @@ export default async function ConfigPage({
         </h2>
         <GcalConnectCard />
       </section>
+
+      <WorkspaceSettings />
     </div>
   );
 }

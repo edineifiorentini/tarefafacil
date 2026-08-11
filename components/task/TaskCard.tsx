@@ -1,12 +1,16 @@
 import { Badge } from "@/components/ui/Badge";
 import type { Task } from "@/types/database";
 
+import { AssigneeAvatar } from "./AssigneeAvatar";
 import { DueChip } from "./DueChip";
 
 // Card de tarefa dentro do Board. Borda de 1px, sem sombra (card em fluxo).
 export function TaskCard({ task, onOpen }: { task: Task; onOpen: () => void }) {
   const done = task.completed_at !== null;
-  const hasMeta = task.due_date !== null || task.priority === "alta";
+  const hasMeta =
+    task.due_date !== null ||
+    task.priority === "alta" ||
+    task.assignee_id !== null;
 
   return (
     <button
@@ -29,6 +33,9 @@ export function TaskCard({ task, onOpen }: { task: Task; onOpen: () => void }) {
           {task.priority === "alta" ? (
             <Badge variant="overdue">Alta</Badge>
           ) : null}
+          <span className="ml-auto">
+            <AssigneeAvatar assigneeId={task.assignee_id} />
+          </span>
         </div>
       ) : null}
     </button>
