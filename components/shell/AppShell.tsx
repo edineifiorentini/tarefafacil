@@ -8,6 +8,8 @@ import { Dialog } from "radix-ui";
 
 import { GcalReconnectBanner } from "@/components/gcal/GcalReconnectBanner";
 import { QuickAdd } from "@/components/task/QuickAdd";
+import { useGcalPoller } from "@/lib/queries/useGcal";
+import { useWorkspace } from "@/lib/queries/useWorkspace";
 import type { Sector } from "@/types/database";
 
 import { DetailPanel } from "./DetailPanel";
@@ -23,7 +25,11 @@ export function AppShell({
   children: ReactNode;
 }) {
   const router = useRouter();
+  const workspace = useWorkspace();
   const { openPanel, mobileNavOpen, setMobileNavOpen } = useShell();
+
+  // Sincronização de entrada do Google por polling (design 9.5, E16).
+  useGcalPoller(workspace.id);
 
   // Atalhos globais (design 11.2). Ignora quando o foco está em campo de texto.
   useEffect(() => {

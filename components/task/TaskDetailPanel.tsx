@@ -14,6 +14,8 @@ import { useTaskDetail, useUpdateTask } from "@/lib/queries/useTasks";
 import { useWorkspace } from "@/lib/queries/useWorkspace";
 import type { TablesUpdate } from "@/types/database";
 
+import { GcalEditedBadge } from "@/components/gcal/GcalEditedBadge";
+
 import { AttachmentList } from "./AttachmentList";
 import { InsightLog } from "./InsightLog";
 import { SubtaskList } from "./SubtaskList";
@@ -112,6 +114,8 @@ export function TaskDetailPanel({ taskId }: { taskId: string }) {
           ) : null}
         </div>
       </div>
+
+      <GcalEditedBadge task={task} />
 
       <div className="grid grid-cols-2 gap-3">
         <Field label="Setor">

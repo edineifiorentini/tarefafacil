@@ -215,6 +215,8 @@ export type Database = {
           gcal_event_id: string | null;
           gcal_etag: string | null;
           gcal_synced_at: string | null;
+          gcal_external_edit_at: string | null;
+          gcal_undo: Json | null;
           recurrence_rule: string | null;
           recurrence_parent_id: string | null;
           created_at: string;
@@ -238,6 +240,8 @@ export type Database = {
           gcal_event_id?: string | null;
           gcal_etag?: string | null;
           gcal_synced_at?: string | null;
+          gcal_external_edit_at?: string | null;
+          gcal_undo?: Json | null;
           recurrence_rule?: string | null;
           recurrence_parent_id?: string | null;
           created_at?: string;
@@ -261,6 +265,8 @@ export type Database = {
           gcal_event_id?: string | null;
           gcal_etag?: string | null;
           gcal_synced_at?: string | null;
+          gcal_external_edit_at?: string | null;
+          gcal_undo?: Json | null;
           recurrence_rule?: string | null;
           recurrence_parent_id?: string | null;
           created_at?: string;
@@ -413,6 +419,10 @@ export type Database = {
           token_expiry: string | null;
           scope: string | null;
           status: GcalStatus;
+          sync_token: string | null;
+          channel_id: string | null;
+          channel_resource_id: string | null;
+          channel_expiration: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -425,6 +435,10 @@ export type Database = {
           token_expiry?: string | null;
           scope?: string | null;
           status?: GcalStatus;
+          sync_token?: string | null;
+          channel_id?: string | null;
+          channel_resource_id?: string | null;
+          channel_expiration?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -437,6 +451,10 @@ export type Database = {
           token_expiry?: string | null;
           scope?: string | null;
           status?: GcalStatus;
+          sync_token?: string | null;
+          channel_id?: string | null;
+          channel_resource_id?: string | null;
+          channel_expiration?: string | null;
           created_at?: string;
           updated_at?: string;
         };

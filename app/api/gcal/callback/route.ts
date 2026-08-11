@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { requireUserAndWorkspace } from "@/lib/gcal/context";
 import { exchangeCode } from "@/lib/gcal/oauth";
 import { saveConnection } from "@/lib/gcal/tokens";
+import { startWatch } from "@/lib/gcal/watch";
 
 // A agenda "primary" tem como id o e-mail da conta — usamos para rotular.
 async function fetchPrimaryEmail(accessToken: string): Promise<string | null> {
@@ -60,6 +61,8 @@ export async function GET(request: Request) {
       expiresInSec: tokens.expires_in,
       scope: tokens.scope ?? null,
     });
+    // Cria o canal push se houver URL pública (senão, polling cobre). Best-effort.
+    await startWatch(workspaceId);
     return fail("ok"); // reutiliza o redirect com ?gcal=ok
   } catch {
     return fail("erro");

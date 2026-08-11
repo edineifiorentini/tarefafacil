@@ -1,4 +1,4 @@
-import { IconDotsVertical, IconTrash } from "@tabler/icons-react";
+import { IconCalendarUp, IconDotsVertical, IconTrash } from "@tabler/icons-react";
 import { DropdownMenu } from "radix-ui";
 
 import { Checkbox } from "@/components/ui/Checkbox";
@@ -44,6 +44,14 @@ export function TaskRow({
         </span>
       </button>
       <div className="flex shrink-0 items-center gap-2">
+        {task.gcal_external_edit_at ? (
+          <IconCalendarUp
+            size={14}
+            stroke={1.5}
+            className="text-fg-muted"
+            aria-label="Editado no Google Agenda"
+          />
+        ) : null}
         {sector ? <SectorDot color={sector.color} name={sector.name} /> : null}
         {task.due_date ? <DueChip date={task.due_date} /> : null}
         <DropdownMenu.Root>

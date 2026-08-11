@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 
 import { useToast } from "@/components/ui/Toast";
 import type { GcalStatusResponse } from "@/lib/gcal/types";
@@ -9,6 +9,7 @@ import { createClient } from "@/lib/supabase/client";
 import type { Task } from "@/types/database";
 
 const GCAL_STATUS_KEY = ["gcal-status"] as const;
+const POLL_INTERVAL_MS = 60_000;
 
 export function useGcalStatus() {
   return useQuery<GcalStatusResponse>({
@@ -92,6 +93,99 @@ export function useToggleTaskSync(workspaceId: string) {
     },
     onSettled: (_d, _e, { id }) => {
       void qc.invalidateQueries({ queryKey: ["task", workspaceId, id] });
+    },
+  });
+}
+
+// Polling de entrada (Google → app): a cada 60s enquanto conectado e com a aba
+// visível, puxa o delta e invalida as tarefas mudadas. Sem setState em effect.
+export function useGcalPoller(workspaceId: string) {
+  const qc = useQueryClient();
+  const { data: status } = useGcalStatus();
+  const connected = status?.connected ?? false;
+
+  useEffect(() => {
+    if (!connected) return;
+
+    async function tick() {
+      if (document.visibilityState !== "visible") return;
+      try {
+        const res = await fetch("/api/gcal/pull", { method: "POST" });
+        if (!res.ok) return;
+        const data = (await res.json()) as {
+          changed?: number;
+          error?: string;
+        };
+        if (data.error === "reauth") {
+          void qc.invalidateQueries({ queryKey: GCAL_STATUS_KEY });
+        } else if (data.changed && data.changed > 0) {
+          void qc.invalidateQueries({ queryKey: ["tasks", workspaceId] });
+          void qc.invalidateQueries({ queryKey: ["task", workspaceId] });
+        }
+      } catch {
+        // silencioso: tenta de novo no próximo ciclo
+      }
+    }
+
+    const id = window.setInterval(tick, POLL_INTERVAL_MS);
+    void tick(); // pull imediato ao conectar/montar
+    const onVisible = () => {
+      if (document.visibilityState === "visible") void tick();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      window.clearInterval(id);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [connected, workspaceId, qc]);
+}
+
+// Desfaz a edição/remoção vinda do Google (até 24h).
+export function useUndoExternalEdit(workspaceId: string) {
+  const qc = useQueryClient();
+  const toast = useToast();
+
+  return useMutation({
+    mutationFn: async (taskId: string) => {
+      const res = await fetch("/api/gcal/undo", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ taskId }),
+      });
+      if (res.status === 410) throw new Error("expired");
+      if (!res.ok) throw new Error("undo_failed");
+    },
+    onSuccess: (_d, taskId) => {
+      void qc.invalidateQueries({ queryKey: ["tasks", workspaceId] });
+      void qc.invalidateQueries({ queryKey: ["task", workspaceId, taskId] });
+    },
+    onError: (e) => {
+      toast.show({
+        message:
+          e instanceof Error && e.message === "expired"
+            ? "O prazo para desfazer (24h) expirou"
+            : "Não foi possível desfazer",
+      });
+    },
+  });
+}
+
+// Dispensa o marcador de edição externa (sem desfazer a mudança).
+export function useDismissExternalEdit(workspaceId: string) {
+  const supabase = createClient();
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (taskId: string) => {
+      const { error } = await supabase
+        .from("task")
+        .update({ gcal_external_edit_at: null, gcal_undo: null })
+        .eq("id", taskId);
+      if (error) throw error;
+    },
+    onSuccess: (_d, taskId) => {
+      void qc.invalidateQueries({ queryKey: ["tasks", workspaceId] });
+      void qc.invalidateQueries({ queryKey: ["task", workspaceId, taskId] });
     },
   });
 }
