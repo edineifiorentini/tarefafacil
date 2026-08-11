@@ -63,6 +63,24 @@ export function useTasks(workspaceId: string, sectorId?: string) {
   });
 }
 
+// Tarefas de um projeto (página do projeto). Chave prefixada por [TASKS, ws],
+// então as mutações otimistas (toggle/delete/move) também a atualizam.
+export function useProjectTasks(workspaceId: string, projectId: string) {
+  const supabase = createClient();
+  return useQuery({
+    queryKey: [TASKS, workspaceId, "project", projectId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("task")
+        .select("*")
+        .eq("project_id", projectId)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
+}
+
 export function useCreateTask(workspaceId: string) {
   const supabase = createClient();
   const qc = useQueryClient();

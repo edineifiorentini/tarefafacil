@@ -1,3 +1,4 @@
+import { SectorProjects } from "@/components/project/SectorProjects";
 import { KanbanBoard } from "@/components/task/KanbanBoard";
 import { QuickAdd } from "@/components/task/QuickAdd";
 import { createClient } from "@/lib/supabase/server";
@@ -20,6 +21,7 @@ export default async function SectorPage({
       <h2 className="text-[length:var(--text-h2-size)] font-medium text-fg">
         {sector?.name ?? "Setor"}
       </h2>
+      <SectorProjects sectorId={id} />
       <div className="max-w-[var(--max-width-read)]">
         <QuickAdd defaultSectorId={id} />
       </div>

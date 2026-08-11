@@ -7,6 +7,7 @@ import type { ReactNode } from "react";
 import { Select } from "@/components/ui/Select";
 import { TextInput } from "@/components/ui/TextInput";
 import { Textarea } from "@/components/ui/Textarea";
+import { useProjects } from "@/lib/queries/useProjects";
 import { useSectors } from "@/lib/queries/useSectors";
 import { useTaskDetail, useUpdateTask } from "@/lib/queries/useTasks";
 import { useWorkspace } from "@/lib/queries/useWorkspace";
@@ -50,6 +51,10 @@ export function TaskDetailPanel({ taskId }: { taskId: string }) {
   const [sectorId, setSectorId] = useState(task?.sector_id ?? "");
   const [dueDate, setDueDate] = useState(task?.due_date ?? "");
   const [priority, setPriority] = useState<string>(task?.priority ?? "media");
+  const [projectId, setProjectId] = useState<string | null>(
+    task?.project_id ?? null
+  );
+  const { data: projects = [] } = useProjects(workspace.id, sectorId);
 
   if (!task) {
     return <p className="text-fg-secondary">Carregando…</p>;
@@ -124,6 +129,22 @@ export function TaskDetailPanel({ taskId }: { taskId: string }) {
           />
         </Field>
       </div>
+
+      <Field label="Projeto">
+        <Select
+          options={[
+            { value: "__none__", label: "Nenhum" },
+            ...projects.map((p) => ({ value: p.id, label: p.name })),
+          ]}
+          value={projectId ?? "__none__"}
+          onValueChange={(v) => {
+            const pid = v === "__none__" ? null : v;
+            setProjectId(pid);
+            scheduleSave({ project_id: pid });
+          }}
+          aria-label="Projeto"
+        />
+      </Field>
 
       <Field label="Prazo">
         <div className="w-44">
