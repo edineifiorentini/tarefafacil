@@ -55,7 +55,7 @@ export function Select({
         <RxSelect.Content
           position="popper"
           sideOffset={4}
-          className="z-50 min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-md border border-line bg-card shadow-[var(--shadow-panel)]"
+          className="z-50 min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-md border border-line bg-card shadow-[var(--shadow-panel)] data-[state=closed]:[animation:tf-pop-out_var(--dur-fast)_ease-in] data-[state=open]:[animation:tf-pop-in_var(--dur-fast)_var(--ease-out)]"
         >
           <RxSelect.Viewport className="p-1">
             {options.map((option) => (

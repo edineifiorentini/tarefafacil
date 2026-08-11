@@ -23,10 +23,10 @@ export function DetailPanel() {
       }}
     >
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-40 bg-black/40 data-[state=open]:[animation:tf-fade-in_var(--dur-base)_var(--ease-out)] xl:bg-transparent" />
+        <Dialog.Overlay className="fixed inset-0 z-40 bg-black/40 data-[state=closed]:[animation:tf-fade-out_var(--dur-fast)_ease-in] data-[state=open]:[animation:tf-fade-in_var(--dur-base)_var(--ease-out)] xl:bg-transparent" />
         <Dialog.Content
           aria-describedby={undefined}
-          className="fixed inset-y-0 right-0 z-50 flex w-full max-w-[400px] flex-col border-l border-line bg-card shadow-[var(--shadow-panel)] outline-none data-[state=open]:[animation:tf-slide-in-right_var(--dur-slow)_var(--ease-out)]"
+          className="fixed inset-y-0 right-0 z-50 flex w-full max-w-[400px] flex-col border-l border-line bg-card shadow-[var(--shadow-panel)] outline-none data-[state=closed]:[animation:tf-slide-out-right_var(--dur-base)_ease-in] data-[state=open]:[animation:tf-slide-in-right_var(--dur-slow)_var(--ease-out)]"
         >
           <div className="flex items-center justify-between border-b border-line p-[var(--space-panel-pad)]">
             <Dialog.Title className="text-[length:var(--text-h3-size)] font-medium text-fg">

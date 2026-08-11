@@ -39,7 +39,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       {toast ? (
         <div
           role="status"
-          className="fixed bottom-4 left-1/2 z-[100] flex -translate-x-1/2 items-center gap-4 rounded-md border border-line bg-card px-4 py-3 shadow-[var(--shadow-panel)]"
+          className="fixed bottom-4 left-1/2 z-[100] flex -translate-x-1/2 items-center gap-4 rounded-md border border-line bg-card px-4 py-3 shadow-[var(--shadow-panel)] [animation:tf-toast-in_var(--dur-base)_var(--ease-out)]"
         >
           <span className="text-[length:var(--text-small-size)] text-fg">
             {toast.message}

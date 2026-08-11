@@ -28,7 +28,7 @@ export function Checkbox({ variant = "default", className, ...props }: CheckboxP
         <IconCheck
           size={14}
           stroke={2.5}
-          className="hidden group-data-[state=checked]:block"
+          className="hidden group-data-[state=checked]:block group-data-[state=checked]:[animation:tf-check-pop_var(--dur-fast)_var(--ease-out)]"
         />
         <IconMinus
           size={14}

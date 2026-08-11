@@ -98,7 +98,7 @@ function SortableCard({
               <DropdownMenu.Content
                 align="end"
                 sideOffset={4}
-                className="z-50 min-w-44 overflow-hidden rounded-md border border-line bg-card p-1 shadow-[var(--shadow-panel)]"
+                className="z-50 min-w-44 overflow-hidden rounded-md border border-line bg-card p-1 shadow-[var(--shadow-panel)] data-[state=closed]:[animation:tf-pop-out_var(--dur-fast)_ease-in] data-[state=open]:[animation:tf-pop-in_var(--dur-fast)_var(--ease-out)]"
               >
                 <DropdownMenu.Label className="px-2 py-1 text-[length:var(--text-caption-size)] text-fg-muted">
                   Mover para

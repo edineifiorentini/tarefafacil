@@ -72,10 +72,10 @@ export function AppShell({
       {/* Sidebar — mobile (sheet à esquerda com overlay) */}
       <Dialog.Root open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
         <Dialog.Portal>
-          <Dialog.Overlay className="fixed inset-0 z-40 bg-black/40 data-[state=open]:[animation:tf-fade-in_var(--dur-base)_var(--ease-out)] lg:hidden" />
+          <Dialog.Overlay className="fixed inset-0 z-40 bg-black/40 data-[state=closed]:[animation:tf-fade-out_var(--dur-fast)_ease-in] data-[state=open]:[animation:tf-fade-in_var(--dur-base)_var(--ease-out)] lg:hidden" />
           <Dialog.Content
             aria-describedby={undefined}
-            className="fixed inset-y-0 left-0 z-50 w-[240px] border-r border-line bg-card outline-none data-[state=open]:[animation:tf-slide-in-left_var(--dur-slow)_var(--ease-out)] lg:hidden"
+            className="fixed inset-y-0 left-0 z-50 w-[240px] border-r border-line bg-card outline-none data-[state=closed]:[animation:tf-slide-out-left_var(--dur-base)_ease-in] data-[state=open]:[animation:tf-slide-in-left_var(--dur-slow)_var(--ease-out)] lg:hidden"
           >
             <Dialog.Title className="sr-only">Navegação</Dialog.Title>
             <Sidebar sectors={sectors} />
