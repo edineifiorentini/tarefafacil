@@ -1,11 +1,13 @@
 "use client";
 
+import { IconSparkles } from "@tabler/icons-react";
 import { differenceInCalendarDays, parseISO } from "date-fns";
 import { useState } from "react";
 import type { ReactNode } from "react";
 
 import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { useShell } from "@/components/shell/shell-context";
 import { useDatedSubtasks, useToggleDatedSubtask } from "@/lib/queries/useHoje";
 import { useSectors } from "@/lib/queries/useSectors";
@@ -176,26 +178,21 @@ export function HojeView() {
 
   if (total === 0) {
     return (
-      <div className="mx-auto max-w-[var(--max-width-read)] px-6 py-12">
-        <div className="rounded-md border border-line bg-card p-8 text-center">
-          <p className="text-[length:var(--text-h3-size)] font-medium text-fg">
-            Seu dia está livre
-          </p>
-          <p className="mt-1 text-fg-secondary">
-            Nada com prazo para agora. Registre a próxima tarefa.
-          </p>
-          <div className="mt-4 flex justify-center">
-            <Button
-              variant="primary"
-              onClick={() =>
-                openPanel({ title: "Nova tarefa", node: <QuickAdd /> })
-              }
-            >
-              Nova tarefa
-            </Button>
-          </div>
-        </div>
-      </div>
+      <EmptyState
+        icon={IconSparkles}
+        title="Seu dia está livre"
+        description="Nada com prazo para agora. Registre a próxima tarefa."
+        action={
+          <Button
+            variant="primary"
+            onClick={() =>
+              openPanel({ title: "Nova tarefa", node: <QuickAdd /> })
+            }
+          >
+            Nova tarefa
+          </Button>
+        }
+      />
     );
   }
 

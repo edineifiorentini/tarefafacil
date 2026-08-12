@@ -1,5 +1,8 @@
 "use client";
 
+import { IconSearch, IconSearchOff } from "@tabler/icons-react";
+
+import { EmptyState } from "@/components/ui/EmptyState";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { TaskRows } from "@/components/task/TaskRows";
 import { useSearch } from "@/lib/queries/useSearch";
@@ -43,9 +46,11 @@ export function SearchView() {
       </div>
 
       {!hasAny ? (
-        <p className="py-12 text-center text-fg-secondary">
-          Busque por título, descrição ou insight — ou combine os filtros acima
-        </p>
+        <EmptyState
+          icon={IconSearch}
+          title="Encontre qualquer tarefa"
+          description="Busque por título, descrição ou insight — ou combine os filtros acima"
+        />
       ) : isPending || (isFetching && !results) ? (
         <div className="flex flex-col gap-2">
           <Skeleton variant="block" className="h-12" />
@@ -63,9 +68,11 @@ export function SearchView() {
           <TaskRows
             tasks={results ?? []}
             empty={
-              <p className="py-12 text-center text-fg-secondary">
-                Nada encontrado. Ajuste a busca ou os filtros
-              </p>
+              <EmptyState
+                icon={IconSearchOff}
+                title="Nada encontrado"
+                description="Ajuste a busca ou os filtros"
+              />
             }
           />
         </div>
