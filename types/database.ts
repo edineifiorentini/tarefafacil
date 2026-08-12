@@ -221,6 +221,8 @@ export type Database = {
           gcal_synced_at: string | null;
           gcal_external_edit_at: string | null;
           gcal_undo: Json | null;
+          gcal_add_meet: boolean;
+          gcal_meet_url: string | null;
           recurrence_rule: string | null;
           recurrence_parent_id: string | null;
           created_at: string;
@@ -247,6 +249,8 @@ export type Database = {
           gcal_synced_at?: string | null;
           gcal_external_edit_at?: string | null;
           gcal_undo?: Json | null;
+          gcal_add_meet?: boolean;
+          gcal_meet_url?: string | null;
           recurrence_rule?: string | null;
           recurrence_parent_id?: string | null;
           created_at?: string;
@@ -273,6 +277,8 @@ export type Database = {
           gcal_synced_at?: string | null;
           gcal_external_edit_at?: string | null;
           gcal_undo?: Json | null;
+          gcal_add_meet?: boolean;
+          gcal_meet_url?: string | null;
           recurrence_rule?: string | null;
           recurrence_parent_id?: string | null;
           created_at?: string;

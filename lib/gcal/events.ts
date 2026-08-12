@@ -17,6 +17,12 @@ type GcalEventBody = {
   extendedProperties: { private: Record<string, string> };
   start: { date?: string; dateTime?: string; timeZone?: string };
   end: { date?: string; dateTime?: string; timeZone?: string };
+  conferenceData?: {
+    createRequest: {
+      requestId: string;
+      conferenceSolutionKey: { type: string };
+    };
+  };
 };
 
 function addDays(isoDate: string, days: number): string {
@@ -35,7 +41,7 @@ function addMinutesToLocal(dateTime: string, minutes: number): string {
 export function taskToEvent(
   task: Task,
   sector: Pick<Sector, "id" | "color">,
-  opts: { appUrl: string; timeZone: string }
+  opts: { appUrl: string; timeZone: string; createMeet?: boolean }
 ): GcalEventBody {
   if (!task.due_date) {
     throw new Error("Tarefa sem prazo não vira evento");
@@ -47,11 +53,22 @@ export function taskToEvent(
     .join("\n\n");
 
   const colorId = nearestColorId(sector.color) ?? undefined;
-  const base = {
+  const base: Omit<GcalEventBody, "start" | "end"> = {
     summary: task.title,
     description,
     colorId,
     extendedProperties: { private: { [TASK_ID_PROP]: task.id } },
+    // Pede um Google Meet só na criação (patches seguintes mantêm o existente).
+    ...(opts.createMeet
+      ? {
+          conferenceData: {
+            createRequest: {
+              requestId: crypto.randomUUID(),
+              conferenceSolutionKey: { type: "hangoutsMeet" },
+            },
+          },
+        }
+      : {}),
   };
 
   if (!task.due_time) {
@@ -97,19 +114,43 @@ async function callGcal(
   return res;
 }
 
-export type InsertResult = { eventId: string; etag: string };
+export type InsertResult = {
+  eventId: string;
+  etag: string;
+  meetUrl: string | null;
+};
+
+type GcalEventResponse = {
+  id: string;
+  etag: string;
+  hangoutLink?: string;
+  conferenceData?: {
+    entryPoints?: { entryPointType?: string; uri?: string }[];
+  };
+};
+
+function meetUrlOf(json: GcalEventResponse): string | null {
+  if (json.hangoutLink) return json.hangoutLink;
+  const video = json.conferenceData?.entryPoints?.find(
+    (e) => e.entryPointType === "video"
+  );
+  return video?.uri ?? null;
+}
+
+// conferenceDataVersion=1 é obrigatório para criar/ler o Meet.
+const CONF = "?conferenceDataVersion=1";
 
 export async function insertEvent(
   accessToken: string,
   body: GcalEventBody
 ): Promise<InsertResult> {
-  const res = await callGcal(accessToken, "", {
+  const res = await callGcal(accessToken, CONF, {
     method: "POST",
     body: JSON.stringify(body),
   });
   if (!res.ok) throw new Error(`events.insert falhou (${res.status})`);
-  const json = (await res.json()) as { id: string; etag: string };
-  return { eventId: json.id, etag: json.etag };
+  const json = (await res.json()) as GcalEventResponse;
+  return { eventId: json.id, etag: json.etag, meetUrl: meetUrlOf(json) };
 }
 
 export async function patchEvent(
@@ -118,17 +159,21 @@ export async function patchEvent(
   body: GcalEventBody,
   etag: string | null
 ): Promise<InsertResult> {
-  const res = await callGcal(accessToken, `/${encodeURIComponent(eventId)}`, {
-    method: "PATCH",
-    // Detecção otimista de conflito (design 9.4). If-Match com o etag guardado.
-    headers: etag ? { "if-match": etag } : {},
-    body: JSON.stringify(body),
-  });
+  const res = await callGcal(
+    accessToken,
+    `/${encodeURIComponent(eventId)}${CONF}`,
+    {
+      method: "PATCH",
+      // Detecção otimista de conflito (design 9.4). If-Match com o etag guardado.
+      headers: etag ? { "if-match": etag } : {},
+      body: JSON.stringify(body),
+    }
+  );
   // 404 = evento sumiu no Google; 412 = etag divergente (editado lá).
   if (res.status === 404) return insertEvent(accessToken, body);
   if (!res.ok) throw new Error(`events.patch falhou (${res.status})`);
-  const json = (await res.json()) as { id: string; etag: string };
-  return { eventId: json.id, etag: json.etag };
+  const json = (await res.json()) as GcalEventResponse;
+  return { eventId: json.id, etag: json.etag, meetUrl: meetUrlOf(json) };
 }
 
 export async function deleteEvent(

@@ -97,6 +97,43 @@ export function useToggleTaskSync(workspaceId: string) {
   });
 }
 
+// Liga/desliga o Google Meet de uma tarefa. Ligar implica sincronizar
+// (o Meet vive no evento da agenda), então também garante gcal_sync.
+export function useToggleTaskMeet(workspaceId: string) {
+  const supabase = createClient();
+  const qc = useQueryClient();
+  const syncEvent = useSyncTaskEvent();
+
+  return useMutation({
+    mutationFn: async ({ id, on }: { id: string; on: boolean }) => {
+      const patch = on
+        ? { gcal_add_meet: true, gcal_sync: true }
+        : { gcal_add_meet: false };
+      const { error } = await supabase.from("task").update(patch).eq("id", id);
+      if (error) throw error;
+    },
+    onMutate: async ({ id, on }) => {
+      await qc.cancelQueries({ queryKey: ["task", workspaceId, id] });
+      const prev = qc.getQueryData<Task>(["task", workspaceId, id]);
+      qc.setQueryData<Task>(["task", workspaceId, id], (t) =>
+        t
+          ? { ...t, gcal_add_meet: on, gcal_sync: on ? true : t.gcal_sync }
+          : t
+      );
+      return { prev };
+    },
+    onError: (_e, { id }, ctx) => {
+      if (ctx?.prev) qc.setQueryData(["task", workspaceId, id], ctx.prev);
+    },
+    onSuccess: (_data, { id }) => {
+      void syncEvent(id);
+    },
+    onSettled: (_d, _e, { id }) => {
+      void qc.invalidateQueries({ queryKey: ["task", workspaceId, id] });
+    },
+  });
+}
+
 // Polling de entrada (Google → app): a cada 60s enquanto conectado e com a aba
 // visível, puxa o delta e invalida as tarefas mudadas. Sem setState em effect.
 export function useGcalPoller(workspaceId: string) {

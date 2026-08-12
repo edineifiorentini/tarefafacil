@@ -56,6 +56,8 @@ function optimisticTask(input: {
     gcal_synced_at: null,
     gcal_external_edit_at: null,
     gcal_undo: null,
+    gcal_add_meet: false,
+    gcal_meet_url: null,
     recurrence_rule: null,
     recurrence_parent_id: null,
     created_at: now,

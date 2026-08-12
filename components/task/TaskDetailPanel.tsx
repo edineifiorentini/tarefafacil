@@ -21,6 +21,7 @@ import { AttachmentList } from "./AttachmentList";
 import { InsightLog } from "./InsightLog";
 import { SubtaskList } from "./SubtaskList";
 import { TagSelector } from "./TagSelector";
+import { TaskMeetToggle } from "./TaskMeetToggle";
 import { TaskSyncToggle } from "./TaskSyncToggle";
 
 const PRIORITIES = [
@@ -266,6 +267,7 @@ export function TaskDetailPanel({ taskId }: { taskId: string }) {
             </>
           ) : null}
         </div>
+        <TaskMeetToggle taskId={taskId} />
       </Field>
 
       <TaskSyncToggle taskId={taskId} />

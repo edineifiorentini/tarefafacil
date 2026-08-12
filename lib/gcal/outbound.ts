@@ -62,7 +62,9 @@ export async function reconcileOutbound(params: {
     const accessToken = await getFreshAccessToken(workspaceId);
 
     if (shouldExist && sector) {
-      const body = taskToEvent(task, sector, { appUrl, timeZone });
+      // Só pede o Meet na criação; se já existe link, mantém.
+      const createMeet = task.gcal_add_meet && !task.gcal_meet_url;
+      const body = taskToEvent(task, sector, { appUrl, timeZone, createMeet });
       const result = task.gcal_event_id
         ? await patchEvent(accessToken, task.gcal_event_id, body, task.gcal_etag)
         : await insertEvent(accessToken, body);
@@ -73,6 +75,7 @@ export async function reconcileOutbound(params: {
           gcal_event_id: result.eventId,
           gcal_etag: result.etag,
           gcal_synced_at: new Date().toISOString(),
+          ...(result.meetUrl ? { gcal_meet_url: result.meetUrl } : {}),
         })
         .eq("id", task.id);
 
@@ -86,6 +89,7 @@ export async function reconcileOutbound(params: {
         .update({
           gcal_event_id: null,
           gcal_etag: null,
+          gcal_meet_url: null,
           gcal_synced_at: new Date().toISOString(),
         })
         .eq("id", task.id);
