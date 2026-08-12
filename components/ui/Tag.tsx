@@ -19,8 +19,8 @@ export function Tag({ children, color = "neutral", onRemove }: TagProps) {
   const colored = color !== "neutral";
   const style = colored
     ? {
-        background: `var(--sector-${color}-fill)`,
-        color: `var(--sector-${color}-text)`,
+        background: `var(--tag-${color})`,
+        color: `var(--tag-fg)`,
       }
     : undefined;
 
