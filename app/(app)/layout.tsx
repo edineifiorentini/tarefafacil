@@ -6,6 +6,7 @@ import { isPlatformAdmin } from "@/lib/admin/admin";
 import { Providers } from "@/components/providers";
 import { AppShell } from "@/components/shell/AppShell";
 import { ShellProvider } from "@/components/shell/shell-context";
+import { AccessExpired } from "@/components/workspace/AccessExpired";
 import { CreateWorkspace } from "@/components/workspace/CreateWorkspace";
 import { WorkspaceProvider } from "@/lib/queries/useWorkspace";
 import { createClient } from "@/lib/supabase/server";
@@ -36,6 +37,19 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   const workspace =
     workspaces.find((w) => w.id === activeId) ?? workspaces[0];
 
+  // Venda por período: bloqueia o workspace vencido (o admin da plataforma
+  // nunca é bloqueado, para conseguir renovar).
+  const admin = isPlatformAdmin(user.email);
+  // Server Component: Date.now() roda no servidor a cada request (ok aqui).
+  // eslint-disable-next-line react-hooks/purity
+  const now = Date.now();
+  const expired =
+    !!workspace.access_expires_at &&
+    new Date(workspace.access_expires_at).getTime() < now;
+  if (expired && !admin) {
+    return <AccessExpired workspaceName={workspace.name} />;
+  }
+
   const { data: sectors } = await supabase
     .from("sector")
     .select("*")
@@ -50,7 +64,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
           <AppShell
             sectors={sectors ?? []}
             workspaces={workspaces}
-            isAdmin={isPlatformAdmin(user.email)}
+            isAdmin={admin}
           >
             {children}
           </AppShell>

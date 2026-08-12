@@ -17,7 +17,9 @@ export async function GET() {
     await Promise.all([
       db
         .from("workspace")
-        .select("id, name, plan, seat_limit, owner_user_id, created_at")
+        .select(
+          "id, name, plan, seat_limit, access_expires_at, owner_user_id, created_at"
+        )
         .order("created_at", { ascending: true }),
       db.from("workspace_member").select("workspace_id"),
       db.from("app_user").select("id, email"),
@@ -34,6 +36,10 @@ export async function GET() {
     name: w.name,
     plan: w.plan,
     seat_limit: w.seat_limit,
+    access_expires_at: w.access_expires_at,
+    expired:
+      !!w.access_expires_at &&
+      new Date(w.access_expires_at).getTime() < Date.now(),
     member_count: countByWs.get(w.id) ?? 0,
     owner_email: w.owner_user_id
       ? (emailById.get(w.owner_user_id) ?? null)
@@ -51,7 +57,12 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 
-  let body: { workspaceId?: string; seat_limit?: number; plan?: Plan };
+  let body: {
+    workspaceId?: string;
+    seat_limit?: number;
+    plan?: Plan;
+    access_expires_at?: string | null;
+  };
   try {
     body = (await request.json()) as typeof body;
   } catch {
@@ -61,11 +72,18 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "missing_workspace" }, { status: 400 });
   }
 
-  const patch: { seat_limit?: number; plan?: Plan } = {};
+  const patch: {
+    seat_limit?: number;
+    plan?: Plan;
+    access_expires_at?: string | null;
+  } = {};
   if (typeof body.seat_limit === "number") {
     patch.seat_limit = Math.max(1, Math.floor(body.seat_limit));
   }
   if (body.plan) patch.plan = body.plan;
+  if ("access_expires_at" in body) {
+    patch.access_expires_at = body.access_expires_at ?? null;
+  }
 
   const db = createAdminClient();
   const { error } = await db

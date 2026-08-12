@@ -32,6 +32,7 @@ export type Database = {
           owner_user_id: string | null;
           plan: Plan;
           seat_limit: number;
+          access_expires_at: string | null;
           created_at: string;
         };
         Insert: {
@@ -40,6 +41,7 @@ export type Database = {
           owner_user_id?: string | null;
           plan?: Plan;
           seat_limit?: number;
+          access_expires_at?: string | null;
           created_at?: string;
         };
         Update: {
@@ -48,6 +50,7 @@ export type Database = {
           owner_user_id?: string | null;
           plan?: Plan;
           seat_limit?: number;
+          access_expires_at?: string | null;
           created_at?: string;
         };
         Relationships: [];
