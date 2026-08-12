@@ -200,3 +200,35 @@ export function useArchiveSector(workspaceId: string) {
     onSettled: () => qc.invalidateQueries({ queryKey: key }),
   });
 }
+
+// Exclui o setor de vez (cascade: apaga tarefas e projetos dele). Irreversível.
+export function useDeleteSector(workspaceId: string) {
+  const supabase = createClient();
+  const qc = useQueryClient();
+  const key = sectorsKey(workspaceId);
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("sector").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onMutate: async (id) => {
+      await qc.cancelQueries({ queryKey: key });
+      const previous = qc.getQueryData<Sector[]>(key) ?? [];
+      qc.setQueryData<Sector[]>(
+        key,
+        previous.filter((s) => s.id !== id)
+      );
+      return { previous };
+    },
+    onError: (_error, _id, ctx) => {
+      if (ctx) qc.setQueryData(key, ctx.previous);
+    },
+    onSettled: () => {
+      void qc.invalidateQueries({ queryKey: key });
+      void qc.invalidateQueries({ queryKey: ["tasks", workspaceId] });
+      void qc.invalidateQueries({ queryKey: ["projects", workspaceId] });
+      void qc.invalidateQueries({ queryKey: ["boardColumns", workspaceId] });
+    },
+  });
+}

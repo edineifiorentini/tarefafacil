@@ -19,6 +19,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import {
   IconArchive,
+  IconTrash,
   IconDotsVertical,
   IconGripVertical,
   IconPencil,
@@ -34,6 +35,7 @@ import { useWorkspace } from "@/lib/queries/useWorkspace";
 import type { Sector } from "@/types/database";
 
 import { ArchiveSectorDialog } from "./ArchiveSectorDialog";
+import { DeleteSectorDialog } from "./DeleteSectorDialog";
 import { SectorForm } from "./SectorForm";
 
 const reveal =
@@ -44,12 +46,14 @@ function SectorItem({
   active,
   onEdit,
   onArchive,
+  onDelete,
   guardClick,
 }: {
   sector: Sector;
   active: boolean;
   onEdit: () => void;
   onArchive: () => void;
+  onDelete: () => void;
   guardClick: () => boolean;
 }) {
   const { setMobileNavOpen } = useShell();
@@ -136,6 +140,13 @@ function SectorItem({
               <IconArchive size={16} stroke={1.5} />
               Arquivar
             </DropdownMenu.Item>
+            <DropdownMenu.Item
+              onSelect={onDelete}
+              className="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] text-overdue outline-none data-[highlighted]:bg-sunken"
+            >
+              <IconTrash size={16} stroke={1.5} />
+              Excluir
+            </DropdownMenu.Item>
           </DropdownMenu.Content>
         </DropdownMenu.Portal>
       </DropdownMenu.Root>
@@ -220,6 +231,14 @@ export function SectorNav({ sectors }: { sectors: Sector[] }) {
                       sectors={sectors}
                       onDone={closePanel}
                     />
+                  ),
+                })
+              }
+              onDelete={() =>
+                openPanel({
+                  title: "Excluir setor",
+                  node: (
+                    <DeleteSectorDialog sector={sector} onDone={closePanel} />
                   ),
                 })
               }
