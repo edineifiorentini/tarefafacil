@@ -53,6 +53,8 @@ export function WorkspaceSettings() {
 
   const myRole = members.find((m) => m.user_id === myId)?.role;
   const canManage = myRole === "owner" || myRole === "admin";
+  const seatLimit = workspace.seat_limit;
+  const seatsFull = members.length >= seatLimit;
 
   async function saveName() {
     const trimmed = name.trim();
@@ -107,7 +109,10 @@ export function WorkspaceSettings() {
 
       <div className="flex flex-col gap-2">
         <h2 className="text-[length:var(--text-small-size)] font-medium text-fg-secondary">
-          Membros
+          Membros{" "}
+          <span className="tnum text-fg-muted">
+            ({members.length}/{seatLimit})
+          </span>
         </h2>
         <ul className="flex flex-col gap-1">
           {members.map((m) => {
@@ -185,11 +190,19 @@ export function WorkspaceSettings() {
               variant="primary"
               size="sm"
               isLoading={createInvite.isPending}
+              disabled={seatsFull}
               onClick={generateInvite}
             >
               Gerar link de convite
             </Button>
           </div>
+
+          {seatsFull ? (
+            <p className="text-[length:var(--text-caption-size)] text-fg-muted">
+              Equipe cheia ({seatLimit} assentos). Remova um membro ou aumente o
+              plano para convidar mais.
+            </p>
+          ) : null}
 
           {invites.length > 0 ? (
             <ul className="flex flex-col gap-1">

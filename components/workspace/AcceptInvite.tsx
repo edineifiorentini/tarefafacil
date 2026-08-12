@@ -9,8 +9,21 @@ import { acceptInvite } from "@/lib/queries/useInvites";
 
 export function AcceptInvite({ token }: { token: string }) {
   const router = useRouter();
-  const accept = useMutation({ mutationFn: () => acceptInvite(token) });
+  const accept = useMutation({
+    mutationFn: () => acceptInvite(token),
+    // Ao aceitar, deixa o convidado já dentro do workspace convidante.
+    onSuccess: async (workspaceId) => {
+      await fetch("/api/workspace/select", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ workspaceId }),
+      }).catch(() => undefined);
+    },
+  });
   const fired = useRef(false);
+
+  const full =
+    accept.error instanceof Error && accept.error.message.includes("cheia");
 
   useEffect(() => {
     if (fired.current) return;
@@ -40,11 +53,12 @@ export function AcceptInvite({ token }: { token: string }) {
       ) : (
         <>
           <h1 className="text-[length:var(--text-h2-size)] font-semibold text-fg">
-            Convite inválido
+            {full ? "Equipe cheia" : "Convite inválido"}
           </h1>
           <p className="text-fg-secondary">
-            O link pode ter expirado ou já ter sido usado. Peça um novo a quem
-            convidou.
+            {full
+              ? "Esta equipe atingiu o limite de membros. Peça a quem convidou para liberar um assento."
+              : "O link pode ter expirado ou já ter sido usado. Peça um novo a quem convidou."}
           </p>
           <Button variant="secondary" onClick={() => router.push("/hoje")}>
             Voltar
