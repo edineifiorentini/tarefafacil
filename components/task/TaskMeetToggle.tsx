@@ -1,8 +1,9 @@
 "use client";
 
-import { IconVideo } from "@tabler/icons-react";
+import { IconCopy, IconVideo } from "@tabler/icons-react";
 
 import { Checkbox } from "@/components/ui/Checkbox";
+import { useToast } from "@/components/ui/Toast";
 import { useGcalStatus, useToggleTaskMeet } from "@/lib/queries/useGcal";
 import { useTaskDetail } from "@/lib/queries/useTasks";
 import { useWorkspace } from "@/lib/queries/useWorkspace";
@@ -11,6 +12,7 @@ import { useWorkspace } from "@/lib/queries/useWorkspace";
 // conexão ativa e uma data (o Meet vive no evento da agenda).
 export function TaskMeetToggle({ taskId }: { taskId: string }) {
   const workspace = useWorkspace();
+  const toast = useToast();
   const { data: task } = useTaskDetail(workspace.id, taskId);
   const { data: status } = useGcalStatus();
   const toggle = useToggleTaskMeet(workspace.id);
@@ -32,15 +34,29 @@ export function TaskMeetToggle({ taskId }: { taskId: string }) {
       </label>
 
       {task?.gcal_meet_url ? (
-        <a
-          href={task.gcal_meet_url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex w-fit items-center gap-1 text-[length:var(--text-caption-size)] text-fg-link"
-        >
-          <IconVideo size={14} stroke={1.5} />
-          Entrar no Meet
-        </a>
+        <div className="flex items-center gap-3">
+          <a
+            href={task.gcal_meet_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-[length:var(--text-caption-size)] text-fg-link"
+          >
+            <IconVideo size={14} stroke={1.5} />
+            Entrar no Meet
+          </a>
+          <button
+            type="button"
+            onClick={() =>
+              void navigator.clipboard
+                .writeText(task.gcal_meet_url as string)
+                .then(() => toast.show({ message: "Link do Meet copiado" }))
+            }
+            className="inline-flex items-center gap-1 text-[length:var(--text-caption-size)] text-fg-secondary hover:text-fg"
+          >
+            <IconCopy size={14} stroke={1.5} />
+            Copiar link
+          </button>
+        </div>
       ) : !connected ? (
         <span className="text-[length:var(--text-caption-size)] text-fg-muted">
           Conecte o Google Agenda para criar reuniões
