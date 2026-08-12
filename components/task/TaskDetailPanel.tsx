@@ -1,9 +1,18 @@
 "use client";
 
-import { IconCheck, IconClock, IconLoader2, IconPlus, IconX } from "@tabler/icons-react";
+import {
+  IconCheck,
+  IconClock,
+  IconLoader2,
+  IconPlus,
+  IconTrash,
+  IconX,
+} from "@tabler/icons-react";
 import { useRef, useState } from "react";
 import type { ReactNode } from "react";
 
+import { useShell } from "@/components/shell/shell-context";
+import { Button } from "@/components/ui/Button";
 import { Select } from "@/components/ui/Select";
 import { TextInput } from "@/components/ui/TextInput";
 import { Textarea } from "@/components/ui/Textarea";
@@ -11,7 +20,11 @@ import { useSyncTaskEvent } from "@/lib/queries/useGcal";
 import { useMembers } from "@/lib/queries/useMembers";
 import { useProjects } from "@/lib/queries/useProjects";
 import { useSectors } from "@/lib/queries/useSectors";
-import { useTaskDetail, useUpdateTask } from "@/lib/queries/useTasks";
+import {
+  useDeleteTask,
+  useTaskDetail,
+  useUpdateTask,
+} from "@/lib/queries/useTasks";
 import { useWorkspace } from "@/lib/queries/useWorkspace";
 import type { TablesUpdate } from "@/types/database";
 
@@ -48,7 +61,9 @@ export function TaskDetailPanel({ taskId }: { taskId: string }) {
   const { data: task } = useTaskDetail(workspace.id, taskId);
   const { data: sectors = [] } = useSectors(workspace.id);
   const update = useUpdateTask(workspace.id);
+  const deleteTask = useDeleteTask(workspace.id);
   const syncEvent = useSyncTaskEvent();
+  const { closePanel } = useShell();
 
   const [status, setStatus] = useState<SaveStatus>("idle");
   const pending = useRef<TablesUpdate<"task">>({});
@@ -319,6 +334,20 @@ export function TaskDetailPanel({ taskId }: { taskId: string }) {
       <Field label="Insights">
         <InsightLog taskId={taskId} />
       </Field>
+
+      <div className="mt-2 border-t border-line pt-4">
+        <Button
+          variant="danger"
+          size="sm"
+          leadingIcon={IconTrash}
+          onClick={() => {
+            deleteTask(task);
+            closePanel();
+          }}
+        >
+          Excluir tarefa
+        </Button>
+      </div>
     </div>
   );
 }
