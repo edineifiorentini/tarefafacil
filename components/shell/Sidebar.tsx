@@ -13,6 +13,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { LogoutButton } from "@/components/auth/LogoutButton";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { SectorForm } from "@/components/sector/SectorForm";
 import { SectorNav } from "@/components/sector/SectorNav";
 import { useSectors } from "@/lib/queries/useSectors";
@@ -133,7 +134,10 @@ export function Sidebar({
           <IconSettings size={20} stroke={1.5} />
           Configurações
         </Link>
-        <LogoutButton />
+        <div className="flex items-center gap-2">
+          <LogoutButton />
+          <ThemeToggle />
+        </div>
       </div>
     </div>
   );

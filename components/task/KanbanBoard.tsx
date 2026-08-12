@@ -3,6 +3,10 @@
 import { Board } from "@/components/board/Board";
 import { useShell } from "@/components/shell/shell-context";
 import {
+  useSubtaskProgress,
+  useTaskTagsBulk,
+} from "@/lib/queries/useCardMeta";
+import {
   useBoardColumns,
   useCreateColumn,
   useDeleteColumn,
@@ -20,6 +24,9 @@ export function KanbanBoard({ sectorId }: { sectorId: string }) {
   const workspace = useWorkspace();
   const { data: columns = [] } = useBoardColumns(workspace.id, sectorId);
   const { data: tasks = [] } = useTasks(workspace.id, sectorId);
+  const taskIds = tasks.map((t) => t.id);
+  const { data: progressByTask } = useSubtaskProgress(workspace.id, taskIds);
+  const { data: tagsByTask } = useTaskTagsBulk(workspace.id, taskIds);
   const move = useMoveTask(workspace.id);
   const createColumn = useCreateColumn(workspace.id, sectorId);
   const renameColumn = useRenameColumn(workspace.id, sectorId);
@@ -55,6 +62,8 @@ export function KanbanBoard({ sectorId }: { sectorId: string }) {
       renderCard={(t) => (
         <TaskCard
           task={t}
+          tags={tagsByTask?.get(t.id)}
+          progress={progressByTask?.get(t.id)}
           onOpen={() =>
             openPanel({
               title: "Tarefa",
