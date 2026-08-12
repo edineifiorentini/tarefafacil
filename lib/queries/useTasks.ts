@@ -279,8 +279,9 @@ export function useDeleteTask(workspaceId: string) {
         if (undone) return;
         void (async () => {
           // Remove o evento no Google antes de apagar a linha (o servidor
-          // precisa da tarefa para achar o evento).
-          if (task.gcal_sync && task.gcal_event_id) {
+          // precisa da tarefa para achar o evento). Basta existir um evento
+          // vinculado — mesmo que o sync esteja desligado.
+          if (task.gcal_event_id) {
             await syncEvent(task.id, { remove: true });
           }
           await supabase.from("task").delete().eq("id", task.id);
