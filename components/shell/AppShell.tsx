@@ -20,10 +20,12 @@ import { useShell } from "./shell-context";
 export function AppShell({
   sectors,
   workspaces,
+  isAdmin,
   children,
 }: {
   sectors: Sector[];
   workspaces: Workspace[];
+  isAdmin: boolean;
   children: ReactNode;
 }) {
   const router = useRouter();
@@ -75,7 +77,7 @@ export function AppShell({
     <div className="flex h-dvh">
       {/* Sidebar — desktop (>=1024px) */}
       <aside className="hidden w-[240px] shrink-0 border-r border-line bg-card lg:block">
-        <Sidebar sectors={sectors} workspaces={workspaces} />
+        <Sidebar sectors={sectors} workspaces={workspaces} isAdmin={isAdmin} />
       </aside>
 
       {/* Sidebar — mobile (sheet à esquerda com overlay) */}
@@ -87,7 +89,7 @@ export function AppShell({
             className="fixed inset-y-0 left-0 z-50 w-[240px] border-r border-line bg-card outline-none data-[state=closed]:[animation:tf-slide-out-left_var(--dur-base)_ease-in] data-[state=open]:[animation:tf-slide-in-left_var(--dur-slow)_var(--ease-out)] lg:hidden"
           >
             <Dialog.Title className="sr-only">Navegação</Dialog.Title>
-            <Sidebar sectors={sectors} workspaces={workspaces} />
+            <Sidebar sectors={sectors} workspaces={workspaces} isAdmin={isAdmin} />
           </Dialog.Content>
         </Dialog.Portal>
       </Dialog.Root>

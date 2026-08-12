@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 
+import { isPlatformAdmin } from "@/lib/admin/admin";
 import { Providers } from "@/components/providers";
 import { AppShell } from "@/components/shell/AppShell";
 import { ShellProvider } from "@/components/shell/shell-context";
@@ -46,7 +47,11 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
     <Providers>
       <WorkspaceProvider workspace={workspace}>
         <ShellProvider>
-          <AppShell sectors={sectors ?? []} workspaces={workspaces}>
+          <AppShell
+            sectors={sectors ?? []}
+            workspaces={workspaces}
+            isAdmin={isPlatformAdmin(user.email)}
+          >
             {children}
           </AppShell>
         </ShellProvider>

@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  IconBuildingStore,
   IconCalendarMonth,
   IconLayoutKanban,
   IconPlus,
@@ -31,9 +32,11 @@ const destinations = [
 export function Sidebar({
   sectors: initialSectors,
   workspaces,
+  isAdmin,
 }: {
   sectors: Sector[];
   workspaces: Workspace[];
+  isAdmin: boolean;
 }) {
   const pathname = usePathname();
   const workspace = useWorkspace();
@@ -102,6 +105,21 @@ export function Sidebar({
       </div>
 
       <div className="mt-auto space-y-1 border-t border-line p-2">
+        {isAdmin ? (
+          <Link
+            href="/admin"
+            aria-current={isActive("/admin") ? "page" : undefined}
+            onClick={() => setMobileNavOpen(false)}
+            className={`flex items-center gap-3 rounded-sm px-3 py-2 transition-colors [transition-duration:var(--dur-fast)] ${
+              isActive("/admin")
+                ? "bg-selected text-fg"
+                : "text-fg-secondary hover:bg-sunken hover:text-fg"
+            }`}
+          >
+            <IconBuildingStore size={20} stroke={1.5} />
+            Clientes
+          </Link>
+        ) : null}
         <Link
           href="/config"
           aria-current={isActive("/config") ? "page" : undefined}
