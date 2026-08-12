@@ -18,6 +18,7 @@ import {
   IconArrowRight,
   IconDotsVertical,
   IconGripVertical,
+  IconPlus,
 } from "@tabler/icons-react";
 import { DropdownMenu } from "radix-ui";
 import { useState } from "react";
@@ -42,6 +43,8 @@ export interface BoardProps<T> {
   onMove: (itemId: string, toColumnId: string, toPosition: number) => void;
   onColumnCreate?: (name: string) => void;
   onColumnRename?: (id: string, name: string) => void;
+  onColumnDelete?: (id: string) => void;
+  onColumnReorder?: (id: string, dir: "left" | "right") => void;
   emptyColumnSlot?: (column: BoardColumnData) => ReactNode;
   isLoading?: boolean;
 }
@@ -152,6 +155,66 @@ function SortableCard({
   );
 }
 
+function AddColumn({ onCreate }: { onCreate: (name: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState("");
+
+  if (!open) {
+    return (
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="flex h-10 w-72 shrink-0 items-center gap-2 rounded-md border border-dashed border-line px-3 text-[length:var(--text-small-size)] text-fg-secondary transition-colors [transition-duration:var(--dur-fast)] hover:bg-sunken hover:text-fg"
+      >
+        <IconPlus size={16} stroke={1.5} />
+        Adicionar coluna
+      </button>
+    );
+  }
+
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        const trimmed = name.trim();
+        if (trimmed) {
+          onCreate(trimmed);
+          setName("");
+          setOpen(false);
+        }
+      }}
+      className="flex w-72 shrink-0 flex-col gap-2 rounded-md bg-sunken p-2"
+    >
+      <input
+        autoFocus
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        placeholder="Nome da coluna"
+        aria-label="Nome da nova coluna"
+        className="h-8 rounded-sm border border-line bg-card px-2 text-[length:var(--text-small-size)] text-fg placeholder:text-fg-muted"
+      />
+      <div className="flex gap-2">
+        <button
+          type="submit"
+          className="h-8 rounded-sm bg-[var(--button-primary-bg)] px-3 text-[length:var(--text-small-size)] text-[var(--button-primary-fg)] hover:bg-[var(--button-primary-bg-hover)]"
+        >
+          Adicionar
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setOpen(false);
+            setName("");
+          }}
+          className="h-8 rounded-sm px-3 text-[length:var(--text-small-size)] text-fg-secondary hover:bg-card hover:text-fg"
+        >
+          Cancelar
+        </button>
+      </div>
+    </form>
+  );
+}
+
 export function Board<T>({
   columns,
   items,
@@ -161,6 +224,10 @@ export function Board<T>({
   getItemLabel,
   renderCard,
   onMove,
+  onColumnCreate,
+  onColumnRename,
+  onColumnDelete,
+  onColumnReorder,
   emptyColumnSlot,
 }: BoardProps<T>) {
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -269,7 +336,7 @@ export function Board<T>({
       onDragCancel={() => setActiveId(null)}
     >
       <div className="flex h-full gap-3 overflow-x-auto pb-2">
-        {columns.map((col) => {
+        {columns.map((col, colIndex) => {
           const colItems = grouped.get(col.id) ?? [];
           return (
             <BoardColumn
@@ -279,6 +346,24 @@ export function Board<T>({
               count={colItems.length}
               itemIds={colItems.map(getItemId)}
               footer={emptyColumnSlot?.(col)}
+              onRename={
+                onColumnRename ? (name) => onColumnRename(col.id, name) : undefined
+              }
+              onDelete={
+                onColumnDelete && columns.length > 1
+                  ? () => onColumnDelete(col.id)
+                  : undefined
+              }
+              onMoveLeft={
+                onColumnReorder && colIndex > 0
+                  ? () => onColumnReorder(col.id, "left")
+                  : undefined
+              }
+              onMoveRight={
+                onColumnReorder && colIndex < columns.length - 1
+                  ? () => onColumnReorder(col.id, "right")
+                  : undefined
+              }
             >
               {colItems.map((item) => {
                 const itemId = getItemId(item);
@@ -300,6 +385,8 @@ export function Board<T>({
             </BoardColumn>
           );
         })}
+
+        {onColumnCreate ? <AddColumn onCreate={onColumnCreate} /> : null}
       </div>
 
       <DragOverlay>
