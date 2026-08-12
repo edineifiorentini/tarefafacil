@@ -35,9 +35,18 @@ export function KanbanBoard({ sectorId }: { sectorId: string }) {
     );
   }
 
+  // Tons das colunas (forma moderna). "Concluído" fica cinza (regra do design);
+  // as demais ciclam pela paleta.
+  const TONES = ["violet", "blue", "amber", "rose", "cyan"];
+  let toneIndex = 0;
+
   return (
     <Board<Task>
-      columns={columns.map((c) => ({ id: c.id, name: c.name }))}
+      columns={columns.map((c) => ({
+        id: c.id,
+        name: c.name,
+        tone: c.is_done_column ? "neutral" : TONES[toneIndex++ % TONES.length],
+      }))}
       items={tasks}
       getItemId={(t) => t.id}
       getColumnId={(t) => t.column_id ?? firstColumnId}

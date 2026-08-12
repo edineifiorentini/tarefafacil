@@ -16,14 +16,13 @@ import { DropdownMenu } from "radix-ui";
 import { useState } from "react";
 import type { ReactNode } from "react";
 
-import { Badge } from "@/components/ui/Badge";
-
 // Casca genérica de coluna: cabeçalho, contador e área de soltura.
 // Não conhece o tipo dos itens. Gerenciamento (renomear/mover/excluir) só
 // aparece quando os callbacks são passados.
 export function BoardColumn({
   id,
   name,
+  tone,
   count,
   itemIds,
   children,
@@ -35,6 +34,7 @@ export function BoardColumn({
 }: {
   id: string;
   name: string;
+  tone?: string;
   count: number;
   itemIds: string[];
   children: ReactNode;
@@ -49,6 +49,8 @@ export function BoardColumn({
   const [draft, setDraft] = useState(name);
 
   const manageable = !!(onRename || onDelete || onMoveLeft || onMoveRight);
+  const dot = `var(--tone-${tone ?? "neutral"})`;
+  const pillBg = `color-mix(in srgb, ${dot} 14%, var(--surface-card))`;
 
   function commitRename() {
     const trimmed = draft.trim();
@@ -80,11 +82,22 @@ export function BoardColumn({
             className="h-6 min-w-0 flex-1 rounded-sm border border-line bg-card px-1 text-[length:var(--text-small-size)] font-medium text-fg"
           />
         ) : (
-          <span className="min-w-0 flex-1 truncate text-[length:var(--text-small-size)] font-medium text-fg">
-            {name}
+          <span
+            className="inline-flex min-w-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-[length:var(--text-small-size)] font-medium text-fg"
+            style={{ backgroundColor: pillBg }}
+          >
+            <span
+              aria-hidden
+              className="h-2 w-2 shrink-0 rounded-full"
+              style={{ backgroundColor: dot }}
+            />
+            <span className="truncate">{name}</span>
           </span>
         )}
-        <Badge variant="neutral">{count}</Badge>
+        <span className="tnum text-[length:var(--text-caption-size)] text-fg-muted">
+          {count}
+        </span>
+        <span className="flex-1" />
 
         {manageable && !editing ? (
           <DropdownMenu.Root>

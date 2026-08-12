@@ -16,10 +16,10 @@ export function TaskCard({ task, onOpen }: { task: Task; onOpen: () => void }) {
     <button
       type="button"
       onClick={onOpen}
-      className="w-full rounded-md border border-line bg-card p-3 text-left transition-colors [transition-duration:var(--dur-fast)] hover:border-line-strong"
+      className="w-full rounded-lg border border-line bg-card p-3.5 text-left transition-[border-color,box-shadow] [transition-duration:var(--dur-fast)] hover:border-line-strong hover:shadow-[var(--shadow-peek)]"
     >
       <p
-        className={`pr-6 text-[length:var(--text-small-size)] ${
+        className={`pr-6 font-medium text-[length:var(--text-small-size)] ${
           done ? "text-done line-through" : "text-fg"
         }`}
       >

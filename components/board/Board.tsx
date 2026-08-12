@@ -30,6 +30,7 @@ export interface BoardColumnData {
   id: string;
   name: string;
   position?: number;
+  tone?: string;
 }
 
 export interface BoardProps<T> {
@@ -343,6 +344,7 @@ export function Board<T>({
               key={col.id}
               id={col.id}
               name={col.name}
+              tone={col.tone}
               count={colItems.length}
               itemIds={colItems.map(getItemId)}
               footer={emptyColumnSlot?.(col)}

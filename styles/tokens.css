@@ -29,6 +29,16 @@
   --brand-800: #08512f;
   --brand-900: #063a22;
 
+  /* Tons de status/coluna do Kanban (forma moderna). Verde fica de fora:
+     não é status. O fundo pastel é calculado por color-mix sobre a superfície,
+     então adapta ao tema claro/escuro sozinho. */
+  --tone-violet: #8b5cf6;
+  --tone-blue: #3b82f6;
+  --tone-amber: #f59e0b;
+  --tone-rose: #ec4899;
+  --tone-cyan: #06b6d4;
+  --tone-neutral: #9a9a95; /* coluna "concluído" — cinza, nunca verde */
+
   /* Neutros crus (derivados de 7.4) */
   --neutral-0: #ffffff;
   --neutral-50: #fbfbfa;
