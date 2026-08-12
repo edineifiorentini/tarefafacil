@@ -47,8 +47,8 @@ type SaveStatus = "idle" | "saving" | "saved";
 
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className="flex flex-col gap-1">
-      <span className="text-[length:var(--text-small-size)] text-fg-secondary">
+    <div className="flex flex-col gap-1.5">
+      <span className="text-[length:var(--text-caption-size)] font-medium uppercase tracking-wide text-fg-muted">
         {label}
       </span>
       {children}
@@ -115,7 +115,7 @@ export function TaskDetailPanel({ taskId }: { taskId: string }) {
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-5">
       <div className="flex flex-col gap-1">
         <TextInput
           value={title}
@@ -125,7 +125,7 @@ export function TaskDetailPanel({ taskId }: { taskId: string }) {
           }}
           aria-label="Título da tarefa"
           placeholder="Título da tarefa"
-          className="text-[length:var(--text-h3-size)]"
+          className="border-transparent bg-transparent px-0 text-[length:var(--text-h2-size)] font-semibold hover:border-transparent"
         />
         <div className="flex h-4 items-center gap-1 text-[length:var(--text-caption-size)] text-fg-muted">
           {status === "saving" ? (
