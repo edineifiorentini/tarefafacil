@@ -47,7 +47,7 @@ export function TopBar() {
         <IconMenu2 size={20} stroke={1.5} />
       </button>
 
-      <h1 className="text-[length:var(--text-h2-size)] font-medium text-fg">
+      <h1 className="text-[length:var(--text-h2-size)] font-semibold text-fg">
         {titleFor(pathname)}
       </h1>
 
@@ -66,7 +66,7 @@ export function TopBar() {
             placeholder="Buscar…"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="w-56 rounded-sm border border-line bg-page py-2 pl-9 pr-3 text-[length:var(--text-small-size)] text-fg placeholder:text-fg-muted"
+            className="w-64 rounded-full border border-line bg-page py-2 pl-10 pr-4 text-[length:var(--text-small-size)] text-fg transition-colors [transition-duration:var(--dur-fast)] placeholder:text-fg-muted focus-visible:border-line-strong"
           />
         </form>
 

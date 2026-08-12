@@ -313,7 +313,7 @@ export function CalendarView() {
   return (
     <div className="flex h-full flex-col p-6">
       <div className="mb-4 flex flex-wrap items-center gap-3">
-        <h2 className="text-[length:var(--text-h2-size)] font-medium capitalize text-fg">
+        <h2 className="text-[length:var(--text-h1-size)] font-semibold capitalize leading-[var(--text-h1-line)] text-fg">
           {format(month, "MMMM 'de' yyyy", { locale: ptBR })}
         </h2>
 

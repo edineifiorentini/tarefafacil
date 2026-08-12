@@ -26,7 +26,7 @@ export function TaskRow({
   const done = task.completed_at !== null;
 
   return (
-    <div className="group flex h-12 items-center gap-3 rounded-sm px-2 hover:bg-sunken">
+    <div className="group flex h-14 items-center gap-3 rounded-md px-3 hover:bg-sunken">
       <Checkbox
         variant="round"
         checked={done}
