@@ -19,9 +19,9 @@ export function LogoutButton() {
     <button
       type="button"
       onClick={signOut}
-      className="inline-flex items-center gap-2 rounded-sm border border-line bg-card px-3 py-2 text-fg-secondary transition-colors [transition-duration:var(--dur-fast)] hover:text-fg"
+      className="inline-flex flex-1 items-center gap-3 rounded-md px-3 py-2 text-[length:var(--text-small-size)] text-fg-secondary transition-colors [transition-duration:var(--dur-fast)] hover:bg-sunken hover:text-fg"
     >
-      <IconLogout size={18} stroke={1.5} />
+      <IconLogout size={20} stroke={1.5} />
       Sair
     </button>
   );

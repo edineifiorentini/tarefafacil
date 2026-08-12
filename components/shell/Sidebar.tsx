@@ -30,6 +30,15 @@ const destinations = [
   { href: "/busca", label: "Buscar", icon: IconSearch, hint: "/" },
 ] as const;
 
+// Estilo compartilhado dos itens de navegação (consistência = mais clean).
+function navItemClass(active: boolean) {
+  return `group flex items-center gap-3 rounded-md px-3 py-2 text-[length:var(--text-small-size)] transition-colors [transition-duration:var(--dur-fast)] ${
+    active
+      ? "bg-selected font-medium text-fg"
+      : "text-fg-secondary hover:bg-sunken hover:text-fg"
+  }`;
+}
+
 export function Sidebar({
   sectors: initialSectors,
   workspaces,
@@ -55,18 +64,14 @@ export function Sidebar({
       </div>
 
       <nav aria-label="Navegação principal" className="px-2">
-        <ul className="space-y-1">
+        <ul className="space-y-0.5">
           {destinations.map(({ href, label, icon: Icon, hint }) => (
             <li key={href}>
               <Link
                 href={href}
                 aria-current={isActive(href) ? "page" : undefined}
                 onClick={() => setMobileNavOpen(false)}
-                className={`group flex items-center gap-3 rounded-sm px-3 py-2 transition-colors [transition-duration:var(--dur-fast)] ${
-                  isActive(href)
-                    ? "bg-selected text-fg"
-                    : "text-fg-secondary hover:bg-sunken hover:text-fg"
-                }`}
+                className={navItemClass(isActive(href))}
               >
                 <Icon size={20} stroke={1.5} />
                 <span className="flex-1">{label}</span>
@@ -105,17 +110,13 @@ export function Sidebar({
         <SectorNav sectors={sectors} />
       </div>
 
-      <div className="mt-auto space-y-1 border-t border-line p-2">
+      <div className="mt-auto space-y-0.5 border-t border-line p-2">
         {isAdmin ? (
           <Link
             href="/admin"
             aria-current={isActive("/admin") ? "page" : undefined}
             onClick={() => setMobileNavOpen(false)}
-            className={`flex items-center gap-3 rounded-sm px-3 py-2 transition-colors [transition-duration:var(--dur-fast)] ${
-              isActive("/admin")
-                ? "bg-selected text-fg"
-                : "text-fg-secondary hover:bg-sunken hover:text-fg"
-            }`}
+            className={navItemClass(isActive("/admin"))}
           >
             <IconBuildingStore size={20} stroke={1.5} />
             Clientes
@@ -125,16 +126,12 @@ export function Sidebar({
           href="/config"
           aria-current={isActive("/config") ? "page" : undefined}
           onClick={() => setMobileNavOpen(false)}
-          className={`flex items-center gap-3 rounded-sm px-3 py-2 transition-colors [transition-duration:var(--dur-fast)] ${
-            isActive("/config")
-              ? "bg-selected text-fg"
-              : "text-fg-secondary hover:bg-sunken hover:text-fg"
-          }`}
+          className={navItemClass(isActive("/config"))}
         >
           <IconSettings size={20} stroke={1.5} />
           Configurações
         </Link>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           <LogoutButton />
           <ThemeToggle />
         </div>

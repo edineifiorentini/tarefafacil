@@ -18,7 +18,7 @@ export function ThemeToggle() {
       onClick={toggle}
       aria-label={isDark ? "Ativar tema claro" : "Ativar tema escuro"}
       aria-pressed={isDark}
-      className="inline-flex h-10 w-10 items-center justify-center rounded-sm border border-line bg-card text-fg-secondary transition-colors [transition-duration:var(--dur-fast)] hover:text-fg"
+      className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-fg-secondary transition-colors [transition-duration:var(--dur-fast)] hover:bg-sunken hover:text-fg"
     >
       {isDark ? (
         <IconSun size={20} stroke={1.5} />
