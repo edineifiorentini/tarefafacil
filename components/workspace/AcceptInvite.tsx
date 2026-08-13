@@ -9,17 +9,8 @@ import { acceptInvite } from "@/lib/queries/useInvites";
 
 export function AcceptInvite({ token }: { token: string }) {
   const router = useRouter();
-  const accept = useMutation({
-    mutationFn: () => acceptInvite(token),
-    // Ao aceitar, deixa o convidado já dentro do workspace convidante.
-    onSuccess: async (workspaceId) => {
-      await fetch("/api/workspace/select", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ workspaceId }),
-      }).catch(() => undefined);
-    },
-  });
+  // A pessoa entra como PENDENTE; o dono precisa aprovar (anti-invasão).
+  const accept = useMutation({ mutationFn: () => acceptInvite(token) });
   const fired = useRef(false);
 
   const full =
@@ -40,11 +31,11 @@ export function AcceptInvite({ token }: { token: string }) {
       ) : accept.isSuccess ? (
         <>
           <h1 className="text-[length:var(--text-h2-size)] font-semibold text-fg">
-            Você entrou no workspace
+            Pedido enviado
           </h1>
           <p className="text-fg-secondary">
-            Seu acesso foi liberado. A troca entre workspaces chega numa próxima
-            fase.
+            O dono do workspace precisa aprovar sua entrada. Assim que aprovar,
+            o workspace aparece no seletor no topo da barra lateral.
           </p>
           <Button variant="primary" onClick={() => router.push("/hoje")}>
             Ir para Hoje

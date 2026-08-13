@@ -93,18 +93,21 @@ export type Database = {
           workspace_id: string;
           user_id: string;
           role: MemberRole;
+          status: "active" | "pending";
           created_at: string;
         };
         Insert: {
           workspace_id: string;
           user_id: string;
           role: MemberRole;
+          status?: "active" | "pending";
           created_at?: string;
         };
         Update: {
           workspace_id?: string;
           user_id?: string;
           role?: MemberRole;
+          status?: "active" | "pending";
           created_at?: string;
         };
         Relationships: [];

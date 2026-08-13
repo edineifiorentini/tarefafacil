@@ -1,6 +1,6 @@
 "use client";
 
-import { IconCopy, IconDownload, IconTrash } from "@tabler/icons-react";
+import { IconCheck, IconCopy, IconDownload, IconTrash, IconX } from "@tabler/icons-react";
 import { useState } from "react";
 
 import { Avatar } from "@/components/ui/Avatar";
@@ -11,6 +11,7 @@ import { TextInput } from "@/components/ui/TextInput";
 import { useToast } from "@/components/ui/Toast";
 import { createClient } from "@/lib/supabase/client";
 import {
+  useApproveMember,
   useCurrentUserId,
   useMembers,
   useRemoveMember,
@@ -45,16 +46,19 @@ export function WorkspaceSettings() {
   const { data: invites = [] } = useInvites(workspace.id);
   const updateRole = useUpdateMemberRole(workspace.id);
   const removeMember = useRemoveMember(workspace.id);
+  const approveMember = useApproveMember(workspace.id);
   const createInvite = useCreateInvite(workspace.id);
   const revokeInvite = useRevokeInvite(workspace.id);
 
   const [name, setName] = useState(workspace.name);
   const [inviteRole, setInviteRole] = useState<string>("member");
 
+  const active = members.filter((m) => m.status === "active");
+  const pending = members.filter((m) => m.status === "pending");
   const myRole = members.find((m) => m.user_id === myId)?.role;
   const canManage = myRole === "owner" || myRole === "admin";
   const seatLimit = workspace.seat_limit;
-  const seatsFull = members.length >= seatLimit;
+  const seatsFull = active.length >= seatLimit;
 
   async function saveName() {
     const trimmed = name.trim();
@@ -107,15 +111,63 @@ export function WorkspaceSettings() {
         </div>
       </div>
 
+      {canManage && pending.length > 0 ? (
+        <div className="flex flex-col gap-2">
+          <h2 className="text-[length:var(--text-small-size)] font-medium text-fg-secondary">
+            Solicitações pendentes
+          </h2>
+          <ul className="flex flex-col gap-1">
+            {pending.map((m) => (
+              <li
+                key={m.user_id}
+                className="flex items-center gap-3 rounded-md border border-line bg-card px-3 py-2"
+              >
+                <Avatar
+                  name={m.display_name ?? m.email}
+                  src={m.avatar_url ?? undefined}
+                  size="sm"
+                />
+                <div className="flex min-w-0 flex-col">
+                  <span className="truncate text-[length:var(--text-small-size)] text-fg">
+                    {m.display_name ?? m.email}
+                  </span>
+                  <span className="truncate text-[length:var(--text-caption-size)] text-fg-muted">
+                    {m.email} · quer entrar como {ROLE_LABELS[m.role]}
+                  </span>
+                </div>
+                <div className="ml-auto flex items-center gap-1">
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    leadingIcon={IconCheck}
+                    onClick={() => approveMember.mutate(m.user_id)}
+                  >
+                    Aprovar
+                  </Button>
+                  <button
+                    type="button"
+                    onClick={() => removeMember.mutate(m.user_id)}
+                    aria-label={`Recusar ${m.display_name ?? m.email}`}
+                    className="rounded-sm p-1 text-fg-muted hover:text-fg"
+                  >
+                    <IconX size={16} stroke={1.5} />
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
       <div className="flex flex-col gap-2">
         <h2 className="text-[length:var(--text-small-size)] font-medium text-fg-secondary">
           Membros{" "}
           <span className="tnum text-fg-muted">
-            ({members.length}/{seatLimit})
+            ({active.length}/{seatLimit})
           </span>
         </h2>
         <ul className="flex flex-col gap-1">
-          {members.map((m) => {
+          {active.map((m) => {
             const isSelf = m.user_id === myId;
             const isOwner = m.role === "owner";
             return (

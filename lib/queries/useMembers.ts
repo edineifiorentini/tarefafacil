@@ -8,6 +8,7 @@ import type { MemberRole } from "@/types/database";
 export type Member = {
   user_id: string;
   role: MemberRole;
+  status: "active" | "pending";
   display_name: string | null;
   avatar_url: string | null;
   email: string;
@@ -38,12 +39,13 @@ export function useMembers(workspaceId: string) {
     queryFn: async (): Promise<Member[]> => {
       const { data, error } = await supabase
         .from("workspace_member")
-        .select("user_id, role, app_user(display_name, avatar_url, email)")
+        .select("user_id, role, status, app_user(display_name, avatar_url, email)")
         .eq("workspace_id", workspaceId);
       if (error) throw error;
       type Row = {
         user_id: string;
         role: MemberRole;
+        status: "active" | "pending";
         app_user: {
           display_name: string | null;
           avatar_url: string | null;
@@ -53,6 +55,7 @@ export function useMembers(workspaceId: string) {
       return (data as unknown as Row[]).map((r) => ({
         user_id: r.user_id,
         role: r.role,
+        status: r.status,
         display_name: r.app_user?.display_name ?? null,
         avatar_url: r.app_user?.avatar_url ?? null,
         email: r.app_user?.email ?? "",
@@ -75,6 +78,24 @@ export function useUpdateMemberRole(workspaceId: string) {
       const { error } = await supabase
         .from("workspace_member")
         .update({ role })
+        .eq("workspace_id", workspaceId)
+        .eq("user_id", userId);
+      if (error) throw error;
+    },
+    onSettled: () =>
+      qc.invalidateQueries({ queryKey: membersKey(workspaceId) }),
+  });
+}
+
+// Aprova a entrada de um membro pendente (dono/admin).
+export function useApproveMember(workspaceId: string) {
+  const supabase = createClient();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (userId: string) => {
+      const { error } = await supabase
+        .from("workspace_member")
+        .update({ status: "active" })
         .eq("workspace_id", workspaceId)
         .eq("user_id", userId);
       if (error) throw error;
