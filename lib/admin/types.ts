@@ -7,6 +7,7 @@ export type ClientRow = {
   seat_limit: number;
   access_expires_at: string | null;
   expired: boolean;
+  suspended: boolean;
   member_count: number;
   owner_email: string | null;
   created_at: string;

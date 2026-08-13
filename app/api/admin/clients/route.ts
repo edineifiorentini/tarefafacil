@@ -18,7 +18,7 @@ export async function GET() {
       db
         .from("workspace")
         .select(
-          "id, name, plan, seat_limit, access_expires_at, owner_user_id, created_at"
+          "id, name, plan, seat_limit, access_expires_at, suspended, owner_user_id, created_at"
         )
         .order("created_at", { ascending: true }),
       db.from("workspace_member").select("workspace_id"),
@@ -40,6 +40,7 @@ export async function GET() {
     expired:
       !!w.access_expires_at &&
       new Date(w.access_expires_at).getTime() < Date.now(),
+    suspended: w.suspended,
     member_count: countByWs.get(w.id) ?? 0,
     owner_email: w.owner_user_id
       ? (emailById.get(w.owner_user_id) ?? null)
@@ -62,6 +63,7 @@ export async function PATCH(request: Request) {
     seat_limit?: number;
     plan?: Plan;
     access_expires_at?: string | null;
+    suspended?: boolean;
   };
   try {
     body = (await request.json()) as typeof body;
@@ -76,6 +78,7 @@ export async function PATCH(request: Request) {
     seat_limit?: number;
     plan?: Plan;
     access_expires_at?: string | null;
+    suspended?: boolean;
   } = {};
   if (typeof body.seat_limit === "number") {
     patch.seat_limit = Math.max(1, Math.floor(body.seat_limit));
@@ -84,6 +87,7 @@ export async function PATCH(request: Request) {
   if ("access_expires_at" in body) {
     patch.access_expires_at = body.access_expires_at ?? null;
   }
+  if (typeof body.suspended === "boolean") patch.suspended = body.suspended;
 
   const db = createAdminClient();
   const { error } = await db
@@ -92,6 +96,27 @@ export async function PATCH(request: Request) {
     .eq("id", body.workspaceId);
   if (error) {
     return NextResponse.json({ error: "update_failed" }, { status: 500 });
+  }
+  return NextResponse.json({ ok: true });
+}
+
+// Remove um cliente (workspace) e todos os dados dele (cascata). Irreversível.
+// Não apaga a conta de login do dono — só o workspace/tenant.
+export async function DELETE(request: Request) {
+  const admin = await requirePlatformAdmin();
+  if (!admin) {
+    return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  }
+
+  const id = new URL(request.url).searchParams.get("id");
+  if (!id) {
+    return NextResponse.json({ error: "missing_workspace" }, { status: 400 });
+  }
+
+  const db = createAdminClient();
+  const { error } = await db.from("workspace").delete().eq("id", id);
+  if (error) {
+    return NextResponse.json({ error: "delete_failed" }, { status: 500 });
   }
   return NextResponse.json({ ok: true });
 }

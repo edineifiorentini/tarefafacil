@@ -46,8 +46,13 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   const expired =
     !!workspace.access_expires_at &&
     new Date(workspace.access_expires_at).getTime() < now;
-  if (expired && !admin) {
-    return <AccessExpired workspaceName={workspace.name} />;
+  if (!admin && (workspace.suspended || expired)) {
+    return (
+      <AccessExpired
+        workspaceName={workspace.name}
+        reason={workspace.suspended ? "suspended" : "expired"}
+      />
+    );
   }
 
   const { data: sectors } = await supabase

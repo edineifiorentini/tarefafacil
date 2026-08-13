@@ -33,6 +33,7 @@ export type Database = {
           plan: Plan;
           seat_limit: number;
           access_expires_at: string | null;
+          suspended: boolean;
           created_at: string;
         };
         Insert: {
@@ -42,6 +43,7 @@ export type Database = {
           plan?: Plan;
           seat_limit?: number;
           access_expires_at?: string | null;
+          suspended?: boolean;
           created_at?: string;
         };
         Update: {
@@ -51,6 +53,7 @@ export type Database = {
           plan?: Plan;
           seat_limit?: number;
           access_expires_at?: string | null;
+          suspended?: boolean;
           created_at?: string;
         };
         Relationships: [];

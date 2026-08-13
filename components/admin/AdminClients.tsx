@@ -1,7 +1,8 @@
 "use client";
 
+import { IconDotsVertical } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { DropdownMenu } from "radix-ui";
+import { AlertDialog, DropdownMenu } from "radix-ui";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/Button";
@@ -19,53 +20,80 @@ const PLANS = [
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const PERIODS = [
-  { label: "Mensal (30 dias)", days: 30 },
-  { label: "Semestral (180 dias)", days: 180 },
-  { label: "Anual (365 dias)", days: 365 },
+  { label: "Renovar 30 dias", days: 30 },
+  { label: "Renovar 180 dias", days: 180 },
+  { label: "Renovar 365 dias", days: 365 },
 ] as const;
+
+const menuItem =
+  "cursor-pointer rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] text-fg outline-none data-[highlighted]:bg-sunken";
 
 function ClientRowItem({ client }: { client: ClientRow }) {
   const qc = useQueryClient();
   const toast = useToast();
   const [plan, setPlan] = useState<Plan>(client.plan);
   const [seats, setSeats] = useState(String(client.seat_limit));
+  const [confirmDelete, setConfirmDelete] = useState(false);
+
+  function invalidate() {
+    void qc.invalidateQueries({ queryKey: ["admin-clients"] });
+  }
+
+  async function patch(body: Record<string, unknown>) {
+    const res = await fetch("/api/admin/clients", {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ workspaceId: client.id, ...body }),
+    });
+    if (!res.ok) throw new Error("falha");
+  }
 
   const save = useMutation({
-    mutationFn: async () => {
-      const res = await fetch("/api/admin/clients", {
-        method: "PATCH",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          workspaceId: client.id,
-          plan,
-          seat_limit: Number(seats),
-        }),
-      });
-      if (!res.ok) throw new Error("falha");
-    },
+    mutationFn: () => patch({ plan, seat_limit: Number(seats) }),
     onSuccess: () => {
       toast.show({ message: "Cliente atualizado" });
-      void qc.invalidateQueries({ queryKey: ["admin-clients"] });
+      invalidate();
     },
     onError: () => toast.show({ message: "Não foi possível salvar" }),
   });
 
   const renew = useMutation({
-    mutationFn: async (days: number | null) => {
-      const access_expires_at =
-        days === null ? null : new Date(Date.now() + days * DAY_MS).toISOString();
-      const res = await fetch("/api/admin/clients", {
-        method: "PATCH",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ workspaceId: client.id, access_expires_at }),
+    mutationFn: (days: number | null) =>
+      patch({
+        access_expires_at:
+          days === null
+            ? null
+            : new Date(Date.now() + days * DAY_MS).toISOString(),
+        suspended: false,
+      }),
+    onSuccess: () => {
+      toast.show({ message: "Acesso atualizado" });
+      invalidate();
+    },
+    onError: () => toast.show({ message: "Não foi possível atualizar" }),
+  });
+
+  const setSuspended = useMutation({
+    mutationFn: (suspended: boolean) => patch({ suspended }),
+    onSuccess: (_d, suspended) => {
+      toast.show({ message: suspended ? "Cliente bloqueado" : "Cliente liberado" });
+      invalidate();
+    },
+    onError: () => toast.show({ message: "Não foi possível atualizar" }),
+  });
+
+  const remove = useMutation({
+    mutationFn: async () => {
+      const res = await fetch(`/api/admin/clients?id=${client.id}`, {
+        method: "DELETE",
       });
       if (!res.ok) throw new Error("falha");
     },
     onSuccess: () => {
-      toast.show({ message: "Acesso atualizado" });
-      void qc.invalidateQueries({ queryKey: ["admin-clients"] });
+      toast.show({ message: "Cliente removido" });
+      invalidate();
     },
-    onError: () => toast.show({ message: "Não foi possível atualizar" }),
+    onError: () => toast.show({ message: "Não foi possível remover" }),
   });
 
   const dirty = plan !== client.plan || Number(seats) !== client.seat_limit;
@@ -73,6 +101,15 @@ function ClientRowItem({ client }: { client: ClientRow }) {
   const accessDate = client.access_expires_at
     ? new Date(client.access_expires_at).toLocaleDateString("pt-BR")
     : null;
+
+  const accessLabel = client.suspended
+    ? "Suspenso"
+    : accessDate
+      ? client.expired
+        ? `Expirou ${accessDate}`
+        : `Até ${accessDate}`
+      : "Sem limite";
+  const accessBad = client.suspended || client.expired;
 
   return (
     <tr className="border-t border-line">
@@ -110,63 +147,120 @@ function ClientRowItem({ client }: { client: ClientRow }) {
         </div>
       </td>
       <td className="px-3 py-2">
-        <div className="flex items-center gap-2">
-          <span
-            className={`text-[length:var(--text-caption-size)] ${
-              client.expired ? "text-overdue" : "text-fg-secondary"
-            }`}
+        <span
+          className={`text-[length:var(--text-caption-size)] ${
+            accessBad ? "text-overdue" : "text-fg-secondary"
+          }`}
+        >
+          {accessLabel}
+        </span>
+      </td>
+      <td className="px-3 py-2">
+        <div className="flex items-center justify-end gap-2">
+          <Button
+            variant="secondary"
+            size="sm"
+            disabled={!dirty}
+            isLoading={save.isPending}
+            onClick={() => save.mutate()}
           >
-            {accessDate
-              ? client.expired
-                ? `Expirou ${accessDate}`
-                : `Até ${accessDate}`
-              : "Sem limite"}
-          </span>
+            Salvar
+          </Button>
+
           <DropdownMenu.Root>
             <DropdownMenu.Trigger asChild>
               <button
                 type="button"
-                className="rounded-sm border border-line px-2 py-1 text-[length:var(--text-caption-size)] text-fg-secondary hover:bg-sunken hover:text-fg"
+                aria-label={`Ações de ${client.name}`}
+                className="inline-flex h-8 w-8 items-center justify-center rounded-sm text-fg-muted hover:bg-sunken hover:text-fg data-[state=open]:bg-sunken"
               >
-                Renovar
+                <IconDotsVertical size={16} stroke={1.5} />
               </button>
             </DropdownMenu.Trigger>
             <DropdownMenu.Portal>
               <DropdownMenu.Content
                 align="end"
                 sideOffset={4}
-                className="z-50 min-w-44 overflow-hidden rounded-md border border-line bg-card p-1 shadow-[var(--shadow-panel)] data-[state=open]:[animation:tf-pop-in_var(--dur-fast)_var(--ease-out)]"
+                className="z-50 min-w-48 overflow-hidden rounded-md border border-line bg-card p-1 shadow-[var(--shadow-panel)] data-[state=open]:[animation:tf-pop-in_var(--dur-fast)_var(--ease-out)]"
               >
                 {PERIODS.map((p) => (
                   <DropdownMenu.Item
                     key={p.days}
                     onSelect={() => renew.mutate(p.days)}
-                    className="cursor-pointer rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] text-fg outline-none data-[highlighted]:bg-sunken"
+                    className={menuItem}
                   >
                     {p.label}
                   </DropdownMenu.Item>
                 ))}
                 <DropdownMenu.Item
                   onSelect={() => renew.mutate(null)}
-                  className="cursor-pointer rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] text-fg outline-none data-[highlighted]:bg-sunken"
+                  className={menuItem}
                 >
-                  Sem limite
+                  Acesso sem limite
+                </DropdownMenu.Item>
+                <DropdownMenu.Separator className="my-1 h-px bg-line" />
+                {client.suspended ? (
+                  <DropdownMenu.Item
+                    onSelect={() => setSuspended.mutate(false)}
+                    className={menuItem}
+                  >
+                    Desbloquear acesso
+                  </DropdownMenu.Item>
+                ) : (
+                  <DropdownMenu.Item
+                    onSelect={() => setSuspended.mutate(true)}
+                    className={menuItem}
+                  >
+                    Bloquear acesso
+                  </DropdownMenu.Item>
+                )}
+                <DropdownMenu.Separator className="my-1 h-px bg-line" />
+                <DropdownMenu.Item
+                  onSelect={(e) => {
+                    e.preventDefault();
+                    setConfirmDelete(true);
+                  }}
+                  className="cursor-pointer rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] text-overdue outline-none data-[highlighted]:bg-sunken"
+                >
+                  Remover cliente
                 </DropdownMenu.Item>
               </DropdownMenu.Content>
             </DropdownMenu.Portal>
           </DropdownMenu.Root>
         </div>
-      </td>
-      <td className="px-3 py-2 text-right">
-        <Button
-          variant="secondary"
-          size="sm"
-          disabled={!dirty}
-          isLoading={save.isPending}
-          onClick={() => save.mutate()}
-        >
-          Salvar
-        </Button>
+
+        <AlertDialog.Root open={confirmDelete} onOpenChange={setConfirmDelete}>
+          <AlertDialog.Portal>
+            <AlertDialog.Overlay className="fixed inset-0 z-50 bg-black/40" />
+            <AlertDialog.Content className="fixed left-1/2 top-1/2 z-50 w-[min(28rem,92vw)] -translate-x-1/2 -translate-y-1/2 rounded-md border border-line bg-card p-5 text-left shadow-[var(--shadow-panel)]">
+              <AlertDialog.Title className="text-[length:var(--text-h3-size)] font-semibold text-fg">
+                Remover {client.name}?
+              </AlertDialog.Title>
+              <AlertDialog.Description className="mt-2 text-fg-secondary">
+                Apaga o workspace e todos os dados dele (setores, tarefas,
+                projetos, anexos), de forma permanente. A conta de login do dono
+                não é apagada. Não dá para desfazer.
+              </AlertDialog.Description>
+              <div className="mt-4 flex justify-end gap-2">
+                <AlertDialog.Cancel asChild>
+                  <Button variant="ghost" size="sm">
+                    Cancelar
+                  </Button>
+                </AlertDialog.Cancel>
+                <AlertDialog.Action asChild>
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    isLoading={remove.isPending}
+                    onClick={() => remove.mutate()}
+                  >
+                    Remover
+                  </Button>
+                </AlertDialog.Action>
+              </div>
+            </AlertDialog.Content>
+          </AlertDialog.Portal>
+        </AlertDialog.Root>
       </td>
     </tr>
   );
@@ -190,8 +284,7 @@ export function AdminClients() {
           Clientes
         </h1>
         <p className="text-fg-secondary">
-          Workspaces, planos, assentos e tempo de acesso. Alterações valem na
-          hora.
+          Workspaces, planos, assentos e acesso. Alterações valem na hora.
         </p>
       </div>
 
