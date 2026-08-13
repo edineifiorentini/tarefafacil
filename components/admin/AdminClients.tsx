@@ -266,6 +266,89 @@ function ClientRowItem({ client }: { client: ClientRow }) {
   );
 }
 
+function CreateClient() {
+  const qc = useQueryClient();
+  const toast = useToast();
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+
+  const create = useMutation({
+    mutationFn: async () => {
+      const res = await fetch("/api/admin/clients", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ name, owner_email: email }),
+      });
+      if (res.status === 404) throw new Error("owner_not_found");
+      if (!res.ok) throw new Error("falha");
+    },
+    onSuccess: () => {
+      toast.show({ message: "Cliente cadastrado" });
+      setName("");
+      setEmail("");
+      setOpen(false);
+      void qc.invalidateQueries({ queryKey: ["admin-clients"] });
+    },
+    onError: (e) => {
+      toast.show({
+        message:
+          e instanceof Error && e.message === "owner_not_found"
+            ? "Esse e-mail ainda não tem conta. Peça para o dono se cadastrar primeiro."
+            : "Não foi possível cadastrar",
+      });
+    },
+  });
+
+  if (!open) {
+    return (
+      <Button variant="secondary" size="sm" onClick={() => setOpen(true)}>
+        Cadastrar cliente
+      </Button>
+    );
+  }
+
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (name.trim() && email.trim()) create.mutate();
+      }}
+      className="flex flex-wrap items-end gap-2 rounded-md border border-line bg-card p-3"
+    >
+      <label className="flex flex-col gap-1 text-[length:var(--text-caption-size)] text-fg-secondary">
+        Nome do cliente
+        <div className="w-56">
+          <TextInput
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Empresa do cliente"
+            aria-label="Nome do cliente"
+          />
+        </div>
+      </label>
+      <label className="flex flex-col gap-1 text-[length:var(--text-caption-size)] text-fg-secondary">
+        E-mail do dono
+        <div className="w-64">
+          <TextInput
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="dono@empresa.com"
+            aria-label="E-mail do dono"
+          />
+        </div>
+      </label>
+      <Button type="submit" variant="primary" size="sm" isLoading={create.isPending}>
+        Criar
+      </Button>
+      <Button type="button" variant="ghost" size="sm" onClick={() => setOpen(false)}>
+        Cancelar
+      </Button>
+    </form>
+  );
+}
+
 export function AdminClients() {
   const { data, isPending } = useQuery({
     queryKey: ["admin-clients"],
@@ -279,13 +362,16 @@ export function AdminClients() {
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 px-6 py-8">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-[length:var(--text-h2-size)] font-semibold text-fg">
-          Clientes
-        </h1>
-        <p className="text-fg-secondary">
-          Workspaces, planos, assentos e acesso. Alterações valem na hora.
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-[length:var(--text-h2-size)] font-semibold text-fg">
+            Clientes
+          </h1>
+          <p className="text-fg-secondary">
+            Workspaces, planos, assentos e acesso. Alterações valem na hora.
+          </p>
+        </div>
+        <CreateClient />
       </div>
 
       {isPending ? (

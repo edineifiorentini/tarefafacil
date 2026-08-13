@@ -5,6 +5,56 @@ import type { ClientRow } from "@/lib/admin/types";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { Plan } from "@/types/database";
 
+// Cadastra um cliente: cria o workspace e atribui o dono (por e-mail).
+// O dono precisa já ter conta (pode se cadastrar antes). Acesso imediato.
+export async function POST(request: Request) {
+  const admin = await requirePlatformAdmin();
+  if (!admin) {
+    return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  }
+
+  let body: { name?: string; owner_email?: string };
+  try {
+    body = (await request.json()) as typeof body;
+  } catch {
+    return NextResponse.json({ error: "bad_request" }, { status: 400 });
+  }
+  const name = body.name?.trim();
+  const email = body.owner_email?.trim();
+  if (!name || !email) {
+    return NextResponse.json({ error: "missing_fields" }, { status: 400 });
+  }
+
+  const db = createAdminClient();
+  const { data: owner } = await db
+    .from("app_user")
+    .select("id")
+    .ilike("email", email)
+    .maybeSingle();
+  if (!owner) {
+    return NextResponse.json({ error: "owner_not_found" }, { status: 404 });
+  }
+
+  const { data: ws, error } = await db
+    .from("workspace")
+    .insert({ name, owner_user_id: owner.id })
+    .select("id")
+    .single();
+  if (error || !ws) {
+    return NextResponse.json({ error: "create_failed" }, { status: 500 });
+  }
+  const { error: memberError } = await db.from("workspace_member").insert({
+    workspace_id: ws.id,
+    user_id: owner.id,
+    role: "owner",
+    status: "active",
+  });
+  if (memberError) {
+    return NextResponse.json({ error: "create_failed" }, { status: 500 });
+  }
+  return NextResponse.json({ ok: true });
+}
+
 // Lista todos os workspaces (clientes) com plano, assentos e nº de membros.
 export async function GET() {
   const admin = await requirePlatformAdmin();
