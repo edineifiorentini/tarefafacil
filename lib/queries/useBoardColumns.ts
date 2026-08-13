@@ -115,6 +115,8 @@ export function useReorderColumn(workspaceId: string, sectorId: string) {
 
   return useMutation({
     mutationFn: async ({ id, dir }: { id: string; dir: "left" | "right" }) => {
+      // Lê a ordem ATUAL (sem otimismo aqui — o otimismo é aplicado à parte,
+      // para não trocar as posições duas vezes).
       const cols = [...(qc.getQueryData<BoardColumn[]>(key) ?? [])].sort(
         (a, b) => a.position - b.position
       );
@@ -123,35 +125,18 @@ export function useReorderColumn(workspaceId: string, sectorId: string) {
       if (i < 0 || j < 0 || j >= cols.length) return;
       const a = cols[i];
       const b = cols[j];
+      // Se as posições coincidirem (dados antigos), normaliza usando o índice.
+      const posA = a.position === b.position ? i : a.position;
+      const posB = a.position === b.position ? j : b.position;
       const { error: e1 } = await supabase
         .from("board_column")
-        .update({ position: b.position })
+        .update({ position: posB })
         .eq("id", a.id);
       const { error: e2 } = await supabase
         .from("board_column")
-        .update({ position: a.position })
+        .update({ position: posA })
         .eq("id", b.id);
       if (e1 || e2) throw e1 ?? e2;
-    },
-    onMutate: async ({ id, dir }) => {
-      await qc.cancelQueries({ queryKey: key });
-      const prev = qc.getQueryData<BoardColumn[]>(key);
-      const cols = [...(prev ?? [])].sort((a, b) => a.position - b.position);
-      const i = cols.findIndex((c) => c.id === id);
-      const j = dir === "left" ? i - 1 : i + 1;
-      if (i >= 0 && j >= 0 && j < cols.length) {
-        const posA = cols[i].position;
-        cols[i] = { ...cols[i], position: cols[j].position };
-        cols[j] = { ...cols[j], position: posA };
-        qc.setQueryData<BoardColumn[]>(
-          key,
-          [...cols].sort((a, b) => a.position - b.position)
-        );
-      }
-      return { prev };
-    },
-    onError: (_e, _v, ctx) => {
-      if (ctx?.prev) qc.setQueryData(key, ctx.prev);
     },
     onSettled: () => qc.invalidateQueries({ queryKey: key }),
   });
