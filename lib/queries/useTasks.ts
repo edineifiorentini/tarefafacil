@@ -41,6 +41,7 @@ function optimisticTask(input: {
     sector_id: input.sector_id,
     project_id: null,
     column_id: null,
+    client_id: null,
     title: input.title,
     description: null,
     due_date: input.due_date,

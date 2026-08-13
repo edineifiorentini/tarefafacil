@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/Button";
 import { Select } from "@/components/ui/Select";
 import { TextInput } from "@/components/ui/TextInput";
 import { Textarea } from "@/components/ui/Textarea";
+import { useClients } from "@/lib/queries/useClients";
 import { useSyncTaskEvent } from "@/lib/queries/useGcal";
 import { useMembers } from "@/lib/queries/useMembers";
 import { useProjects } from "@/lib/queries/useProjects";
@@ -86,8 +87,12 @@ export function TaskDetailPanel({ taskId }: { taskId: string }) {
   const [assigneeId, setAssigneeId] = useState<string | null>(
     task?.assignee_id ?? null
   );
+  const [clientId, setClientId] = useState<string | null>(
+    task?.client_id ?? null
+  );
   const { data: projects = [] } = useProjects(workspace.id, sectorId);
   const { data: members = [] } = useMembers(workspace.id);
+  const { data: clients = [] } = useClients(workspace.id);
 
   if (!task) {
     return <p className="text-fg-secondary">Carregando…</p>;
@@ -182,6 +187,22 @@ export function TaskDetailPanel({ taskId }: { taskId: string }) {
             scheduleSave({ project_id: pid });
           }}
           aria-label="Projeto"
+        />
+      </Field>
+
+      <Field label="Cliente">
+        <Select
+          options={[
+            { value: "__none__", label: "Nenhum" },
+            ...clients.map((c) => ({ value: c.id, label: c.name })),
+          ]}
+          value={clientId ?? "__none__"}
+          onValueChange={(v) => {
+            const cid = v === "__none__" ? null : v;
+            setClientId(cid);
+            scheduleSave({ client_id: cid });
+          }}
+          aria-label="Cliente"
         />
       </Field>
 

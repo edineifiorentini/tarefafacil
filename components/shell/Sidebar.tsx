@@ -8,6 +8,7 @@ import {
   IconSearch,
   IconSettings,
   IconSun,
+  IconUsers,
 } from "@tabler/icons-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -27,6 +28,7 @@ const destinations = [
   { href: "/hoje", label: "Hoje", icon: IconSun, hint: "1" },
   { href: "/quadro", label: "Quadro", icon: IconLayoutKanban, hint: "2" },
   { href: "/calendario", label: "Calendário", icon: IconCalendarMonth, hint: "3" },
+  { href: "/clientes", label: "Clientes", icon: IconUsers, hint: "4" },
   { href: "/busca", label: "Buscar", icon: IconSearch, hint: "/" },
 ] as const;
 
@@ -119,7 +121,7 @@ export function Sidebar({
             className={navItemClass(isActive("/admin"))}
           >
             <IconBuildingStore size={20} stroke={1.5} />
-            Clientes
+            Contas
           </Link>
         ) : null}
         <Link

@@ -21,6 +21,8 @@ export type ProjectStatus = "planejado" | "ativo" | "pausado" | "concluido";
 export type TaskPriority = "baixa" | "media" | "alta";
 export type AttachmentKind = "file" | "link";
 export type GcalStatus = "active" | "expired" | "revoked";
+export type ClientType = "pf" | "pj";
+export type ClientStatus = "prospecto" | "ativo" | "pausado" | "encerrado";
 
 export type Database = {
   public: {
@@ -215,6 +217,7 @@ export type Database = {
           sector_id: string;
           project_id: string | null;
           column_id: string | null;
+          client_id: string | null;
           title: string;
           description: string | null;
           due_date: string | null;
@@ -243,6 +246,7 @@ export type Database = {
           sector_id: string;
           project_id?: string | null;
           column_id?: string | null;
+          client_id?: string | null;
           title: string;
           description?: string | null;
           due_date?: string | null;
@@ -271,6 +275,7 @@ export type Database = {
           sector_id?: string;
           project_id?: string | null;
           column_id?: string | null;
+          client_id?: string | null;
           title?: string;
           description?: string | null;
           due_date?: string | null;
@@ -430,6 +435,54 @@ export type Database = {
         };
         Relationships: [];
       };
+      client: {
+        Row: {
+          id: string;
+          workspace_id: string;
+          type: ClientType;
+          name: string;
+          fantasy_name: string | null;
+          document: string | null;
+          email: string | null;
+          phone: string | null;
+          status: ClientStatus;
+          entry_date: string | null;
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          workspace_id: string;
+          type?: ClientType;
+          name: string;
+          fantasy_name?: string | null;
+          document?: string | null;
+          email?: string | null;
+          phone?: string | null;
+          status?: ClientStatus;
+          entry_date?: string | null;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          workspace_id?: string;
+          type?: ClientType;
+          name?: string;
+          fantasy_name?: string | null;
+          document?: string | null;
+          email?: string | null;
+          phone?: string | null;
+          status?: ClientStatus;
+          entry_date?: string | null;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       google_connection: {
         Row: {
           workspace_id: string;
@@ -577,3 +630,4 @@ export type Tag = Tables<"tag">;
 export type TaskTag = Tables<"task_tag">;
 export type GoogleConnection = Tables<"google_connection">;
 export type WorkspaceInvite = Tables<"workspace_invite">;
+export type Client = Tables<"client">;
