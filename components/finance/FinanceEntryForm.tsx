@@ -4,11 +4,12 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 
 import { Button } from "@/components/ui/Button";
+import { CurrencyInput } from "@/components/ui/CurrencyInput";
 import { Select } from "@/components/ui/Select";
 import { TextInput } from "@/components/ui/TextInput";
 import { Textarea } from "@/components/ui/Textarea";
 import { useToast } from "@/components/ui/Toast";
-import { formatCentsBRL, parseCurrencyToCents } from "@/lib/finance/money";
+import { centsToMaskedInput, parseCurrencyToCents } from "@/lib/finance/money";
 import { useClients } from "@/lib/queries/useClients";
 import {
   useCreateFinanceEntry,
@@ -56,7 +57,7 @@ export function FinanceEntryForm({
   const [kind, setKind] = useState<FinanceKind>(entry?.kind ?? "entrada");
   const [description, setDescription] = useState(entry?.description ?? "");
   const [amount, setAmount] = useState(
-    entry ? formatCentsBRL(entry.amount_cents).replace(/[^\d,]/g, "") : ""
+    entry ? centsToMaskedInput(entry.amount_cents) : ""
   );
   const [status, setStatus] = useState<FinanceStatus>(entry?.status ?? "previsto");
   const [dueDate, setDueDate] = useState(entry?.due_date ?? "");
@@ -129,14 +130,8 @@ export function FinanceEntryForm({
       </Field>
 
       <div className="grid grid-cols-2 gap-3">
-        <Field label="Valor (R$)">
-          <TextInput
-            inputMode="decimal"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            placeholder="0,00"
-            aria-label="Valor"
-          />
+        <Field label="Valor">
+          <CurrencyInput value={amount} onChange={setAmount} aria-label="Valor" />
         </Field>
         <Field label="Vencimento">
           <TextInput

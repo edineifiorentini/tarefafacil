@@ -4,6 +4,7 @@ import {
   IconDotsVertical,
   IconFileText,
   IconPlus,
+  IconPrinter,
   IconReceipt2,
   IconTrash,
 } from "@tabler/icons-react";
@@ -242,6 +243,17 @@ export function ContractsView() {
                             onCloseAutoFocus={(e) => e.preventDefault()}
                             className="z-50 min-w-48 overflow-hidden rounded-md border border-line bg-card p-1 shadow-[var(--shadow-panel)] data-[state=closed]:[animation:tf-pop-out_var(--dur-fast)_ease-in] data-[state=open]:[animation:tf-pop-in_var(--dur-fast)_var(--ease-out)]"
                           >
+                            <DropdownMenu.Item asChild>
+                              <a
+                                href={`/contratos/${c.id}/imprimir`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] text-fg outline-none data-[highlighted]:bg-sunken"
+                              >
+                                <IconPrinter size={14} stroke={1.5} />
+                                Visualizar / imprimir
+                              </a>
+                            </DropdownMenu.Item>
                             {c.status === "assinado" || c.status === "ativo" ? (
                               <DropdownMenu.Item
                                 onSelect={() => setGenerateFor(c)}

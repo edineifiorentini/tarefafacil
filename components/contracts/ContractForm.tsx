@@ -5,11 +5,12 @@ import type { FormEvent } from "react";
 
 import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
+import { CurrencyInput } from "@/components/ui/CurrencyInput";
 import { Select } from "@/components/ui/Select";
 import { TextInput } from "@/components/ui/TextInput";
 import { Textarea } from "@/components/ui/Textarea";
 import { useToast } from "@/components/ui/Toast";
-import { formatCentsBRL, parseCurrencyToCents } from "@/lib/finance/money";
+import { centsToMaskedInput, formatCentsBRL, parseCurrencyToCents } from "@/lib/finance/money";
 import { useClients } from "@/lib/queries/useClients";
 import { useContractInstallments } from "@/lib/queries/useContractFinance";
 import { useCreateContract, useUpdateContract } from "@/lib/queries/useContracts";
@@ -74,7 +75,7 @@ export function ContractForm({
     contract?.renew_notice_days ? String(contract.renew_notice_days) : ""
   );
   const [amount, setAmount] = useState(
-    contract?.amount_cents ? formatCentsBRL(contract.amount_cents).replace(/[^\d,]/g, "") : ""
+    contract?.amount_cents ? centsToMaskedInput(contract.amount_cents) : ""
   );
   const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>(
     contract?.billing_period ?? "mensal"
@@ -238,14 +239,8 @@ export function ContractForm({
       </div>
 
       <div className="grid grid-cols-3 gap-3">
-        <Field label="Valor (R$)">
-          <TextInput
-            inputMode="decimal"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            placeholder="0,00"
-            aria-label="Valor"
-          />
+        <Field label="Valor">
+          <CurrencyInput value={amount} onChange={setAmount} aria-label="Valor" />
         </Field>
         <Field label="Periodicidade">
           <Select
