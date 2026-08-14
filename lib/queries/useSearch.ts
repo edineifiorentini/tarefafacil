@@ -24,6 +24,7 @@ export function useSearch(workspaceId: string, filters: SearchFilters) {
         p_status: filters.status,
         p_due_from: filters.dueFrom,
         p_due_to: filters.dueTo,
+        p_service: filters.service.trim() || null,
       });
       if (error) throw error;
       // A RPC roda sob RLS (pode abranger vários workspaces do usuário);

@@ -23,6 +23,7 @@ export type DashboardStats = {
   overdue: number;
   dueSoon: number;
   done30: number;
+  cancelled30: number;
   bySector: SectorBucket[];
   byClient: ClientBucket[];
   byAssignee: AssigneeBucket[];
@@ -57,8 +58,18 @@ export function computeDashboard(
   let overdue = 0;
   let dueSoon = 0;
   let done30 = 0;
+  let cancelled30 = 0;
 
   for (const t of tasks) {
+    // Cancelada é um encerramento distinto de concluída — nunca conta como
+    // aberta/atrasada/vencendo (RN de canceled_at, rodada "aprofundar
+    // demandas"), mas também não é "trabalho entregue" (done30).
+    if (t.cancelled_at) {
+      const daysAgo = differenceInCalendarDays(now, parseISO(t.cancelled_at));
+      if (daysAgo >= 0 && daysAgo <= 30) cancelled30 += 1;
+      continue;
+    }
+
     if (t.completed_at) {
       const daysAgo = differenceInCalendarDays(now, parseISO(t.completed_at));
       if (daysAgo >= 0 && daysAgo <= 30) {
@@ -132,6 +143,7 @@ export function computeDashboard(
     overdue,
     dueSoon,
     done30,
+    cancelled30,
     bySector,
     byClient,
     byAssignee,

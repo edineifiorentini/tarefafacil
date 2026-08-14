@@ -9,6 +9,7 @@ import {
   countOpenSubtasks,
   useCompleteTask,
   useDeleteTask,
+  useToggleTaskCancel,
   useToggleTaskComplete,
 } from "@/lib/queries/useTasks";
 import { useWorkspace } from "@/lib/queries/useWorkspace";
@@ -32,6 +33,7 @@ export function TaskRows({
   const toggle = useToggleTaskComplete(workspace.id);
   const complete = useCompleteTask(workspace.id);
   const deleteTask = useDeleteTask(workspace.id);
+  const toggleCancel = useToggleTaskCancel(workspace.id);
   const { openPanel } = useShell();
   const [confirm, setConfirm] = useState<{ task: Task; count: number } | null>(
     null
@@ -66,6 +68,7 @@ export function TaskRows({
               sector={sectorsById.get(task.sector_id)}
               onToggle={(c) => handleToggle(task, c)}
               onDelete={() => deleteTask(task)}
+              onToggleCancel={(cancel) => toggleCancel.mutate({ id: task.id, cancel })}
               onOpen={() =>
                 openPanel({
                   title: "Tarefa",

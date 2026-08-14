@@ -35,6 +35,8 @@ function task(partial: Partial<Task>): Task {
     gcal_meet_url: null,
     recurrence_rule: null,
     recurrence_parent_id: null,
+    cancelled_at: null,
+    service: null,
     created_at: NOW.toISOString(),
     updated_at: NOW.toISOString(),
     ...partial,
@@ -104,5 +106,18 @@ describe("computeDashboard", () => {
     expect(ana).toMatchObject({ name: "Ana", open: 1, done30: 1 });
     expect(none).toMatchObject({ name: "Sem responsável", open: 1, done30: 0 });
     expect(bob).toMatchObject({ name: "bob@x.com", open: 0, done30: 1 });
+  });
+
+  it("cancelada não conta como aberta/atrasada/concluída, mas soma cancelled30", () => {
+    const tasks = [
+      task({ due_date: "2026-08-01", cancelled_at: "2026-08-05T10:00:00Z" }), // teria atrasado, mas foi cancelada
+      task({ cancelled_at: "2026-06-01T10:00:00Z" }), // cancelada >30d
+      task({}), // aberta normal
+    ];
+    const s = computeDashboard({ tasks, sectors, clients, members }, NOW);
+    expect(s.open).toBe(1);
+    expect(s.overdue).toBe(0);
+    expect(s.done30).toBe(0);
+    expect(s.cancelled30).toBe(1);
   });
 });

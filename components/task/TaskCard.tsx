@@ -1,10 +1,12 @@
-import { Badge } from "@/components/ui/Badge";
+import { IconBan } from "@tabler/icons-react";
+
 import { Tag, type TagColor } from "@/components/ui/Tag";
 import type { Progress } from "@/lib/queries/useCardMeta";
 import type { Tag as TagType, Task } from "@/types/database";
 
 import { AssigneeAvatar } from "./AssigneeAvatar";
 import { DueChip } from "./DueChip";
+import { PriorityBadge } from "./PriorityBadge";
 
 // Card de tarefa dentro do Board. Borda de 1px, cantos suaves, com tags e
 // progresso das subtarefas (forma moderna).
@@ -20,9 +22,11 @@ export function TaskCard({
   progress?: Progress;
 }) {
   const done = task.completed_at !== null;
+  const cancelled = task.cancelled_at !== null;
+  const closed = done || cancelled;
   const hasMeta =
     task.due_date !== null ||
-    task.priority === "alta" ||
+    (!closed && task.priority !== "media" && task.priority !== "sem_prioridade") ||
     task.assignee_id !== null;
   const pct =
     progress && progress.total > 0
@@ -37,11 +41,18 @@ export function TaskCard({
     >
       <p
         className={`pr-6 font-medium text-[length:var(--text-small-size)] ${
-          done ? "text-done line-through" : "text-fg"
+          closed ? "text-done line-through" : "text-fg"
         }`}
       >
         {task.title}
       </p>
+
+      {cancelled ? (
+        <span className="mt-1 inline-flex items-center gap-1 text-[length:var(--text-caption-size)] text-fg-muted">
+          <IconBan size={12} stroke={2} aria-hidden />
+          Cancelada
+        </span>
+      ) : null}
 
       {tags.length > 0 ? (
         <div className="mt-2 flex flex-wrap gap-1">
@@ -58,9 +69,7 @@ export function TaskCard({
           {task.due_date ? (
             <DueChip date={task.due_date} time={task.due_time} />
           ) : null}
-          {task.priority === "alta" ? (
-            <Badge variant="overdue">Alta</Badge>
-          ) : null}
+          {!closed ? <PriorityBadge priority={task.priority} /> : null}
           <span className="ml-auto">
             <AssigneeAvatar assigneeId={task.assignee_id} />
           </span>

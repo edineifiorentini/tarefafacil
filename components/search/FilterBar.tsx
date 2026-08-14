@@ -11,15 +11,19 @@ import type { SearchFilters } from "@/lib/search/filters";
 import { useWorkspace } from "@/lib/queries/useWorkspace";
 
 const PRIORITIES = [
+  { value: "urgente", label: "Urgente" },
   { value: "alta", label: "Alta" },
-  { value: "media", label: "Média" },
+  { value: "media", label: "Normal" },
   { value: "baixa", label: "Baixa" },
+  { value: "sem_prioridade", label: "Sem prioridade" },
 ];
 
 const STATUS = [
   { value: null, label: "Todas" },
   { value: "aberta", label: "Abertas" },
+  { value: "atrasada", label: "Atrasadas" },
   { value: "concluida", label: "Concluídas" },
+  { value: "cancelada", label: "Canceladas" },
 ];
 
 const menuContent =
@@ -110,11 +114,13 @@ export function FilterBar({
   onToggle,
   onStatus,
   onDueRange,
+  onService,
 }: {
   filters: SearchFilters;
   onToggle: (key: "sectors" | "tags" | "priorities", value: string) => void;
   onStatus: (status: string | null) => void;
   onDueRange: (from: string | null, to: string | null) => void;
+  onService: (service: string) => void;
 }) {
   const workspace = useWorkspace();
   const { data: sectors = [] } = useSectors(workspace.id);
@@ -207,6 +213,41 @@ export function FilterBar({
               >
                 <IconX size={12} stroke={1.5} />
                 Limpar prazo
+              </button>
+            ) : null}
+          </Popover.Content>
+        </Popover.Portal>
+      </Popover.Root>
+
+      <Popover.Root>
+        <Popover.Trigger asChild>
+          <TriggerButton active={!!filters.service}>
+            {filters.service ? `Tipo: ${filters.service}` : "Tipo de demanda"}
+          </TriggerButton>
+        </Popover.Trigger>
+        <Popover.Portal>
+          <Popover.Content
+            align="start"
+            sideOffset={4}
+            className="z-50 flex w-56 flex-col gap-2 rounded-md border border-line bg-card p-3 shadow-[var(--shadow-panel)] data-[state=open]:[animation:tf-pop-in_var(--dur-fast)_var(--ease-out)]"
+          >
+            <label className="flex flex-col gap-1 text-[length:var(--text-caption-size)] text-fg-secondary">
+              Tipo de demanda
+              <TextInput
+                value={filters.service}
+                onChange={(e) => onService(e.target.value)}
+                placeholder="Ex.: Design, Suporte…"
+                aria-label="Tipo de demanda"
+              />
+            </label>
+            {filters.service ? (
+              <button
+                type="button"
+                onClick={() => onService("")}
+                className="inline-flex items-center gap-1 self-start text-[length:var(--text-caption-size)] text-fg-link"
+              >
+                <IconX size={12} stroke={1.5} />
+                Limpar
               </button>
             ) : null}
           </Popover.Content>

@@ -7,10 +7,11 @@ export type SearchFilters = {
   q: string;
   sectors: string[];
   tags: string[];
-  priorities: string[]; // baixa | media | alta
-  status: string | null; // aberta | concluida
+  priorities: string[]; // sem_prioridade | baixa | media | alta | urgente
+  status: string | null; // aberta | concluida | cancelada | atrasada
   dueFrom: string | null; // YYYY-MM-DD
   dueTo: string | null;
+  service: string; // tipo de demanda (texto livre)
 };
 
 export const EMPTY_FILTERS: SearchFilters = {
@@ -21,6 +22,7 @@ export const EMPTY_FILTERS: SearchFilters = {
   status: null,
   dueFrom: null,
   dueTo: null,
+  service: "",
 };
 
 type ArrayKey = "sectors" | "tags" | "priorities";
@@ -40,6 +42,7 @@ function parse(sp: URLSearchParams): SearchFilters {
     status: sp.get("status"),
     dueFrom: sp.get("de"),
     dueTo: sp.get("ate"),
+    service: sp.get("servico") ?? "",
   };
 }
 
@@ -52,6 +55,7 @@ function toQueryString(f: SearchFilters): string {
   if (f.status) p.set("status", f.status);
   if (f.dueFrom) p.set("de", f.dueFrom);
   if (f.dueTo) p.set("ate", f.dueTo);
+  if (f.service) p.set("servico", f.service);
   return p.toString();
 }
 
@@ -63,7 +67,8 @@ export function hasAnyFilter(f: SearchFilters): boolean {
     f.priorities.length > 0 ||
     !!f.status ||
     !!f.dueFrom ||
-    !!f.dueTo
+    !!f.dueTo ||
+    f.service.trim() !== ""
   );
 }
 
@@ -104,6 +109,11 @@ export function useSearchFilters() {
     [apply, filters]
   );
 
+  const setService = useCallback(
+    (service: string) => apply({ ...filters, service }),
+    [apply, filters]
+  );
+
   const setDueRange = useCallback(
     (dueFrom: string | null, dueTo: string | null) =>
       apply({ ...filters, dueFrom: dueFrom || null, dueTo: dueTo || null }),
@@ -118,6 +128,7 @@ export function useSearchFilters() {
     setQ,
     toggleValue,
     setStatus,
+    setService,
     setDueRange,
     clearAll,
   };

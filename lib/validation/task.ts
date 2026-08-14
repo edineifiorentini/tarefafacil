@@ -1,6 +1,12 @@
 import { z } from "zod";
 
-export const taskPriorities = ["baixa", "media", "alta"] as const;
+export const taskPriorities = [
+  "sem_prioridade",
+  "baixa",
+  "media",
+  "alta",
+  "urgente",
+] as const;
 
 // Criação rápida — 3 campos (design 6.1): título, setor, prazo (opcional).
 export const quickAddSchema = z.object({

@@ -61,6 +61,8 @@ function optimisticTask(input: {
     gcal_meet_url: null,
     recurrence_rule: null,
     recurrence_parent_id: null,
+    cancelled_at: null,
+    service: null,
     created_at: now,
     updated_at: now,
   };
@@ -190,6 +192,51 @@ export function useToggleTaskComplete(workspaceId: string) {
       void qc.invalidateQueries({ queryKey: [TASKS, workspaceId] });
       if (ctx?.hadSync) void syncEvent(id);
     },
+  });
+}
+
+// Cancela/reabre a demanda — status distinto de concluída (nunca os dois ao
+// mesmo tempo). Otimista, sem interação com o Google Agenda por enquanto.
+export function useToggleTaskCancel(workspaceId: string) {
+  const supabase = createClient();
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, cancel }: { id: string; cancel: boolean }) => {
+      const { error } = await supabase
+        .from("task")
+        .update({
+          cancelled_at: cancel ? new Date().toISOString() : null,
+          completed_at: cancel ? null : undefined,
+        })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onMutate: async ({ id, cancel }) => {
+      await qc.cancelQueries({ queryKey: [TASKS, workspaceId] });
+      const snapshots = qc.getQueriesData<Task[]>({
+        queryKey: [TASKS, workspaceId],
+      });
+      const cancelledAt = cancel ? new Date().toISOString() : null;
+      qc.setQueriesData<Task[]>(
+        { queryKey: [TASKS, workspaceId] },
+        (data) =>
+          data?.map((t) =>
+            t.id === id
+              ? {
+                  ...t,
+                  cancelled_at: cancelledAt,
+                  completed_at: cancel ? null : t.completed_at,
+                }
+              : t
+          )
+      );
+      return { snapshots };
+    },
+    onError: (_error, _input, ctx) => {
+      ctx?.snapshots.forEach(([key, data]) => qc.setQueryData(key, data));
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: [TASKS, workspaceId] }),
   });
 }
 

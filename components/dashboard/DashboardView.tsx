@@ -2,6 +2,7 @@
 
 import {
   IconAlertTriangle,
+  IconBan,
   IconChecklist,
   IconClockHour4,
   IconLayoutDashboard,
@@ -29,7 +30,7 @@ export function DashboardView() {
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-6 py-8">
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
         <StatCard
           label="Abertas"
           value={stats.open}
@@ -52,6 +53,12 @@ export function DashboardView() {
           label="Concluídas (30 dias)"
           value={stats.done30}
           icon={IconChecklist}
+          tone="var(--color-fg-muted)"
+        />
+        <StatCard
+          label="Canceladas (30 dias)"
+          value={stats.cancelled30}
+          icon={IconBan}
           tone="var(--color-fg-muted)"
         />
       </div>

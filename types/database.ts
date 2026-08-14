@@ -18,7 +18,12 @@ export type Plan = "free" | "pro" | "team";
 export type MemberRole = "owner" | "admin" | "member" | "viewer";
 export type SectorColor = "violeta" | "azul" | "coral" | "rosa" | "grafite";
 export type ProjectStatus = "planejado" | "ativo" | "pausado" | "concluido";
-export type TaskPriority = "baixa" | "media" | "alta";
+export type TaskPriority =
+  | "sem_prioridade"
+  | "baixa"
+  | "media"
+  | "alta"
+  | "urgente";
 export type AttachmentKind = "file" | "link";
 export type GcalStatus = "active" | "expired" | "revoked";
 export type ClientType = "pf" | "pj";
@@ -237,6 +242,8 @@ export type Database = {
           gcal_meet_url: string | null;
           recurrence_rule: string | null;
           recurrence_parent_id: string | null;
+          cancelled_at: string | null;
+          service: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -266,6 +273,8 @@ export type Database = {
           gcal_meet_url?: string | null;
           recurrence_rule?: string | null;
           recurrence_parent_id?: string | null;
+          cancelled_at?: string | null;
+          service?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -295,6 +304,8 @@ export type Database = {
           gcal_meet_url?: string | null;
           recurrence_rule?: string | null;
           recurrence_parent_id?: string | null;
+          cancelled_at?: string | null;
+          service?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -586,6 +597,7 @@ export type Database = {
           p_status?: string | null;
           p_due_from?: string | null;
           p_due_to?: string | null;
+          p_service?: string | null;
         };
         Returns: Database["public"]["Tables"]["task"]["Row"][];
       };

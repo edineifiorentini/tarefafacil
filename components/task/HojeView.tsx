@@ -88,7 +88,12 @@ export function HojeView() {
 
   const items: Item[] = [
     ...tasks
-      .filter((t) => t.completed_at === null && t.due_date !== null)
+      .filter(
+        (t) =>
+          t.completed_at === null &&
+          t.cancelled_at === null &&
+          t.due_date !== null
+      )
       .map((t) => ({ kind: "task" as const, due: t.due_date as string, task: t })),
     ...datedSubtasks.map((s) => ({
       kind: "subtask" as const,

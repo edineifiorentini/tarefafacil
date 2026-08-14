@@ -1,10 +1,12 @@
 "use client";
 
 import {
+  IconBan,
   IconCheck,
   IconClock,
   IconLoader2,
   IconPlus,
+  IconRotate,
   IconTrash,
   IconX,
 } from "@tabler/icons-react";
@@ -24,10 +26,11 @@ import { useSectors } from "@/lib/queries/useSectors";
 import {
   useDeleteTask,
   useTaskDetail,
+  useToggleTaskCancel,
   useUpdateTask,
 } from "@/lib/queries/useTasks";
 import { useWorkspace } from "@/lib/queries/useWorkspace";
-import type { TablesUpdate } from "@/types/database";
+import type { TablesUpdate, TaskPriority } from "@/types/database";
 
 import { GcalEditedBadge } from "@/components/gcal/GcalEditedBadge";
 
@@ -39,9 +42,11 @@ import { TaskMeetToggle } from "./TaskMeetToggle";
 import { TaskSyncToggle } from "./TaskSyncToggle";
 
 const PRIORITIES = [
+  { value: "sem_prioridade", label: "Sem prioridade" },
   { value: "baixa", label: "Baixa" },
-  { value: "media", label: "Média" },
+  { value: "media", label: "Normal" },
   { value: "alta", label: "Alta" },
+  { value: "urgente", label: "Urgente" },
 ];
 
 type SaveStatus = "idle" | "saving" | "saved";
@@ -63,6 +68,7 @@ export function TaskDetailPanel({ taskId }: { taskId: string }) {
   const { data: sectors = [] } = useSectors(workspace.id);
   const update = useUpdateTask(workspace.id);
   const deleteTask = useDeleteTask(workspace.id);
+  const toggleCancel = useToggleTaskCancel(workspace.id);
   const syncEvent = useSyncTaskEvent();
   const { closePanel } = useShell();
 
@@ -90,6 +96,7 @@ export function TaskDetailPanel({ taskId }: { taskId: string }) {
   const [clientId, setClientId] = useState<string | null>(
     task?.client_id ?? null
   );
+  const [service, setService] = useState(task?.service ?? "");
   const { data: projects = [] } = useProjects(workspace.id, sectorId);
   const { data: members = [] } = useMembers(workspace.id);
   const { data: clients = [] } = useClients(workspace.id);
@@ -97,6 +104,8 @@ export function TaskDetailPanel({ taskId }: { taskId: string }) {
   if (!task) {
     return <p className="text-fg-secondary">Carregando…</p>;
   }
+
+  const cancelled = task.cancelled_at !== null;
 
   function scheduleSave(patch: TablesUpdate<"task">) {
     pending.current = { ...pending.current, ...patch };
@@ -149,6 +158,13 @@ export function TaskDetailPanel({ taskId }: { taskId: string }) {
 
       <GcalEditedBadge task={task} />
 
+      {cancelled ? (
+        <div className="flex items-center gap-2 rounded-md border border-line bg-sunken px-3 py-2 text-[length:var(--text-small-size)] text-fg-secondary">
+          <IconBan size={16} stroke={1.5} />
+          Esta demanda foi cancelada
+        </div>
+      ) : null}
+
       <div className="grid grid-cols-2 gap-3">
         <Field label="Setor">
           <Select
@@ -167,7 +183,7 @@ export function TaskDetailPanel({ taskId }: { taskId: string }) {
             value={priority}
             onValueChange={(v) => {
               setPriority(v);
-              scheduleSave({ priority: v as "baixa" | "media" | "alta" });
+              scheduleSave({ priority: v as TaskPriority });
             }}
             aria-label="Prioridade"
           />
@@ -203,6 +219,18 @@ export function TaskDetailPanel({ taskId }: { taskId: string }) {
             scheduleSave({ client_id: cid });
           }}
           aria-label="Cliente"
+        />
+      </Field>
+
+      <Field label="Tipo de demanda">
+        <TextInput
+          value={service}
+          onChange={(e) => {
+            setService(e.target.value);
+            scheduleSave({ service: e.target.value || null });
+          }}
+          placeholder="Ex.: Design, Suporte, Consultoria…"
+          aria-label="Tipo de demanda"
         />
       </Field>
 
@@ -356,7 +384,15 @@ export function TaskDetailPanel({ taskId }: { taskId: string }) {
         <InsightLog taskId={taskId} />
       </Field>
 
-      <div className="mt-2 border-t border-line pt-4">
+      <div className="mt-2 flex gap-2 border-t border-line pt-4">
+        <Button
+          variant="secondary"
+          size="sm"
+          leadingIcon={cancelled ? IconRotate : IconBan}
+          onClick={() => toggleCancel.mutate({ id: taskId, cancel: !cancelled })}
+        >
+          {cancelled ? "Reabrir demanda" : "Cancelar demanda"}
+        </Button>
         <Button
           variant="danger"
           size="sm"

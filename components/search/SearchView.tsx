@@ -14,8 +14,16 @@ import { SearchInput } from "./SearchInput";
 
 export function SearchView() {
   const workspace = useWorkspace();
-  const { filters, hasAny, setQ, toggleValue, setStatus, setDueRange, clearAll } =
-    useSearchFilters();
+  const {
+    filters,
+    hasAny,
+    setQ,
+    toggleValue,
+    setStatus,
+    setService,
+    setDueRange,
+    clearAll,
+  } = useSearchFilters();
   const { data: results, isFetching, isPending } = useSearch(
     workspace.id,
     filters
@@ -33,6 +41,7 @@ export function SearchView() {
           onToggle={toggleValue}
           onStatus={setStatus}
           onDueRange={setDueRange}
+          onService={setService}
         />
         {hasAny ? (
           <button
