@@ -36,6 +36,8 @@ export function useMembers(workspaceId: string) {
   const supabase = createClient();
   return useQuery({
     queryKey: membersKey(workspaceId),
+    // Mantém o sino de pedidos pendentes vivo sem recarregar a página.
+    refetchInterval: 60_000,
     queryFn: async (): Promise<Member[]> => {
       const { data, error } = await supabase
         .from("workspace_member")

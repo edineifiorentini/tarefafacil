@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { QuickAdd } from "@/components/task/QuickAdd";
+import { NotificationBell } from "@/components/workspace/NotificationBell";
 
 import { useShell } from "./shell-context";
 
@@ -70,6 +71,8 @@ export function TopBar() {
             className="w-64 rounded-full border border-line bg-page py-2 pl-10 pr-4 text-[length:var(--text-small-size)] text-fg transition-colors [transition-duration:var(--dur-fast)] placeholder:text-fg-muted focus-visible:border-line-strong"
           />
         </form>
+
+        <NotificationBell />
 
         <button
           type="button"
