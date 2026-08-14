@@ -10,6 +10,7 @@ import { NotificationBell } from "@/components/workspace/NotificationBell";
 import { useShell } from "./shell-context";
 
 const staticTitles: Record<string, string> = {
+  "/dashboard": "Dashboard",
   "/hoje": "Hoje",
   "/quadro": "Quadro",
   "/calendario": "Calendário",

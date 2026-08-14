@@ -3,6 +3,7 @@
 import {
   IconBuildingStore,
   IconCalendarMonth,
+  IconLayoutDashboard,
   IconLayoutKanban,
   IconPlus,
   IconSearch,
@@ -25,10 +26,11 @@ import { useShell } from "./shell-context";
 import { WorkspaceSwitcher } from "./WorkspaceSwitcher";
 
 const destinations = [
-  { href: "/hoje", label: "Hoje", icon: IconSun, hint: "1" },
-  { href: "/quadro", label: "Quadro", icon: IconLayoutKanban, hint: "2" },
-  { href: "/calendario", label: "Calendário", icon: IconCalendarMonth, hint: "3" },
-  { href: "/clientes", label: "Clientes", icon: IconUsers, hint: "4" },
+  { href: "/dashboard", label: "Dashboard", icon: IconLayoutDashboard, hint: "1" },
+  { href: "/hoje", label: "Hoje", icon: IconSun, hint: "2" },
+  { href: "/quadro", label: "Quadro", icon: IconLayoutKanban, hint: "3" },
+  { href: "/calendario", label: "Calendário", icon: IconCalendarMonth, hint: "4" },
+  { href: "/clientes", label: "Clientes", icon: IconUsers, hint: "5" },
   { href: "/busca", label: "Buscar", icon: IconSearch, hint: "/" },
 ] as const;
 
