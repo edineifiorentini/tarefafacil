@@ -617,6 +617,9 @@ export type Database = {
           category: string | null;
           client_id: string | null;
           notes: string | null;
+          source_type: string | null;
+          source_id: string | null;
+          installment_number: number | null;
           created_by: string | null;
           created_at: string;
           updated_at: string;
@@ -633,6 +636,9 @@ export type Database = {
           category?: string | null;
           client_id?: string | null;
           notes?: string | null;
+          source_type?: string | null;
+          source_id?: string | null;
+          installment_number?: number | null;
           created_by?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -649,6 +655,9 @@ export type Database = {
           category?: string | null;
           client_id?: string | null;
           notes?: string | null;
+          source_type?: string | null;
+          source_id?: string | null;
+          installment_number?: number | null;
           created_by?: string | null;
           created_at?: string;
           updated_at?: string;

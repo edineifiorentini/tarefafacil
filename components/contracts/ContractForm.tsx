@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/Textarea";
 import { useToast } from "@/components/ui/Toast";
 import { formatCentsBRL, parseCurrencyToCents } from "@/lib/finance/money";
 import { useClients } from "@/lib/queries/useClients";
+import { useContractInstallments } from "@/lib/queries/useContractFinance";
 import { useCreateContract, useUpdateContract } from "@/lib/queries/useContracts";
 import { useMembers } from "@/lib/queries/useMembers";
 import { useWorkspace } from "@/lib/queries/useWorkspace";
@@ -57,6 +58,7 @@ export function ContractForm({
   const { data: members = [] } = useMembers(workspace.id);
   const create = useCreateContract(workspace.id);
   const update = useUpdateContract(workspace.id);
+  const { data: installments = [] } = useContractInstallments(contract?.id ?? "");
 
   const [number, setNumber] = useState(contract?.number ?? "");
   const [clientId, setClientId] = useState(contract?.client_id ?? "");
@@ -291,6 +293,16 @@ export function ContractForm({
           aria-label="Observações"
         />
       </Field>
+
+      {mode === "edit" && installments.length > 0 ? (
+        <p className="rounded-md border border-line bg-sunken px-3 py-2 text-[length:var(--text-small-size)] text-fg-secondary">
+          {installments.length} parcela{installments.length === 1 ? "" : "s"} gerada
+          {installments.length === 1 ? "" : "s"} no Financeiro{" "}
+          <span className="tnum">
+            ({formatCentsBRL(installments.reduce((s, i) => s + i.amount_cents, 0))} no total)
+          </span>
+        </p>
+      ) : null}
 
       <div className="flex justify-end gap-2">
         <Button type="button" variant="ghost" onClick={onDone}>

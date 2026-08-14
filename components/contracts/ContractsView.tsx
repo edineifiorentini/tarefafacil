@@ -4,6 +4,7 @@ import {
   IconDotsVertical,
   IconFileText,
   IconPlus,
+  IconReceipt2,
   IconTrash,
 } from "@tabler/icons-react";
 import { DropdownMenu } from "radix-ui";
@@ -27,6 +28,7 @@ import { useWorkspace } from "@/lib/queries/useWorkspace";
 import type { Contract, ContractStatus } from "@/types/database";
 
 import { ContractForm } from "./ContractForm";
+import { GenerateInstallmentsDialog } from "./GenerateInstallmentsDialog";
 
 const STATUS_LABEL: Record<ContractStatus, string> = {
   rascunho: "Rascunho",
@@ -71,6 +73,7 @@ export function ContractsView() {
 
   const [statusFilter, setStatusFilter] = useState<"__all__" | ContractStatus>("__all__");
   const [clientFilter, setClientFilter] = useState("__all__");
+  const [generateFor, setGenerateFor] = useState<Contract | null>(null);
 
   const clientNameById = new Map(clients.map((c) => [c.id, c.name]));
   const stats = useMemo(() => computeContractStats(contracts), [contracts]);
@@ -233,8 +236,21 @@ export function ContractsView() {
                           <DropdownMenu.Content
                             align="end"
                             sideOffset={4}
+                            // Evita o Radix roubar o foco de volta ao fechar
+                            // (mesmo problema já corrigido em BoardColumn) —
+                            // aqui abre um AlertDialog logo em seguida.
+                            onCloseAutoFocus={(e) => e.preventDefault()}
                             className="z-50 min-w-48 overflow-hidden rounded-md border border-line bg-card p-1 shadow-[var(--shadow-panel)] data-[state=closed]:[animation:tf-pop-out_var(--dur-fast)_ease-in] data-[state=open]:[animation:tf-pop-in_var(--dur-fast)_var(--ease-out)]"
                           >
+                            {c.status === "assinado" || c.status === "ativo" ? (
+                              <DropdownMenu.Item
+                                onSelect={() => setGenerateFor(c)}
+                                className="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] text-fg outline-none data-[highlighted]:bg-sunken"
+                              >
+                                <IconReceipt2 size={14} stroke={1.5} />
+                                Gerar parcelas no Financeiro
+                              </DropdownMenu.Item>
+                            ) : null}
                             {nextStatus ? (
                               <DropdownMenu.Item
                                 onSelect={() => setStatus.mutate({ id: c.id, status: nextStatus })}
@@ -281,6 +297,15 @@ export function ContractsView() {
           </table>
         </div>
       )}
+
+      {generateFor ? (
+        <GenerateInstallmentsDialog
+          contract={generateFor}
+          onOpenChange={(open) => {
+            if (!open) setGenerateFor(null);
+          }}
+        />
+      ) : null}
     </div>
   );
 }

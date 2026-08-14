@@ -90,8 +90,27 @@ export function useSetContractStatus(workspaceId: string) {
       if (signedDocumentUrl !== undefined) patch.signed_document_url = signedDocumentUrl;
       const { error } = await supabase.from("contract").update(patch).eq("id", id);
       if (error) throw error;
+
+      // Spec §13.1.6: cancelar o contrato cancela as parcelas futuras AINDA
+      // NÃO pagas geradas a partir dele — as já confirmadas (recebidas)
+      // ficam intactas, preservando o histórico realizado.
+      if (status === "cancelado") {
+        const today = new Date().toISOString().slice(0, 10);
+        const { error: financeError } = await supabase
+          .from("finance_entry")
+          .update({ status: "cancelado" })
+          .eq("source_type", "contract")
+          .eq("source_id", id)
+          .eq("status", "previsto")
+          .gte("due_date", today);
+        if (financeError) throw financeError;
+      }
     },
-    onSettled: () => qc.invalidateQueries({ queryKey: contractsKey(workspaceId) }),
+    onSettled: (_d, _e, { id }) => {
+      void qc.invalidateQueries({ queryKey: contractsKey(workspaceId) });
+      void qc.invalidateQueries({ queryKey: ["finance", workspaceId] });
+      void qc.invalidateQueries({ queryKey: ["contractInstallments", id] });
+    },
   });
 }
 
