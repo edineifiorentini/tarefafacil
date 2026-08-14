@@ -42,7 +42,7 @@ export function SectorProjects({ sectorId }: { sectorId: string }) {
             ),
           })
         }
-        className="text-fg-secondary hover:bg-sunken hover:text-fg inline-flex items-center gap-1 rounded-full px-2 py-1 text-[length:var(--text-small-size)] transition-colors [transition-duration:var(--dur-fast)]"
+        className="text-fg-secondary hover:bg-hover hover:text-fg inline-flex items-center gap-1 rounded-full px-2 py-1 text-[length:var(--text-small-size)] transition-colors [transition-duration:var(--dur-fast)]"
       >
         <IconPlus size={14} stroke={1.5} />
         Projeto

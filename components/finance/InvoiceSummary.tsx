@@ -41,7 +41,7 @@ export function InvoiceSummary({
               <button
                 type="button"
                 onClick={() => onOpen(e)}
-                className="hover:bg-sunken flex w-full items-center justify-between rounded-sm px-2 py-1.5 text-left text-[length:var(--text-small-size)] transition-colors [transition-duration:var(--dur-fast)]"
+                className="hover:bg-hover flex w-full items-center justify-between rounded-sm px-2 py-1.5 text-left text-[length:var(--text-small-size)] transition-colors [transition-duration:var(--dur-fast)]"
               >
                 <span className="text-fg truncate">{e.description}</span>
                 <span className="tnum text-fg-muted">

@@ -270,7 +270,7 @@ export function TaskDetailPanel({ taskId }: { taskId: string }) {
                 <button
                   type="button"
                   onClick={() => setTimeOpen(true)}
-                  className="text-fg-secondary hover:bg-sunken hover:text-fg inline-flex items-center gap-1 rounded-sm px-2 py-1 text-[length:var(--text-small-size)]"
+                  className="text-fg-secondary hover:bg-hover hover:text-fg inline-flex items-center gap-1 rounded-sm px-2 py-1 text-[length:var(--text-small-size)]"
                 >
                   <IconClock size={16} stroke={1.5} />
                   Adicionar horário
@@ -326,7 +326,7 @@ export function TaskDetailPanel({ taskId }: { taskId: string }) {
                     <button
                       type="button"
                       onClick={() => setEndOpen(true)}
-                      className="text-fg-secondary hover:bg-sunken hover:text-fg inline-flex items-center gap-1 rounded-sm px-2 py-1 text-[length:var(--text-small-size)]"
+                      className="text-fg-secondary hover:bg-hover hover:text-fg inline-flex items-center gap-1 rounded-sm px-2 py-1 text-[length:var(--text-small-size)]"
                     >
                       <IconPlus size={14} stroke={1.5} />
                       Término
@@ -342,7 +342,7 @@ export function TaskDetailPanel({ taskId }: { taskId: string }) {
                       setDueEndTime("");
                       scheduleSave({ due_time: null, due_end_time: null });
                     }}
-                    className="text-fg-muted hover:bg-sunken hover:text-fg inline-flex items-center gap-1 rounded-sm px-2 py-1 text-[length:var(--text-caption-size)]"
+                    className="text-fg-muted hover:bg-hover hover:text-fg inline-flex items-center gap-1 rounded-sm px-2 py-1 text-[length:var(--text-caption-size)]"
                   >
                     <IconX size={14} stroke={1.5} />
                     Dia inteiro

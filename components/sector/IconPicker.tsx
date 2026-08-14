@@ -47,7 +47,7 @@ function Grid({
             className={`inline-flex aspect-square items-center justify-center rounded-sm transition-colors [transition-duration:var(--dur-fast)] ${
               selected
                 ? "bg-selected text-fg-link"
-                : "text-fg-secondary hover:bg-sunken hover:text-fg"
+                : "text-fg-secondary hover:bg-hover hover:text-fg"
             }`}
           >
             <Glyph size={20} stroke={1.5} />

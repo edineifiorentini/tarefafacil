@@ -154,22 +154,14 @@ export function FinanceView() {
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-6 py-8">
+      {/* Título e subtítulo vivem na barra superior — aqui ficam só as ações. */}
       <div className="flex flex-wrap items-center gap-3">
-        <div className="flex flex-col">
-          <h1 className="text-fg text-[length:var(--text-h2-size)] font-semibold">
-            Financeiro
-          </h1>
-          <p className="text-fg-secondary text-[length:var(--text-small-size)]">
-            Fechamento do mês
-          </p>
-        </div>
-
         <div className="ml-auto flex items-center gap-1">
           <button
             type="button"
             aria-label="Mês anterior"
             onClick={() => setMonth((m) => shiftMonth(m, -1))}
-            className="text-fg-secondary hover:bg-sunken hover:text-fg inline-flex h-8 w-8 items-center justify-center rounded-sm"
+            className="text-fg-secondary hover:bg-hover hover:text-fg inline-flex h-8 w-8 items-center justify-center rounded-sm"
           >
             <IconChevronLeft size={18} stroke={1.5} />
           </button>
@@ -180,7 +172,7 @@ export function FinanceView() {
             type="button"
             aria-label="Próximo mês"
             onClick={() => setMonth((m) => shiftMonth(m, 1))}
-            className="text-fg-secondary hover:bg-sunken hover:text-fg inline-flex h-8 w-8 items-center justify-center rounded-sm"
+            className="text-fg-secondary hover:bg-hover hover:text-fg inline-flex h-8 w-8 items-center justify-center rounded-sm"
           >
             <IconChevronRight size={18} stroke={1.5} />
           </button>
@@ -339,7 +331,7 @@ export function FinanceView() {
           }
         />
       ) : (
-        <div className="border-line overflow-hidden rounded-md border">
+        <div className="border-line bg-card overflow-hidden rounded-md border shadow-[var(--shadow-card)]">
           <table className="w-full border-collapse text-left">
             <thead>
               <tr className="border-line bg-sunken text-fg-muted border-b text-[length:var(--text-caption-size)] tracking-wide uppercase">
@@ -357,7 +349,7 @@ export function FinanceView() {
                 return (
                   <tr
                     key={e.id}
-                    className="border-line hover:bg-sunken cursor-pointer border-b transition-colors [transition-duration:var(--dur-fast)] last:border-0"
+                    className="border-line hover:bg-hover cursor-pointer border-b transition-colors [transition-duration:var(--dur-fast)] last:border-0"
                     onClick={() => openForm(e)}
                   >
                     <td className="px-4 py-3">

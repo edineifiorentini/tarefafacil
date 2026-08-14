@@ -18,7 +18,7 @@ export interface IconButtonProps extends Omit<
 }
 
 const variants: Record<Variant, string> = {
-  ghost: "text-fg-secondary hover:bg-sunken hover:text-fg",
+  ghost: "text-fg-secondary hover:bg-hover hover:text-fg",
   subtle: "bg-sunken text-fg-secondary hover:text-fg",
 };
 

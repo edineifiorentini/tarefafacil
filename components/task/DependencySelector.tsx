@@ -79,7 +79,7 @@ export function DependencySelector({ taskId }: { taskId: string }) {
         <Popover.Trigger asChild>
           <button
             type="button"
-            className="border-line text-fg-secondary hover:bg-sunken hover:text-fg inline-flex h-7 w-fit items-center gap-1 rounded-full border border-dashed px-2 text-[length:var(--text-caption-size)] transition-colors [transition-duration:var(--dur-fast)]"
+            className="border-line text-fg-secondary hover:bg-hover hover:text-fg inline-flex h-7 w-fit items-center gap-1 rounded-full border border-dashed px-2 text-[length:var(--text-caption-size)] transition-colors [transition-duration:var(--dur-fast)]"
           >
             <IconPlus size={12} stroke={2} />
             Bloquear por outra demanda
@@ -110,7 +110,7 @@ export function DependencySelector({ taskId }: { taskId: string }) {
                     <button
                       type="button"
                       onClick={() => pick(t.id)}
-                      className="text-fg hover:bg-sunken w-full truncate rounded-sm px-2 py-1.5 text-left text-[length:var(--text-small-size)]"
+                      className="text-fg hover:bg-hover w-full truncate rounded-sm px-2 py-1.5 text-left text-[length:var(--text-small-size)]"
                     >
                       {t.title}
                     </button>

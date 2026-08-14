@@ -36,17 +36,15 @@ export function useSetFinanceGoal(workspaceId: string, month: string) {
       const {
         data: { user },
       } = await supabase.auth.getUser();
-      const { error } = await supabase
-        .from("finance_goal")
-        .upsert(
-          {
-            workspace_id: workspaceId,
-            month,
-            target_cents: targetCents,
-            created_by: user?.id ?? null,
-          },
-          { onConflict: "workspace_id,month" }
-        );
+      const { error } = await supabase.from("finance_goal").upsert(
+        {
+          workspace_id: workspaceId,
+          month,
+          target_cents: targetCents,
+          created_by: user?.id ?? null,
+        },
+        { onConflict: "workspace_id,month" }
+      );
       if (error) throw error;
     },
     onSettled: () =>

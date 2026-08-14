@@ -306,7 +306,7 @@ export function WorkspaceSettings() {
         </h2>
         <a
           href="/api/export"
-          className="border-line bg-card text-fg hover:bg-sunken inline-flex h-8 w-fit items-center gap-2 rounded-sm border px-3 text-[length:var(--text-small-size)]"
+          className="border-line bg-card text-fg hover:bg-hover inline-flex h-8 w-fit items-center gap-2 rounded-sm border px-3 text-[length:var(--text-small-size)]"
         >
           <IconDownload size={16} stroke={1.5} />
           Exportar tudo em JSON

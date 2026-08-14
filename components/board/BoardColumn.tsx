@@ -174,7 +174,7 @@ export function BoardColumn({
                       setDraft(name);
                       setEditing(true);
                     }}
-                    className="text-fg data-[highlighted]:bg-sunken flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] outline-none"
+                    className="text-fg data-[highlighted]:bg-hover flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] outline-none"
                   >
                     <IconPencil size={14} stroke={1.5} />
                     Renomear
@@ -183,7 +183,7 @@ export function BoardColumn({
                 {onMoveLeft ? (
                   <DropdownMenu.Item
                     onSelect={() => onMoveLeft()}
-                    className="text-fg data-[highlighted]:bg-sunken flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] outline-none"
+                    className="text-fg data-[highlighted]:bg-hover flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] outline-none"
                   >
                     <IconArrowLeft size={14} stroke={1.5} />
                     Mover para esquerda
@@ -192,7 +192,7 @@ export function BoardColumn({
                 {onMoveRight ? (
                   <DropdownMenu.Item
                     onSelect={() => onMoveRight()}
-                    className="text-fg data-[highlighted]:bg-sunken flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] outline-none"
+                    className="text-fg data-[highlighted]:bg-hover flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] outline-none"
                   >
                     <IconArrowRight size={14} stroke={1.5} />
                     Mover para direita
@@ -204,7 +204,7 @@ export function BoardColumn({
                       setWipDraft(wipLimit ? String(wipLimit) : "");
                       setEditingWip(true);
                     }}
-                    className="text-fg data-[highlighted]:bg-sunken flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] outline-none"
+                    className="text-fg data-[highlighted]:bg-hover flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] outline-none"
                   >
                     <IconGauge size={14} stroke={1.5} />
                     {wipLimit
@@ -215,7 +215,7 @@ export function BoardColumn({
                 {onDelete ? (
                   <DropdownMenu.Item
                     onSelect={() => onDelete()}
-                    className="text-overdue data-[highlighted]:bg-sunken flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] outline-none"
+                    className="text-overdue data-[highlighted]:bg-hover flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] outline-none"
                   >
                     <IconTrash size={14} stroke={1.5} />
                     Excluir coluna

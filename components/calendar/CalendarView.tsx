@@ -335,7 +335,7 @@ export function CalendarView() {
               className={`rounded-full px-3 py-1 text-[length:var(--text-small-size)] transition-colors [transition-duration:var(--dur-fast)] ${
                 layers[layer]
                   ? "bg-selected text-fg"
-                  : "text-fg-secondary hover:bg-sunken"
+                  : "text-fg-secondary hover:bg-hover"
               }`}
             >
               {layer === "tasks" ? "Tarefas" : "Projetos"}
@@ -383,7 +383,7 @@ export function CalendarView() {
         <div
           role="grid"
           aria-label={`Calendário de ${format(month, "MMMM 'de' yyyy", { locale: ptBR })}`}
-          className="border-line flex min-h-0 flex-1 flex-col overflow-hidden rounded-md border"
+          className="border-line bg-card flex min-h-0 flex-1 flex-col overflow-hidden rounded-md border shadow-[var(--shadow-card)]"
         >
           {weeks.map((week, wi) => {
             const segments = layers.projects

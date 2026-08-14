@@ -15,7 +15,7 @@ import { useWorkspace } from "@/lib/queries/useWorkspace";
 const menuContent =
   "z-50 min-w-48 max-h-64 overflow-auto rounded-md tf-glass-strong p-1 data-[state=closed]:[animation:tf-pop-out_var(--dur-fast)_ease-in] data-[state=open]:[animation:tf-pop-in_var(--dur-fast)_var(--ease-out)]";
 const menuItem =
-  "flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] text-fg outline-none data-[highlighted]:bg-sunken";
+  "flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] text-fg outline-none data-[highlighted]:bg-hover";
 
 // Participantes além do responsável principal. Ninguém em duplicidade: o
 // dropdown só oferece quem ainda não está na lista (e opcionalmente exclui
@@ -67,7 +67,7 @@ export function ParticipantsSelector({
         <DropdownMenu.Trigger asChild>
           <button
             type="button"
-            className="border-line text-fg-secondary hover:bg-sunken hover:text-fg inline-flex h-7 items-center gap-1 rounded-full border border-dashed px-2 text-[length:var(--text-caption-size)] transition-colors [transition-duration:var(--dur-fast)]"
+            className="border-line text-fg-secondary hover:bg-hover hover:text-fg inline-flex h-7 items-center gap-1 rounded-full border border-dashed px-2 text-[length:var(--text-caption-size)] transition-colors [transition-duration:var(--dur-fast)]"
           >
             <IconPlus size={12} stroke={2} />
             Adicionar

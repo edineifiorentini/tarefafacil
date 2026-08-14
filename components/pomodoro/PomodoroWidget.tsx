@@ -47,7 +47,7 @@ export function PomodoroWidget() {
             type="button"
             aria-label="Retomar pomodoro"
             onClick={resume}
-            className="text-fg-secondary hover:bg-sunken hover:text-fg inline-flex h-7 w-7 items-center justify-center rounded-sm transition-colors [transition-duration:var(--dur-fast)]"
+            className="text-fg-secondary hover:bg-hover hover:text-fg inline-flex h-7 w-7 items-center justify-center rounded-sm transition-colors [transition-duration:var(--dur-fast)]"
           >
             <IconPlayerPlay size={16} stroke={1.5} />
           </button>
@@ -56,7 +56,7 @@ export function PomodoroWidget() {
             type="button"
             aria-label="Pausar pomodoro"
             onClick={pause}
-            className="text-fg-secondary hover:bg-sunken hover:text-fg inline-flex h-7 w-7 items-center justify-center rounded-sm transition-colors [transition-duration:var(--dur-fast)]"
+            className="text-fg-secondary hover:bg-hover hover:text-fg inline-flex h-7 w-7 items-center justify-center rounded-sm transition-colors [transition-duration:var(--dur-fast)]"
           >
             <IconPlayerPause size={16} stroke={1.5} />
           </button>
@@ -65,7 +65,7 @@ export function PomodoroWidget() {
           type="button"
           aria-label="Parar pomodoro"
           onClick={stop}
-          className="text-fg-secondary hover:bg-sunken hover:text-fg inline-flex h-7 w-7 items-center justify-center rounded-sm transition-colors [transition-duration:var(--dur-fast)]"
+          className="text-fg-secondary hover:bg-hover hover:text-fg inline-flex h-7 w-7 items-center justify-center rounded-sm transition-colors [transition-duration:var(--dur-fast)]"
         >
           <IconPlayerStop size={16} stroke={1.5} />
         </button>

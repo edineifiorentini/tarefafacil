@@ -111,7 +111,7 @@ export function ClientsView() {
               className={`rounded-full px-3 py-1.5 text-[length:var(--text-small-size)] transition-colors [transition-duration:var(--dur-fast)] ${
                 filter === f.value
                   ? "bg-selected text-fg font-medium"
-                  : "text-fg-secondary hover:bg-sunken hover:text-fg"
+                  : "text-fg-secondary hover:bg-hover hover:text-fg"
               }`}
             >
               {f.label}
@@ -147,7 +147,7 @@ export function ClientsView() {
           Nenhum cliente encontrado para esse filtro
         </p>
       ) : (
-        <div className="border-line overflow-hidden rounded-md border">
+        <div className="border-line bg-card overflow-hidden rounded-md border shadow-[var(--shadow-card)]">
           <table className="w-full border-collapse text-left">
             <thead>
               <tr className="border-line bg-sunken text-fg-muted border-b text-[length:var(--text-caption-size)] tracking-wide uppercase">
@@ -173,7 +173,7 @@ export function ClientsView() {
                       openClient(c);
                     }
                   }}
-                  className="border-line hover:bg-sunken focus-visible:bg-sunken cursor-pointer border-b transition-colors [transition-duration:var(--dur-fast)] last:border-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]"
+                  className="border-line hover:bg-hover focus-visible:bg-sunken cursor-pointer border-b transition-colors [transition-duration:var(--dur-fast)] last:border-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]"
                 >
                   <td className="px-4 py-3">
                     <span className="text-fg font-medium">{c.name}</span>

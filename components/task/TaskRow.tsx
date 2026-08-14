@@ -41,7 +41,7 @@ export function TaskRow({
   const closed = done || cancelled;
 
   return (
-    <div className="group hover:bg-sunken flex h-14 items-center gap-3 rounded-md px-3">
+    <div className="group hover:bg-hover flex h-14 items-center gap-3 rounded-md px-3">
       {onSelectChange ? (
         <Checkbox
           checked={!!selected}
@@ -107,7 +107,7 @@ export function TaskRow({
               {onToggleCancel ? (
                 <DropdownMenu.Item
                   onSelect={() => onToggleCancel(!cancelled)}
-                  className="text-fg data-[highlighted]:bg-sunken flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] outline-none"
+                  className="text-fg data-[highlighted]:bg-hover flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] outline-none"
                 >
                   {cancelled ? (
                     <IconRotate size={16} stroke={1.5} />
@@ -119,7 +119,7 @@ export function TaskRow({
               ) : null}
               <DropdownMenu.Item
                 onSelect={onDelete}
-                className="text-fg data-[highlighted]:bg-sunken flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] outline-none"
+                className="text-fg data-[highlighted]:bg-hover flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] outline-none"
               >
                 <IconTrash size={16} stroke={1.5} />
                 Excluir

@@ -16,7 +16,7 @@ import { useWorkspace } from "@/lib/queries/useWorkspace";
 const menuContent =
   "z-50 min-w-44 max-h-64 overflow-auto rounded-md tf-glass-strong p-1 data-[state=closed]:[animation:tf-pop-out_var(--dur-fast)_ease-in] data-[state=open]:[animation:tf-pop-in_var(--dur-fast)_var(--ease-out)]";
 const menuItem =
-  "flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] text-fg outline-none data-[highlighted]:bg-sunken";
+  "flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] text-fg outline-none data-[highlighted]:bg-hover";
 
 // Comentários com @menções explícitas (escolhidas num menu, não parseadas do
 // texto — mais previsível). Distinto de InsightLog (log de decisões/ADR-008).
@@ -104,7 +104,7 @@ export function CommentList({ taskId }: { taskId: string }) {
             <DropdownMenu.Trigger asChild>
               <button
                 type="button"
-                className="text-fg-secondary hover:bg-sunken hover:text-fg inline-flex h-7 items-center gap-1 rounded-sm px-2 text-[length:var(--text-caption-size)] transition-colors [transition-duration:var(--dur-fast)]"
+                className="text-fg-secondary hover:bg-hover hover:text-fg inline-flex h-7 items-center gap-1 rounded-sm px-2 text-[length:var(--text-caption-size)] transition-colors [transition-duration:var(--dur-fast)]"
               >
                 <IconAt size={14} stroke={1.5} />
                 Mencionar

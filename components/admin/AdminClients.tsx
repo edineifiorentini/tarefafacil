@@ -26,7 +26,7 @@ const PERIODS = [
 ] as const;
 
 const menuItem =
-  "cursor-pointer rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] text-fg outline-none data-[highlighted]:bg-sunken";
+  "cursor-pointer rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] text-fg outline-none data-[highlighted]:bg-hover";
 
 function ClientRowItem({ client }: { client: ClientRow }) {
   const qc = useQueryClient();
@@ -174,7 +174,7 @@ function ClientRowItem({ client }: { client: ClientRow }) {
               <button
                 type="button"
                 aria-label={`Ações de ${client.name}`}
-                className="text-fg-muted hover:bg-sunken hover:text-fg data-[state=open]:bg-sunken inline-flex h-8 w-8 items-center justify-center rounded-sm"
+                className="text-fg-muted hover:bg-hover hover:text-fg data-[state=open]:bg-sunken inline-flex h-8 w-8 items-center justify-center rounded-sm"
               >
                 <IconDotsVertical size={16} stroke={1.5} />
               </button>
@@ -222,7 +222,7 @@ function ClientRowItem({ client }: { client: ClientRow }) {
                     e.preventDefault();
                     setConfirmDelete(true);
                   }}
-                  className="text-overdue data-[highlighted]:bg-sunken cursor-pointer rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] outline-none"
+                  className="text-overdue data-[highlighted]:bg-hover cursor-pointer rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] outline-none"
                 >
                   Remover cliente
                 </DropdownMenu.Item>
@@ -374,15 +374,12 @@ export function AdminClients() {
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 px-6 py-8">
+      {/* O título "Contas" está na barra superior; aqui fica só o aviso de
+          comportamento e a ação de criar. */}
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-fg text-[length:var(--text-h2-size)] font-semibold">
-            Clientes
-          </h1>
-          <p className="text-fg-secondary">
-            Workspaces, planos, assentos e acesso. Alterações valem na hora.
-          </p>
-        </div>
+        <p className="text-fg-secondary text-[length:var(--text-small-size)]">
+          Alterações de plano, assentos e acesso valem na hora.
+        </p>
         <CreateClient />
       </div>
 

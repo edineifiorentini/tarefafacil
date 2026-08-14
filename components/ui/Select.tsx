@@ -62,7 +62,7 @@ export function Select({
               <RxSelect.Item
                 key={option.value}
                 value={option.value}
-                className="text-fg data-[highlighted]:bg-sunken relative flex cursor-pointer items-center rounded-sm py-2 pr-3 pl-8 text-[length:var(--text-small-size)] outline-none select-none data-[disabled]:cursor-not-allowed data-[disabled]:opacity-60"
+                className="text-fg data-[highlighted]:bg-hover relative flex cursor-pointer items-center rounded-sm py-2 pr-3 pl-8 text-[length:var(--text-small-size)] outline-none select-none data-[disabled]:cursor-not-allowed data-[disabled]:opacity-60"
               >
                 <RxSelect.ItemIndicator className="absolute left-2 inline-flex items-center">
                   <IconCheck size={16} stroke={2} />

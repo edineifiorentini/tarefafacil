@@ -61,7 +61,7 @@ export function NotificationBell() {
               ? `${count} pedido${count > 1 ? "s" : ""} de entrada`
               : "Notificações"
           }
-          className="text-fg-secondary hover:bg-sunken hover:text-fg relative inline-flex h-9 w-9 items-center justify-center rounded-sm transition-colors [transition-duration:var(--dur-fast)]"
+          className="text-fg-secondary hover:bg-hover hover:text-fg relative inline-flex h-9 w-9 items-center justify-center rounded-sm transition-colors [transition-duration:var(--dur-fast)]"
         >
           <IconBell size={20} stroke={1.5} />
           {count > 0 ? (

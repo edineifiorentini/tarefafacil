@@ -86,7 +86,7 @@ function SectorItem({
       style={style}
       className={`group flex items-center rounded-sm ${
         isDragging ? "opacity-60" : ""
-      } ${active ? "bg-selected" : "hover:bg-sunken"}`}
+      } ${active ? "bg-selected" : "hover:bg-hover"}`}
     >
       {/* A linha inteira é o alvo de arraste (mouse e teclado). Clique simples
           navega; clique-arrastando reordena. Link ignora Espaço, então o
@@ -134,21 +134,21 @@ function SectorItem({
           >
             <DropdownMenu.Item
               onSelect={onEdit}
-              className="text-fg data-[highlighted]:bg-sunken flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] outline-none"
+              className="text-fg data-[highlighted]:bg-hover flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] outline-none"
             >
               <IconPencil size={16} stroke={1.5} />
               Editar
             </DropdownMenu.Item>
             <DropdownMenu.Item
               onSelect={onArchive}
-              className="text-fg data-[highlighted]:bg-sunken flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] outline-none"
+              className="text-fg data-[highlighted]:bg-hover flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] outline-none"
             >
               <IconArchive size={16} stroke={1.5} />
               Arquivar
             </DropdownMenu.Item>
             <DropdownMenu.Item
               onSelect={onDelete}
-              className="text-overdue data-[highlighted]:bg-sunken flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] outline-none"
+              className="text-overdue data-[highlighted]:bg-hover flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] outline-none"
             >
               <IconTrash size={16} stroke={1.5} />
               Excluir

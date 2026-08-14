@@ -102,7 +102,7 @@ export default function LoginPage() {
       <button
         type="button"
         onClick={signInWithGoogle}
-        className="border-line bg-card text-fg hover:bg-sunken inline-flex items-center justify-center gap-2 rounded-sm border px-4 py-2 transition-colors [transition-duration:var(--dur-fast)]"
+        className="border-line bg-card text-fg hover:bg-hover inline-flex items-center justify-center gap-2 rounded-sm border px-4 py-2 transition-colors [transition-duration:var(--dur-fast)]"
       >
         <IconBrandGoogle size={18} stroke={1.5} />
         Continuar com Google

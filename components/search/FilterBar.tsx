@@ -29,7 +29,7 @@ const STATUS = [
 const menuContent =
   "z-50 min-w-48 overflow-hidden rounded-md tf-glass-strong p-1 data-[state=closed]:[animation:tf-pop-out_var(--dur-fast)_ease-in] data-[state=open]:[animation:tf-pop-in_var(--dur-fast)_var(--ease-out)]";
 const menuItem =
-  "flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] text-fg outline-none data-[highlighted]:bg-sunken";
+  "flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] text-fg outline-none data-[highlighted]:bg-hover";
 
 function TriggerButton({
   children,
@@ -46,7 +46,7 @@ function TriggerButton({
       className={`inline-flex h-8 items-center gap-1.5 rounded-sm border px-3 text-[length:var(--text-small-size)] transition-colors [transition-duration:var(--dur-fast)] ${
         active
           ? "border-line-strong bg-sunken text-fg"
-          : "border-line bg-card text-fg-secondary hover:bg-sunken"
+          : "border-line bg-card text-fg-secondary hover:bg-hover"
       }`}
     >
       {children}

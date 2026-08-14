@@ -73,7 +73,7 @@ export function TaskList({ sectorId }: { sectorId?: string }) {
             className={`rounded-full px-3 py-1 text-[length:var(--text-small-size)] transition-colors [transition-duration:var(--dur-fast)] ${
               filter === f.key
                 ? "bg-selected text-fg"
-                : "text-fg-secondary hover:bg-sunken"
+                : "text-fg-secondary hover:bg-hover"
             }`}
           >
             {f.label}

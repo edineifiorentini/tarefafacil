@@ -19,13 +19,7 @@ export default async function ConfigPage({
 
   return (
     <div className="mx-auto flex max-w-[var(--max-width-read)] flex-col gap-6 px-6 py-8">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-fg text-[length:var(--text-h2-size)] font-semibold">
-          Configurações
-        </h1>
-        <p className="text-fg-secondary">Integrações e preferências</p>
-      </div>
-
+      {/* O título está na barra superior. */}
       {message ? (
         <p
           role="status"

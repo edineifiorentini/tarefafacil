@@ -34,7 +34,7 @@ export function WorkspaceSwitcher({ workspaces }: { workspaces: Workspace[] }) {
       <DropdownMenu.Trigger asChild>
         <button
           type="button"
-          className="hover:bg-sunken flex w-full items-center gap-2 rounded-sm px-2 py-1 text-left transition-colors [transition-duration:var(--dur-fast)]"
+          className="hover:bg-hover flex w-full items-center gap-2 rounded-sm px-2 py-1 text-left transition-colors [transition-duration:var(--dur-fast)]"
         >
           <span className="text-fg min-w-0 flex-1 truncate text-[length:var(--text-h3-size)] font-medium">
             {active.name}
@@ -56,7 +56,7 @@ export function WorkspaceSwitcher({ workspaces }: { workspaces: Workspace[] }) {
             <DropdownMenu.Item
               key={w.id}
               onSelect={() => void select(w.id)}
-              className="text-fg data-[highlighted]:bg-sunken flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] outline-none"
+              className="text-fg data-[highlighted]:bg-hover flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] outline-none"
             >
               <span className="flex h-4 w-4 items-center justify-center">
                 {w.id === active.id ? <IconCheck size={14} stroke={2} /> : null}

@@ -143,7 +143,7 @@ function SortableCard({
                   <DropdownMenu.Item
                     key={col.id}
                     onSelect={() => onMoveToColumn(col.id)}
-                    className="text-fg data-[highlighted]:bg-sunken flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] outline-none"
+                    className="text-fg data-[highlighted]:bg-hover flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] outline-none"
                   >
                     <IconArrowRight size={14} stroke={1.5} />
                     {col.name}
@@ -167,7 +167,7 @@ function AddColumn({ onCreate }: { onCreate: (name: string) => void }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="border-line text-fg-secondary hover:bg-sunken hover:text-fg flex h-10 w-72 shrink-0 items-center gap-2 rounded-md border border-dashed px-3 text-[length:var(--text-small-size)] transition-colors [transition-duration:var(--dur-fast)]"
+        className="border-line text-fg-secondary hover:bg-hover hover:text-fg flex h-10 w-72 shrink-0 items-center gap-2 rounded-md border border-dashed px-3 text-[length:var(--text-small-size)] transition-colors [transition-duration:var(--dur-fast)]"
       >
         <IconPlus size={16} stroke={1.5} />
         Adicionar coluna

@@ -111,10 +111,8 @@ export function ContractsView() {
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-6 py-8">
+      {/* O título fica na barra superior — aqui só a ação principal. */}
       <div className="flex flex-wrap items-center gap-3">
-        <h1 className="text-fg text-[length:var(--text-h2-size)] font-semibold">
-          Contratos
-        </h1>
         <Button
           variant="primary"
           size="sm"
@@ -199,7 +197,7 @@ export function ContractsView() {
           }
         />
       ) : (
-        <div className="border-line overflow-hidden rounded-md border">
+        <div className="border-line bg-card overflow-hidden rounded-md border shadow-[var(--shadow-card)]">
           <table className="w-full border-collapse text-left">
             <thead>
               <tr className="border-line bg-sunken text-fg-muted border-b text-[length:var(--text-caption-size)] tracking-wide uppercase">
@@ -218,7 +216,7 @@ export function ContractsView() {
                 return (
                   <tr
                     key={c.id}
-                    className="border-line hover:bg-sunken cursor-pointer border-b transition-colors [transition-duration:var(--dur-fast)] last:border-0"
+                    className="border-line hover:bg-hover cursor-pointer border-b transition-colors [transition-duration:var(--dur-fast)] last:border-0"
                     onClick={() => openForm(c)}
                   >
                     <td className="px-4 py-3">
@@ -268,7 +266,7 @@ export function ContractsView() {
                           <button
                             type="button"
                             aria-label={`Ações de ${c.title}`}
-                            className="text-fg-muted hover:bg-sunken hover:text-fg inline-flex h-7 w-7 items-center justify-center rounded-sm"
+                            className="text-fg-muted hover:bg-hover hover:text-fg inline-flex h-7 w-7 items-center justify-center rounded-sm"
                           >
                             <IconDotsVertical size={16} stroke={1.5} />
                           </button>
@@ -288,7 +286,7 @@ export function ContractsView() {
                                 href={`/contratos/${c.id}/imprimir`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-fg data-[highlighted]:bg-sunken flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] outline-none"
+                                className="text-fg data-[highlighted]:bg-hover flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] outline-none"
                               >
                                 <IconPrinter size={14} stroke={1.5} />
                                 Visualizar / imprimir
@@ -297,7 +295,7 @@ export function ContractsView() {
                             {c.status === "assinado" || c.status === "ativo" ? (
                               <DropdownMenu.Item
                                 onSelect={() => setGenerateFor(c)}
-                                className="text-fg data-[highlighted]:bg-sunken flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] outline-none"
+                                className="text-fg data-[highlighted]:bg-hover flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] outline-none"
                               >
                                 <IconReceipt2 size={14} stroke={1.5} />
                                 Gerar parcelas no Financeiro
@@ -311,7 +309,7 @@ export function ContractsView() {
                                     status: nextStatus,
                                   })
                                 }
-                                className="text-fg data-[highlighted]:bg-sunken flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] outline-none"
+                                className="text-fg data-[highlighted]:bg-hover flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] outline-none"
                               >
                                 {NEXT_LABEL[c.status]}
                               </DropdownMenu.Item>
@@ -325,7 +323,7 @@ export function ContractsView() {
                                     status: "encerrado",
                                   })
                                 }
-                                className="text-fg data-[highlighted]:bg-sunken flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] outline-none"
+                                className="text-fg data-[highlighted]:bg-hover flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] outline-none"
                               >
                                 Encerrar
                               </DropdownMenu.Item>
@@ -338,7 +336,7 @@ export function ContractsView() {
                                     status: "cancelado",
                                   })
                                 }
-                                className="text-fg data-[highlighted]:bg-sunken flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] outline-none"
+                                className="text-fg data-[highlighted]:bg-hover flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] outline-none"
                               >
                                 Cancelar
                               </DropdownMenu.Item>
@@ -348,7 +346,7 @@ export function ContractsView() {
                             {c.status === "rascunho" ? (
                               <DropdownMenu.Item
                                 onSelect={() => deleteContract.mutate(c.id)}
-                                className="text-overdue data-[highlighted]:bg-sunken flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] outline-none"
+                                className="text-overdue data-[highlighted]:bg-hover flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] outline-none"
                               >
                                 <IconTrash size={14} stroke={1.5} />
                                 Excluir rascunho

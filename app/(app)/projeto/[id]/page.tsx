@@ -40,9 +40,10 @@ export default async function ProjectPage({
     <div className="mx-auto max-w-[var(--max-width-read)] px-6 py-8">
       <div className="mb-6">
         <div className="flex flex-wrap items-center gap-3">
-          <h1 className="text-fg text-[length:var(--text-h1-size)] leading-[var(--text-h1-line)] font-medium">
+          {/* h2: o h1 da página é o título da rota, na barra superior. */}
+          <h2 className="text-fg text-[length:var(--text-h2-size)] leading-[var(--text-h2-line)] font-semibold">
             {project.name}
-          </h1>
+          </h2>
           <Badge variant={project.status === "ativo" ? "brand" : "neutral"}>
             {projectStatusLabels[project.status]}
           </Badge>

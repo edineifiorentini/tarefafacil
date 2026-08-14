@@ -158,7 +158,7 @@ export function HojeView() {
     return (
       <div
         key={`s-${s.id}`}
-        className="group hover:bg-sunken flex items-center gap-3 rounded-sm py-1 pr-2 pl-8"
+        className="group hover:bg-hover flex items-center gap-3 rounded-sm py-1 pr-2 pl-8"
       >
         <Checkbox
           variant="round"
