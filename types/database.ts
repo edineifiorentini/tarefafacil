@@ -28,6 +28,14 @@ export type AttachmentKind = "file" | "link";
 export type TaskTimeSource = "manual" | "pomodoro";
 export type FinanceKind = "entrada" | "saida";
 export type FinanceStatus = "previsto" | "confirmado" | "cancelado";
+export type ContractStatus =
+  | "rascunho"
+  | "enviado"
+  | "assinado"
+  | "ativo"
+  | "encerrado"
+  | "cancelado";
+export type BillingPeriod = "unico" | "mensal" | "trimestral" | "anual";
 export type GcalStatus = "active" | "expired" | "revoked";
 export type ClientType = "pf" | "pj";
 export type ClientStatus = "prospecto" | "ativo" | "pausado" | "encerrado";
@@ -647,6 +655,81 @@ export type Database = {
         };
         Relationships: [];
       };
+      contract: {
+        Row: {
+          id: string;
+          workspace_id: string;
+          number: string | null;
+          client_id: string;
+          responsible_id: string | null;
+          title: string;
+          description: string | null;
+          status: ContractStatus;
+          issued_on: string | null;
+          starts_on: string | null;
+          ends_on: string | null;
+          auto_renew: boolean;
+          renew_notice_days: number | null;
+          amount_cents: number | null;
+          billing_period: BillingPeriod | null;
+          payment_method: string | null;
+          notes: string | null;
+          signed_at: string | null;
+          signed_document_url: string | null;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          workspace_id: string;
+          number?: string | null;
+          client_id: string;
+          responsible_id?: string | null;
+          title: string;
+          description?: string | null;
+          status?: ContractStatus;
+          issued_on?: string | null;
+          starts_on?: string | null;
+          ends_on?: string | null;
+          auto_renew?: boolean;
+          renew_notice_days?: number | null;
+          amount_cents?: number | null;
+          billing_period?: BillingPeriod | null;
+          payment_method?: string | null;
+          notes?: string | null;
+          signed_at?: string | null;
+          signed_document_url?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          workspace_id?: string;
+          number?: string | null;
+          client_id?: string;
+          responsible_id?: string | null;
+          title?: string;
+          description?: string | null;
+          status?: ContractStatus;
+          issued_on?: string | null;
+          starts_on?: string | null;
+          ends_on?: string | null;
+          auto_renew?: boolean;
+          renew_notice_days?: number | null;
+          amount_cents?: number | null;
+          billing_period?: BillingPeriod | null;
+          payment_method?: string | null;
+          notes?: string | null;
+          signed_at?: string | null;
+          signed_document_url?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       client: {
         Row: {
           id: string;
@@ -850,3 +933,4 @@ export type TaskComment = Tables<"task_comment">;
 export type TaskTimeEntry = Tables<"task_time_entry">;
 export type TaskDependency = Tables<"task_dependency">;
 export type FinanceEntry = Tables<"finance_entry">;
+export type Contract = Tables<"contract">;

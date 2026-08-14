@@ -18,6 +18,7 @@ const staticTitles: Record<string, string> = {
   "/busca": "Buscar",
   "/clientes": "Clientes",
   "/financeiro": "Financeiro",
+  "/contratos": "Contratos",
   "/admin": "Contas",
   "/config": "Configurações",
 };

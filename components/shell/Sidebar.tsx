@@ -5,6 +5,7 @@ import {
   IconCalendarMonth,
   IconLayoutDashboard,
   IconLayoutKanban,
+  IconFileText,
   IconLayoutList,
   IconMoneybag,
   IconPlus,
@@ -63,7 +64,9 @@ export function Sidebar({
   const { data: myId } = useCurrentUserId();
   const { data: members = [] } = useMembers(workspace.id);
   const myRole = members.find((m) => m.user_id === myId)?.role;
-  const canManageFinance = myRole === "owner" || myRole === "admin";
+  // Financeiro e Contratos carregam dado sensível — só dono/admin (RLS
+  // já protege os dados; isto só evita mostrar um link "acesso restrito").
+  const canManageBusiness = myRole === "owner" || myRole === "admin";
 
   function isActive(href: string) {
     return pathname === href || pathname.startsWith(`${href}/`);
@@ -96,18 +99,31 @@ export function Sidebar({
               </Link>
             </li>
           ))}
-          {canManageFinance ? (
-            <li>
-              <Link
-                href="/financeiro"
-                aria-current={isActive("/financeiro") ? "page" : undefined}
-                onClick={() => setMobileNavOpen(false)}
-                className={navItemClass(isActive("/financeiro"))}
-              >
-                <IconMoneybag size={20} stroke={1.5} />
-                <span className="flex-1">Financeiro</span>
-              </Link>
-            </li>
+          {canManageBusiness ? (
+            <>
+              <li>
+                <Link
+                  href="/financeiro"
+                  aria-current={isActive("/financeiro") ? "page" : undefined}
+                  onClick={() => setMobileNavOpen(false)}
+                  className={navItemClass(isActive("/financeiro"))}
+                >
+                  <IconMoneybag size={20} stroke={1.5} />
+                  <span className="flex-1">Financeiro</span>
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/contratos"
+                  aria-current={isActive("/contratos") ? "page" : undefined}
+                  onClick={() => setMobileNavOpen(false)}
+                  className={navItemClass(isActive("/contratos"))}
+                >
+                  <IconFileText size={20} stroke={1.5} />
+                  <span className="flex-1">Contratos</span>
+                </Link>
+              </li>
+            </>
           ) : null}
         </ul>
       </nav>
