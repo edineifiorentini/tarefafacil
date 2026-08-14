@@ -12,6 +12,15 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Destino pós-login (ex.: link de convite). Só aceita caminho interno.
+  function callbackUrl() {
+    const base = `${location.origin}/auth/callback`;
+    const next = new URLSearchParams(location.search).get("next");
+    return next && next.startsWith("/")
+      ? `${base}?next=${encodeURIComponent(next)}`
+      : base;
+  }
+
   async function sendMagicLink(e: FormEvent) {
     e.preventDefault();
     setLoading(true);
@@ -19,7 +28,7 @@ export default function LoginPage() {
     const supabase = createClient();
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: `${location.origin}/auth/callback` },
+      options: { emailRedirectTo: callbackUrl() },
     });
     setLoading(false);
     if (error) setError(error.message);
@@ -31,7 +40,7 @@ export default function LoginPage() {
     const supabase = createClient();
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${location.origin}/auth/callback` },
+      options: { redirectTo: callbackUrl() },
     });
     if (error) setError(error.message);
   }

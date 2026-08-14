@@ -8,6 +8,7 @@ import { AppShell } from "@/components/shell/AppShell";
 import { ShellProvider } from "@/components/shell/shell-context";
 import { AccessExpired } from "@/components/workspace/AccessExpired";
 import { CreateWorkspace } from "@/components/workspace/CreateWorkspace";
+import { PendingApproval } from "@/components/workspace/PendingApproval";
 import { WorkspaceProvider } from "@/lib/queries/useWorkspace";
 import { createClient } from "@/lib/supabase/server";
 
@@ -28,6 +29,18 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
     .order("created_at", { ascending: true });
 
   if (!workspaces || workspaces.length === 0) {
+    // Sem workspace ativo: pode ser convidado aguardando aprovação (entrou
+    // como 'pending') OU usuário novo de fato. Distingue pela própria linha
+    // de membership (visível via policy workspace_member_self_select).
+    const { data: pending } = await supabase
+      .from("workspace_member")
+      .select("workspace_id")
+      .eq("user_id", user.id)
+      .eq("status", "pending")
+      .limit(1);
+    if (pending && pending.length > 0) {
+      return <PendingApproval />;
+    }
     return <CreateWorkspace />;
   }
 

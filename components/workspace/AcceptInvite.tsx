@@ -1,34 +1,36 @@
 "use client";
 
-import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/Button";
 import { acceptInvite } from "@/lib/queries/useInvites";
 
+type State = "loading" | "success" | "full" | "invalid";
+
+// Roda fora do grupo (app), sem QueryClientProvider — por isso usa estado
+// local em vez de react-query. Aceite dispara uma única vez (ref guard).
 export function AcceptInvite({ token }: { token: string }) {
   const router = useRouter();
-  // A pessoa entra como PENDENTE; o dono precisa aprovar (anti-invasão).
-  const accept = useMutation({ mutationFn: () => acceptInvite(token) });
+  const [state, setState] = useState<State>("loading");
   const fired = useRef(false);
-
-  const full =
-    accept.error instanceof Error && accept.error.message.includes("cheia");
 
   useEffect(() => {
     if (fired.current) return;
     fired.current = true;
-    accept.mutate();
-    // dispara uma vez ao montar
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    acceptInvite(token)
+      .then(() => setState("success"))
+      .catch((err: unknown) => {
+        const msg = err instanceof Error ? err.message : "";
+        setState(msg.includes("cheia") ? "full" : "invalid");
+      });
+  }, [token]);
 
   return (
-    <div className="mx-auto flex max-w-[var(--max-width-read)] flex-col items-center gap-4 px-6 py-16 text-center">
-      {accept.isPending || accept.isIdle ? (
+    <div className="mx-auto flex min-h-dvh max-w-[var(--max-width-read)] flex-col items-center justify-center gap-4 px-6 text-center">
+      {state === "loading" ? (
         <p className="text-fg-secondary">Aceitando convite…</p>
-      ) : accept.isSuccess ? (
+      ) : state === "success" ? (
         <>
           <h1 className="text-[length:var(--text-h2-size)] font-semibold text-fg">
             Pedido enviado
@@ -38,16 +40,16 @@ export function AcceptInvite({ token }: { token: string }) {
             o workspace aparece no seletor no topo da barra lateral.
           </p>
           <Button variant="primary" onClick={() => router.push("/hoje")}>
-            Ir para Hoje
+            Continuar
           </Button>
         </>
       ) : (
         <>
           <h1 className="text-[length:var(--text-h2-size)] font-semibold text-fg">
-            {full ? "Equipe cheia" : "Convite inválido"}
+            {state === "full" ? "Equipe cheia" : "Convite inválido"}
           </h1>
           <p className="text-fg-secondary">
-            {full
+            {state === "full"
               ? "Esta equipe atingiu o limite de membros. Peça a quem convidou para liberar um assento."
               : "O link pode ter expirado ou já ter sido usado. Peça um novo a quem convidou."}
           </p>

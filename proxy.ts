@@ -37,6 +37,9 @@ export async function proxy(request: NextRequest) {
   const isPublic =
     path.startsWith("/login") ||
     path.startsWith("/auth") ||
+    // Aceite de convite: a própria página decide login/redirect (precisa
+    // renderizar mesmo sem sessão para preservar o token no /login?next=).
+    path.startsWith("/convite") ||
     // Webhook do Google: chamado sem sessão (o Google não tem cookie).
     path.startsWith("/api/gcal/webhook");
 
@@ -47,8 +50,11 @@ export async function proxy(request: NextRequest) {
   }
 
   if (user && path === "/login") {
+    // Já logado: se veio com destino (ex.: link de convite), respeita-o.
+    const next = request.nextUrl.searchParams.get("next");
     const url = request.nextUrl.clone();
-    url.pathname = "/hoje";
+    url.pathname = next && next.startsWith("/") ? next : "/hoje";
+    url.search = "";
     return NextResponse.redirect(url);
   }
 
