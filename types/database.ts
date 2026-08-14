@@ -620,6 +620,10 @@ export type Database = {
           source_type: string | null;
           source_id: string | null;
           installment_number: number | null;
+          needs_invoice: boolean;
+          invoice_number: string | null;
+          invoice_issued_at: string | null;
+          invoice_file_url: string | null;
           created_by: string | null;
           created_at: string;
           updated_at: string;
@@ -639,6 +643,10 @@ export type Database = {
           source_type?: string | null;
           source_id?: string | null;
           installment_number?: number | null;
+          needs_invoice?: boolean;
+          invoice_number?: string | null;
+          invoice_issued_at?: string | null;
+          invoice_file_url?: string | null;
           created_by?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -658,6 +666,40 @@ export type Database = {
           source_type?: string | null;
           source_id?: string | null;
           installment_number?: number | null;
+          needs_invoice?: boolean;
+          invoice_number?: string | null;
+          invoice_issued_at?: string | null;
+          invoice_file_url?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      finance_goal: {
+        Row: {
+          id: string;
+          workspace_id: string;
+          month: string;
+          target_cents: number;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          workspace_id: string;
+          month: string;
+          target_cents: number;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          workspace_id?: string;
+          month?: string;
+          target_cents?: number;
           created_by?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -943,3 +985,4 @@ export type TaskTimeEntry = Tables<"task_time_entry">;
 export type TaskDependency = Tables<"task_dependency">;
 export type FinanceEntry = Tables<"finance_entry">;
 export type Contract = Tables<"contract">;
+export type FinanceGoal = Tables<"finance_goal">;

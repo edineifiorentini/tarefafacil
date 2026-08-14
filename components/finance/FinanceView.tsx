@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Select } from "@/components/ui/Select";
 import { StatCard } from "@/components/ui/StatCard";
+import { buildCashFlowSeries, periodBalance, type CashFlowMode } from "@/lib/finance/cashflow";
 import { formatCentsBRL } from "@/lib/finance/money";
 import { currentMonthISO, monthLabel, shiftMonth } from "@/lib/finance/month";
 import { computeFinanceStats, entriesForMonth, isOverdue } from "@/lib/finance/stats";
@@ -32,7 +33,10 @@ import { useCurrentUserId, useMembers } from "@/lib/queries/useMembers";
 import { useWorkspace } from "@/lib/queries/useWorkspace";
 import type { FinanceEntry, FinanceKind, FinanceStatus } from "@/types/database";
 
+import { CashFlowChart } from "./CashFlowChart";
 import { FinanceEntryForm } from "./FinanceEntryForm";
+import { GoalGauge } from "./GoalGauge";
+import { InvoiceSummary } from "./InvoiceSummary";
 
 const HIDE_KEY = "tf-finance-hide-values";
 const STATUS_LABEL: Record<FinanceStatus, string> = {
@@ -58,6 +62,8 @@ export function FinanceView() {
   const [hide, setHide] = useState(false);
   const [kindFilter, setKindFilter] = useState<"__all__" | FinanceKind>("__all__");
   const [statusFilter, setStatusFilter] = useState<"__all__" | FinanceStatus>("__all__");
+  const [months, setMonths] = useState<3 | 6 | 12>(6);
+  const [cashFlowMode, setCashFlowMode] = useState<CashFlowMode>("realizado");
 
   useEffect(() => {
     try {
@@ -83,12 +89,17 @@ export function FinanceView() {
 
   const clientNameById = new Map(clients.map((c) => [c.id, c.name]));
   const stats = useMemo(() => computeFinanceStats(entries, month), [entries, month]);
+  const cashFlow = useMemo(
+    () => buildCashFlowSeries(entries, month, months, cashFlowMode),
+    [entries, month, months, cashFlowMode]
+  );
+  const monthEntries = useMemo(() => entriesForMonth(entries, month), [entries, month]);
   const visible = useMemo(() => {
-    return entriesForMonth(entries, month)
+    return monthEntries
       .filter((e) => kindFilter === "__all__" || e.kind === kindFilter)
       .filter((e) => statusFilter === "__all__" || e.status === statusFilter)
       .sort((a, b) => a.due_date.localeCompare(b.due_date));
-  }, [entries, month, kindFilter, statusFilter]);
+  }, [monthEntries, kindFilter, statusFilter]);
 
   function mask(text: string) {
     return hide ? "••••••" : text;
@@ -202,6 +213,54 @@ export function FinanceView() {
           tone="var(--tone-amber)"
         />
       </div>
+
+      <div className="grid gap-4 lg:grid-cols-3">
+        <div className="flex flex-col gap-3 rounded-md border border-line bg-card p-4 lg:col-span-2">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="text-[length:var(--text-small-size)] font-medium text-fg-secondary">
+              Fluxo de caixa
+            </h2>
+            <div className="flex items-center gap-2">
+              <div className="w-32">
+                <Select
+                  options={[
+                    { value: "realizado", label: "Realizado" },
+                    { value: "previsto", label: "Previsto" },
+                  ]}
+                  value={cashFlowMode}
+                  onValueChange={(v) => setCashFlowMode(v as CashFlowMode)}
+                  aria-label="Modo do fluxo de caixa"
+                />
+              </div>
+              <div className="w-24">
+                <Select
+                  options={[
+                    { value: "3", label: "3 meses" },
+                    { value: "6", label: "6 meses" },
+                    { value: "12", label: "12 meses" },
+                  ]}
+                  value={String(months)}
+                  onValueChange={(v) => setMonths(Number(v) as 3 | 6 | 12)}
+                  aria-label="Período do fluxo de caixa"
+                />
+              </div>
+            </div>
+          </div>
+          <CashFlowChart points={cashFlow} />
+          <p className="text-[length:var(--text-small-size)] text-fg-secondary">
+            Saldo do período:{" "}
+            <span
+              className={`tnum font-medium ${periodBalance(cashFlow) < 0 ? "text-overdue" : "text-fg"}`}
+            >
+              {mask(formatCentsBRL(periodBalance(cashFlow)))}
+            </span>
+          </p>
+        </div>
+
+        <GoalGauge month={month} received={stats.recebido} />
+      </div>
+
+      <InvoiceSummary entries={monthEntries} onOpen={openForm} />
 
       <div className="flex flex-wrap items-center gap-2">
         <div className="w-36">

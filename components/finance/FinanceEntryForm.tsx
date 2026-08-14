@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 
 import { Button } from "@/components/ui/Button";
+import { Checkbox } from "@/components/ui/Checkbox";
 import { CurrencyInput } from "@/components/ui/CurrencyInput";
 import { Select } from "@/components/ui/Select";
 import { TextInput } from "@/components/ui/TextInput";
@@ -65,6 +66,10 @@ export function FinanceEntryForm({
   const [category, setCategory] = useState(entry?.category ?? "");
   const [clientId, setClientId] = useState(entry?.client_id ?? "__none__");
   const [notes, setNotes] = useState(entry?.notes ?? "");
+  const [needsInvoice, setNeedsInvoice] = useState(entry?.needs_invoice ?? false);
+  const [invoiceNumber, setInvoiceNumber] = useState(entry?.invoice_number ?? "");
+  const [invoiceIssuedAt, setInvoiceIssuedAt] = useState(entry?.invoice_issued_at ?? "");
+  const [invoiceFileUrl, setInvoiceFileUrl] = useState(entry?.invoice_file_url ?? "");
 
   const busy = create.isPending || update.isPending;
 
@@ -85,6 +90,10 @@ export function FinanceEntryForm({
       category: category.trim() || null,
       client_id: clientId === "__none__" ? null : clientId,
       notes: notes.trim() || null,
+      needs_invoice: needsInvoice,
+      invoice_number: invoiceNumber.trim() || null,
+      invoice_issued_at: invoiceIssuedAt || null,
+      invoice_file_url: invoiceFileUrl.trim() || null,
     };
     const handlers = {
       onSuccess: () => {
@@ -185,6 +194,50 @@ export function FinanceEntryForm({
           aria-label="Observações"
         />
       </Field>
+
+      <div className="flex flex-col gap-3 rounded-md border border-line p-3">
+        <label className="flex items-center gap-2">
+          <Checkbox
+            checked={needsInvoice}
+            onCheckedChange={(c) => setNeedsInvoice(c === true)}
+            aria-label="Precisa de nota fiscal"
+          />
+          <span className="text-[length:var(--text-small-size)] text-fg">
+            Precisa de nota fiscal
+          </span>
+        </label>
+
+        {needsInvoice ? (
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Nº da nota">
+              <TextInput
+                value={invoiceNumber}
+                onChange={(e) => setInvoiceNumber(e.target.value)}
+                placeholder="Preencha ao emitir"
+                aria-label="Número da nota fiscal"
+              />
+            </Field>
+            <Field label="Data de emissão">
+              <TextInput
+                type="date"
+                value={invoiceIssuedAt}
+                onChange={(e) => setInvoiceIssuedAt(e.target.value)}
+                aria-label="Data de emissão da nota"
+              />
+            </Field>
+            <div className="col-span-2">
+              <Field label="Link do arquivo">
+                <TextInput
+                  value={invoiceFileUrl}
+                  onChange={(e) => setInvoiceFileUrl(e.target.value)}
+                  placeholder="https://…"
+                  aria-label="Link do arquivo da nota fiscal"
+                />
+              </Field>
+            </div>
+          </div>
+        ) : null}
+      </div>
 
       <div className="flex justify-end gap-2">
         <Button type="button" variant="ghost" onClick={onDone}>
