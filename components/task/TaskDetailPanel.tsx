@@ -407,7 +407,11 @@ export function TaskDetailPanel({ taskId }: { taskId: string }) {
       </Field>
 
       <Field label="Tempo registrado">
-        <TimeTracking taskId={taskId} estimateMinutes={task.estimate_minutes} />
+        <TimeTracking
+          taskId={taskId}
+          taskTitle={title || task.title}
+          estimateMinutes={task.estimate_minutes}
+        />
       </Field>
 
       <Field label="Bloqueada por">

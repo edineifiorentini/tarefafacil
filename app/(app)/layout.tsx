@@ -9,6 +9,7 @@ import { ShellProvider } from "@/components/shell/shell-context";
 import { AccessExpired } from "@/components/workspace/AccessExpired";
 import { CreateWorkspace } from "@/components/workspace/CreateWorkspace";
 import { PendingApproval } from "@/components/workspace/PendingApproval";
+import { PomodoroProvider } from "@/lib/pomodoro/PomodoroContext";
 import { WorkspaceProvider } from "@/lib/queries/useWorkspace";
 import { createClient } from "@/lib/supabase/server";
 
@@ -78,15 +79,17 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   return (
     <Providers>
       <WorkspaceProvider workspace={workspace}>
-        <ShellProvider>
-          <AppShell
-            sectors={sectors ?? []}
-            workspaces={workspaces}
-            isAdmin={admin}
-          >
-            {children}
-          </AppShell>
-        </ShellProvider>
+        <PomodoroProvider>
+          <ShellProvider>
+            <AppShell
+              sectors={sectors ?? []}
+              workspaces={workspaces}
+              isAdmin={admin}
+            >
+              {children}
+            </AppShell>
+          </ShellProvider>
+        </PomodoroProvider>
       </WorkspaceProvider>
     </Providers>
   );

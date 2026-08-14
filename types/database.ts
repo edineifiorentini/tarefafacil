@@ -25,6 +25,7 @@ export type TaskPriority =
   | "alta"
   | "urgente";
 export type AttachmentKind = "file" | "link";
+export type TaskTimeSource = "manual" | "pomodoro";
 export type GcalStatus = "active" | "expired" | "revoked";
 export type ClientType = "pf" | "pj";
 export type ClientStatus = "prospecto" | "ativo" | "pausado" | "encerrado";
@@ -545,6 +546,7 @@ export type Database = {
           minutes: number;
           note: string | null;
           logged_on: string;
+          source: string;
           created_at: string;
         };
         Insert: {
@@ -555,6 +557,7 @@ export type Database = {
           minutes: number;
           note?: string | null;
           logged_on?: string;
+          source?: string;
           created_at?: string;
         };
         Update: {
@@ -565,6 +568,7 @@ export type Database = {
           minutes?: number;
           note?: string | null;
           logged_on?: string;
+          source?: string;
           created_at?: string;
         };
         Relationships: [];

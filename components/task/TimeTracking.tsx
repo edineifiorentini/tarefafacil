@@ -14,6 +14,8 @@ import {
 } from "@/lib/queries/useTaskTime";
 import { useWorkspace } from "@/lib/queries/useWorkspace";
 
+import { PomodoroControl } from "./PomodoroControl";
+
 function formatMinutes(total: number): string {
   const h = Math.floor(total / 60);
   const m = total % 60;
@@ -24,9 +26,11 @@ function formatMinutes(total: number): string {
 
 export function TimeTracking({
   taskId,
+  taskTitle,
   estimateMinutes,
 }: {
   taskId: string;
+  taskTitle: string;
   estimateMinutes: number | null;
 }) {
   const workspace = useWorkspace();
@@ -39,6 +43,7 @@ export function TimeTracking({
 
   const total = entries.reduce((sum, e) => sum + e.minutes, 0);
   const overEstimate = !!estimateMinutes && total > estimateMinutes;
+  const pomodoroCount = entries.filter((e) => e.source === "pomodoro").length;
 
   function submit(e: FormEvent) {
     e.preventDefault();
@@ -51,7 +56,9 @@ export function TimeTracking({
   }
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-3">
+      <PomodoroControl taskId={taskId} taskTitle={taskTitle} pomodoroCount={pomodoroCount} />
+
       <p className="text-[length:var(--text-small-size)] text-fg-secondary">
         <span className={overEstimate ? "font-medium text-overdue" : "text-fg"}>
           {formatMinutes(total)}
@@ -72,6 +79,7 @@ export function TimeTracking({
                 <span className="tnum font-medium text-fg">
                   {formatMinutes(entry.minutes)}
                 </span>
+                {entry.source === "pomodoro" ? <span aria-hidden>🍅</span> : null}
                 <span>{who?.display_name ?? who?.email ?? "Alguém"}</span>
                 {entry.note ? <span className="truncate">— {entry.note}</span> : null}
                 <button
