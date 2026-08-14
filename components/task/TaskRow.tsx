@@ -24,6 +24,8 @@ export function TaskRow({
   onOpen,
   onDelete,
   onToggleCancel,
+  selected,
+  onSelectChange,
 }: {
   task: Task;
   sector?: Sector;
@@ -31,6 +33,8 @@ export function TaskRow({
   onOpen: () => void;
   onDelete: () => void;
   onToggleCancel?: (cancel: boolean) => void;
+  selected?: boolean;
+  onSelectChange?: (selected: boolean) => void;
 }) {
   const done = task.completed_at !== null;
   const cancelled = task.cancelled_at !== null;
@@ -38,6 +42,13 @@ export function TaskRow({
 
   return (
     <div className="group flex h-14 items-center gap-3 rounded-md px-3 hover:bg-sunken">
+      {onSelectChange ? (
+        <Checkbox
+          checked={!!selected}
+          onCheckedChange={(c) => onSelectChange(c === true)}
+          aria-label={selected ? "Remover da seleção" : "Selecionar demanda"}
+        />
+      ) : null}
       <Checkbox
         variant="round"
         checked={done}

@@ -35,11 +35,16 @@ import type { TablesUpdate, TaskPriority } from "@/types/database";
 import { GcalEditedBadge } from "@/components/gcal/GcalEditedBadge";
 
 import { AttachmentList } from "./AttachmentList";
+import { CommentList } from "./CommentList";
+import { DependencySelector } from "./DependencySelector";
 import { InsightLog } from "./InsightLog";
+import { ParticipantsSelector } from "./ParticipantsSelector";
 import { SubtaskList } from "./SubtaskList";
+import { TaskActivityLog } from "./TaskActivityLog";
 import { TagSelector } from "./TagSelector";
 import { TaskMeetToggle } from "./TaskMeetToggle";
 import { TaskSyncToggle } from "./TaskSyncToggle";
+import { TimeTracking } from "./TimeTracking";
 
 const PRIORITIES = [
   { value: "sem_prioridade", label: "Sem prioridade" },
@@ -97,6 +102,9 @@ export function TaskDetailPanel({ taskId }: { taskId: string }) {
     task?.client_id ?? null
   );
   const [service, setService] = useState(task?.service ?? "");
+  const [estimateHours, setEstimateHours] = useState(
+    task?.estimate_minutes ? String(task.estimate_minutes / 60) : ""
+  );
   const { data: projects = [] } = useProjects(workspace.id, sectorId);
   const { data: members = [] } = useMembers(workspace.id);
   const { data: clients = [] } = useClients(workspace.id);
@@ -355,6 +363,10 @@ export function TaskDetailPanel({ taskId }: { taskId: string }) {
         />
       </Field>
 
+      <Field label="Participantes">
+        <ParticipantsSelector taskId={taskId} excludeUserId={assigneeId} />
+      </Field>
+
       <Field label="Tags">
         <TagSelector taskId={taskId} />
       </Field>
@@ -372,6 +384,36 @@ export function TaskDetailPanel({ taskId }: { taskId: string }) {
         />
       </Field>
 
+      <Field label="Estimativa (horas)">
+        <div className="w-24">
+          <TextInput
+            inputMode="decimal"
+            value={estimateHours}
+            onChange={(e) => {
+              const v = e.target.value.replace(/[^0-9.,]/g, "");
+              setEstimateHours(v);
+              const hours = Number.parseFloat(v.replace(",", "."));
+              scheduleSave({
+                estimate_minutes:
+                  Number.isFinite(hours) && hours > 0
+                    ? Math.round(hours * 60)
+                    : null,
+              });
+            }}
+            placeholder="Ex.: 2.5"
+            aria-label="Estimativa em horas"
+          />
+        </div>
+      </Field>
+
+      <Field label="Tempo registrado">
+        <TimeTracking taskId={taskId} estimateMinutes={task.estimate_minutes} />
+      </Field>
+
+      <Field label="Bloqueada por">
+        <DependencySelector taskId={taskId} />
+      </Field>
+
       <Field label="Subtarefas">
         <SubtaskList taskId={taskId} parentDue={dueDate || null} />
       </Field>
@@ -382,6 +424,14 @@ export function TaskDetailPanel({ taskId }: { taskId: string }) {
 
       <Field label="Insights">
         <InsightLog taskId={taskId} />
+      </Field>
+
+      <Field label="Comentários">
+        <CommentList taskId={taskId} />
+      </Field>
+
+      <Field label="Histórico">
+        <TaskActivityLog taskId={taskId} sectorId={task.sector_id} />
       </Field>
 
       <div className="mt-2 flex gap-2 border-t border-line pt-4">

@@ -12,6 +12,7 @@ import {
   useDeleteColumn,
   useRenameColumn,
   useReorderColumn,
+  useSetColumnWipLimit,
 } from "@/lib/queries/useBoardColumns";
 import { useMoveTask, useTasks } from "@/lib/queries/useTasks";
 import { useWorkspace } from "@/lib/queries/useWorkspace";
@@ -32,6 +33,7 @@ export function KanbanBoard({ sectorId }: { sectorId: string }) {
   const renameColumn = useRenameColumn(workspace.id, sectorId);
   const deleteColumn = useDeleteColumn(workspace.id, sectorId);
   const reorderColumn = useReorderColumn(workspace.id, sectorId);
+  const setWipLimit = useSetColumnWipLimit(workspace.id, sectorId);
   const { openPanel } = useShell();
 
   const firstColumnId = columns[0]?.id ?? "";
@@ -53,6 +55,7 @@ export function KanbanBoard({ sectorId }: { sectorId: string }) {
         id: c.id,
         name: c.name,
         tone: c.is_done_column ? "neutral" : TONES[toneIndex++ % TONES.length],
+        wipLimit: c.wip_limit,
       }))}
       items={tasks}
       getItemId={(t) => t.id}
@@ -85,6 +88,7 @@ export function KanbanBoard({ sectorId }: { sectorId: string }) {
       onColumnRename={(id, name) => renameColumn.mutate({ id, name })}
       onColumnDelete={(id) => deleteColumn.mutate(id)}
       onColumnReorder={(id, dir) => reorderColumn.mutate({ id, dir })}
+      onColumnWipLimitChange={(id, limit) => setWipLimit.mutate({ id, limit })}
     />
   );
 }

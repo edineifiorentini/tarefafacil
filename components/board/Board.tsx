@@ -31,6 +31,7 @@ export interface BoardColumnData {
   name: string;
   position?: number;
   tone?: string;
+  wipLimit?: number | null;
 }
 
 export interface BoardProps<T> {
@@ -46,6 +47,7 @@ export interface BoardProps<T> {
   onColumnRename?: (id: string, name: string) => void;
   onColumnDelete?: (id: string) => void;
   onColumnReorder?: (id: string, dir: "left" | "right") => void;
+  onColumnWipLimitChange?: (id: string, limit: number | null) => void;
   emptyColumnSlot?: (column: BoardColumnData) => ReactNode;
   isLoading?: boolean;
 }
@@ -229,6 +231,7 @@ export function Board<T>({
   onColumnRename,
   onColumnDelete,
   onColumnReorder,
+  onColumnWipLimitChange,
   emptyColumnSlot,
 }: BoardProps<T>) {
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -346,8 +349,14 @@ export function Board<T>({
               name={col.name}
               tone={col.tone}
               count={colItems.length}
+              wipLimit={col.wipLimit}
               itemIds={colItems.map(getItemId)}
               footer={emptyColumnSlot?.(col)}
+              onWipLimitChange={
+                onColumnWipLimitChange
+                  ? (limit) => onColumnWipLimitChange(col.id, limit)
+                  : undefined
+              }
               onRename={
                 onColumnRename ? (name) => onColumnRename(col.id, name) : undefined
               }

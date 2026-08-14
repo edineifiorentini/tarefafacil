@@ -5,6 +5,7 @@ import {
   IconCalendarMonth,
   IconLayoutDashboard,
   IconLayoutKanban,
+  IconLayoutList,
   IconPlus,
   IconSearch,
   IconSettings,
@@ -28,9 +29,10 @@ import { WorkspaceSwitcher } from "./WorkspaceSwitcher";
 const destinations = [
   { href: "/dashboard", label: "Dashboard", icon: IconLayoutDashboard, hint: "1" },
   { href: "/hoje", label: "Hoje", icon: IconSun, hint: "2" },
-  { href: "/quadro", label: "Quadro", icon: IconLayoutKanban, hint: "3" },
-  { href: "/calendario", label: "Calendário", icon: IconCalendarMonth, hint: "4" },
-  { href: "/clientes", label: "Clientes", icon: IconUsers, hint: "5" },
+  { href: "/lista", label: "Lista", icon: IconLayoutList, hint: "3" },
+  { href: "/quadro", label: "Quadro", icon: IconLayoutKanban, hint: "4" },
+  { href: "/calendario", label: "Calendário", icon: IconCalendarMonth, hint: "5" },
+  { href: "/clientes", label: "Clientes", icon: IconUsers, hint: "6" },
   { href: "/busca", label: "Buscar", icon: IconSearch, hint: "/" },
 ] as const;
 

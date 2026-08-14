@@ -9,6 +9,7 @@ import {
   IconArrowLeft,
   IconArrowRight,
   IconDotsVertical,
+  IconGauge,
   IconPencil,
   IconTrash,
 } from "@tabler/icons-react";
@@ -24,6 +25,7 @@ export function BoardColumn({
   name,
   tone,
   count,
+  wipLimit,
   itemIds,
   children,
   footer,
@@ -31,11 +33,13 @@ export function BoardColumn({
   onDelete,
   onMoveLeft,
   onMoveRight,
+  onWipLimitChange,
 }: {
   id: string;
   name: string;
   tone?: string;
   count: number;
+  wipLimit?: number | null;
   itemIds: string[];
   children: ReactNode;
   footer?: ReactNode;
@@ -43,12 +47,29 @@ export function BoardColumn({
   onDelete?: () => void;
   onMoveLeft?: () => void;
   onMoveRight?: () => void;
+  onWipLimitChange?: (limit: number | null) => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id });
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(name);
+  const [editingWip, setEditingWip] = useState(false);
+  const [wipDraft, setWipDraft] = useState(wipLimit ? String(wipLimit) : "");
 
-  const manageable = !!(onRename || onDelete || onMoveLeft || onMoveRight);
+  const manageable = !!(
+    onRename ||
+    onDelete ||
+    onMoveLeft ||
+    onMoveRight ||
+    onWipLimitChange
+  );
+  const overWip = !!wipLimit && count > wipLimit;
+
+  function commitWipLimit() {
+    const trimmed = wipDraft.trim();
+    const parsed = trimmed ? Number.parseInt(trimmed, 10) : null;
+    onWipLimitChange?.(parsed && parsed > 0 ? parsed : null);
+    setEditingWip(false);
+  }
   const dot = `var(--tone-${tone ?? "neutral"})`;
   const pillBg = `color-mix(in srgb, ${dot} 14%, var(--surface-card))`;
 
@@ -94,9 +115,34 @@ export function BoardColumn({
             <span className="truncate">{name}</span>
           </span>
         )}
-        <span className="tnum text-[length:var(--text-caption-size)] text-fg-muted">
-          {count}
-        </span>
+        {editingWip ? (
+          <input
+            autoFocus
+            inputMode="numeric"
+            value={wipDraft}
+            onChange={(e) => setWipDraft(e.target.value.replace(/\D/g, ""))}
+            onBlur={commitWipLimit}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") commitWipLimit();
+              if (e.key === "Escape") {
+                setWipDraft(wipLimit ? String(wipLimit) : "");
+                setEditingWip(false);
+              }
+            }}
+            aria-label="Limite de trabalho em progresso"
+            placeholder="sem limite"
+            className="h-6 w-16 rounded-sm border border-line bg-card px-1 text-[length:var(--text-caption-size)] tnum text-fg"
+          />
+        ) : (
+          <span
+            className={`tnum text-[length:var(--text-caption-size)] ${
+              overWip ? "font-medium text-overdue" : "text-fg-muted"
+            }`}
+            title={overWip ? "Limite de trabalho em progresso excedido" : undefined}
+          >
+            {wipLimit ? `${count}/${wipLimit}` : count}
+          </span>
+        )}
         <span className="flex-1" />
 
         {manageable && !editing ? (
@@ -144,6 +190,18 @@ export function BoardColumn({
                   >
                     <IconArrowRight size={14} stroke={1.5} />
                     Mover para direita
+                  </DropdownMenu.Item>
+                ) : null}
+                {onWipLimitChange ? (
+                  <DropdownMenu.Item
+                    onSelect={() => {
+                      setWipDraft(wipLimit ? String(wipLimit) : "");
+                      setEditingWip(true);
+                    }}
+                    className="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] text-fg outline-none data-[highlighted]:bg-sunken"
+                  >
+                    <IconGauge size={14} stroke={1.5} />
+                    {wipLimit ? "Alterar limite de WIP" : "Definir limite de WIP"}
                   </DropdownMenu.Item>
                 ) : null}
                 {onDelete ? (

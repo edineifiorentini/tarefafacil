@@ -75,6 +75,35 @@ export function useRenameColumn(workspaceId: string, sectorId: string) {
   });
 }
 
+// Limite de trabalho em progresso — aviso, não bloqueio (7.6 do spec).
+export function useSetColumnWipLimit(workspaceId: string, sectorId: string) {
+  const supabase = createClient();
+  const qc = useQueryClient();
+  const key = columnsKey(workspaceId, sectorId);
+
+  return useMutation({
+    mutationFn: async ({ id, limit }: { id: string; limit: number | null }) => {
+      const { error } = await supabase
+        .from("board_column")
+        .update({ wip_limit: limit })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onMutate: async ({ id, limit }) => {
+      await qc.cancelQueries({ queryKey: key });
+      const prev = qc.getQueryData<BoardColumn[]>(key);
+      qc.setQueryData<BoardColumn[]>(key, (cols) =>
+        cols?.map((c) => (c.id === id ? { ...c, wip_limit: limit } : c))
+      );
+      return { prev };
+    },
+    onError: (_e, _v, ctx) => {
+      if (ctx?.prev) qc.setQueryData(key, ctx.prev);
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: key }),
+  });
+}
+
 export function useDeleteColumn(workspaceId: string, sectorId: string) {
   const supabase = createClient();
   const qc = useQueryClient();

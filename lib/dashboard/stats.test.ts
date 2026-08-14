@@ -37,6 +37,7 @@ function task(partial: Partial<Task>): Task {
     recurrence_parent_id: null,
     cancelled_at: null,
     service: null,
+    estimate_minutes: null,
     created_at: NOW.toISOString(),
     updated_at: NOW.toISOString(),
     ...partial,

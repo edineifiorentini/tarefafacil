@@ -63,6 +63,7 @@ function optimisticTask(input: {
     recurrence_parent_id: null,
     cancelled_at: null,
     service: null,
+    estimate_minutes: null,
     created_at: now,
     updated_at: now,
   };

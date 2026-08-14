@@ -157,6 +157,7 @@ export type Database = {
           name: string;
           position: number;
           is_done_column: boolean;
+          wip_limit: number | null;
         };
         Insert: {
           id?: string;
@@ -165,6 +166,7 @@ export type Database = {
           name: string;
           position?: number;
           is_done_column?: boolean;
+          wip_limit?: number | null;
         };
         Update: {
           id?: string;
@@ -173,6 +175,7 @@ export type Database = {
           name?: string;
           position?: number;
           is_done_column?: boolean;
+          wip_limit?: number | null;
         };
         Relationships: [];
       };
@@ -244,6 +247,7 @@ export type Database = {
           recurrence_parent_id: string | null;
           cancelled_at: string | null;
           service: string | null;
+          estimate_minutes: number | null;
           created_at: string;
           updated_at: string;
         };
@@ -275,6 +279,7 @@ export type Database = {
           recurrence_parent_id?: string | null;
           cancelled_at?: string | null;
           service?: string | null;
+          estimate_minutes?: number | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -306,6 +311,7 @@ export type Database = {
           recurrence_parent_id?: string | null;
           cancelled_at?: string | null;
           service?: string | null;
+          estimate_minutes?: number | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -443,6 +449,144 @@ export type Database = {
         Update: {
           task_id?: string;
           tag_id?: string;
+        };
+        Relationships: [];
+      };
+      task_participant: {
+        Row: {
+          task_id: string;
+          user_id: string;
+          workspace_id: string;
+          created_at: string;
+        };
+        Insert: {
+          task_id: string;
+          user_id: string;
+          workspace_id: string;
+          created_at?: string;
+        };
+        Update: {
+          task_id?: string;
+          user_id?: string;
+          workspace_id?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      task_activity: {
+        Row: {
+          id: string;
+          workspace_id: string;
+          task_id: string;
+          changed_by: string | null;
+          field: string;
+          old_value: string | null;
+          new_value: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          workspace_id: string;
+          task_id: string;
+          changed_by?: string | null;
+          field: string;
+          old_value?: string | null;
+          new_value?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          workspace_id?: string;
+          task_id?: string;
+          changed_by?: string | null;
+          field?: string;
+          old_value?: string | null;
+          new_value?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      task_comment: {
+        Row: {
+          id: string;
+          workspace_id: string;
+          task_id: string;
+          author_id: string;
+          body: string;
+          mentioned_user_ids: string[];
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          workspace_id: string;
+          task_id: string;
+          author_id: string;
+          body: string;
+          mentioned_user_ids?: string[];
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          workspace_id?: string;
+          task_id?: string;
+          author_id?: string;
+          body?: string;
+          mentioned_user_ids?: string[];
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      task_time_entry: {
+        Row: {
+          id: string;
+          workspace_id: string;
+          task_id: string;
+          user_id: string;
+          minutes: number;
+          note: string | null;
+          logged_on: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          workspace_id: string;
+          task_id: string;
+          user_id: string;
+          minutes: number;
+          note?: string | null;
+          logged_on?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          workspace_id?: string;
+          task_id?: string;
+          user_id?: string;
+          minutes?: number;
+          note?: string | null;
+          logged_on?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      task_dependency: {
+        Row: {
+          task_id: string;
+          depends_on_id: string;
+          workspace_id: string;
+          created_at: string;
+        };
+        Insert: {
+          task_id: string;
+          depends_on_id: string;
+          workspace_id: string;
+          created_at?: string;
+        };
+        Update: {
+          task_id?: string;
+          depends_on_id?: string;
+          workspace_id?: string;
+          created_at?: string;
         };
         Relationships: [];
       };
@@ -643,3 +787,8 @@ export type TaskTag = Tables<"task_tag">;
 export type GoogleConnection = Tables<"google_connection">;
 export type WorkspaceInvite = Tables<"workspace_invite">;
 export type Client = Tables<"client">;
+export type TaskParticipant = Tables<"task_participant">;
+export type TaskActivity = Tables<"task_activity">;
+export type TaskComment = Tables<"task_comment">;
+export type TaskTimeEntry = Tables<"task_time_entry">;
+export type TaskDependency = Tables<"task_dependency">;

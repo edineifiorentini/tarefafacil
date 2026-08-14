@@ -12,6 +12,7 @@ import { useShell } from "./shell-context";
 const staticTitles: Record<string, string> = {
   "/dashboard": "Dashboard",
   "/hoje": "Hoje",
+  "/lista": "Lista",
   "/quadro": "Quadro",
   "/calendario": "Calendário",
   "/busca": "Buscar",

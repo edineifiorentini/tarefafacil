@@ -1,0 +1,384 @@
+"use client";
+
+import {
+  IconBan,
+  IconCheck,
+  IconLayoutList,
+  IconTrash,
+  IconX,
+} from "@tabler/icons-react";
+import { useMemo, useState } from "react";
+
+import { useShell } from "@/components/shell/shell-context";
+import { Button } from "@/components/ui/Button";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { Select } from "@/components/ui/Select";
+import {
+  EMPTY_LIST_FILTERS,
+  filterTasks,
+  groupTasks,
+  sortTasks,
+  type GroupBy,
+  type ListFilters,
+  type SortBy,
+} from "@/lib/task/list-view";
+import { useClients } from "@/lib/queries/useClients";
+import { useBulkTaskActions } from "@/lib/queries/useBulkTasks";
+import { useMembers } from "@/lib/queries/useMembers";
+import { useSectors } from "@/lib/queries/useSectors";
+import {
+  countOpenSubtasks,
+  useCompleteTask,
+  useDeleteTask,
+  useToggleTaskCancel,
+  useToggleTaskComplete,
+  useTasks,
+} from "@/lib/queries/useTasks";
+import { useWorkspace } from "@/lib/queries/useWorkspace";
+import type { Task } from "@/types/database";
+
+import { ConfirmCompleteDialog } from "./ConfirmCompleteDialog";
+import { TaskDetailPanel } from "./TaskDetailPanel";
+import { TaskRow } from "./TaskRow";
+
+const STATUS_OPTIONS = [
+  { value: "todas", label: "Todas" },
+  { value: "aberta", label: "Abertas" },
+  { value: "atrasada", label: "Atrasadas" },
+  { value: "concluida", label: "Concluídas" },
+  { value: "cancelada", label: "Canceladas" },
+];
+const PRIORITY_OPTIONS = [
+  { value: "__all__", label: "Todas" },
+  { value: "urgente", label: "Urgente" },
+  { value: "alta", label: "Alta" },
+  { value: "media", label: "Normal" },
+  { value: "baixa", label: "Baixa" },
+  { value: "sem_prioridade", label: "Sem prioridade" },
+];
+const DUE_OPTIONS = [
+  { value: "__all__", label: "Qualquer prazo" },
+  { value: "7", label: "Próximos 7 dias" },
+  { value: "14", label: "Próximos 14 dias" },
+  { value: "30", label: "Próximos 30 dias" },
+];
+const GROUP_OPTIONS: { value: GroupBy; label: string }[] = [
+  { value: "none", label: "Sem agrupamento" },
+  { value: "overdue", label: "Atrasadas" },
+  { value: "day", label: "Dia" },
+  { value: "week", label: "Semana" },
+  { value: "client", label: "Cliente" },
+  { value: "assignee", label: "Responsável" },
+  { value: "status", label: "Status" },
+  { value: "no_date", label: "Com/sem data" },
+];
+const SORT_OPTIONS: { value: SortBy; label: string }[] = [
+  { value: "due", label: "Prazo" },
+  { value: "priority", label: "Prioridade" },
+  { value: "client", label: "Cliente" },
+  { value: "created", label: "Criação" },
+  { value: "updated", label: "Atualização" },
+];
+
+export function ListView() {
+  const workspace = useWorkspace();
+  const { data: tasks = [], isLoading } = useTasks(workspace.id);
+  const { data: sectors = [] } = useSectors(workspace.id);
+  const { data: clients = [] } = useClients(workspace.id);
+  const { data: members = [] } = useMembers(workspace.id);
+  const { openPanel } = useShell();
+
+  const toggle = useToggleTaskComplete(workspace.id);
+  const complete = useCompleteTask(workspace.id);
+  const deleteTask = useDeleteTask(workspace.id);
+  const toggleCancel = useToggleTaskCancel(workspace.id);
+  const bulk = useBulkTaskActions(workspace.id);
+
+  const [filters, setFilters] = useState<ListFilters>(EMPTY_LIST_FILTERS);
+  const [groupBy, setGroupBy] = useState<GroupBy>("none");
+  const [sortBy, setSortBy] = useState<SortBy>("due");
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [confirm, setConfirm] = useState<{ task: Task; count: number } | null>(
+    null
+  );
+
+  const sectorsById = new Map(sectors.map((s) => [s.id, s]));
+  const clientNameById = useMemo(
+    () => new Map(clients.map((c) => [c.id, c.name])),
+    [clients]
+  );
+  const memberNameById = useMemo(
+    () => new Map(members.map((m) => [m.user_id, m.display_name ?? m.email])),
+    [members]
+  );
+
+  const filtered = useMemo(
+    () => filterTasks(tasks, filters),
+    [tasks, filters]
+  );
+  const sorted = useMemo(
+    () => sortTasks(filtered, sortBy, clientNameById),
+    [filtered, sortBy, clientNameById]
+  );
+  const groups = useMemo(
+    () => groupTasks(sorted, groupBy, { clientNameById, memberNameById }),
+    [sorted, groupBy, clientNameById, memberNameById]
+  );
+
+  const hasFilters =
+    filters.q.trim() !== "" ||
+    filters.status !== "todas" ||
+    filters.sectorIds.length > 0 ||
+    filters.priorities.length > 0 ||
+    !!filters.clientId ||
+    !!filters.assigneeId ||
+    filters.dueWithinDays !== null;
+
+  async function handleToggle(task: Task, completed: boolean) {
+    if (!completed) {
+      toggle.mutate({ id: task.id, completed: false });
+      return;
+    }
+    const open = await countOpenSubtasks(task.id);
+    if (open > 0) {
+      setConfirm({ task, count: open });
+      return;
+    }
+    toggle.mutate({ id: task.id, completed: true });
+  }
+
+  function toggleSelect(id: string, on: boolean) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (on) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+  }
+
+  const selectedIds = [...selected];
+
+  function runBulk(action: (ids: string[]) => void) {
+    action(selectedIds);
+    setSelected(new Set());
+  }
+
+  return (
+    <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 px-6 py-8">
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="w-56">
+          <input
+            type="search"
+            value={filters.q}
+            onChange={(e) => setFilters((f) => ({ ...f, q: e.target.value }))}
+            placeholder="Buscar por título…"
+            aria-label="Buscar demandas"
+            className="h-8 w-full rounded-sm border border-line bg-card px-2 text-[length:var(--text-small-size)] text-fg placeholder:text-fg-muted"
+          />
+        </div>
+        <div className="w-36">
+          <Select
+            options={STATUS_OPTIONS}
+            value={filters.status}
+            onValueChange={(v) =>
+              setFilters((f) => ({ ...f, status: v as ListFilters["status"] }))
+            }
+            aria-label="Status"
+          />
+        </div>
+        <div className="w-40">
+          <Select
+            options={[{ value: "__all__", label: "Todos os setores" }, ...sectors.map((s) => ({ value: s.id, label: s.name }))]}
+            value={filters.sectorIds[0] ?? "__all__"}
+            onValueChange={(v) =>
+              setFilters((f) => ({ ...f, sectorIds: v === "__all__" ? [] : [v] }))
+            }
+            aria-label="Setor"
+          />
+        </div>
+        <div className="w-36">
+          <Select
+            options={PRIORITY_OPTIONS}
+            value={filters.priorities[0] ?? "__all__"}
+            onValueChange={(v) =>
+              setFilters((f) => ({ ...f, priorities: v === "__all__" ? [] : [v] }))
+            }
+            aria-label="Prioridade"
+          />
+        </div>
+        <div className="w-40">
+          <Select
+            options={[{ value: "__all__", label: "Todos os clientes" }, ...clients.map((c) => ({ value: c.id, label: c.name }))]}
+            value={filters.clientId ?? "__all__"}
+            onValueChange={(v) =>
+              setFilters((f) => ({ ...f, clientId: v === "__all__" ? null : v }))
+            }
+            aria-label="Cliente"
+          />
+        </div>
+        <div className="w-40">
+          <Select
+            options={[{ value: "__all__", label: "Todos os responsáveis" }, ...members.map((m) => ({ value: m.user_id, label: m.display_name ?? m.email }))]}
+            value={filters.assigneeId ?? "__all__"}
+            onValueChange={(v) =>
+              setFilters((f) => ({ ...f, assigneeId: v === "__all__" ? null : v }))
+            }
+            aria-label="Responsável"
+          />
+        </div>
+        <div className="w-40">
+          <Select
+            options={DUE_OPTIONS}
+            value={filters.dueWithinDays ? String(filters.dueWithinDays) : "__all__"}
+            onValueChange={(v) =>
+              setFilters((f) => ({
+                ...f,
+                dueWithinDays: v === "__all__" ? null : (Number(v) as 7 | 14 | 30),
+              }))
+            }
+            aria-label="Prazo"
+          />
+        </div>
+
+        {hasFilters ? (
+          <button
+            type="button"
+            onClick={() => setFilters(EMPTY_LIST_FILTERS)}
+            className="text-[length:var(--text-small-size)] text-fg-link"
+          >
+            Limpar filtros
+          </button>
+        ) : null}
+
+        <div className="ml-auto flex items-center gap-2">
+          <div className="w-40">
+            <Select
+              options={GROUP_OPTIONS}
+              value={groupBy}
+              onValueChange={(v) => setGroupBy(v as GroupBy)}
+              aria-label="Agrupar por"
+            />
+          </div>
+          <div className="w-36">
+            <Select
+              options={SORT_OPTIONS}
+              value={sortBy}
+              onValueChange={(v) => setSortBy(v as SortBy)}
+              aria-label="Ordenar por"
+            />
+          </div>
+        </div>
+      </div>
+
+      {selected.size > 0 ? (
+        <div className="sticky top-0 z-10 flex items-center gap-2 rounded-md border border-line bg-selected px-3 py-2">
+          <span className="tnum text-[length:var(--text-small-size)] font-medium text-fg">
+            {selected.size} selecionada{selected.size === 1 ? "" : "s"}
+          </span>
+          <div className="ml-auto flex items-center gap-2">
+            <Button
+              variant="secondary"
+              size="sm"
+              leadingIcon={IconCheck}
+              onClick={() => runBulk((ids) => bulk.complete.mutate(ids))}
+            >
+              Concluir
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              leadingIcon={IconBan}
+              onClick={() => runBulk((ids) => bulk.cancel.mutate(ids))}
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="danger"
+              size="sm"
+              leadingIcon={IconTrash}
+              onClick={() => runBulk((ids) => bulk.remove.mutate(ids))}
+            >
+              Excluir
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              leadingIcon={IconX}
+              onClick={() => setSelected(new Set())}
+            >
+              Limpar seleção
+            </Button>
+          </div>
+        </div>
+      ) : null}
+
+      {isLoading ? (
+        <p className="text-fg-secondary">Carregando…</p>
+      ) : groups.length === 0 ? (
+        <EmptyState
+          icon={IconLayoutList}
+          title={hasFilters ? "Nenhuma demanda encontrada" : "Nenhuma demanda ainda"}
+          description={
+            hasFilters
+              ? "Ajuste os filtros para ver outros resultados"
+              : "As demandas do workspace aparecem aqui"
+          }
+        />
+      ) : (
+        <div className="flex flex-col gap-6">
+          {groups.map((group) => (
+            <section key={group.key} className="flex flex-col">
+              {groupBy !== "none" ? (
+                <h2 className="mb-1 px-1 text-[length:var(--text-caption-size)] font-medium uppercase tracking-wide text-fg-muted">
+                  {group.label}{" "}
+                  <span className="tnum text-fg-muted">({group.tasks.length})</span>
+                </h2>
+              ) : null}
+              <ul className="flex flex-col">
+                {group.tasks.map((task) => (
+                  <li key={task.id}>
+                    <TaskRow
+                      task={task}
+                      sector={sectorsById.get(task.sector_id)}
+                      selected={selected.has(task.id)}
+                      onSelectChange={(on) => toggleSelect(task.id, on)}
+                      onToggle={(c) => handleToggle(task, c)}
+                      onToggleCancel={(cancel) =>
+                        toggleCancel.mutate({ id: task.id, cancel })
+                      }
+                      onDelete={() => deleteTask(task)}
+                      onOpen={() =>
+                        openPanel({
+                          title: "Tarefa",
+                          node: <TaskDetailPanel taskId={task.id} />,
+                        })
+                      }
+                    />
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ))}
+        </div>
+      )}
+
+      {confirm ? (
+        <ConfirmCompleteDialog
+          open
+          count={confirm.count}
+          onOpenChange={(o) => {
+            if (!o) setConfirm(null);
+          }}
+          onCompleteAll={() => {
+            complete.mutate({ id: confirm.task.id, alsoSubtasks: true });
+            setConfirm(null);
+          }}
+          onCompleteTaskOnly={() => {
+            toggle.mutate({ id: confirm.task.id, completed: true });
+            setConfirm(null);
+          }}
+        />
+      ) : null}
+    </div>
+  );
+}
