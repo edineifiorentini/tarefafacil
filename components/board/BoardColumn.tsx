@@ -160,6 +160,10 @@ export function BoardColumn({
               <DropdownMenu.Content
                 align="end"
                 sideOffset={4}
+                // Sem isto, o Radix devolve o foco ao botão de ações ao
+                // fechar — o que dispara onBlur no input de renomear/WIP
+                // que acabou de abrir, fechando-o antes do usuário ver.
+                onCloseAutoFocus={(e) => e.preventDefault()}
                 className="z-50 min-w-40 overflow-hidden rounded-md border border-line bg-card p-1 shadow-[var(--shadow-panel)] data-[state=closed]:[animation:tf-pop-out_var(--dur-fast)_ease-in] data-[state=open]:[animation:tf-pop-in_var(--dur-fast)_var(--ease-out)]"
               >
                 {onRename ? (
