@@ -113,19 +113,19 @@ function SortableCard({
         {...attributes}
         {...listeners}
         aria-label={`Mover ${label}`}
-        className="absolute left-1 top-1 inline-flex h-6 w-6 items-center justify-center rounded-sm bg-card text-fg-muted opacity-0 shadow-[var(--shadow-peek)] transition-opacity hover:text-fg group-hover:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100"
+        className="bg-card text-fg-muted hover:text-fg absolute top-1 left-1 inline-flex h-6 w-6 items-center justify-center rounded-sm opacity-0 shadow-[var(--shadow-peek)] transition-opacity group-hover:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100"
       >
         <IconGripVertical size={14} stroke={1.5} />
       </button>
 
       {others.length > 0 ? (
-        <div className="absolute right-1 top-1">
+        <div className="absolute top-1 right-1">
           <DropdownMenu.Root>
             <DropdownMenu.Trigger asChild>
               <button
                 type="button"
                 aria-label="Mover para outra coluna"
-                className="inline-flex h-6 w-6 items-center justify-center rounded-sm bg-card text-fg-muted opacity-0 shadow-[var(--shadow-peek)] transition-opacity hover:text-fg group-hover:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100"
+                className="bg-card text-fg-muted hover:text-fg inline-flex h-6 w-6 items-center justify-center rounded-sm opacity-0 shadow-[var(--shadow-peek)] transition-opacity group-hover:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100"
               >
                 <IconDotsVertical size={14} stroke={1.5} />
               </button>
@@ -134,16 +134,16 @@ function SortableCard({
               <DropdownMenu.Content
                 align="end"
                 sideOffset={4}
-                className="z-50 min-w-44 overflow-hidden rounded-md border border-line bg-card p-1 shadow-[var(--shadow-panel)] data-[state=closed]:[animation:tf-pop-out_var(--dur-fast)_ease-in] data-[state=open]:[animation:tf-pop-in_var(--dur-fast)_var(--ease-out)]"
+                className="tf-glass-strong z-50 min-w-44 overflow-hidden rounded-md p-1 data-[state=closed]:[animation:tf-pop-out_var(--dur-fast)_ease-in] data-[state=open]:[animation:tf-pop-in_var(--dur-fast)_var(--ease-out)]"
               >
-                <DropdownMenu.Label className="px-2 py-1 text-[length:var(--text-caption-size)] text-fg-muted">
+                <DropdownMenu.Label className="text-fg-muted px-2 py-1 text-[length:var(--text-caption-size)]">
                   Mover para
                 </DropdownMenu.Label>
                 {others.map((col) => (
                   <DropdownMenu.Item
                     key={col.id}
                     onSelect={() => onMoveToColumn(col.id)}
-                    className="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] text-fg outline-none data-[highlighted]:bg-sunken"
+                    className="text-fg data-[highlighted]:bg-sunken flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] outline-none"
                   >
                     <IconArrowRight size={14} stroke={1.5} />
                     {col.name}
@@ -167,7 +167,7 @@ function AddColumn({ onCreate }: { onCreate: (name: string) => void }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="flex h-10 w-72 shrink-0 items-center gap-2 rounded-md border border-dashed border-line px-3 text-[length:var(--text-small-size)] text-fg-secondary transition-colors [transition-duration:var(--dur-fast)] hover:bg-sunken hover:text-fg"
+        className="border-line text-fg-secondary hover:bg-sunken hover:text-fg flex h-10 w-72 shrink-0 items-center gap-2 rounded-md border border-dashed px-3 text-[length:var(--text-small-size)] transition-colors [transition-duration:var(--dur-fast)]"
       >
         <IconPlus size={16} stroke={1.5} />
         Adicionar coluna
@@ -186,7 +186,7 @@ function AddColumn({ onCreate }: { onCreate: (name: string) => void }) {
           setOpen(false);
         }
       }}
-      className="flex w-72 shrink-0 flex-col gap-2 rounded-md bg-sunken p-2"
+      className="bg-sunken flex w-72 shrink-0 flex-col gap-2 rounded-md p-2"
     >
       <input
         autoFocus
@@ -194,7 +194,7 @@ function AddColumn({ onCreate }: { onCreate: (name: string) => void }) {
         onChange={(e) => setName(e.target.value)}
         placeholder="Nome da coluna"
         aria-label="Nome da nova coluna"
-        className="h-8 rounded-sm border border-line bg-card px-2 text-[length:var(--text-small-size)] text-fg placeholder:text-fg-muted"
+        className="border-line bg-card text-fg placeholder:text-fg-muted h-8 rounded-sm border px-2 text-[length:var(--text-small-size)]"
       />
       <div className="flex gap-2">
         <button
@@ -209,7 +209,7 @@ function AddColumn({ onCreate }: { onCreate: (name: string) => void }) {
             setOpen(false);
             setName("");
           }}
-          className="h-8 rounded-sm px-3 text-[length:var(--text-small-size)] text-fg-secondary hover:bg-card hover:text-fg"
+          className="text-fg-secondary hover:bg-card hover:text-fg h-8 rounded-sm px-3 text-[length:var(--text-small-size)]"
         >
           Cancelar
         </button>
@@ -358,7 +358,9 @@ export function Board<T>({
                   : undefined
               }
               onRename={
-                onColumnRename ? (name) => onColumnRename(col.id, name) : undefined
+                onColumnRename
+                  ? (name) => onColumnRename(col.id, name)
+                  : undefined
               }
               onDelete={
                 onColumnDelete && columns.length > 1
@@ -401,7 +403,9 @@ export function Board<T>({
       </div>
 
       <DragOverlay>
-        {activeItem ? <div className="cursor-grabbing">{renderCard(activeItem)}</div> : null}
+        {activeItem ? (
+          <div className="cursor-grabbing">{renderCard(activeItem)}</div>
+        ) : null}
       </DragOverlay>
 
       <div aria-live="polite" className="sr-only">

@@ -43,7 +43,13 @@ export function useBulkTaskActions(workspaceId: string) {
   });
 
   const moveToSector = useMutation({
-    mutationFn: async ({ ids, sectorId }: { ids: string[]; sectorId: string }) => {
+    mutationFn: async ({
+      ids,
+      sectorId,
+    }: {
+      ids: string[];
+      sectorId: string;
+    }) => {
       // column_id some: cada setor tem colunas próprias — sem isso a tarefa
       // poderia "sumir" numa coluna que não existe no novo setor.
       const { error } = await supabase

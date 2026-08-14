@@ -72,7 +72,7 @@ export function ProjectForm({
       <div className="flex flex-col gap-1">
         <label
           htmlFor="project-name"
-          className="text-[length:var(--text-small-size)] text-fg-secondary"
+          className="text-fg-secondary text-[length:var(--text-small-size)]"
         >
           Nome
         </label>
@@ -86,7 +86,7 @@ export function ProjectForm({
         {errors.name ? (
           <span
             role="alert"
-            className="text-[length:var(--text-caption-size)] text-overdue"
+            className="text-overdue text-[length:var(--text-caption-size)]"
           >
             {errors.name.message}
           </span>
@@ -95,18 +95,20 @@ export function ProjectForm({
 
       <div className="grid grid-cols-2 gap-3">
         <div className="flex flex-col gap-1">
-          <span className="text-[length:var(--text-small-size)] text-fg-secondary">
+          <span className="text-fg-secondary text-[length:var(--text-small-size)]">
             Setor
           </span>
           <Select
             options={sectors.map((s) => ({ value: s.id, label: s.name }))}
             value={sectorId}
-            onValueChange={(v) => setValue("sector_id", v, { shouldValidate: true })}
+            onValueChange={(v) =>
+              setValue("sector_id", v, { shouldValidate: true })
+            }
             aria-label="Setor"
           />
         </div>
         <div className="flex flex-col gap-1">
-          <span className="text-[length:var(--text-small-size)] text-fg-secondary">
+          <span className="text-fg-secondary text-[length:var(--text-small-size)]">
             Status
           </span>
           <Select
@@ -129,16 +131,20 @@ export function ProjectForm({
         <div className="flex flex-col gap-1">
           <label
             htmlFor="project-start"
-            className="text-[length:var(--text-small-size)] text-fg-secondary"
+            className="text-fg-secondary text-[length:var(--text-small-size)]"
           >
             Início
           </label>
-          <TextInput id="project-start" type="date" {...register("starts_on")} />
+          <TextInput
+            id="project-start"
+            type="date"
+            {...register("starts_on")}
+          />
         </div>
         <div className="flex flex-col gap-1">
           <label
             htmlFor="project-end"
-            className="text-[length:var(--text-small-size)] text-fg-secondary"
+            className="text-fg-secondary text-[length:var(--text-small-size)]"
           >
             Fim
           </label>
@@ -149,11 +155,16 @@ export function ProjectForm({
       <div className="flex flex-col gap-1">
         <label
           htmlFor="project-desc"
-          className="text-[length:var(--text-small-size)] text-fg-secondary"
+          className="text-fg-secondary text-[length:var(--text-small-size)]"
         >
           Descrição
         </label>
-        <Textarea id="project-desc" autogrow {...register("description")} placeholder="Opcional" />
+        <Textarea
+          id="project-desc"
+          autogrow
+          {...register("description")}
+          placeholder="Opcional"
+        />
       </div>
 
       <div className="flex justify-end gap-2 pt-2">

@@ -83,7 +83,7 @@ export function BoardColumn({
   return (
     <section
       aria-label={`${name}, ${count} ${count === 1 ? "item" : "itens"}`}
-      className="flex w-72 shrink-0 flex-col rounded-md bg-sunken"
+      className="bg-sunken flex w-72 shrink-0 flex-col rounded-md"
     >
       <header className="flex items-center gap-2 px-3 py-2">
         {editing ? (
@@ -100,11 +100,11 @@ export function BoardColumn({
               }
             }}
             aria-label="Nome da coluna"
-            className="h-6 min-w-0 flex-1 rounded-sm border border-line bg-card px-1 text-[length:var(--text-small-size)] font-medium text-fg"
+            className="border-line bg-card text-fg h-6 min-w-0 flex-1 rounded-sm border px-1 text-[length:var(--text-small-size)] font-medium"
           />
         ) : (
           <span
-            className="inline-flex min-w-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-[length:var(--text-small-size)] font-medium text-fg"
+            className="text-fg inline-flex min-w-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-[length:var(--text-small-size)] font-medium"
             style={{ backgroundColor: pillBg }}
           >
             <span
@@ -131,14 +131,16 @@ export function BoardColumn({
             }}
             aria-label="Limite de trabalho em progresso"
             placeholder="sem limite"
-            className="h-6 w-16 rounded-sm border border-line bg-card px-1 text-[length:var(--text-caption-size)] tnum text-fg"
+            className="border-line bg-card tnum text-fg h-6 w-16 rounded-sm border px-1 text-[length:var(--text-caption-size)]"
           />
         ) : (
           <span
             className={`tnum text-[length:var(--text-caption-size)] ${
-              overWip ? "font-medium text-overdue" : "text-fg-muted"
+              overWip ? "text-overdue font-medium" : "text-fg-muted"
             }`}
-            title={overWip ? "Limite de trabalho em progresso excedido" : undefined}
+            title={
+              overWip ? "Limite de trabalho em progresso excedido" : undefined
+            }
           >
             {wipLimit ? `${count}/${wipLimit}` : count}
           </span>
@@ -151,7 +153,7 @@ export function BoardColumn({
               <button
                 type="button"
                 aria-label={`Ações da coluna ${name}`}
-                className="inline-flex h-6 w-6 items-center justify-center rounded-sm text-fg-muted transition-colors [transition-duration:var(--dur-fast)] hover:bg-card hover:text-fg data-[state=open]:bg-card"
+                className="text-fg-muted hover:bg-card hover:text-fg data-[state=open]:bg-card inline-flex h-6 w-6 items-center justify-center rounded-sm transition-colors [transition-duration:var(--dur-fast)]"
               >
                 <IconDotsVertical size={14} stroke={1.5} />
               </button>
@@ -164,7 +166,7 @@ export function BoardColumn({
                 // fechar — o que dispara onBlur no input de renomear/WIP
                 // que acabou de abrir, fechando-o antes do usuário ver.
                 onCloseAutoFocus={(e) => e.preventDefault()}
-                className="z-50 min-w-40 overflow-hidden rounded-md border border-line bg-card p-1 shadow-[var(--shadow-panel)] data-[state=closed]:[animation:tf-pop-out_var(--dur-fast)_ease-in] data-[state=open]:[animation:tf-pop-in_var(--dur-fast)_var(--ease-out)]"
+                className="tf-glass-strong z-50 min-w-40 overflow-hidden rounded-md p-1 data-[state=closed]:[animation:tf-pop-out_var(--dur-fast)_ease-in] data-[state=open]:[animation:tf-pop-in_var(--dur-fast)_var(--ease-out)]"
               >
                 {onRename ? (
                   <DropdownMenu.Item
@@ -172,7 +174,7 @@ export function BoardColumn({
                       setDraft(name);
                       setEditing(true);
                     }}
-                    className="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] text-fg outline-none data-[highlighted]:bg-sunken"
+                    className="text-fg data-[highlighted]:bg-sunken flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] outline-none"
                   >
                     <IconPencil size={14} stroke={1.5} />
                     Renomear
@@ -181,7 +183,7 @@ export function BoardColumn({
                 {onMoveLeft ? (
                   <DropdownMenu.Item
                     onSelect={() => onMoveLeft()}
-                    className="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] text-fg outline-none data-[highlighted]:bg-sunken"
+                    className="text-fg data-[highlighted]:bg-sunken flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] outline-none"
                   >
                     <IconArrowLeft size={14} stroke={1.5} />
                     Mover para esquerda
@@ -190,7 +192,7 @@ export function BoardColumn({
                 {onMoveRight ? (
                   <DropdownMenu.Item
                     onSelect={() => onMoveRight()}
-                    className="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] text-fg outline-none data-[highlighted]:bg-sunken"
+                    className="text-fg data-[highlighted]:bg-sunken flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] outline-none"
                   >
                     <IconArrowRight size={14} stroke={1.5} />
                     Mover para direita
@@ -202,16 +204,18 @@ export function BoardColumn({
                       setWipDraft(wipLimit ? String(wipLimit) : "");
                       setEditingWip(true);
                     }}
-                    className="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] text-fg outline-none data-[highlighted]:bg-sunken"
+                    className="text-fg data-[highlighted]:bg-sunken flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] outline-none"
                   >
                     <IconGauge size={14} stroke={1.5} />
-                    {wipLimit ? "Alterar limite de WIP" : "Definir limite de WIP"}
+                    {wipLimit
+                      ? "Alterar limite de WIP"
+                      : "Definir limite de WIP"}
                   </DropdownMenu.Item>
                 ) : null}
                 {onDelete ? (
                   <DropdownMenu.Item
                     onSelect={() => onDelete()}
-                    className="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] text-overdue outline-none data-[highlighted]:bg-sunken"
+                    className="text-overdue data-[highlighted]:bg-sunken flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] outline-none"
                   >
                     <IconTrash size={14} stroke={1.5} />
                     Excluir coluna

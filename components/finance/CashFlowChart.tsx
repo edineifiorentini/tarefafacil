@@ -47,14 +47,20 @@ export function CashFlowChart({ points }: { points: CashFlowPoint[] }) {
   const range = maxVal - minVal || 1;
 
   const xFor = (i: number) => PAD_LEFT + i * stepX;
-  const yFor = (v: number) => PAD_TOP + usableH - ((v - minVal) / range) * usableH;
+  const yFor = (v: number) =>
+    PAD_TOP + usableH - ((v - minVal) / range) * usableH;
   const zeroY = yFor(0);
 
-  const recebidoPts = points.map((p, i) => ({ x: xFor(i), y: yFor(p.recebido) }));
-  const despesasPts = points.map((p, i) => ({ x: xFor(i), y: yFor(p.despesas) }));
+  const recebidoPts = points.map((p, i) => ({
+    x: xFor(i),
+    y: yFor(p.recebido),
+  }));
+  const despesasPts = points.map((p, i) => ({
+    x: xFor(i),
+    y: yFor(p.despesas),
+  }));
   const saldoPts = points.map((p, i) => ({ x: xFor(i), y: yFor(p.saldo) }));
-  const saldoArea =
-    `${smoothPath(saldoPts)} L ${xFor(points.length - 1)} ${zeroY} L ${xFor(0)} ${zeroY} Z`;
+  const saldoArea = `${smoothPath(saldoPts)} L ${xFor(points.length - 1)} ${zeroY} L ${xFor(0)} ${zeroY} Z`;
 
   function handleMove(e: React.MouseEvent<SVGSVGElement>) {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -67,7 +73,7 @@ export function CashFlowChart({ points }: { points: CashFlowPoint[] }) {
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex items-center gap-4 text-[length:var(--text-caption-size)] text-fg-secondary">
+      <div className="text-fg-secondary flex items-center gap-4 text-[length:var(--text-caption-size)]">
         <Legend color="var(--tone-blue)" label="Recebido" />
         <Legend color="var(--color-overdue)" label="Despesas" />
         <Legend color="var(--brand-600)" label="Saldo" />
@@ -98,9 +104,24 @@ export function CashFlowChart({ points }: { points: CashFlowPoint[] }) {
             fill="color-mix(in srgb, var(--brand-600) 16%, transparent)"
             stroke="none"
           />
-          <path d={smoothPath(despesasPts)} fill="none" stroke="var(--color-overdue)" strokeWidth={2} />
-          <path d={smoothPath(recebidoPts)} fill="none" stroke="var(--tone-blue)" strokeWidth={2} />
-          <path d={smoothPath(saldoPts)} fill="none" stroke="var(--brand-600)" strokeWidth={2} />
+          <path
+            d={smoothPath(despesasPts)}
+            fill="none"
+            stroke="var(--color-overdue)"
+            strokeWidth={2}
+          />
+          <path
+            d={smoothPath(recebidoPts)}
+            fill="none"
+            stroke="var(--tone-blue)"
+            strokeWidth={2}
+          />
+          <path
+            d={smoothPath(saldoPts)}
+            fill="none"
+            stroke="var(--brand-600)"
+            strokeWidth={2}
+          />
 
           {hover !== null ? (
             <line
@@ -130,13 +151,19 @@ export function CashFlowChart({ points }: { points: CashFlowPoint[] }) {
 
         {active ? (
           <div
-            className="pointer-events-none absolute top-0 flex -translate-x-1/2 flex-col gap-0.5 rounded-md border border-line bg-card px-3 py-2 text-[length:var(--text-caption-size)] shadow-[var(--shadow-peek)]"
+            className="border-line bg-card pointer-events-none absolute top-0 flex -translate-x-1/2 flex-col gap-0.5 rounded-md border px-3 py-2 text-[length:var(--text-caption-size)] shadow-[var(--shadow-peek)]"
             style={{ left: `${(xFor(hover!) / WIDTH) * 100}%` }}
           >
-            <span className="font-medium text-fg">{active.label}</span>
-            <span style={{ color: "var(--tone-blue)" }}>Recebido: {formatCentsBRL(active.recebido)}</span>
-            <span style={{ color: "var(--color-overdue)" }}>Despesas: {formatCentsBRL(active.despesas)}</span>
-            <span style={{ color: "var(--brand-600)" }}>Saldo: {formatCentsBRL(active.saldo)}</span>
+            <span className="text-fg font-medium">{active.label}</span>
+            <span style={{ color: "var(--tone-blue)" }}>
+              Recebido: {formatCentsBRL(active.recebido)}
+            </span>
+            <span style={{ color: "var(--color-overdue)" }}>
+              Despesas: {formatCentsBRL(active.despesas)}
+            </span>
+            <span style={{ color: "var(--brand-600)" }}>
+              Saldo: {formatCentsBRL(active.saldo)}
+            </span>
           </div>
         ) : null}
       </div>
@@ -147,7 +174,11 @@ export function CashFlowChart({ points }: { points: CashFlowPoint[] }) {
 function Legend({ color, label }: { color: string; label: string }) {
   return (
     <span className="inline-flex items-center gap-1.5">
-      <span aria-hidden className="h-2 w-2 rounded-full" style={{ background: color }} />
+      <span
+        aria-hidden
+        className="h-2 w-2 rounded-full"
+        style={{ background: color }}
+      />
       {label}
     </span>
   );

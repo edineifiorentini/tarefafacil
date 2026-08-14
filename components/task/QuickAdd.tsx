@@ -44,7 +44,7 @@ export function QuickAdd({ defaultSectorId }: { defaultSectorId?: string }) {
 
   if (sectors.length === 0) {
     return (
-      <p className="text-[length:var(--text-small-size)] text-fg-secondary">
+      <p className="text-fg-secondary text-[length:var(--text-small-size)]">
         Crie um setor antes de adicionar tarefas.
       </p>
     );
@@ -62,7 +62,7 @@ export function QuickAdd({ defaultSectorId }: { defaultSectorId?: string }) {
       {errors.title ? (
         <span
           role="alert"
-          className="text-[length:var(--text-caption-size)] text-overdue"
+          className="text-overdue text-[length:var(--text-caption-size)]"
         >
           {errors.title.message}
         </span>

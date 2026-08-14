@@ -8,7 +8,12 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 
 import { Icon } from "./Icon";
 
-const row = { display: "flex", gap: 16, alignItems: "center", color: "var(--text-primary)" };
+const row = {
+  display: "flex",
+  gap: 16,
+  alignItems: "center",
+  color: "var(--text-primary)",
+};
 
 const meta: Meta<typeof Icon> = {
   title: "Átomos/Icon",
@@ -52,11 +57,20 @@ export const Responsive: Story = {
 
 export const Accessibility: Story = {
   render: () => (
-    <div style={{ ...row, flexDirection: "column", alignItems: "flex-start", gap: 8 }}>
+    <div
+      style={{
+        ...row,
+        flexDirection: "column",
+        alignItems: "flex-start",
+        gap: 8,
+      }}
+    >
       <Icon icon={IconSettings} label="Configurações" />
-      <p style={{ fontSize: 12, color: "var(--text-secondary)", maxWidth: 320 }}>
-        Sem `label`, o ícone é decorativo (aria-hidden). Com `label`, é anunciado
-        pelo leitor de tela.
+      <p
+        style={{ fontSize: 12, color: "var(--text-secondary)", maxWidth: 320 }}
+      >
+        Sem `label`, o ícone é decorativo (aria-hidden). Com `label`, é
+        anunciado pelo leitor de tela.
       </p>
     </div>
   ),

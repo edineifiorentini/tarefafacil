@@ -54,7 +54,9 @@ export function taskIdOf(event: GcalEvent): string | null {
 
 // Remove a linha "Abrir no TarefaFácil: …" que adicionamos na saída, para não
 // reimportá-la como parte da descrição.
-export function stripAppLink(description: string | undefined | null): string | null {
+export function stripAppLink(
+  description: string | undefined | null
+): string | null {
   if (!description) return null;
   const cleaned = description
     .split("\n")
@@ -86,7 +88,10 @@ export function eventToPatch(event: GcalEvent): EventPatch {
   return patch;
 }
 
-function snapshot(task: ReconcileTask, kind: UndoSnapshot["kind"]): UndoSnapshot {
+function snapshot(
+  task: ReconcileTask,
+  kind: UndoSnapshot["kind"]
+): UndoSnapshot {
   return {
     kind,
     title: task.title,
@@ -104,10 +109,15 @@ function snapshot(task: ReconcileTask, kind: UndoSnapshot["kind"]): UndoSnapshot
 function googleIsNewer(task: ReconcileTask, event: GcalEvent): boolean {
   if (!event.updated) return false;
   if (!task.gcal_synced_at) return true;
-  return new Date(event.updated).getTime() > new Date(task.gcal_synced_at).getTime();
+  return (
+    new Date(event.updated).getTime() > new Date(task.gcal_synced_at).getTime()
+  );
 }
 
-export function reconcile(task: ReconcileTask, event: GcalEvent): ReconcileAction {
+export function reconcile(
+  task: ReconcileTask,
+  event: GcalEvent
+): ReconcileAction {
   // Evento não é o que conhecíamos: ignora (não sequestramos outro evento).
   if (task.gcal_event_id && event.id !== task.gcal_event_id) {
     return { type: "ignore" };

@@ -60,7 +60,7 @@ export function SectorForm({
       <div className="flex flex-col gap-1">
         <label
           htmlFor="sector-name"
-          className="text-[length:var(--text-small-size)] text-fg-secondary"
+          className="text-fg-secondary text-[length:var(--text-small-size)]"
         >
           Nome
         </label>
@@ -74,7 +74,7 @@ export function SectorForm({
         {errors.name ? (
           <span
             role="alert"
-            className="text-[length:var(--text-caption-size)] text-overdue"
+            className="text-overdue text-[length:var(--text-caption-size)]"
           >
             {errors.name.message}
           </span>
@@ -82,7 +82,7 @@ export function SectorForm({
       </div>
 
       <div className="flex flex-col gap-2">
-        <span className="text-[length:var(--text-small-size)] text-fg-secondary">
+        <span className="text-fg-secondary text-[length:var(--text-small-size)]">
           Cor
         </span>
         <HexColorPicker
@@ -92,7 +92,7 @@ export function SectorForm({
         <div className="flex items-center gap-2">
           <span
             aria-hidden
-            className="h-7 w-7 shrink-0 rounded-full border border-line"
+            className="border-line h-7 w-7 shrink-0 rounded-full border"
             style={{ background: color }}
           />
           <div className="w-28 shrink-0">
@@ -114,7 +114,7 @@ export function SectorForm({
                 type="button"
                 aria-label={p}
                 onClick={() => setValue("color", p, { shouldValidate: true })}
-                className="h-6 w-6 rounded-full border border-line"
+                className="border-line h-6 w-6 rounded-full border"
                 style={{ background: p }}
               />
             ))}
@@ -123,7 +123,7 @@ export function SectorForm({
         {errors.color ? (
           <span
             role="alert"
-            className="text-[length:var(--text-caption-size)] text-overdue"
+            className="text-overdue text-[length:var(--text-caption-size)]"
           >
             {errors.color.message}
           </span>
@@ -131,14 +131,14 @@ export function SectorForm({
       </div>
 
       <div className="flex flex-col gap-2">
-        <span className="text-[length:var(--text-small-size)] text-fg-secondary">
+        <span className="text-fg-secondary text-[length:var(--text-small-size)]">
           Ícone
         </span>
         <div className="flex items-center gap-2">
-          <span className="inline-flex h-9 w-9 items-center justify-center rounded-sm bg-sunken text-fg">
+          <span className="bg-sunken text-fg inline-flex h-9 w-9 items-center justify-center rounded-sm">
             <DynamicIcon name={icon} />
           </span>
-          <span className="text-[length:var(--text-small-size)] text-fg-muted">
+          <span className="text-fg-muted text-[length:var(--text-small-size)]">
             {icon.slice(4)}
           </span>
         </div>
@@ -149,7 +149,7 @@ export function SectorForm({
         {errors.icon ? (
           <span
             role="alert"
-            className="text-[length:var(--text-caption-size)] text-overdue"
+            className="text-overdue text-[length:var(--text-caption-size)]"
           >
             {errors.icon.message}
           </span>

@@ -20,10 +20,16 @@ export type AssigneeBucket = {
 export type DashboardStats = {
   total: number;
   open: number;
+  /** Abertas com responsável definido — alguém já está tocando. */
+  inProgress: number;
   overdue: number;
   dueSoon: number;
+  /** Concluídas em todo o histórico (base da taxa de conclusão). */
+  done: number;
   done30: number;
   cancelled30: number;
+  /** Concluídas ÷ (concluídas + abertas), em %. Canceladas ficam de fora. */
+  completionRate: number;
   bySector: SectorBucket[];
   byClient: ClientBucket[];
   byAssignee: AssigneeBucket[];
@@ -55,8 +61,10 @@ export function computeDashboard(
   const assigneeDone = new Map<string, number>();
 
   let open = 0;
+  let inProgress = 0;
   let overdue = 0;
   let dueSoon = 0;
+  let done = 0;
   let done30 = 0;
   let cancelled30 = 0;
 
@@ -71,6 +79,7 @@ export function computeDashboard(
     }
 
     if (t.completed_at) {
+      done += 1;
       const daysAgo = differenceInCalendarDays(now, parseISO(t.completed_at));
       if (daysAgo >= 0 && daysAgo <= 30) {
         done30 += 1;
@@ -82,6 +91,7 @@ export function computeDashboard(
 
     // Aberta
     open += 1;
+    if (t.assignee_id) inProgress += 1;
 
     if (t.due_date) {
       const diff = differenceInCalendarDays(parseISO(t.due_date), now);
@@ -137,13 +147,19 @@ export function computeDashboard(
     })
     .sort((a, b) => b.open - a.open || b.done30 - a.done30);
 
+  // Canceladas ficam fora da taxa: não são entrega nem pendência.
+  const decided = done + open;
+
   return {
     total: tasks.length,
     open,
+    inProgress,
     overdue,
     dueSoon,
+    done,
     done30,
     cancelled30,
+    completionRate: decided > 0 ? Math.round((done / decided) * 100) : 0,
     bySector,
     byClient,
     byAssignee,

@@ -6,7 +6,8 @@ import type { Sector, Task } from "@/types/database";
 import { nearestColorId } from "./colors";
 import { GcalAuthError } from "./oauth";
 
-const CAL_BASE = "https://www.googleapis.com/calendar/v3/calendars/primary/events";
+const CAL_BASE =
+  "https://www.googleapis.com/calendar/v3/calendars/primary/events";
 const DEFAULT_DURATION_MIN = 30;
 export const TASK_ID_PROP = "tarefafacil_task_id";
 
@@ -84,7 +85,8 @@ export function taskToEvent(
   // Fim explícito (reunião com intervalo) quando for depois do início; senão
   // a duração padrão de 30min.
   const hasValidEnd =
-    !!task.due_end_time && task.due_end_time.slice(0, 8) > task.due_time.slice(0, 8);
+    !!task.due_end_time &&
+    task.due_end_time.slice(0, 8) > task.due_time.slice(0, 8);
   const endLocal = hasValidEnd
     ? `${task.due_date}T${(task.due_end_time as string).slice(0, 8)}`
     : addMinutesToLocal(startLocal, DEFAULT_DURATION_MIN);

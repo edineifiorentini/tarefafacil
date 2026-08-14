@@ -47,26 +47,29 @@ export default function LoginPage() {
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-[400px] flex-col justify-center px-6 py-12">
-      <h1 className="mb-1 text-[length:var(--text-h2-size)] font-medium text-fg">
+      <h1 className="text-fg mb-1 text-[length:var(--text-h2-size)] font-medium">
         Entrar no TarefaFácil
       </h1>
-      <p className="mb-8 text-fg-secondary">
+      <p className="text-fg-secondary mb-8">
         Use seu e-mail ou sua conta Google
       </p>
 
       {sent ? (
         <div
           role="status"
-          className="rounded-md border border-line bg-selected p-[var(--space-card-pad)] text-fg"
+          className="border-line bg-selected text-fg rounded-md border p-[var(--space-card-pad)]"
         >
           <p className="font-medium">Link enviado</p>
-          <p className="mt-1 text-[length:var(--text-small-size)] text-fg-secondary">
+          <p className="text-fg-secondary mt-1 text-[length:var(--text-small-size)]">
             Abra o link que enviamos para <strong>{email}</strong> para entrar.
           </p>
         </div>
       ) : (
         <form onSubmit={sendMagicLink} className="flex flex-col gap-3">
-          <label htmlFor="email" className="text-[length:var(--text-small-size)] text-fg-secondary">
+          <label
+            htmlFor="email"
+            className="text-fg-secondary text-[length:var(--text-small-size)]"
+          >
             E-mail
           </label>
           <input
@@ -77,7 +80,7 @@ export default function LoginPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="voce@exemplo.com"
-            className="rounded-sm border border-line bg-card px-3 py-2 text-fg placeholder:text-fg-muted"
+            className="border-line bg-card text-fg placeholder:text-fg-muted rounded-sm border px-3 py-2"
           />
           <button
             type="submit"
@@ -90,7 +93,7 @@ export default function LoginPage() {
         </form>
       )}
 
-      <div className="my-6 flex items-center gap-3 text-[length:var(--text-caption-size)] text-fg-secondary">
+      <div className="text-fg-secondary my-6 flex items-center gap-3 text-[length:var(--text-caption-size)]">
         <span className="h-px flex-1 bg-[var(--border)]" />
         ou
         <span className="h-px flex-1 bg-[var(--border)]" />
@@ -99,14 +102,17 @@ export default function LoginPage() {
       <button
         type="button"
         onClick={signInWithGoogle}
-        className="inline-flex items-center justify-center gap-2 rounded-sm border border-line bg-card px-4 py-2 text-fg transition-colors [transition-duration:var(--dur-fast)] hover:bg-sunken"
+        className="border-line bg-card text-fg hover:bg-sunken inline-flex items-center justify-center gap-2 rounded-sm border px-4 py-2 transition-colors [transition-duration:var(--dur-fast)]"
       >
         <IconBrandGoogle size={18} stroke={1.5} />
         Continuar com Google
       </button>
 
       {error && (
-        <p role="alert" className="mt-4 text-[length:var(--text-small-size)] text-overdue">
+        <p
+          role="alert"
+          className="text-overdue mt-4 text-[length:var(--text-small-size)]"
+        >
           {error}
         </p>
       )}

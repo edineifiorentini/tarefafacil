@@ -48,8 +48,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   // Workspace ativo: preferência salva em cookie, senão o primeiro.
   const cookieStore = await cookies();
   const activeId = cookieStore.get("active_workspace")?.value;
-  const workspace =
-    workspaces.find((w) => w.id === activeId) ?? workspaces[0];
+  const workspace = workspaces.find((w) => w.id === activeId) ?? workspaces[0];
 
   // Venda por período: bloqueia o workspace vencido (o admin da plataforma
   // nunca é bloqueado, para conseguir renovar).

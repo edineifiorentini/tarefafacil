@@ -17,7 +17,11 @@ import {
   useUpdateFinanceEntry,
 } from "@/lib/queries/useFinance";
 import { useWorkspace } from "@/lib/queries/useWorkspace";
-import type { FinanceEntry, FinanceKind, FinanceStatus } from "@/types/database";
+import type {
+  FinanceEntry,
+  FinanceKind,
+  FinanceStatus,
+} from "@/types/database";
 
 const KINDS = [
   { value: "entrada", label: "Entrada" },
@@ -29,10 +33,16 @@ const STATUSES = [
   { value: "cancelado", label: "Cancelada" },
 ];
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
   return (
     <label className="flex flex-col gap-1">
-      <span className="text-[length:var(--text-caption-size)] font-medium uppercase tracking-wide text-fg-muted">
+      <span className="text-fg-muted text-[length:var(--text-caption-size)] font-medium tracking-wide uppercase">
         {label}
       </span>
       {children}
@@ -60,16 +70,26 @@ export function FinanceEntryForm({
   const [amount, setAmount] = useState(
     entry ? centsToMaskedInput(entry.amount_cents) : ""
   );
-  const [status, setStatus] = useState<FinanceStatus>(entry?.status ?? "previsto");
+  const [status, setStatus] = useState<FinanceStatus>(
+    entry?.status ?? "previsto"
+  );
   const [dueDate, setDueDate] = useState(entry?.due_date ?? "");
   const [confirmedAt, setConfirmedAt] = useState(entry?.confirmed_at ?? "");
   const [category, setCategory] = useState(entry?.category ?? "");
   const [clientId, setClientId] = useState(entry?.client_id ?? "__none__");
   const [notes, setNotes] = useState(entry?.notes ?? "");
-  const [needsInvoice, setNeedsInvoice] = useState(entry?.needs_invoice ?? false);
-  const [invoiceNumber, setInvoiceNumber] = useState(entry?.invoice_number ?? "");
-  const [invoiceIssuedAt, setInvoiceIssuedAt] = useState(entry?.invoice_issued_at ?? "");
-  const [invoiceFileUrl, setInvoiceFileUrl] = useState(entry?.invoice_file_url ?? "");
+  const [needsInvoice, setNeedsInvoice] = useState(
+    entry?.needs_invoice ?? false
+  );
+  const [invoiceNumber, setInvoiceNumber] = useState(
+    entry?.invoice_number ?? ""
+  );
+  const [invoiceIssuedAt, setInvoiceIssuedAt] = useState(
+    entry?.invoice_issued_at ?? ""
+  );
+  const [invoiceFileUrl, setInvoiceFileUrl] = useState(
+    entry?.invoice_file_url ?? ""
+  );
 
   const busy = create.isPending || update.isPending;
 
@@ -98,7 +118,8 @@ export function FinanceEntryForm({
     const handlers = {
       onSuccess: () => {
         toast.show({
-          message: mode === "create" ? "Lançamento criado" : "Lançamento atualizado",
+          message:
+            mode === "create" ? "Lançamento criado" : "Lançamento atualizado",
         });
         onDone();
       },
@@ -140,7 +161,11 @@ export function FinanceEntryForm({
 
       <div className="grid grid-cols-2 gap-3">
         <Field label="Valor">
-          <CurrencyInput value={amount} onChange={setAmount} aria-label="Valor" />
+          <CurrencyInput
+            value={amount}
+            onChange={setAmount}
+            aria-label="Valor"
+          />
         </Field>
         <Field label="Vencimento">
           <TextInput
@@ -153,7 +178,11 @@ export function FinanceEntryForm({
       </div>
 
       {status === "confirmado" ? (
-        <Field label={kind === "entrada" ? "Data de recebimento" : "Data de pagamento"}>
+        <Field
+          label={
+            kind === "entrada" ? "Data de recebimento" : "Data de pagamento"
+          }
+        >
           <TextInput
             type="date"
             value={confirmedAt || dueDate}
@@ -195,14 +224,14 @@ export function FinanceEntryForm({
         />
       </Field>
 
-      <div className="flex flex-col gap-3 rounded-md border border-line p-3">
+      <div className="border-line flex flex-col gap-3 rounded-md border p-3">
         <label className="flex items-center gap-2">
           <Checkbox
             checked={needsInvoice}
             onCheckedChange={(c) => setNeedsInvoice(c === true)}
             aria-label="Precisa de nota fiscal"
           />
-          <span className="text-[length:var(--text-small-size)] text-fg">
+          <span className="text-fg text-[length:var(--text-small-size)]">
             Precisa de nota fiscal
           </span>
         </label>

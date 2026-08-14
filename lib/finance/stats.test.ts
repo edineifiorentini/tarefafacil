@@ -29,9 +29,24 @@ function entry(partial: Partial<FinanceEntry>): FinanceEntry {
 describe("computeFinanceStats", () => {
   it("soma centavos com precisão exata (sem erro de ponto flutuante)", () => {
     const entries = [
-      entry({ kind: "entrada", status: "confirmado", confirmed_at: "2026-08-01", amount_cents: 10 }),
-      entry({ kind: "entrada", status: "confirmado", confirmed_at: "2026-08-02", amount_cents: 20 }),
-      entry({ kind: "entrada", status: "confirmado", confirmed_at: "2026-08-03", amount_cents: 33 }),
+      entry({
+        kind: "entrada",
+        status: "confirmado",
+        confirmed_at: "2026-08-01",
+        amount_cents: 10,
+      }),
+      entry({
+        kind: "entrada",
+        status: "confirmado",
+        confirmed_at: "2026-08-02",
+        amount_cents: 20,
+      }),
+      entry({
+        kind: "entrada",
+        status: "confirmado",
+        confirmed_at: "2026-08-03",
+        amount_cents: 33,
+      }),
     ];
     const s = computeFinanceStats(entries, "2026-08");
     expect(s.recebido).toBe(63);
@@ -39,10 +54,30 @@ describe("computeFinanceStats", () => {
 
   it("recebido/despesas só contam confirmadas NO mês pedido", () => {
     const entries = [
-      entry({ kind: "entrada", status: "confirmado", confirmed_at: "2026-08-05", amount_cents: 5000 }),
-      entry({ kind: "entrada", status: "confirmado", confirmed_at: "2026-07-31", amount_cents: 9999 }), // mês anterior
-      entry({ kind: "saida", status: "confirmado", confirmed_at: "2026-08-06", amount_cents: 1500 }),
-      entry({ kind: "entrada", status: "previsto", due_date: "2026-08-20", amount_cents: 7000 }), // ainda não confirmada
+      entry({
+        kind: "entrada",
+        status: "confirmado",
+        confirmed_at: "2026-08-05",
+        amount_cents: 5000,
+      }),
+      entry({
+        kind: "entrada",
+        status: "confirmado",
+        confirmed_at: "2026-07-31",
+        amount_cents: 9999,
+      }), // mês anterior
+      entry({
+        kind: "saida",
+        status: "confirmado",
+        confirmed_at: "2026-08-06",
+        amount_cents: 1500,
+      }),
+      entry({
+        kind: "entrada",
+        status: "previsto",
+        due_date: "2026-08-20",
+        amount_cents: 7000,
+      }), // ainda não confirmada
     ];
     const s = computeFinanceStats(entries, "2026-08");
     expect(s.recebido).toBe(5000);
@@ -52,17 +87,42 @@ describe("computeFinanceStats", () => {
 
   it("cancelada nunca entra em nenhum total", () => {
     const entries = [
-      entry({ status: "cancelado", amount_cents: 999999, confirmed_at: "2026-08-01" }),
+      entry({
+        status: "cancelado",
+        amount_cents: 999999,
+        confirmed_at: "2026-08-01",
+      }),
     ];
     const s = computeFinanceStats(entries, "2026-08");
-    expect(s).toEqual({ recebido: 0, despesas: 0, lucro: 0, aReceber: 0, aPagar: 0 });
+    expect(s).toEqual({
+      recebido: 0,
+      despesas: 0,
+      lucro: 0,
+      aReceber: 0,
+      aPagar: 0,
+    });
   });
 
   it("a receber/a pagar somam TODAS previstas, sem recorte de mês (inclui vencidas)", () => {
     const entries = [
-      entry({ kind: "entrada", status: "previsto", due_date: "2026-06-01", amount_cents: 1000 }), // vencida, mês antigo
-      entry({ kind: "entrada", status: "previsto", due_date: "2026-09-01", amount_cents: 2000 }), // futura
-      entry({ kind: "saida", status: "previsto", due_date: "2026-08-30", amount_cents: 500 }),
+      entry({
+        kind: "entrada",
+        status: "previsto",
+        due_date: "2026-06-01",
+        amount_cents: 1000,
+      }), // vencida, mês antigo
+      entry({
+        kind: "entrada",
+        status: "previsto",
+        due_date: "2026-09-01",
+        amount_cents: 2000,
+      }), // futura
+      entry({
+        kind: "saida",
+        status: "previsto",
+        due_date: "2026-08-30",
+        amount_cents: 500,
+      }),
     ];
     const s = computeFinanceStats(entries, "2026-08");
     expect(s.aReceber).toBe(3000);
@@ -72,10 +132,21 @@ describe("computeFinanceStats", () => {
 
 describe("isOverdue", () => {
   it("só é vencida quando prevista e a data já passou", () => {
-    expect(isOverdue(entry({ status: "previsto", due_date: "2026-08-01" }), NOW)).toBe(true);
-    expect(isOverdue(entry({ status: "previsto", due_date: "2026-09-01" }), NOW)).toBe(false);
     expect(
-      isOverdue(entry({ status: "confirmado", due_date: "2026-08-01", confirmed_at: "2026-08-01" }), NOW)
+      isOverdue(entry({ status: "previsto", due_date: "2026-08-01" }), NOW)
+    ).toBe(true);
+    expect(
+      isOverdue(entry({ status: "previsto", due_date: "2026-09-01" }), NOW)
+    ).toBe(false);
+    expect(
+      isOverdue(
+        entry({
+          status: "confirmado",
+          due_date: "2026-08-01",
+          confirmed_at: "2026-08-01",
+        }),
+        NOW
+      )
     ).toBe(false);
   });
 });

@@ -23,7 +23,9 @@ export const Default: Story = {};
 
 export const AllVariants: Story = {
   render: () => (
-    <div style={{ display: "flex", flexDirection: "column", gap: 12, width: 280 }}>
+    <div
+      style={{ display: "flex", flexDirection: "column", gap: 12, width: 280 }}
+    >
       <Skeleton variant="text" />
       <Skeleton variant="block" className="h-24" />
     </div>
@@ -32,7 +34,9 @@ export const AllVariants: Story = {
 
 export const AllStates: Story = {
   render: () => (
-    <div style={{ display: "flex", flexDirection: "column", gap: 8, width: 280 }}>
+    <div
+      style={{ display: "flex", flexDirection: "column", gap: 8, width: 280 }}
+    >
       <Skeleton variant="text" className="w-1/2" />
       <Skeleton variant="text" />
       <Skeleton variant="text" className="w-3/4" />
@@ -50,7 +54,9 @@ export const Responsive: Story = {
 
 export const Accessibility: Story = {
   render: () => (
-    <div style={{ display: "flex", flexDirection: "column", gap: 8, width: 280 }}>
+    <div
+      style={{ display: "flex", flexDirection: "column", gap: 8, width: 280 }}
+    >
       <Skeleton variant="text" />
       <p style={{ fontSize: 12, color: "var(--text-secondary)" }}>
         aria-hidden (é placeholder visual); a animação some com

@@ -26,7 +26,9 @@ export function TaskCard({
   const closed = done || cancelled;
   const hasMeta =
     task.due_date !== null ||
-    (!closed && task.priority !== "media" && task.priority !== "sem_prioridade") ||
+    (!closed &&
+      task.priority !== "media" &&
+      task.priority !== "sem_prioridade") ||
     task.assignee_id !== null;
   const pct =
     progress && progress.total > 0
@@ -37,10 +39,10 @@ export function TaskCard({
     <button
       type="button"
       onClick={onOpen}
-      className="w-full rounded-lg border border-line bg-card p-3.5 text-left transition-[border-color,box-shadow] [transition-duration:var(--dur-fast)] hover:border-line-strong hover:shadow-[var(--shadow-peek)]"
+      className="border-line bg-card hover:border-line-strong w-full rounded-lg border p-3.5 text-left transition-[border-color,box-shadow] [transition-duration:var(--dur-fast)] hover:shadow-[var(--shadow-peek)]"
     >
       <p
-        className={`pr-6 font-medium text-[length:var(--text-small-size)] ${
+        className={`pr-6 text-[length:var(--text-small-size)] font-medium ${
           closed ? "text-done line-through" : "text-fg"
         }`}
       >
@@ -48,7 +50,7 @@ export function TaskCard({
       </p>
 
       {cancelled ? (
-        <span className="mt-1 inline-flex items-center gap-1 text-[length:var(--text-caption-size)] text-fg-muted">
+        <span className="text-fg-muted mt-1 inline-flex items-center gap-1 text-[length:var(--text-caption-size)]">
           <IconBan size={12} stroke={2} aria-hidden />
           Cancelada
         </span>
@@ -78,13 +80,13 @@ export function TaskCard({
 
       {pct !== null ? (
         <div className="mt-2.5 flex items-center gap-2">
-          <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-sunken">
+          <div className="bg-sunken h-1.5 flex-1 overflow-hidden rounded-full">
             <div
               className="h-full rounded-full bg-[var(--fill-brand)]"
               style={{ width: `${pct}%` }}
             />
           </div>
-          <span className="tnum text-[length:var(--text-caption-size)] text-fg-muted">
+          <span className="tnum text-fg-muted text-[length:var(--text-caption-size)]">
             {pct}%
           </span>
         </div>

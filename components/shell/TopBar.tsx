@@ -1,40 +1,87 @@
 "use client";
 
-import { IconMenu2, IconPlus, IconSearch } from "@tabler/icons-react";
+import {
+  IconChevronDown,
+  IconLogout,
+  IconMenu2,
+  IconPlus,
+  IconSearch,
+  IconSettings,
+} from "@tabler/icons-react";
+import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { DropdownMenu } from "radix-ui";
 import { useState } from "react";
 
 import { QuickAdd } from "@/components/task/QuickAdd";
+import { Avatar } from "@/components/ui/Avatar";
 import { NotificationBell } from "@/components/workspace/NotificationBell";
+import { useCurrentUserId, useMembers } from "@/lib/queries/useMembers";
+import { createClient } from "@/lib/supabase/client";
+import { useWorkspace } from "@/lib/queries/useWorkspace";
 
 import { useShell } from "./shell-context";
 
-const staticTitles: Record<string, string> = {
-  "/dashboard": "Dashboard",
-  "/hoje": "Hoje",
-  "/lista": "Lista",
-  "/quadro": "Quadro",
-  "/calendario": "Calendário",
-  "/busca": "Buscar",
-  "/clientes": "Clientes",
-  "/financeiro": "Financeiro",
-  "/contratos": "Contratos",
-  "/admin": "Contas",
-  "/config": "Configurações",
+type PageMeta = { title: string; subtitle?: string };
+
+const staticPages: Record<string, PageMeta> = {
+  "/dashboard": {
+    title: "Visão geral",
+    subtitle: "Acompanhe demandas, entregas e desempenho da equipe.",
+  },
+  "/hoje": {
+    title: "Hoje",
+    subtitle: "O que vence agora e nos próximos dias.",
+  },
+  "/lista": {
+    title: "Lista",
+    subtitle: "Todas as demandas, com filtros e ações em lote.",
+  },
+  "/quadro": { title: "Quadro", subtitle: "Fluxo das demandas por coluna." },
+  "/calendario": { title: "Calendário", subtitle: "Prazos e projetos no mês." },
+  "/clientes": {
+    title: "Clientes",
+    subtitle: "Carteira, situação e demandas por cliente.",
+  },
+  "/busca": {
+    title: "Buscar",
+    subtitle: "Encontre demandas por texto e filtros.",
+  },
+  "/financeiro": { title: "Financeiro", subtitle: "Fechamento do mês." },
+  "/contratos": {
+    title: "Contratos",
+    subtitle: "Vigência, honorários e assinatura.",
+  },
+  "/admin": {
+    title: "Contas",
+    subtitle: "Workspaces, planos e acessos da plataforma.",
+  },
+  "/config": {
+    title: "Configurações",
+    subtitle: "Workspace, equipe e integrações.",
+  },
 };
 
-function titleFor(path: string): string {
-  if (staticTitles[path]) return staticTitles[path];
-  if (path.startsWith("/setor")) return "Setor";
-  if (path.startsWith("/projeto")) return "Projeto";
-  return "TarefaFácil";
+function pageMetaFor(path: string): PageMeta {
+  const exact = staticPages[path];
+  if (exact) return exact;
+  if (path.startsWith("/setor")) return { title: "Setor" };
+  if (path.startsWith("/projeto")) return { title: "Projeto" };
+  return { title: "TarefaFácil" };
 }
 
 export function TopBar() {
   const pathname = usePathname();
   const router = useRouter();
+  const workspace = useWorkspace();
   const { openPanel, setMobileNavOpen } = useShell();
+  const { data: myId } = useCurrentUserId();
+  const { data: members = [] } = useMembers(workspace.id);
   const [query, setQuery] = useState("");
+
+  const me = members.find((m) => m.user_id === myId);
+  const myName = me?.display_name ?? me?.email ?? "Você";
+  const { title, subtitle } = pageMetaFor(pathname);
 
   function submitSearch(e: React.FormEvent) {
     e.preventDefault();
@@ -42,28 +89,41 @@ export function TopBar() {
     router.push(q ? `/busca?q=${encodeURIComponent(q)}` : "/busca");
   }
 
+  async function signOut() {
+    await createClient().auth.signOut();
+    router.push("/login");
+    router.refresh();
+  }
+
   return (
-    <header className="flex items-center gap-3 border-b border-line bg-card px-4 py-3">
+    <header className="flex items-center gap-3 px-4 py-4 lg:px-6">
       <button
         type="button"
         aria-label="Abrir navegação"
         onClick={() => setMobileNavOpen(true)}
-        className="inline-flex h-9 w-9 items-center justify-center rounded-sm text-fg-secondary transition-colors [transition-duration:var(--dur-fast)] hover:bg-sunken hover:text-fg lg:hidden"
+        className="text-fg-secondary hover:bg-hover hover:text-fg inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-sm transition-colors [transition-duration:var(--dur-fast)] lg:hidden"
       >
-        <IconMenu2 size={20} stroke={1.5} />
+        <IconMenu2 size={20} stroke={1.75} />
       </button>
 
-      <h1 className="text-[length:var(--text-h2-size)] font-semibold text-fg">
-        {titleFor(pathname)}
-      </h1>
+      <div className="min-w-0 flex-1">
+        <h1 className="text-fg truncate text-[length:var(--text-h1-size)] leading-[var(--text-h1-line)] font-bold tracking-[-0.01em]">
+          {title}
+        </h1>
+        {subtitle ? (
+          <p className="text-fg-secondary mt-0.5 hidden truncate text-[length:var(--text-small-size)] sm:block">
+            {subtitle}
+          </p>
+        ) : null}
+      </div>
 
-      <div className="ml-auto flex items-center gap-2">
-        <form onSubmit={submitSearch} className="relative hidden sm:block">
+      <div className="flex shrink-0 items-center gap-2">
+        <form onSubmit={submitSearch} className="relative hidden md:block">
           <IconSearch
             aria-hidden
             size={18}
-            stroke={1.5}
-            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-fg-muted"
+            stroke={1.75}
+            className="text-fg-muted pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2"
           />
           <input
             id="app-search"
@@ -72,18 +132,69 @@ export function TopBar() {
             placeholder="Buscar…"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="w-64 rounded-full border border-line bg-page py-2 pl-10 pr-4 text-[length:var(--text-small-size)] text-fg transition-colors [transition-duration:var(--dur-fast)] placeholder:text-fg-muted focus-visible:border-line-strong"
+            className="tf-glass text-fg placeholder:text-fg-muted h-11 w-56 rounded-sm py-2 pr-4 pl-11 text-[length:var(--text-small-size)] transition-[width,border-color] [transition-duration:var(--dur-base)] focus:w-72 lg:w-64"
           />
         </form>
 
+        {/* Busca em telas estreitas: só o atalho, sem ocupar a linha inteira */}
+        <Link
+          href="/busca"
+          aria-label="Buscar"
+          className="text-fg-secondary hover:bg-hover hover:text-fg inline-flex h-11 w-11 items-center justify-center rounded-sm transition-colors [transition-duration:var(--dur-fast)] md:hidden"
+        >
+          <IconSearch size={20} stroke={1.75} />
+        </Link>
+
         <NotificationBell />
+
+        <DropdownMenu.Root>
+          <DropdownMenu.Trigger asChild>
+            <button
+              type="button"
+              aria-label={`Conta de ${myName}`}
+              className="text-fg-secondary hover:bg-hover hover:text-fg inline-flex h-11 items-center gap-1 rounded-sm pr-1.5 pl-1 transition-colors [transition-duration:var(--dur-fast)]"
+            >
+              <Avatar name={myName} src={me?.avatar_url ?? undefined} />
+              <IconChevronDown size={16} stroke={1.75} aria-hidden />
+            </button>
+          </DropdownMenu.Trigger>
+          <DropdownMenu.Portal>
+            <DropdownMenu.Content
+              align="end"
+              sideOffset={8}
+              className="tf-glass-strong z-50 min-w-48 overflow-hidden rounded-md p-1 data-[state=closed]:[animation:tf-pop-out_var(--dur-fast)_ease-in] data-[state=open]:[animation:tf-pop-in_var(--dur-fast)_var(--ease-out)]"
+            >
+              <DropdownMenu.Label className="text-fg-muted truncate px-2 py-1.5 text-[length:var(--text-caption-size)]">
+                {myName}
+              </DropdownMenu.Label>
+              <DropdownMenu.Item asChild>
+                <Link
+                  href="/config"
+                  className="text-fg data-[highlighted]:bg-hover flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] outline-none"
+                >
+                  <IconSettings size={16} stroke={1.75} />
+                  Configurações
+                </Link>
+              </DropdownMenu.Item>
+              <DropdownMenu.Item
+                onSelect={() => void signOut()}
+                className="text-fg data-[highlighted]:bg-hover flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] outline-none"
+              >
+                <IconLogout size={16} stroke={1.75} />
+                Sair
+              </DropdownMenu.Item>
+            </DropdownMenu.Content>
+          </DropdownMenu.Portal>
+        </DropdownMenu.Root>
 
         <button
           type="button"
-          onClick={() => openPanel({ title: "Nova tarefa", node: <QuickAdd /> })}
-          className="inline-flex items-center gap-2 rounded-sm bg-[var(--button-primary-bg)] px-3 py-2 text-[length:var(--text-small-size)] text-[var(--button-primary-fg)] transition-colors [transition-duration:var(--dur-fast)] hover:bg-[var(--button-primary-bg-hover)]"
+          onClick={() =>
+            openPanel({ title: "Nova tarefa", node: <QuickAdd /> })
+          }
+          className="tf-sheen inline-flex h-11 items-center gap-2 rounded-sm bg-[var(--button-primary-bg)] px-4 text-[length:var(--text-small-size)] font-medium text-[var(--button-primary-fg)] shadow-[var(--shadow-peek)] transition-colors [transition-duration:var(--dur-fast)] hover:bg-[var(--button-primary-bg-hover)]"
         >
-          <IconPlus size={18} stroke={1.5} />
+          <IconPlus size={18} stroke={2} aria-hidden />
           <span className="hidden sm:inline">Nova tarefa</span>
         </button>
       </div>

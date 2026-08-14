@@ -23,10 +23,16 @@ const STATUSES = [
   { value: "encerrado", label: "Encerrado" },
 ];
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
   return (
     <label className="flex flex-col gap-1">
-      <span className="text-[length:var(--text-caption-size)] font-medium uppercase tracking-wide text-fg-muted">
+      <span className="text-fg-muted text-[length:var(--text-caption-size)] font-medium tracking-wide uppercase">
         {label}
       </span>
       {children}

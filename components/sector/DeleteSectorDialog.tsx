@@ -35,7 +35,7 @@ export function DeleteSectorDialog({
         e <strong className="text-fg">todas as tarefas e projetos dele</strong>,
         de forma permanente. Não dá para desfazer.
       </p>
-      <p className="text-[length:var(--text-small-size)] text-fg-muted">
+      <p className="text-fg-muted text-[length:var(--text-small-size)]">
         Para preservar as tarefas, use <strong>Arquivar</strong> em vez de
         excluir.
       </p>
@@ -44,11 +44,7 @@ export function DeleteSectorDialog({
         <Button variant="ghost" onClick={onDone}>
           Cancelar
         </Button>
-        <Button
-          variant="danger"
-          isLoading={del.isPending}
-          onClick={confirm}
-        >
+        <Button variant="danger" isLoading={del.isPending} onClick={confirm}>
           Excluir setor
         </Button>
       </div>

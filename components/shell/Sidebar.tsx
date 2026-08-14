@@ -3,9 +3,9 @@
 import {
   IconBuildingStore,
   IconCalendarMonth,
+  IconFileText,
   IconLayoutDashboard,
   IconLayoutKanban,
-  IconFileText,
   IconLayoutList,
   IconMoneybag,
   IconPlus,
@@ -24,28 +24,90 @@ import { SectorNav } from "@/components/sector/SectorNav";
 import { useCurrentUserId, useMembers } from "@/lib/queries/useMembers";
 import { useSectors } from "@/lib/queries/useSectors";
 import { useWorkspace } from "@/lib/queries/useWorkspace";
+import type { IconComponent } from "@/components/ui/types";
 import type { Sector, Workspace } from "@/types/database";
 
 import { useShell } from "./shell-context";
 import { WorkspaceSwitcher } from "./WorkspaceSwitcher";
 
-const destinations = [
-  { href: "/dashboard", label: "Dashboard", icon: IconLayoutDashboard, hint: "1" },
+type Destination = {
+  href: string;
+  label: string;
+  icon: IconComponent;
+  /** Atalho de teclado — precisa bater com o mapa do AppShell. */
+  hint?: string;
+};
+
+const destinations: Destination[] = [
+  {
+    href: "/dashboard",
+    label: "Dashboard",
+    icon: IconLayoutDashboard,
+    hint: "1",
+  },
   { href: "/hoje", label: "Hoje", icon: IconSun, hint: "2" },
   { href: "/lista", label: "Lista", icon: IconLayoutList, hint: "3" },
   { href: "/quadro", label: "Quadro", icon: IconLayoutKanban, hint: "4" },
-  { href: "/calendario", label: "Calendário", icon: IconCalendarMonth, hint: "5" },
+  {
+    href: "/calendario",
+    label: "Calendário",
+    icon: IconCalendarMonth,
+    hint: "5",
+  },
   { href: "/clientes", label: "Clientes", icon: IconUsers, hint: "6" },
   { href: "/busca", label: "Buscar", icon: IconSearch, hint: "/" },
-] as const;
+];
 
-// Estilo compartilhado dos itens de navegação (consistência = mais clean).
+// Módulos com dado sensível — a RLS já protege; isto só evita oferecer um
+// link que levaria a "acesso restrito".
+const businessDestinations: Destination[] = [
+  { href: "/financeiro", label: "Financeiro", icon: IconMoneybag },
+  { href: "/contratos", label: "Contratos", icon: IconFileText },
+];
+
+/** Altura de 44px no toque, 40px no ponteiro (alvo confortável em ambos). */
+const itemBase =
+  "group flex h-11 items-center gap-3 rounded-sm px-3 text-[length:var(--text-small-size)] transition-colors [transition-duration:var(--dur-fast)] lg:h-10";
+
 function navItemClass(active: boolean) {
-  return `group flex items-center gap-3 rounded-md px-3 py-2 text-[length:var(--text-small-size)] transition-colors [transition-duration:var(--dur-fast)] ${
+  return `${itemBase} ${
     active
-      ? "bg-selected font-medium text-fg"
-      : "text-fg-secondary hover:bg-sunken hover:text-fg"
+      ? "tf-liquid bg-selected font-medium text-fg-link"
+      : "text-fg-secondary hover:bg-hover hover:text-fg"
   }`;
+}
+
+function NavItem({
+  destination,
+  active,
+  onNavigate,
+}: {
+  destination: Destination;
+  active: boolean;
+  onNavigate: () => void;
+}) {
+  const { href, label, icon: Icon, hint } = destination;
+  return (
+    <li>
+      <Link
+        href={href}
+        aria-current={active ? "page" : undefined}
+        onClick={onNavigate}
+        className={navItemClass(active)}
+      >
+        <Icon size={20} stroke={1.75} aria-hidden />
+        <span className="flex-1 truncate">{label}</span>
+        {hint ? (
+          <kbd
+            aria-hidden
+            className="tnum border-line text-fg-muted rounded-xs border px-1 text-[length:var(--text-caption-size)] opacity-0 transition-opacity [transition-duration:var(--dur-fast)] group-focus-within:opacity-100 group-hover:opacity-100"
+          >
+            {hint}
+          </kbd>
+        ) : null}
+      </Link>
+    </li>
+  );
 }
 
 export function Sidebar({
@@ -64,73 +126,46 @@ export function Sidebar({
   const { data: myId } = useCurrentUserId();
   const { data: members = [] } = useMembers(workspace.id);
   const myRole = members.find((m) => m.user_id === myId)?.role;
-  // Financeiro e Contratos carregam dado sensível — só dono/admin (RLS
-  // já protege os dados; isto só evita mostrar um link "acesso restrito").
   const canManageBusiness = myRole === "owner" || myRole === "admin";
 
   function isActive(href: string) {
     return pathname === href || pathname.startsWith(`${href}/`);
   }
 
+  const closeMobile = () => setMobileNavOpen(false);
+
   return (
     <div className="flex h-full flex-col">
-      <div className="px-[var(--space-card-pad)] py-4">
+      <div className="px-3 py-4">
         <WorkspaceSwitcher workspaces={workspaces} />
       </div>
 
-      <nav aria-label="Navegação principal" className="px-2">
+      <nav aria-label="Navegação principal" className="px-3">
         <ul className="space-y-0.5">
-          {destinations.map(({ href, label, icon: Icon, hint }) => (
-            <li key={href}>
-              <Link
-                href={href}
-                aria-current={isActive(href) ? "page" : undefined}
-                onClick={() => setMobileNavOpen(false)}
-                className={navItemClass(isActive(href))}
-              >
-                <Icon size={20} stroke={1.5} />
-                <span className="flex-1">{label}</span>
-                <kbd
-                  aria-hidden
-                  className="tnum rounded-sm border border-line px-1 text-[length:var(--text-caption-size)] text-fg-muted opacity-0 transition-opacity [transition-duration:var(--dur-fast)] group-hover:opacity-100 group-focus-within:opacity-100"
-                >
-                  {hint}
-                </kbd>
-              </Link>
-            </li>
+          {destinations.map((destination) => (
+            <NavItem
+              key={destination.href}
+              destination={destination}
+              active={isActive(destination.href)}
+              onNavigate={closeMobile}
+            />
           ))}
-          {canManageBusiness ? (
-            <>
-              <li>
-                <Link
-                  href="/financeiro"
-                  aria-current={isActive("/financeiro") ? "page" : undefined}
-                  onClick={() => setMobileNavOpen(false)}
-                  className={navItemClass(isActive("/financeiro"))}
-                >
-                  <IconMoneybag size={20} stroke={1.5} />
-                  <span className="flex-1">Financeiro</span>
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/contratos"
-                  aria-current={isActive("/contratos") ? "page" : undefined}
-                  onClick={() => setMobileNavOpen(false)}
-                  className={navItemClass(isActive("/contratos"))}
-                >
-                  <IconFileText size={20} stroke={1.5} />
-                  <span className="flex-1">Contratos</span>
-                </Link>
-              </li>
-            </>
-          ) : null}
+          {canManageBusiness
+            ? businessDestinations.map((destination) => (
+                <NavItem
+                  key={destination.href}
+                  destination={destination}
+                  active={isActive(destination.href)}
+                  onNavigate={closeMobile}
+                />
+              ))
+            : null}
         </ul>
       </nav>
 
-      <div className="mt-6 min-h-0 flex-1 overflow-auto px-2">
+      <div className="mt-6 min-h-0 flex-1 overflow-auto px-3">
         <div className="flex items-center justify-between px-3 py-1">
-          <span className="text-[length:var(--text-caption-size)] font-medium uppercase tracking-wide text-fg-muted">
+          <span className="text-fg-muted text-[length:var(--text-caption-size)] font-semibold tracking-[0.08em] uppercase">
             Setores
           </span>
           <button
@@ -142,35 +177,35 @@ export function Sidebar({
                 node: <SectorForm mode="create" onDone={closePanel} />,
               })
             }
-            className="inline-flex h-6 w-6 items-center justify-center rounded-sm text-fg-secondary transition-colors [transition-duration:var(--dur-fast)] hover:bg-sunken hover:text-fg"
+            className="text-fg-secondary hover:bg-hover hover:text-fg inline-flex h-6 w-6 items-center justify-center rounded-xs transition-colors [transition-duration:var(--dur-fast)]"
           >
-            <IconPlus size={16} stroke={1.5} />
+            <IconPlus size={16} stroke={1.75} />
           </button>
         </div>
 
         <SectorNav sectors={sectors} />
       </div>
 
-      <div className="mt-auto space-y-0.5 border-t border-line p-2">
+      <div className="border-line mt-auto space-y-0.5 border-t p-3">
         {isAdmin ? (
           <Link
             href="/admin"
             aria-current={isActive("/admin") ? "page" : undefined}
-            onClick={() => setMobileNavOpen(false)}
+            onClick={closeMobile}
             className={navItemClass(isActive("/admin"))}
           >
-            <IconBuildingStore size={20} stroke={1.5} />
-            Contas
+            <IconBuildingStore size={20} stroke={1.75} aria-hidden />
+            <span className="flex-1 truncate">Contas</span>
           </Link>
         ) : null}
         <Link
           href="/config"
           aria-current={isActive("/config") ? "page" : undefined}
-          onClick={() => setMobileNavOpen(false)}
+          onClick={closeMobile}
           className={navItemClass(isActive("/config"))}
         >
-          <IconSettings size={20} stroke={1.5} />
-          Configurações
+          <IconSettings size={20} stroke={1.75} aria-hidden />
+          <span className="flex-1 truncate">Configurações</span>
         </Link>
         <div className="flex items-center gap-1">
           <LogoutButton />

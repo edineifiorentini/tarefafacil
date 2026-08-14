@@ -34,7 +34,9 @@ export function useCreateContract(workspaceId: string) {
   const supabase = createClient();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (input: Omit<TablesInsert<"contract">, "workspace_id">) => {
+    mutationFn: async (
+      input: Omit<TablesInsert<"contract">, "workspace_id">
+    ) => {
       const {
         data: { user },
       } = await supabase.auth.getUser();
@@ -45,7 +47,8 @@ export function useCreateContract(workspaceId: string) {
       });
       if (error) throw error;
     },
-    onSettled: () => qc.invalidateQueries({ queryKey: contractsKey(workspaceId) }),
+    onSettled: () =>
+      qc.invalidateQueries({ queryKey: contractsKey(workspaceId) }),
   });
 }
 
@@ -60,10 +63,14 @@ export function useUpdateContract(workspaceId: string) {
       id: string;
       patch: TablesUpdate<"contract">;
     }) => {
-      const { error } = await supabase.from("contract").update(patch).eq("id", id);
+      const { error } = await supabase
+        .from("contract")
+        .update(patch)
+        .eq("id", id);
       if (error) throw error;
     },
-    onSettled: () => qc.invalidateQueries({ queryKey: contractsKey(workspaceId) }),
+    onSettled: () =>
+      qc.invalidateQueries({ queryKey: contractsKey(workspaceId) }),
   });
 }
 
@@ -87,8 +94,12 @@ export function useSetContractStatus(workspaceId: string) {
     }) => {
       const patch: TablesUpdate<"contract"> = { status };
       if (signedAt !== undefined) patch.signed_at = signedAt;
-      if (signedDocumentUrl !== undefined) patch.signed_document_url = signedDocumentUrl;
-      const { error } = await supabase.from("contract").update(patch).eq("id", id);
+      if (signedDocumentUrl !== undefined)
+        patch.signed_document_url = signedDocumentUrl;
+      const { error } = await supabase
+        .from("contract")
+        .update(patch)
+        .eq("id", id);
       if (error) throw error;
 
       // Spec §13.1.6: cancelar o contrato cancela as parcelas futuras AINDA
@@ -122,6 +133,7 @@ export function useDeleteContract(workspaceId: string) {
       const { error } = await supabase.from("contract").delete().eq("id", id);
       if (error) throw error;
     },
-    onSettled: () => qc.invalidateQueries({ queryKey: contractsKey(workspaceId) }),
+    onSettled: () =>
+      qc.invalidateQueries({ queryKey: contractsKey(workspaceId) }),
   });
 }

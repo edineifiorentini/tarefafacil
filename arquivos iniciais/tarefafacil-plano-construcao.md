@@ -26,13 +26,13 @@ Este documento é o roteiro de construção. Ele não substitui a documentação
 
 ## 1. Decisões travadas antes de começar
 
-| # | Decisão | Valor | Muda depois? |
-|---|---|---|---|
-| D01 | Modo escuro na v1 | **sim** | caro — refatora todo token |
-| D02 | Recorrência de tarefas na v1 | **não**, mas colunas reservadas no schema | barato se reservado |
-| D03 | Idioma | **pt-BR apenas**, strings centralizadas em um único módulo | médio |
-| D04 | Notificações na fase 1 | **nenhuma** | barato |
-| D05 | Multi-tenant no banco | **sim, desde E02** | inviável depois |
+| #   | Decisão                      | Valor                                                      | Muda depois?               |
+| --- | ---------------------------- | ---------------------------------------------------------- | -------------------------- |
+| D01 | Modo escuro na v1            | **sim**                                                    | caro — refatora todo token |
+| D02 | Recorrência de tarefas na v1 | **não**, mas colunas reservadas no schema                  | barato se reservado        |
+| D03 | Idioma                       | **pt-BR apenas**, strings centralizadas em um único módulo | médio                      |
+| D04 | Notificações na fase 1       | **nenhuma**                                                | barato                     |
+| D05 | Multi-tenant no banco        | **sim, desde E02**                                         | inviável depois            |
 
 Se discordar de D01 ou D02, altere **antes** de executar E01 e E02 respectivamente.
 
@@ -131,6 +131,7 @@ Deploy         Vercel + Supabase
 **Objetivo:** projeto rodando, vazio, com todas as ferramentas configuradas.
 
 **Entregas**
+
 - Next.js 15 + TypeScript strict + Tailwind v4
 - ESLint + Prettier
 - Storybook 8 com addon-a11y
@@ -139,6 +140,7 @@ Deploy         Vercel + Supabase
 - `CLAUDE.md` na raiz (conteúdo na seção 5)
 
 **Prompt**
+
 ```
 Inicialize um projeto Next.js 15 com App Router, TypeScript strict, Tailwind v4,
 ESLint e Prettier. Configure Storybook 8 com addon-a11y, Vitest para testes de
@@ -148,6 +150,7 @@ Me mostre o plano de arquivos antes de executar.
 ```
 
 **Aceite**
+
 - [ ] `npm run dev` sobe sem erro
 - [ ] `npm run storybook` abre
 - [ ] `npm run lint` e `npm run test` passam
@@ -160,6 +163,7 @@ Me mostre o plano de arquivos antes de executar.
 **Objetivo:** todo o sistema de design em CSS custom properties, claro e escuro, antes de qualquer componente.
 
 **Entregas**
+
 - `styles/tokens.css` com as três camadas (global, alias, componente)
 - Par escuro para cada token (D01)
 - Integração com Tailwind v4 via `@theme`
@@ -172,6 +176,7 @@ Me mostre o plano de arquivos antes de executar.
 **Atenção — correção já registrada:** o botão primário usa `--brand-600` como fundo (4.6:1 com branco), **não** `--brand-500` (3.2:1, reprovado para texto).
 
 **Prompt**
+
 ```
 Crie styles/tokens.css com todos os tokens da seção 7 de docs/design.md, em três
 camadas: global, alias e componente. Gere o par de modo escuro para cada token,
@@ -182,6 +187,7 @@ combinação de texto sobre fundo.
 ```
 
 **Aceite**
+
 - [ ] Story de paleta renderiza nos dois modos
 - [ ] Toda combinação de texto exibida atinge no mínimo 4.5:1
 - [ ] Nenhum hex fora de `tokens.css`
@@ -194,6 +200,7 @@ combinação de texto sobre fundo.
 **Objetivo:** schema completo, multi-tenant, com RLS ativa desde a primeira linha.
 
 **Entregas**
+
 - Migrations com todas as tabelas da seção 4.2 da documentação de design
 - Índices da seção 4.3
 - Políticas de RLS em todas as tabelas
@@ -204,6 +211,7 @@ combinação de texto sobre fundo.
 **O seed precisa incluir casos difíceis:** título de 140 caracteres, tarefa com 12 subtarefas, setor vazio, projeto de 4 meses atravessando quebras de semana, tarefa atrasada há 30 dias, anexo com nome longo.
 
 **Prompt**
+
 ```
 Crie as migrations do Supabase com todas as tabelas, índices e políticas de RLS
 descritas na seção 4 de docs/design.md. Adicione em task as colunas
@@ -214,6 +222,7 @@ atrasada. Me mostre o SQL antes de aplicar.
 ```
 
 **Aceite**
+
 - [ ] Migrations aplicam e revertem sem erro
 - [ ] RLS ativa em todas as tabelas — teste: usuário do workspace A não lê dado do workspace B
 - [ ] Tipos gerados e importáveis
@@ -226,6 +235,7 @@ atrasada. Me mostre o SQL antes de aplicar.
 **Objetivo:** login funcionando, workspace criado automaticamente no primeiro acesso.
 
 **Entregas**
+
 - Login por e-mail com magic link + Google OAuth
 - Criação automática de workspace e da linha em `workspace_member` no primeiro login
 - Middleware de proteção de rotas
@@ -234,6 +244,7 @@ atrasada. Me mostre o SQL antes de aplicar.
 - Página de login e tela de carregamento
 
 **Prompt**
+
 ```
 Implemente autenticação com Supabase: magic link por e-mail e Google OAuth.
 No primeiro login, crie automaticamente um workspace e a linha correspondente em
@@ -243,6 +254,7 @@ A tela de login usa os tokens de E01.
 ```
 
 **Aceite**
+
 - [ ] Login e logout funcionam
 - [ ] Primeiro login cria workspace
 - [ ] Rota protegida redireciona para login
@@ -255,6 +267,7 @@ A tela de login usa os tokens de E01.
 **Objetivo:** o esqueleto de navegação que todas as telas usam.
 
 **Entregas**
+
 - `Sidebar` de 240px: destinos, lista de setores, botão de novo setor, acesso a configurações
 - `TopBar`: título da visão, filtros, busca, botão de nova tarefa
 - `DetailPanel` de 400px que desliza sobre o conteúdo, sem substituir a tela
@@ -264,6 +277,7 @@ A tela de login usa os tokens de E01.
 **Referência:** seção 5.2 da documentação de design.
 
 **Prompt**
+
 ```
 Construa o AppShell conforme a seção 5.2 de docs/design.md: Sidebar 240px,
 TopBar e DetailPanel 400px que desliza sobre o conteúdo. Implemente o
@@ -273,6 +287,7 @@ aberto e devolve o foco ao elemento de origem ao fechar.
 ```
 
 **Aceite**
+
 - [ ] Painel desliza sem deslocar o conteúdo por trás
 - [ ] Foco preso no painel aberto, devolvido ao fechar
 - [ ] Atalhos funcionam e não conflitam com campos de texto
@@ -290,6 +305,7 @@ Componentes da seção 8.1 da documentação de design: `Button`, `IconButton`, 
 Cada um com: todas as variantes e estados, API conforme o padrão da seção 8.6, e as stories obrigatórias (`Default`, `AllVariants`, `AllStates`, `Responsive`, `Accessibility`).
 
 **Prompt**
+
 ```
 Construa os átomos da seção 8.1 de docs/design.md usando Radix UI como base de
 comportamento e nossos tokens para o visual. Siga o padrão de API da seção 8.6:
@@ -299,6 +315,7 @@ Comece por Button e TextInput e me mostre para revisão antes de seguir.
 ```
 
 **Aceite**
+
 - [ ] Todos os átomos no Storybook com as 5 stories
 - [ ] addon-a11y sem violações
 - [ ] Nenhum valor visual fora dos tokens
@@ -311,6 +328,7 @@ Comece por Button e TextInput e me mostre para revisão antes de seguir.
 **Objetivo:** primeira funcionalidade de ponta a ponta — prova que a stack inteira funciona.
 
 **Entregas**
+
 - CRUD de setores com cor e ícone
 - Sidebar renderizando setores reais
 - Reordenação por arraste com equivalente por teclado
@@ -318,6 +336,7 @@ Comece por Button e TextInput e me mostre para revisão antes de seguir.
 - Colunas padrão de Kanban criadas junto com o setor: A fazer, Fazendo, Revisão, Concluído
 
 **Prompt**
+
 ```
 Implemente o CRUD de setores: criar, editar nome, cor e ícone, reordenar e
 arquivar. Ao criar um setor, crie automaticamente as quatro colunas padrão de
@@ -327,6 +346,7 @@ A reordenação precisa de alternativa por teclado.
 ```
 
 **Aceite**
+
 - [ ] Criar, editar, reordenar e arquivar funcionam
 - [ ] Mutações otimistas — interface responde antes do servidor
 - [ ] Colunas padrão criadas junto com o setor
@@ -339,6 +359,7 @@ A reordenação precisa de alternativa por teclado.
 **Objetivo:** o núcleo do produto.
 
 **Entregas**
+
 - `QuickAdd` com três campos: título, setor, prazo (seção 6.1)
 - `Enter` cria e mantém o formulário aberto; `Esc` fecha
 - `TaskRow` com checkbox, título, ponto do setor, chip de prazo e tags
@@ -349,6 +370,7 @@ A reordenação precisa de alternativa por teclado.
 **Meta de desempenho:** do gatilho até a tarefa criada, menos de 8 segundos. É métrica, não aspiração.
 
 **Prompt**
+
 ```
 Implemente o QuickAdd da seção 6.1 de docs/design.md — exatamente três campos.
 Enter cria e mantém aberto para registro em sequência. Construa TaskRow com
@@ -358,6 +380,7 @@ desfazer por 10 segundos antes de efetivar.
 ```
 
 **Aceite**
+
 - [ ] Criar 10 tarefas em sequência sem tocar o mouse
 - [ ] Concluir e desfazer funcionam
 - [ ] Confirmação de subtarefas em aberto aparece
@@ -370,6 +393,7 @@ desfazer por 10 segundos antes de efetivar.
 **Objetivo:** todo o contexto de uma tarefa em um só lugar.
 
 **Entregas**
+
 - Título editável inline
 - Setor, projeto, prazo, prioridade, tags
 - Descrição com autogrow
@@ -378,6 +402,7 @@ desfazer por 10 segundos antes de efetivar.
 - Salvamento automático com debounce de 800ms, indicador discreto, **sem botão salvar**
 
 **Prompt**
+
 ```
 Construa o TaskDetailPanel conforme a seção 6.2 de docs/design.md. Todos os
 campos salvam automaticamente com debounce de 800ms — não crie botão de salvar.
@@ -387,6 +412,7 @@ são um log cronológico datado, editáveis por 5 minutos e imutáveis depois.
 ```
 
 **Aceite**
+
 - [ ] Edição salva sem ação explícita
 - [ ] Aviso de data de subtarefa posterior ao prazo aparece e não bloqueia
 - [ ] Insights ordenados cronologicamente
@@ -399,6 +425,7 @@ são um log cronológico datado, editáveis por 5 minutos e imutáveis depois.
 **Objetivo:** o organismo que paga a fase 4 do roadmap.
 
 **Entregas**
+
 - `Board<T>` genérico com a API da seção 8.5 da documentação de design — **não pode conhecer "tarefa"**
 - `BoardColumn` com cabeçalho, contador e área de soltura
 - Arraste com `@dnd-kit`
@@ -411,6 +438,7 @@ são um log cronológico datado, editáveis por 5 minutos e imutáveis depois.
 **Este é o componente mais importante do repositório.** Se ele conhecer o tipo `Task`, a fase 4 vira reconstrução.
 
 **Prompt**
+
 ```
 Construa o componente Board genérico com exatamente a API da seção 8.5 de
 docs/design.md. Ele recebe a entidade por props e NÃO pode importar nem
@@ -421,6 +449,7 @@ aria-live. Use ordenação fracionária.
 ```
 
 **Aceite**
+
 - [ ] `Board.tsx` não contém a palavra "task" nem "tarefa"
 - [ ] Movimento funciona por arraste, teclado e menu
 - [ ] Movimento anunciado ao leitor de tela
@@ -434,12 +463,14 @@ aria-live. Use ordenação fracionária.
 **Objetivo:** a tela inicial, a que responde "o que faço agora".
 
 **Entregas**
+
 - Três grupos: atrasadas, hoje, próximos 7 dias
 - Subtarefas com data aparecem no dia correspondente, marcadas como etapa da tarefa pai
 - Estado vazio escrito como convite, não como desculpa
 - Contadores por grupo
 
 **Prompt**
+
 ```
 Implemente a visão Hoje agrupando em atrasadas, hoje e próximos 7 dias.
 Subtarefas com data aparecem no dia correspondente, visualmente subordinadas à
@@ -448,6 +479,7 @@ uma linha de apoio e um verbo como CTA — nada de "nada por aqui ainda".
 ```
 
 **Aceite**
+
 - [ ] Agrupamento correto no fuso do usuário
 - [ ] Subtarefas datadas aparecem sem duplicar a tarefa pai
 - [ ] Estado vazio com CTA funcional
@@ -459,12 +491,14 @@ uma linha de apoio e um verbo como CTA — nada de "nada por aqui ainda".
 **Objetivo:** agrupamento com duração.
 
 **Entregas**
+
 - CRUD de projeto com início, fim e status
 - Página do projeto: tarefas, progresso, prazo
 - Vincular tarefa a projeto (opcional — RN-05)
 - Cálculo de progresso: concluídas sobre total
 
 **Aceite**
+
 - [ ] Tarefa sem projeto continua funcionando normalmente
 - [ ] Progresso reflete conclusões em tempo real
 
@@ -475,6 +509,7 @@ uma linha de apoio e um verbo como CTA — nada de "nada por aqui ainda".
 **Objetivo:** a lente do tempo.
 
 **Entregas**
+
 - Grade mensal com navegação
 - Camada de projetos: barras horizontais atravessando dias, cortadas na quebra de semana
 - Camada de tarefas: chips na célula do dia
@@ -487,6 +522,7 @@ uma linha de apoio e um verbo como CTA — nada de "nada por aqui ainda".
 - Arrastar tarefa entre dias altera o prazo
 
 **Prompt**
+
 ```
 Construa o CalendarMonth com duas camadas independentes e seletor de camadas,
 conforme a seção 6.4 de docs/design.md. Barras de projeto cortam e recomeçam na
@@ -497,6 +533,7 @@ sheet inferior com botão explícito para abrir o projeto.
 ```
 
 **Aceite**
+
 - [ ] Peek fecha com `Esc` sem mover o ponteiro
 - [ ] Ponteiro entra no peek sem que ele desapareça
 - [ ] `Tab` abre o peek
@@ -510,6 +547,7 @@ sheet inferior com botão explícito para abrir o projeto.
 **Objetivo:** contexto junto da tarefa.
 
 **Entregas**
+
 - Upload direto ao bucket via URL assinada
 - Arrastar arquivo para o painel
 - Validação por magic number, não por extensão
@@ -519,6 +557,7 @@ sheet inferior com botão explícito para abrir o projeto.
 - Barra de progresso e mensagem de erro acionável
 
 **Prompt**
+
 ```
 Implemente anexos conforme a seção 10 de docs/design.md. Upload direto ao
 Supabase Storage por URL assinada, sem passar pelo servidor de aplicação.
@@ -529,6 +568,7 @@ Falha de upload mostra o motivo e um botão de tentar de novo.
 ```
 
 **Aceite**
+
 - [ ] Arquivo renomeado para burlar extensão é bloqueado
 - [ ] Upload de 20MB com progresso visível
 - [ ] Falha de rede não perde o arquivo silenciosamente
@@ -540,6 +580,7 @@ Falha de upload mostra o motivo e um botão de tentar de novo.
 **Objetivo:** a tarefa aparece na agenda do usuário — e só quando ele pedir.
 
 **Entregas**
+
 - OAuth com os escopos mínimos da seção 9.1
 - Alternador de sincronização por tarefa, **padrão desligado**
 - Criar, editar e excluir evento conforme seção 9.4
@@ -549,6 +590,7 @@ Falha de upload mostra o motivo e um botão de tentar de novo.
 - Subtarefa **nunca** vira evento (RN-02)
 
 **Prompt**
+
 ```
 Implemente a sincronização unidirecional com o Google Agenda conforme as seções
 9.1 a 9.4 e 9.7 de docs/design.md. O alternador é por tarefa e nasce desligado.
@@ -558,6 +600,7 @@ Token expirado mostra banner persistente com botão de reconectar.
 ```
 
 **Aceite**
+
 - [ ] Nenhuma tarefa sincroniza sem ativação explícita
 - [ ] Tarefa sem hora vira evento de dia inteiro
 - [ ] Tarefa com 6 subtarefas datadas gera exatamente 1 evento
@@ -568,12 +611,14 @@ Token expirado mostra banner persistente com botão de reconectar.
 ### E15 — Busca e filtros
 
 **Entregas**
+
 - Busca full-text em título, descrição e insights
 - Filtros: setor, tag, prioridade, prazo, status
 - Filtros combináveis, refletidos na URL
 - Atalho `/` com foco imediato
 
 **Aceite**
+
 - [ ] Busca responde em menos de 200ms com 5.000 tarefas
 - [ ] URL de filtro é compartilhável e restaura o estado
 
@@ -584,6 +629,7 @@ Token expirado mostra banner persistente com botão de reconectar.
 **Objetivo:** editar de qualquer lado e ver refletido no outro.
 
 **Entregas**
+
 - `events.watch` com renovação automática antes do TTL
 - Endpoint de webhook
 - Sincronização incremental por `syncToken`
@@ -594,6 +640,7 @@ Token expirado mostra banner persistente com botão de reconectar.
 **Esta é a etapa mais cara do projeto.** Reserve o dobro do tempo que estimar.
 
 **Prompt**
+
 ```
 Implemente a sincronização bidirecional conforme as seções 9.5 e 9.6 de
 docs/design.md. Canal de watch com renovação automática, sincronização
@@ -606,6 +653,7 @@ syncToken expirado, e edição simultânea nos dois lados.
 ```
 
 **Aceite**
+
 - [ ] Editar título no Google atualiza a tarefa em até 60 segundos
 - [ ] Deletar evento no Google desliga `gcal_sync` sem apagar a tarefa
 - [ ] Marcador de origem externa sempre visível após sync de entrada
@@ -618,6 +666,7 @@ syncToken expirado, e edição simultânea nos dois lados.
 **Objetivo:** verificar, não presumir.
 
 **Entregas**
+
 - axe-core no pipeline de CI, falhando o build em violação
 - Teste de navegação por teclado em todos os fluxos principais
 - Teste manual com leitor de tela (NVDA ou VoiceOver)
@@ -626,6 +675,7 @@ syncToken expirado, e edição simultânea nos dois lados.
 - Correção de tudo que aparecer
 
 **Aceite**
+
 - [ ] Zero violações do axe em todas as rotas
 - [ ] Fluxo completo executável só com teclado: criar, editar, mover, concluir
 - [ ] Todo contraste no mínimo 4.5:1 nos dois modos
@@ -638,6 +688,7 @@ syncToken expirado, e edição simultânea nos dois lados.
 **Objetivo:** destravar a fase 3 sem construí-la inteira.
 
 **Entregas**
+
 - Convite por e-mail e aceite
 - Papéis: owner, admin, member, viewer, com RLS por papel
 - Atribuição de responsável em tarefa

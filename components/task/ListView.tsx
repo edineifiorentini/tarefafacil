@@ -112,10 +112,7 @@ export function ListView() {
     [members]
   );
 
-  const filtered = useMemo(
-    () => filterTasks(tasks, filters),
-    [tasks, filters]
-  );
+  const filtered = useMemo(() => filterTasks(tasks, filters), [tasks, filters]);
   const sorted = useMemo(
     () => sortTasks(filtered, sortBy, clientNameById),
     [filtered, sortBy, clientNameById]
@@ -173,7 +170,7 @@ export function ListView() {
             onChange={(e) => setFilters((f) => ({ ...f, q: e.target.value }))}
             placeholder="Buscar por título…"
             aria-label="Buscar demandas"
-            className="h-8 w-full rounded-sm border border-line bg-card px-2 text-[length:var(--text-small-size)] text-fg placeholder:text-fg-muted"
+            className="border-line bg-card text-fg placeholder:text-fg-muted h-8 w-full rounded-sm border px-2 text-[length:var(--text-small-size)]"
           />
         </div>
         <div className="w-36">
@@ -188,10 +185,16 @@ export function ListView() {
         </div>
         <div className="w-40">
           <Select
-            options={[{ value: "__all__", label: "Todos os setores" }, ...sectors.map((s) => ({ value: s.id, label: s.name }))]}
+            options={[
+              { value: "__all__", label: "Todos os setores" },
+              ...sectors.map((s) => ({ value: s.id, label: s.name })),
+            ]}
             value={filters.sectorIds[0] ?? "__all__"}
             onValueChange={(v) =>
-              setFilters((f) => ({ ...f, sectorIds: v === "__all__" ? [] : [v] }))
+              setFilters((f) => ({
+                ...f,
+                sectorIds: v === "__all__" ? [] : [v],
+              }))
             }
             aria-label="Setor"
           />
@@ -201,27 +204,45 @@ export function ListView() {
             options={PRIORITY_OPTIONS}
             value={filters.priorities[0] ?? "__all__"}
             onValueChange={(v) =>
-              setFilters((f) => ({ ...f, priorities: v === "__all__" ? [] : [v] }))
+              setFilters((f) => ({
+                ...f,
+                priorities: v === "__all__" ? [] : [v],
+              }))
             }
             aria-label="Prioridade"
           />
         </div>
         <div className="w-40">
           <Select
-            options={[{ value: "__all__", label: "Todos os clientes" }, ...clients.map((c) => ({ value: c.id, label: c.name }))]}
+            options={[
+              { value: "__all__", label: "Todos os clientes" },
+              ...clients.map((c) => ({ value: c.id, label: c.name })),
+            ]}
             value={filters.clientId ?? "__all__"}
             onValueChange={(v) =>
-              setFilters((f) => ({ ...f, clientId: v === "__all__" ? null : v }))
+              setFilters((f) => ({
+                ...f,
+                clientId: v === "__all__" ? null : v,
+              }))
             }
             aria-label="Cliente"
           />
         </div>
         <div className="w-40">
           <Select
-            options={[{ value: "__all__", label: "Todos os responsáveis" }, ...members.map((m) => ({ value: m.user_id, label: m.display_name ?? m.email }))]}
+            options={[
+              { value: "__all__", label: "Todos os responsáveis" },
+              ...members.map((m) => ({
+                value: m.user_id,
+                label: m.display_name ?? m.email,
+              })),
+            ]}
             value={filters.assigneeId ?? "__all__"}
             onValueChange={(v) =>
-              setFilters((f) => ({ ...f, assigneeId: v === "__all__" ? null : v }))
+              setFilters((f) => ({
+                ...f,
+                assigneeId: v === "__all__" ? null : v,
+              }))
             }
             aria-label="Responsável"
           />
@@ -229,11 +250,14 @@ export function ListView() {
         <div className="w-40">
           <Select
             options={DUE_OPTIONS}
-            value={filters.dueWithinDays ? String(filters.dueWithinDays) : "__all__"}
+            value={
+              filters.dueWithinDays ? String(filters.dueWithinDays) : "__all__"
+            }
             onValueChange={(v) =>
               setFilters((f) => ({
                 ...f,
-                dueWithinDays: v === "__all__" ? null : (Number(v) as 7 | 14 | 30),
+                dueWithinDays:
+                  v === "__all__" ? null : (Number(v) as 7 | 14 | 30),
               }))
             }
             aria-label="Prazo"
@@ -244,7 +268,7 @@ export function ListView() {
           <button
             type="button"
             onClick={() => setFilters(EMPTY_LIST_FILTERS)}
-            className="text-[length:var(--text-small-size)] text-fg-link"
+            className="text-fg-link text-[length:var(--text-small-size)]"
           >
             Limpar filtros
           </button>
@@ -271,8 +295,8 @@ export function ListView() {
       </div>
 
       {selected.size > 0 ? (
-        <div className="sticky top-0 z-10 flex items-center gap-2 rounded-md border border-line bg-selected px-3 py-2">
-          <span className="tnum text-[length:var(--text-small-size)] font-medium text-fg">
+        <div className="border-line bg-selected sticky top-0 z-10 flex items-center gap-2 rounded-md border px-3 py-2">
+          <span className="tnum text-fg text-[length:var(--text-small-size)] font-medium">
             {selected.size} selecionada{selected.size === 1 ? "" : "s"}
           </span>
           <div className="ml-auto flex items-center gap-2">
@@ -317,7 +341,9 @@ export function ListView() {
       ) : groups.length === 0 ? (
         <EmptyState
           icon={IconLayoutList}
-          title={hasFilters ? "Nenhuma demanda encontrada" : "Nenhuma demanda ainda"}
+          title={
+            hasFilters ? "Nenhuma demanda encontrada" : "Nenhuma demanda ainda"
+          }
           description={
             hasFilters
               ? "Ajuste os filtros para ver outros resultados"
@@ -329,9 +355,11 @@ export function ListView() {
           {groups.map((group) => (
             <section key={group.key} className="flex flex-col">
               {groupBy !== "none" ? (
-                <h2 className="mb-1 px-1 text-[length:var(--text-caption-size)] font-medium uppercase tracking-wide text-fg-muted">
+                <h2 className="text-fg-muted mb-1 px-1 text-[length:var(--text-caption-size)] font-medium tracking-wide uppercase">
                   {group.label}{" "}
-                  <span className="tnum text-fg-muted">({group.tasks.length})</span>
+                  <span className="tnum text-fg-muted">
+                    ({group.tasks.length})
+                  </span>
                 </h2>
               ) : null}
               <ul className="flex flex-col">

@@ -2,7 +2,11 @@ import { describe, expect, it } from "vitest";
 
 import type { Contract } from "@/types/database";
 
-import { computeContractStats, isExpiringSoon, monthlyEquivalentCents } from "./stats";
+import {
+  computeContractStats,
+  isExpiringSoon,
+  monthlyEquivalentCents,
+} from "./stats";
 
 const NOW = new Date("2026-08-14T12:00:00Z");
 
@@ -36,10 +40,26 @@ function contract(partial: Partial<Contract>): Contract {
 
 describe("monthlyEquivalentCents", () => {
   it("normaliza trimestral e anual pra equivalente mensal", () => {
-    expect(monthlyEquivalentCents(contract({ amount_cents: 300000, billing_period: "trimestral" }))).toBe(100000);
-    expect(monthlyEquivalentCents(contract({ amount_cents: 1200000, billing_period: "anual" }))).toBe(100000);
-    expect(monthlyEquivalentCents(contract({ amount_cents: 500000, billing_period: "unico" }))).toBe(0);
-    expect(monthlyEquivalentCents(contract({ amount_cents: 150000, billing_period: "mensal" }))).toBe(150000);
+    expect(
+      monthlyEquivalentCents(
+        contract({ amount_cents: 300000, billing_period: "trimestral" })
+      )
+    ).toBe(100000);
+    expect(
+      monthlyEquivalentCents(
+        contract({ amount_cents: 1200000, billing_period: "anual" })
+      )
+    ).toBe(100000);
+    expect(
+      monthlyEquivalentCents(
+        contract({ amount_cents: 500000, billing_period: "unico" })
+      )
+    ).toBe(0);
+    expect(
+      monthlyEquivalentCents(
+        contract({ amount_cents: 150000, billing_period: "mensal" })
+      )
+    ).toBe(150000);
   });
 });
 
@@ -50,8 +70,16 @@ describe("computeContractStats", () => {
       contract({ status: "rascunho" }),
       contract({ status: "enviado" }),
       contract({ status: "assinado" }),
-      contract({ status: "ativo", amount_cents: 200000, billing_period: "mensal" }),
-      contract({ status: "ativo", amount_cents: 300000, billing_period: "trimestral" }), // 100000/mês
+      contract({
+        status: "ativo",
+        amount_cents: 200000,
+        billing_period: "mensal",
+      }),
+      contract({
+        status: "ativo",
+        amount_cents: 300000,
+        billing_period: "trimestral",
+      }), // 100000/mês
       contract({ status: "cancelado", amount_cents: 999999 }),
     ];
     const s = computeContractStats(contracts);
@@ -65,13 +93,25 @@ describe("computeContractStats", () => {
 describe("isExpiringSoon", () => {
   it("só considera ativo com vigência terminando na janela", () => {
     expect(
-      isExpiringSoon(contract({ status: "ativo", ends_on: "2026-08-20" }), 30, NOW)
+      isExpiringSoon(
+        contract({ status: "ativo", ends_on: "2026-08-20" }),
+        30,
+        NOW
+      )
     ).toBe(true);
     expect(
-      isExpiringSoon(contract({ status: "ativo", ends_on: "2026-12-01" }), 30, NOW)
+      isExpiringSoon(
+        contract({ status: "ativo", ends_on: "2026-12-01" }),
+        30,
+        NOW
+      )
     ).toBe(false);
     expect(
-      isExpiringSoon(contract({ status: "rascunho", ends_on: "2026-08-20" }), 30, NOW)
+      isExpiringSoon(
+        contract({ status: "rascunho", ends_on: "2026-08-20" }),
+        30,
+        NOW
+      )
     ).toBe(false);
   });
 });

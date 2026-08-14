@@ -57,9 +57,9 @@ function Section({
 }) {
   return (
     <section className="mb-6">
-      <h3 className="mb-2 flex items-center gap-2 text-[length:var(--text-h3-size)] font-medium text-fg">
+      <h3 className="text-fg mb-2 flex items-center gap-2 text-[length:var(--text-h3-size)] font-medium">
         {title}
-        <span className="tnum text-[length:var(--text-small-size)] font-normal text-fg-muted">
+        <span className="tnum text-fg-muted text-[length:var(--text-small-size)] font-normal">
           {count}
         </span>
       </h3>
@@ -94,7 +94,11 @@ export function HojeView() {
           t.cancelled_at === null &&
           t.due_date !== null
       )
-      .map((t) => ({ kind: "task" as const, due: t.due_date as string, task: t })),
+      .map((t) => ({
+        kind: "task" as const,
+        due: t.due_date as string,
+        task: t,
+      })),
     ...datedSubtasks.map((s) => ({
       kind: "subtask" as const,
       due: s.due_date as string,
@@ -154,7 +158,7 @@ export function HojeView() {
     return (
       <div
         key={`s-${s.id}`}
-        className="group flex items-center gap-3 rounded-sm py-1 pl-8 pr-2 hover:bg-sunken"
+        className="group hover:bg-sunken flex items-center gap-3 rounded-sm py-1 pr-2 pl-8"
       >
         <Checkbox
           variant="round"
@@ -167,11 +171,11 @@ export function HojeView() {
           onClick={() => parent && openTask(parent.id)}
           className="flex min-w-0 flex-1 items-center gap-2 text-left"
         >
-          <span className="truncate text-[length:var(--text-small-size)] text-fg">
+          <span className="text-fg truncate text-[length:var(--text-small-size)]">
             {s.title}
           </span>
           {parent ? (
-            <span className="shrink-0 text-[length:var(--text-caption-size)] text-fg-muted">
+            <span className="text-fg-muted shrink-0 text-[length:var(--text-caption-size)]">
               · {parent.title}
             </span>
           ) : null}

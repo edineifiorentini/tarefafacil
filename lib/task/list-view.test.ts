@@ -2,7 +2,12 @@ import { describe, expect, it } from "vitest";
 
 import type { Task } from "@/types/database";
 
-import { EMPTY_LIST_FILTERS, filterTasks, groupTasks, sortTasks } from "./list-view";
+import {
+  EMPTY_LIST_FILTERS,
+  filterTasks,
+  groupTasks,
+  sortTasks,
+} from "./list-view";
 
 const NOW = new Date("2026-08-14T12:00:00Z");
 
@@ -46,10 +51,18 @@ describe("filterTasks", () => {
   it("status atrasada só pega aberta com prazo vencido (exclui cancelada)", () => {
     const tasks = [
       task({ title: "vencida", due_date: "2026-08-01" }),
-      task({ title: "cancelada vencida", due_date: "2026-08-01", cancelled_at: "2026-08-05T00:00:00Z" }),
+      task({
+        title: "cancelada vencida",
+        due_date: "2026-08-01",
+        cancelled_at: "2026-08-05T00:00:00Z",
+      }),
       task({ title: "futura", due_date: "2026-09-01" }),
     ];
-    const result = filterTasks(tasks, { ...EMPTY_LIST_FILTERS, status: "atrasada" }, NOW);
+    const result = filterTasks(
+      tasks,
+      { ...EMPTY_LIST_FILTERS, status: "atrasada" },
+      NOW
+    );
     expect(result.map((t) => t.title)).toEqual(["vencida"]);
   });
 
@@ -59,13 +72,24 @@ describe("filterTasks", () => {
       task({ title: "em 20 dias", due_date: "2026-09-03" }),
       task({ title: "sem prazo" }),
     ];
-    const result = filterTasks(tasks, { ...EMPTY_LIST_FILTERS, dueWithinDays: 7 }, NOW);
+    const result = filterTasks(
+      tasks,
+      { ...EMPTY_LIST_FILTERS, dueWithinDays: 7 },
+      NOW
+    );
     expect(result.map((t) => t.title)).toEqual(["em 3 dias"]);
   });
 
   it("busca por texto é case-insensitive", () => {
-    const tasks = [task({ title: "Revisar Contrato" }), task({ title: "Outra coisa" })];
-    const result = filterTasks(tasks, { ...EMPTY_LIST_FILTERS, q: "contrato" }, NOW);
+    const tasks = [
+      task({ title: "Revisar Contrato" }),
+      task({ title: "Outra coisa" }),
+    ];
+    const result = filterTasks(
+      tasks,
+      { ...EMPTY_LIST_FILTERS, q: "contrato" },
+      NOW
+    );
     expect(result).toHaveLength(1);
   });
 });

@@ -44,10 +44,26 @@ Radix UI · TanStack Query · dnd-kit · Zod · Storybook 9 · Vitest · Playwri
 
 ## Cores
 
-Botão primário usa `--brand-600` (#0D8850), não `--brand-500`. O 500 não atinge
-contraste para texto branco.
+Marca = **azul** `--brand-600` (#2563EB); acento = **lilás** `--accent-600`
+(#7C3AED). O gradiente azul→lilás é a assinatura e só aparece em pontos
+estratégicos, nunca como fundo global.
+O **botão primário é grafite profundo** (`--button-primary-bg`), não a cor da
+marca — é o que dá a sobriedade da referência.
+Nunca use `--brand-500` como texto sobre branco: não atinge contraste.
 Verde NÃO significa "concluído". Concluído é cinza + check + texto riscado.
+Verde é reservado a **dado financeiro positivo** e à série de faturamento.
 Setores nunca usam verde.
+
+## Direção visual (ago/2026)
+
+Pearl claro, minimalista, sóbrio. Proporção alvo: ~80% superfície sólida,
+~15% translúcida, ~5% efeito.
+**Liquid glass é seletivo** — casca lateral, campo de busca, botão primário,
+item ativo da navegação, tooltip, menus, popovers, modais e hover da agenda.
+Card de dado permanece sólido: legibilidade vem antes do efeito.
+Use as classes `tf-glass` / `tf-glass-strong` / `tf-glass-edge`; nunca escreva
+`backdrop-filter` solto em componente.
+Hover de card sobe no máximo 2px (`tf-lift`). Nada de escala forte.
 
 ## Escrita de interface
 

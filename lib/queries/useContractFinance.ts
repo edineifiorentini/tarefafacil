@@ -49,7 +49,9 @@ export function useGenerateContractInstallments(workspaceId: string) {
         .eq("source_id", contract.id);
       if (existingError) throw existingError;
 
-      const existingNumbers = new Set(existing.map((e) => e.installment_number));
+      const existingNumbers = new Set(
+        existing.map((e) => e.installment_number)
+      );
       const missing = planned.filter((p) => !existingNumbers.has(p.number));
       if (missing.length === 0) return 0;
 

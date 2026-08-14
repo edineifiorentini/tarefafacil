@@ -33,7 +33,8 @@ export function computeContractStats(contracts: Contract[]): ContractStats {
   for (const c of contracts) {
     if (c.status === "rascunho") rascunhos += 1;
     else if (c.status === "enviado") enviados += 1;
-    else if (c.status === "assinado" || c.status === "ativo") assinadosAtivos += 1;
+    else if (c.status === "assinado" || c.status === "ativo")
+      assinadosAtivos += 1;
 
     if (c.status === "ativo") valorMensalCents += monthlyEquivalentCents(c);
   }
@@ -49,6 +50,8 @@ export function isExpiringSoon(
 ): boolean {
   if (contract.status !== "ativo" || !contract.ends_on) return false;
   const today = now.toISOString().slice(0, 10);
-  const limit = new Date(now.getTime() + days * 86_400_000).toISOString().slice(0, 10);
+  const limit = new Date(now.getTime() + days * 86_400_000)
+    .toISOString()
+    .slice(0, 10);
   return contract.ends_on >= today && contract.ends_on <= limit;
 }

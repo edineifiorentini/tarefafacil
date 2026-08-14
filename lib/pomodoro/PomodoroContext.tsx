@@ -14,7 +14,10 @@ import type { ReactNode } from "react";
 import { useToast } from "@/components/ui/Toast";
 import { PomodoroWidget } from "@/components/pomodoro/PomodoroWidget";
 import { playChime } from "@/lib/pomodoro/chime";
-import { notifyPhaseComplete, requestNotifyPermission } from "@/lib/pomodoro/notify";
+import {
+  notifyPhaseComplete,
+  requestNotifyPermission,
+} from "@/lib/pomodoro/notify";
 import { createClient } from "@/lib/supabase/client";
 import { useWorkspace } from "@/lib/queries/useWorkspace";
 
@@ -40,7 +43,11 @@ export type PomodoroSession = {
 // o React Compiler proíbe relógio de parede no caminho de render, mas não
 // enxerga chamadas indiretas através de uma função separada (mesmo padrão
 // de HojeView.bucketFor e do formatDistanceToNow em GcalEditedBadge).
-function freshSession(taskId: string, taskTitle: string, cycle: number): PomodoroSession {
+function freshSession(
+  taskId: string,
+  taskTitle: string,
+  cycle: number
+): PomodoroSession {
   return {
     taskId,
     taskTitle,
@@ -178,7 +185,9 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
       savePersisted(next);
     } else {
       playChime();
-      toast.show({ message: "Pausa concluída — pronto para o próximo pomodoro" });
+      toast.show({
+        message: "Pausa concluída — pronto para o próximo pomodoro",
+      });
       notifyPhaseComplete(
         "Pausa concluída",
         `Pronto para o próximo pomodoro em "${active.taskTitle}".`
@@ -243,6 +252,7 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
 
 export function usePomodoro(): PomodoroContextValue {
   const ctx = useContext(PomodoroContext);
-  if (!ctx) throw new Error("usePomodoro deve ser usado dentro de PomodoroProvider");
+  if (!ctx)
+    throw new Error("usePomodoro deve ser usado dentro de PomodoroProvider");
   return ctx;
 }

@@ -62,7 +62,7 @@ function SubtaskItem({
       />
       {late ? (
         <span
-          className="inline-flex items-center text-due-soon"
+          className="text-due-soon inline-flex items-center"
           title="Data posterior ao prazo da tarefa"
         >
           <IconAlertTriangle size={13} stroke={1.5} aria-hidden />
@@ -74,13 +74,13 @@ function SubtaskItem({
         value={subtask.due_date ?? ""}
         onChange={(e) => onDate(e.target.value || null)}
         aria-label="Data da etapa"
-        className="tnum rounded-sm border border-line bg-card px-1 text-[length:var(--text-caption-size)] text-fg-secondary"
+        className="tnum border-line bg-card text-fg-secondary rounded-sm border px-1 text-[length:var(--text-caption-size)]"
       />
       <button
         type="button"
         onClick={onDelete}
         aria-label="Excluir etapa"
-        className="text-fg-muted opacity-0 transition-opacity hover:text-fg group-hover:opacity-100 focus-visible:opacity-100"
+        className="text-fg-muted hover:text-fg opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
       >
         <IconTrash size={14} stroke={1.5} />
       </button>
@@ -116,7 +116,7 @@ export function SubtaskList({
   return (
     <div className="flex flex-col gap-1">
       {subtasks.length > 0 ? (
-        <span className="tnum text-[length:var(--text-caption-size)] text-fg-muted">
+        <span className="tnum text-fg-muted text-[length:var(--text-caption-size)]">
           {doneCount} de {subtasks.length}
         </span>
       ) : null}

@@ -17,15 +17,15 @@ export function StatCard({
   tone: string;
 }) {
   return (
-    <div className="flex flex-col gap-2 rounded-md border border-line bg-card p-4">
-      <div className="flex items-center gap-2 text-fg-muted">
+    <div className="border-line bg-card flex flex-col gap-2 rounded-md border p-4">
+      <div className="text-fg-muted flex items-center gap-2">
         <Icon size={18} stroke={1.5} />
-        <span className="text-[length:var(--text-caption-size)] uppercase tracking-wide">
+        <span className="text-[length:var(--text-caption-size)] tracking-wide uppercase">
           {label}
         </span>
       </div>
       <span
-        className="tnum text-[length:var(--text-h1-size)] font-semibold leading-none"
+        className="tnum text-[length:var(--text-h1-size)] leading-none font-semibold"
         style={{ color: tone }}
       >
         {value}

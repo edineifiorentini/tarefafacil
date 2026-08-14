@@ -74,16 +74,16 @@ function ImageAttachmentRow({
               <IconPhoto
                 size={16}
                 stroke={1.5}
-                className="mx-1.5 shrink-0 text-fg-muted"
+                className="text-fg-muted mx-1.5 shrink-0"
               />
             ) : (
-              <span className="h-7 w-7 shrink-0 animate-pulse rounded-sm bg-sunken" />
+              <span className="bg-sunken h-7 w-7 shrink-0 animate-pulse rounded-sm" />
             )}
-            <span className="truncate text-[length:var(--text-small-size)] text-fg">
+            <span className="text-fg truncate text-[length:var(--text-small-size)]">
               {attachment.filename}
             </span>
             {attachment.size_bytes ? (
-              <span className="shrink-0 text-[length:var(--text-caption-size)] text-fg-muted">
+              <span className="text-fg-muted shrink-0 text-[length:var(--text-caption-size)]">
                 {formatBytes(attachment.size_bytes)}
               </span>
             ) : null}
@@ -92,7 +92,7 @@ function ImageAttachmentRow({
         {url && !isError ? (
           <HoverCard.Portal>
             <HoverCard.Content side="right" sideOffset={8} className="z-50">
-              <div className="overflow-hidden rounded-md border border-line bg-card p-1 shadow-[var(--shadow-peek)]">
+              <div className="border-line bg-card overflow-hidden rounded-md border p-1 shadow-[var(--shadow-peek)]">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={url}
@@ -108,7 +108,7 @@ function ImageAttachmentRow({
         type="button"
         onClick={onDelete}
         aria-label={`Remover ${attachment.filename}`}
-        className="text-fg-muted opacity-0 transition-opacity hover:text-fg group-hover:opacity-100 focus-visible:opacity-100"
+        className="text-fg-muted hover:text-fg opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
       >
         <IconTrash size={14} stroke={1.5} />
       </button>
@@ -214,12 +214,12 @@ export function AttachmentList({ taskId }: { taskId: string }) {
               onClick={() => void openAttachment(a)}
               className="flex min-w-0 flex-1 items-center gap-2 text-left"
             >
-              <Icon size={16} stroke={1.5} className="shrink-0 text-fg-muted" />
-              <span className="truncate text-[length:var(--text-small-size)] text-fg">
+              <Icon size={16} stroke={1.5} className="text-fg-muted shrink-0" />
+              <span className="text-fg truncate text-[length:var(--text-small-size)]">
                 {a.filename}
               </span>
               {a.kind === "file" && a.size_bytes ? (
-                <span className="shrink-0 text-[length:var(--text-caption-size)] text-fg-muted">
+                <span className="text-fg-muted shrink-0 text-[length:var(--text-caption-size)]">
                   {formatBytes(a.size_bytes)}
                 </span>
               ) : null}
@@ -227,7 +227,7 @@ export function AttachmentList({ taskId }: { taskId: string }) {
                 <IconExternalLink
                   size={12}
                   stroke={1.5}
-                  className="shrink-0 text-fg-muted"
+                  className="text-fg-muted shrink-0"
                 />
               ) : null}
             </button>
@@ -235,7 +235,7 @@ export function AttachmentList({ taskId }: { taskId: string }) {
               type="button"
               onClick={() => del.mutate(a.id)}
               aria-label={`Remover ${a.filename}`}
-              className="text-fg-muted opacity-0 transition-opacity hover:text-fg group-hover:opacity-100 focus-visible:opacity-100"
+              className="text-fg-muted hover:text-fg opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
             >
               <IconTrash size={14} stroke={1.5} />
             </button>
@@ -245,14 +245,14 @@ export function AttachmentList({ taskId }: { taskId: string }) {
 
       {uploading ? (
         <div className="flex flex-col gap-1">
-          <div className="flex items-center gap-2 text-[length:var(--text-caption-size)] text-fg-secondary">
+          <div className="text-fg-secondary flex items-center gap-2 text-[length:var(--text-caption-size)]">
             <IconLoader2 size={12} className="animate-spin" aria-hidden />
             <span className="truncate">{uploading.name}</span>
             <span className="tnum ml-auto">
               {Math.round(uploading.progress * 100)}%
             </span>
           </div>
-          <div className="h-1 w-full overflow-hidden rounded-full bg-sunken">
+          <div className="bg-sunken h-1 w-full overflow-hidden rounded-full">
             <div
               className="h-full rounded-full bg-[var(--fill-brand)]"
               style={{ width: `${uploading.progress * 100}%` }}
@@ -264,7 +264,7 @@ export function AttachmentList({ taskId }: { taskId: string }) {
       {error ? (
         <div
           role="alert"
-          className="flex items-center gap-2 text-[length:var(--text-caption-size)] text-overdue"
+          className="text-overdue flex items-center gap-2 text-[length:var(--text-caption-size)]"
         >
           <span>{error}</span>
           <button
@@ -297,7 +297,7 @@ export function AttachmentList({ taskId }: { taskId: string }) {
             e.target.value = "";
           }}
         />
-        <span className="text-[length:var(--text-caption-size)] text-fg-muted">
+        <span className="text-fg-muted text-[length:var(--text-caption-size)]">
           ou arraste aqui
         </span>
       </div>
@@ -314,7 +314,7 @@ export function AttachmentList({ taskId }: { taskId: string }) {
           Link
         </Button>
       </form>
-      <p className="text-[length:var(--text-caption-size)] text-fg-muted">
+      <p className="text-fg-muted text-[length:var(--text-caption-size)]">
         Links do Drive: o app não gerencia a permissão — quem abrir precisa ter
         acesso.
       </p>

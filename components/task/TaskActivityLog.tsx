@@ -35,7 +35,9 @@ function describe(
     case "completed_at":
       return row.new_value ? "marcou como concluída" : "reabriu a demanda";
     case "cancelled_at":
-      return row.new_value ? "cancelou a demanda" : "reabriu a demanda cancelada";
+      return row.new_value
+        ? "cancelou a demanda"
+        : "reabriu a demanda cancelada";
     case "due_date":
       return `mudou o ${label} de ${formatDate(row.old_value)} para ${formatDate(row.new_value)}`;
     case "priority":
@@ -67,7 +69,7 @@ export function TaskActivityLog({
 
   if (activity.length === 0) {
     return (
-      <p className="text-[length:var(--text-small-size)] text-fg-secondary">
+      <p className="text-fg-secondary text-[length:var(--text-small-size)]">
         Nenhuma alteração registrada ainda
       </p>
     );
@@ -87,9 +89,9 @@ export function TaskActivityLog({
         return (
           <li
             key={row.id}
-            className="text-[length:var(--text-small-size)] text-fg-secondary"
+            className="text-fg-secondary text-[length:var(--text-small-size)]"
           >
-            <span className="font-medium text-fg">{actor}</span>{" "}
+            <span className="text-fg font-medium">{actor}</span>{" "}
             {describe(row, membersByI, columnsById)}
             {" · "}
             <span className="text-fg-muted">

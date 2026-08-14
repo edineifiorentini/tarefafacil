@@ -116,9 +116,7 @@ export function useToggleTaskMeet(workspaceId: string) {
       await qc.cancelQueries({ queryKey: ["task", workspaceId, id] });
       const prev = qc.getQueryData<Task>(["task", workspaceId, id]);
       qc.setQueryData<Task>(["task", workspaceId, id], (t) =>
-        t
-          ? { ...t, gcal_add_meet: on, gcal_sync: on ? true : t.gcal_sync }
-          : t
+        t ? { ...t, gcal_add_meet: on, gcal_sync: on ? true : t.gcal_sync } : t
       );
       return { prev };
     },

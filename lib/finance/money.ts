@@ -21,6 +21,24 @@ export function parseCurrencyToCents(input: string): number | null {
   return Math.round(value * 100);
 }
 
+/**
+ * Forma curta para eixo de gráfico: "150k", "1,3M". O valor cheio continua
+ * disponível no tooltip — aqui o objetivo é só dar escala sem poluir.
+ */
+export function formatCompactBRL(cents: number): string {
+  const reais = cents / 100;
+  const abs = Math.abs(reais);
+  if (abs >= 1_000_000) {
+    const millions = reais / 1_000_000;
+    const text = Number.isInteger(millions)
+      ? String(millions)
+      : millions.toFixed(1);
+    return `${text.replace(".", ",")}M`;
+  }
+  if (abs >= 1000) return `${Math.round(reais / 1000)}k`;
+  return String(Math.round(reais));
+}
+
 // Máscara "ao digitar": os dígitos formam a parte inteira (reais, com
 // separador de milhar), completada com ",00" de centavos automaticamente.
 // Ao digitar uma vírgula, os dígitos seguintes (até 2) substituem os
@@ -36,7 +54,10 @@ export function maskCurrencyInput(raw: string): string {
 
   let cents = "00";
   if (commaIndex !== -1) {
-    const centsDigits = cleaned.slice(commaIndex + 1).replace(/,/g, "").slice(0, 2);
+    const centsDigits = cleaned
+      .slice(commaIndex + 1)
+      .replace(/,/g, "")
+      .slice(0, 2);
     cents = (centsDigits + "00").slice(0, 2);
   }
   return `${intFormatted},${cents}`;

@@ -27,9 +27,9 @@ function InsightEntry({
   const [body, setBody] = useState(insight.body);
 
   return (
-    <div className="rounded-md border border-line bg-card p-3">
+    <div className="border-line bg-card rounded-md border p-3">
       <div className="mb-1 flex items-center justify-between">
-        <span className="tnum text-[length:var(--text-caption-size)] text-fg-muted">
+        <span className="tnum text-fg-muted text-[length:var(--text-caption-size)]">
           {format(parseISO(insight.created_at), "d MMM, HH:mm", {
             locale: ptBR,
           })}
@@ -38,7 +38,7 @@ function InsightEntry({
           <button
             type="button"
             onClick={() => setEditing(true)}
-            className="text-[length:var(--text-caption-size)] text-fg-link"
+            className="text-fg-link text-[length:var(--text-caption-size)]"
           >
             Editar
           </button>
@@ -77,7 +77,7 @@ function InsightEntry({
           </div>
         </div>
       ) : (
-        <p className="whitespace-pre-wrap text-[length:var(--text-small-size)] text-fg">
+        <p className="text-fg text-[length:var(--text-small-size)] whitespace-pre-wrap">
           {insight.body}
         </p>
       )}

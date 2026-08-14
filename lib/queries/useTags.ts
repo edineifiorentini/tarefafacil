@@ -89,7 +89,9 @@ export function useAddTaskTag(workspaceId: string, taskId: string) {
       await qc.cancelQueries({ queryKey: key });
       const previous = qc.getQueryData<Tag[]>(key) ?? [];
       const trimmed = name.trim();
-      if (previous.some((t) => t.name.toLowerCase() === trimmed.toLowerCase())) {
+      if (
+        previous.some((t) => t.name.toLowerCase() === trimmed.toLowerCase())
+      ) {
         return { previous };
       }
       const optimistic: Tag = {

@@ -22,7 +22,7 @@ vercel --prod # publica em produção
 ```
 
 **Opção B — GitHub + Vercel**: crie um repositório, faça `git push`, e no painel
-da Vercel clique em *New Project* e importe o repositório. Cada push publica.
+da Vercel clique em _New Project_ e importe o repositório. Cada push publica.
 
 > A Vercel detecta Next.js automaticamente. Não há `vercel.json` — build
 > padrão `next build`, Node ≥ 20 (fixado em `package.json`).
@@ -32,16 +32,16 @@ da Vercel clique em *New Project* e importe o repositório. Cada push publica.
 Use os mesmos nomes do [`.env.example`](../.env.example). As sensíveis ficam
 só no servidor (não use prefixo `NEXT_PUBLIC` nelas):
 
-| Variável | Valor em produção |
-|---|---|
-| `NEXT_PUBLIC_SUPABASE_URL` | URL do projeto Supabase |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | chave publishable |
-| `SUPABASE_SECRET_KEY` | chave secreta (servidor) |
-| `NEXT_PUBLIC_APP_URL` | `https://SEU-DOMINIO` |
-| `GOOGLE_CLIENT_ID` | client id do OAuth |
-| `GOOGLE_CLIENT_SECRET` | client secret (servidor) |
-| `GOOGLE_REDIRECT_URI` | `https://SEU-DOMINIO/api/gcal/callback` |
-| `GOOGLE_WEBHOOK_URL` | `https://SEU-DOMINIO/api/gcal/webhook` (liga o tempo real) |
+| Variável                               | Valor em produção                                          |
+| -------------------------------------- | ---------------------------------------------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`             | URL do projeto Supabase                                    |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | chave publishable                                          |
+| `SUPABASE_SECRET_KEY`                  | chave secreta (servidor)                                   |
+| `NEXT_PUBLIC_APP_URL`                  | `https://SEU-DOMINIO`                                      |
+| `GOOGLE_CLIENT_ID`                     | client id do OAuth                                         |
+| `GOOGLE_CLIENT_SECRET`                 | client secret (servidor)                                   |
+| `GOOGLE_REDIRECT_URI`                  | `https://SEU-DOMINIO/api/gcal/callback`                    |
+| `GOOGLE_WEBHOOK_URL`                   | `https://SEU-DOMINIO/api/gcal/webhook` (liga o tempo real) |
 
 > **Ovo e galinha:** o domínio só existe depois do 1º deploy. Faça um deploy,
 > anote a URL (`https://xxx.vercel.app` ou seu domínio), preencha as variáveis
@@ -52,7 +52,7 @@ só no servidor (não use prefixo `NEXT_PUBLIC` nelas):
 - Em **Authorized redirect URIs**, adicione (mantendo as de dev):
   - `https://SEU-DOMINIO/api/gcal/callback`
   - a URL de callback do Supabase (ver passo 4) já deve estar lá.
-- **OAuth consent screen**: enquanto estiver em *Testing*, só e-mails na lista
+- **OAuth consent screen**: enquanto estiver em _Testing_, só e-mails na lista
   de test users conseguem conectar. Para liberar geral, publique o app (os
   escopos de calendar são sensíveis e podem exigir verificação do Google).
 

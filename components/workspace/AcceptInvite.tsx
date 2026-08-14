@@ -32,7 +32,7 @@ export function AcceptInvite({ token }: { token: string }) {
         <p className="text-fg-secondary">Aceitando convite…</p>
       ) : state === "success" ? (
         <>
-          <h1 className="text-[length:var(--text-h2-size)] font-semibold text-fg">
+          <h1 className="text-fg text-[length:var(--text-h2-size)] font-semibold">
             Pedido enviado
           </h1>
           <p className="text-fg-secondary">
@@ -45,7 +45,7 @@ export function AcceptInvite({ token }: { token: string }) {
         </>
       ) : (
         <>
-          <h1 className="text-[length:var(--text-h2-size)] font-semibold text-fg">
+          <h1 className="text-fg text-[length:var(--text-h2-size)] font-semibold">
             {state === "full" ? "Equipe cheia" : "Convite inválido"}
           </h1>
           <p className="text-fg-secondary">

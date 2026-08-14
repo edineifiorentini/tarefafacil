@@ -83,7 +83,8 @@ export function useCreateClient(workspaceId: string) {
       if (error) throw error;
       return data;
     },
-    onSettled: () => qc.invalidateQueries({ queryKey: clientsKey(workspaceId) }),
+    onSettled: () =>
+      qc.invalidateQueries({ queryKey: clientsKey(workspaceId) }),
   });
 }
 

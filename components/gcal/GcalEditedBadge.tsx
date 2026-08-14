@@ -31,12 +31,12 @@ export function GcalEditedBadge({ task }: { task: Task }) {
   const ago = formatDistanceToNow(editedAt, { addSuffix: true, locale: ptBR });
 
   return (
-    <div className="flex items-center gap-2 rounded-md border border-line bg-sunken px-3 py-2 text-[length:var(--text-caption-size)] text-fg-secondary">
+    <div className="border-line bg-sunken text-fg-secondary flex items-center gap-2 rounded-md border px-3 py-2 text-[length:var(--text-caption-size)]">
       <IconCalendarUp
         size={14}
         stroke={1.5}
         aria-hidden
-        className="shrink-0 text-fg-muted"
+        className="text-fg-muted shrink-0"
       />
       <span>
         {label} · {ago}
@@ -53,7 +53,7 @@ export function GcalEditedBadge({ task }: { task: Task }) {
         type="button"
         onClick={() => dismiss.mutate(task.id)}
         aria-label="Dispensar aviso"
-        className="ml-auto shrink-0 text-fg-muted hover:text-fg"
+        className="text-fg-muted hover:text-fg ml-auto shrink-0"
       >
         <IconX size={14} stroke={1.5} />
       </button>

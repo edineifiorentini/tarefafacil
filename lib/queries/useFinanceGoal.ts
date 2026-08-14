@@ -39,11 +39,17 @@ export function useSetFinanceGoal(workspaceId: string, month: string) {
       const { error } = await supabase
         .from("finance_goal")
         .upsert(
-          { workspace_id: workspaceId, month, target_cents: targetCents, created_by: user?.id ?? null },
+          {
+            workspace_id: workspaceId,
+            month,
+            target_cents: targetCents,
+            created_by: user?.id ?? null,
+          },
           { onConflict: "workspace_id,month" }
         );
       if (error) throw error;
     },
-    onSettled: () => qc.invalidateQueries({ queryKey: goalKey(workspaceId, month) }),
+    onSettled: () =>
+      qc.invalidateQueries({ queryKey: goalKey(workspaceId, month) }),
   });
 }

@@ -13,13 +13,13 @@ export function GcalReconnectBanner() {
   return (
     <div
       role="alert"
-      className="flex items-center justify-between gap-3 border-b border-line bg-sunken px-4 py-2"
+      className="border-line bg-sunken flex items-center justify-between gap-3 border-b px-4 py-2"
     >
-      <span className="flex items-center gap-2 text-[length:var(--text-small-size)] text-fg">
+      <span className="text-fg flex items-center gap-2 text-[length:var(--text-small-size)]">
         <IconAlertTriangle
           size={16}
           stroke={1.5}
-          className="shrink-0 text-overdue"
+          className="text-overdue shrink-0"
           aria-hidden
         />
         Reconecte o Google Agenda para retomar a sincronização

@@ -40,8 +40,7 @@ function detectMime(bytes: Uint8Array): string | null {
 }
 
 export type Validation =
-  | { ok: true; mime: string }
-  | { ok: false; reason: string };
+  { ok: true; mime: string } | { ok: false; reason: string };
 
 export async function validateFile(file: File): Promise<Validation> {
   if (file.size > MAX_BYTES) {

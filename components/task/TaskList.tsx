@@ -82,9 +82,9 @@ export function TaskList({ sectorId }: { sectorId?: string }) {
       </div>
 
       {visible.length === 0 ? (
-        <div className="rounded-md border border-line bg-card p-[var(--space-card-pad)] text-center">
-          <p className="font-medium text-fg">Nada por aqui</p>
-          <p className="mt-1 text-[length:var(--text-small-size)] text-fg-secondary">
+        <div className="border-line bg-card rounded-md border p-[var(--space-card-pad)] text-center">
+          <p className="text-fg font-medium">Nada por aqui</p>
+          <p className="text-fg-secondary mt-1 text-[length:var(--text-small-size)]">
             {filter === "abertas"
               ? "Adicione a primeira tarefa no campo acima."
               : "Nenhuma tarefa neste filtro."}

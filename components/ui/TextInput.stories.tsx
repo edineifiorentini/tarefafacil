@@ -67,7 +67,9 @@ export const Accessibility: Story = {
         E-mail
       </label>
       <TextInput id="a11y-input" type="email" placeholder="voce@exemplo.com" />
-      <p style={{ fontSize: 12, color: "var(--text-secondary)", maxWidth: 280 }}>
+      <p
+        style={{ fontSize: 12, color: "var(--text-secondary)", maxWidth: 280 }}
+      >
         Sempre associe um &lt;label&gt; (nunca só placeholder). O estado de erro
         usa aria-invalid.
       </p>

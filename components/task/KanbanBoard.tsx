@@ -2,10 +2,7 @@
 
 import { Board } from "@/components/board/Board";
 import { useShell } from "@/components/shell/shell-context";
-import {
-  useSubtaskProgress,
-  useTaskTagsBulk,
-} from "@/lib/queries/useCardMeta";
+import { useSubtaskProgress, useTaskTagsBulk } from "@/lib/queries/useCardMeta";
 import {
   useBoardColumns,
   useCreateColumn,

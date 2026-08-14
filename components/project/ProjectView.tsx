@@ -17,9 +17,9 @@ export function ProjectView({ projectId }: { projectId: string }) {
       <TaskRows
         tasks={tasks}
         empty={
-          <div className="rounded-md border border-line bg-card p-[var(--space-card-pad)] text-center">
-            <p className="font-medium text-fg">Nenhuma tarefa neste projeto</p>
-            <p className="mt-1 text-[length:var(--text-small-size)] text-fg-secondary">
+          <div className="border-line bg-card rounded-md border p-[var(--space-card-pad)] text-center">
+            <p className="text-fg font-medium">Nenhuma tarefa neste projeto</p>
+            <p className="text-fg-secondary mt-1 text-[length:var(--text-small-size)]">
               Vincule tarefas ao projeto pelo campo “Projeto” no painel de
               detalhe.
             </p>

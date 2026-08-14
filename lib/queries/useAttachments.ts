@@ -76,7 +76,12 @@ export function useUploadAttachment(workspaceId: string, taskId: string) {
         throw signError ?? new Error("Não foi possível preparar o upload");
       }
 
-      await putWithProgress(signed.signedUrl, file, validation.mime, onProgress);
+      await putWithProgress(
+        signed.signedUrl,
+        file,
+        validation.mime,
+        onProgress
+      );
 
       const {
         data: { user },
@@ -108,7 +113,13 @@ export function useAddAttachmentLink(workspaceId: string, taskId: string) {
   const key = attachmentsKey(workspaceId, taskId);
 
   return useMutation({
-    mutationFn: async ({ url, filename }: { url: string; filename: string }) => {
+    mutationFn: async ({
+      url,
+      filename,
+    }: {
+      url: string;
+      filename: string;
+    }) => {
       const { error } = await supabase.from("attachment").insert({
         workspace_id: workspaceId,
         task_id: taskId,

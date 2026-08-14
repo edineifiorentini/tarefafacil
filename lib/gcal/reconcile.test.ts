@@ -50,8 +50,14 @@ describe("stripAppLink", () => {
 
 describe("eventToPatch", () => {
   it("evento de dia inteiro → due_time null", () => {
-    const patch = eventToPatch(event({ summary: "Novo", start: { date: "2026-08-15" } }));
-    expect(patch).toMatchObject({ title: "Novo", due_date: "2026-08-15", due_time: null });
+    const patch = eventToPatch(
+      event({ summary: "Novo", start: { date: "2026-08-15" } })
+    );
+    expect(patch).toMatchObject({
+      title: "Novo",
+      due_date: "2026-08-15",
+      due_time: null,
+    });
   });
   it("evento com horário → extrai data e hora de parede", () => {
     const patch = eventToPatch(
@@ -83,7 +89,10 @@ describe("reconcile — cenários do aceite E16", () => {
   it("evento editado no Google (mais novo) → update com snapshot", () => {
     const action = reconcile(
       baseTask,
-      event({ summary: "Editado no Google", updated: "2026-08-10T13:00:00.000Z" })
+      event({
+        summary: "Editado no Google",
+        updated: "2026-08-10T13:00:00.000Z",
+      })
     );
     expect(action.type).toBe("update");
     if (action.type === "update") {

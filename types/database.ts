@@ -19,22 +19,13 @@ export type MemberRole = "owner" | "admin" | "member" | "viewer";
 export type SectorColor = "violeta" | "azul" | "coral" | "rosa" | "grafite";
 export type ProjectStatus = "planejado" | "ativo" | "pausado" | "concluido";
 export type TaskPriority =
-  | "sem_prioridade"
-  | "baixa"
-  | "media"
-  | "alta"
-  | "urgente";
+  "sem_prioridade" | "baixa" | "media" | "alta" | "urgente";
 export type AttachmentKind = "file" | "link";
 export type TaskTimeSource = "manual" | "pomodoro";
 export type FinanceKind = "entrada" | "saida";
 export type FinanceStatus = "previsto" | "confirmado" | "cancelado";
 export type ContractStatus =
-  | "rascunho"
-  | "enviado"
-  | "assinado"
-  | "ativo"
-  | "encerrado"
-  | "cancelado";
+  "rascunho" | "enviado" | "assinado" | "ativo" | "encerrado" | "cancelado";
 export type BillingPeriod = "unico" | "mensal" | "trimestral" | "anual";
 export type GcalStatus = "active" | "expired" | "revoked";
 export type ClientType = "pf" | "pj";

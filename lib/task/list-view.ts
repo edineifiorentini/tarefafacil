@@ -1,4 +1,9 @@
-import { differenceInCalendarDays, format, parseISO, startOfWeek } from "date-fns";
+import {
+  differenceInCalendarDays,
+  format,
+  parseISO,
+  startOfWeek,
+} from "date-fns";
 
 import type { Task } from "@/types/database";
 
@@ -12,7 +17,8 @@ export type GroupBy =
   | "status"
   | "no_date";
 export type SortBy = "due" | "priority" | "client" | "created" | "updated";
-export type StatusFilter = "todas" | "aberta" | "concluida" | "cancelada" | "atrasada";
+export type StatusFilter =
+  "todas" | "aberta" | "concluida" | "cancelada" | "atrasada";
 
 export type ListFilters = {
   q: string;
@@ -99,7 +105,9 @@ export function sortTasks(
   arr.sort((a, b) => {
     switch (sortBy) {
       case "priority":
-        return (PRIORITY_RANK[a.priority] ?? 9) - (PRIORITY_RANK[b.priority] ?? 9);
+        return (
+          (PRIORITY_RANK[a.priority] ?? 9) - (PRIORITY_RANK[b.priority] ?? 9)
+        );
       case "client":
         return (clientNameById.get(a.client_id ?? "") ?? "").localeCompare(
           clientNameById.get(b.client_id ?? "") ?? ""
@@ -169,7 +177,9 @@ export function groupTasks(
         const id = t.client_id ?? "none";
         push(
           id,
-          t.client_id ? (ctx.clientNameById.get(t.client_id) ?? "Cliente removido") : "Sem cliente",
+          t.client_id
+            ? (ctx.clientNameById.get(t.client_id) ?? "Cliente removido")
+            : "Sem cliente",
           t
         );
         break;
@@ -178,20 +188,34 @@ export function groupTasks(
         const id = t.assignee_id ?? "none";
         push(
           id,
-          t.assignee_id ? (ctx.memberNameById.get(t.assignee_id) ?? "Removido") : "Sem responsável",
+          t.assignee_id
+            ? (ctx.memberNameById.get(t.assignee_id) ?? "Removido")
+            : "Sem responsável",
           t
         );
         break;
       }
       case "status": {
-        const key = t.cancelled_at ? "cancelada" : t.completed_at ? "concluida" : "aberta";
+        const key = t.cancelled_at
+          ? "cancelada"
+          : t.completed_at
+            ? "concluida"
+            : "aberta";
         const label =
-          key === "cancelada" ? "Canceladas" : key === "concluida" ? "Concluídas" : "Abertas";
+          key === "cancelada"
+            ? "Canceladas"
+            : key === "concluida"
+              ? "Concluídas"
+              : "Abertas";
         push(key, label, t);
         break;
       }
       case "no_date": {
-        push(t.due_date ? "with_date" : "no_date", t.due_date ? "Com data" : "Sem data", t);
+        push(
+          t.due_date ? "with_date" : "no_date",
+          t.due_date ? "Com data" : "Sem data",
+          t
+        );
         break;
       }
     }

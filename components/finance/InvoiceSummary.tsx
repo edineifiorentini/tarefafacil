@@ -13,20 +13,23 @@ export function InvoiceSummary({
   entries: FinanceEntry[];
   onOpen: (entry: FinanceEntry) => void;
 }) {
-  const relevant = entries.filter((e) => e.needs_invoice && e.status !== "cancelado");
+  const relevant = entries.filter(
+    (e) => e.needs_invoice && e.status !== "cancelado"
+  );
   if (relevant.length === 0) return null;
 
   const emitidas = relevant.filter((e) => e.invoice_number);
   const pendentes = relevant.filter((e) => !e.invoice_number);
 
   return (
-    <div className="flex flex-col gap-2 rounded-md border border-line bg-card p-4">
+    <div className="border-line bg-card flex flex-col gap-2 rounded-md border p-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-[length:var(--text-small-size)] font-medium text-fg-secondary">
+        <h3 className="text-fg-secondary text-[length:var(--text-small-size)] font-medium">
           Notas fiscais
         </h3>
-        <span className="text-[length:var(--text-caption-size)] text-fg-muted">
-          {emitidas.length} emitida{emitidas.length === 1 ? "" : "s"} · {pendentes.length} pendente
+        <span className="text-fg-muted text-[length:var(--text-caption-size)]">
+          {emitidas.length} emitida{emitidas.length === 1 ? "" : "s"} ·{" "}
+          {pendentes.length} pendente
           {pendentes.length === 1 ? "" : "s"}
         </span>
       </div>
@@ -38,16 +41,18 @@ export function InvoiceSummary({
               <button
                 type="button"
                 onClick={() => onOpen(e)}
-                className="flex w-full items-center justify-between rounded-sm px-2 py-1.5 text-left text-[length:var(--text-small-size)] transition-colors [transition-duration:var(--dur-fast)] hover:bg-sunken"
+                className="hover:bg-sunken flex w-full items-center justify-between rounded-sm px-2 py-1.5 text-left text-[length:var(--text-small-size)] transition-colors [transition-duration:var(--dur-fast)]"
               >
-                <span className="truncate text-fg">{e.description}</span>
-                <span className="tnum text-fg-muted">{formatCentsBRL(e.amount_cents)}</span>
+                <span className="text-fg truncate">{e.description}</span>
+                <span className="tnum text-fg-muted">
+                  {formatCentsBRL(e.amount_cents)}
+                </span>
               </button>
             </li>
           ))}
         </ul>
       ) : (
-        <p className="text-[length:var(--text-small-size)] text-fg-secondary">
+        <p className="text-fg-secondary text-[length:var(--text-small-size)]">
           Todas emitidas neste mês
         </p>
       )}

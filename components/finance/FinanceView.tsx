@@ -19,10 +19,18 @@ import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Select } from "@/components/ui/Select";
 import { StatCard } from "@/components/ui/StatCard";
-import { buildCashFlowSeries, periodBalance, type CashFlowMode } from "@/lib/finance/cashflow";
+import {
+  buildCashFlowSeries,
+  periodBalance,
+  type CashFlowMode,
+} from "@/lib/finance/cashflow";
 import { formatCentsBRL } from "@/lib/finance/money";
 import { currentMonthISO, monthLabel, shiftMonth } from "@/lib/finance/month";
-import { computeFinanceStats, entriesForMonth, isOverdue } from "@/lib/finance/stats";
+import {
+  computeFinanceStats,
+  entriesForMonth,
+  isOverdue,
+} from "@/lib/finance/stats";
 import { useClients } from "@/lib/queries/useClients";
 import {
   useConfirmFinanceEntry,
@@ -31,7 +39,11 @@ import {
 } from "@/lib/queries/useFinance";
 import { useCurrentUserId, useMembers } from "@/lib/queries/useMembers";
 import { useWorkspace } from "@/lib/queries/useWorkspace";
-import type { FinanceEntry, FinanceKind, FinanceStatus } from "@/types/database";
+import type {
+  FinanceEntry,
+  FinanceKind,
+  FinanceStatus,
+} from "@/types/database";
 
 import { CashFlowChart } from "./CashFlowChart";
 import { FinanceEntryForm } from "./FinanceEntryForm";
@@ -60,8 +72,12 @@ export function FinanceView() {
 
   const [month, setMonth] = useState(currentMonthISO);
   const [hide, setHide] = useState(false);
-  const [kindFilter, setKindFilter] = useState<"__all__" | FinanceKind>("__all__");
-  const [statusFilter, setStatusFilter] = useState<"__all__" | FinanceStatus>("__all__");
+  const [kindFilter, setKindFilter] = useState<"__all__" | FinanceKind>(
+    "__all__"
+  );
+  const [statusFilter, setStatusFilter] = useState<"__all__" | FinanceStatus>(
+    "__all__"
+  );
   const [months, setMonths] = useState<3 | 6 | 12>(6);
   const [cashFlowMode, setCashFlowMode] = useState<CashFlowMode>("realizado");
 
@@ -88,12 +104,18 @@ export function FinanceView() {
   }
 
   const clientNameById = new Map(clients.map((c) => [c.id, c.name]));
-  const stats = useMemo(() => computeFinanceStats(entries, month), [entries, month]);
+  const stats = useMemo(
+    () => computeFinanceStats(entries, month),
+    [entries, month]
+  );
   const cashFlow = useMemo(
     () => buildCashFlowSeries(entries, month, months, cashFlowMode),
     [entries, month, months, cashFlowMode]
   );
-  const monthEntries = useMemo(() => entriesForMonth(entries, month), [entries, month]);
+  const monthEntries = useMemo(
+    () => entriesForMonth(entries, month),
+    [entries, month]
+  );
   const visible = useMemo(() => {
     return monthEntries
       .filter((e) => kindFilter === "__all__" || e.kind === kindFilter)
@@ -134,10 +156,10 @@ export function FinanceView() {
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-6 py-8">
       <div className="flex flex-wrap items-center gap-3">
         <div className="flex flex-col">
-          <h1 className="text-[length:var(--text-h2-size)] font-semibold text-fg">
+          <h1 className="text-fg text-[length:var(--text-h2-size)] font-semibold">
             Financeiro
           </h1>
-          <p className="text-[length:var(--text-small-size)] text-fg-secondary">
+          <p className="text-fg-secondary text-[length:var(--text-small-size)]">
             Fechamento do mês
           </p>
         </div>
@@ -147,22 +169,26 @@ export function FinanceView() {
             type="button"
             aria-label="Mês anterior"
             onClick={() => setMonth((m) => shiftMonth(m, -1))}
-            className="inline-flex h-8 w-8 items-center justify-center rounded-sm text-fg-secondary hover:bg-sunken hover:text-fg"
+            className="text-fg-secondary hover:bg-sunken hover:text-fg inline-flex h-8 w-8 items-center justify-center rounded-sm"
           >
             <IconChevronLeft size={18} stroke={1.5} />
           </button>
-          <span className="w-40 text-center text-[length:var(--text-small-size)] font-medium text-fg">
+          <span className="text-fg w-40 text-center text-[length:var(--text-small-size)] font-medium">
             {monthLabel(month)}
           </span>
           <button
             type="button"
             aria-label="Próximo mês"
             onClick={() => setMonth((m) => shiftMonth(m, 1))}
-            className="inline-flex h-8 w-8 items-center justify-center rounded-sm text-fg-secondary hover:bg-sunken hover:text-fg"
+            className="text-fg-secondary hover:bg-sunken hover:text-fg inline-flex h-8 w-8 items-center justify-center rounded-sm"
           >
             <IconChevronRight size={18} stroke={1.5} />
           </button>
-          <Button variant="ghost" size="sm" onClick={() => setMonth(currentMonthISO())}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setMonth(currentMonthISO())}
+          >
             Hoje
           </Button>
         </div>
@@ -176,7 +202,12 @@ export function FinanceView() {
           {hide ? "Mostrar valores" : "Ocultar valores"}
         </Button>
 
-        <Button variant="primary" size="sm" leadingIcon={IconPlus} onClick={() => openForm()}>
+        <Button
+          variant="primary"
+          size="sm"
+          leadingIcon={IconPlus}
+          onClick={() => openForm()}
+        >
           Novo lançamento
         </Button>
       </div>
@@ -215,9 +246,9 @@ export function FinanceView() {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
-        <div className="flex flex-col gap-3 rounded-md border border-line bg-card p-4 lg:col-span-2">
+        <div className="border-line bg-card flex flex-col gap-3 rounded-md border p-4 lg:col-span-2">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <h2 className="text-[length:var(--text-small-size)] font-medium text-fg-secondary">
+            <h2 className="text-fg-secondary text-[length:var(--text-small-size)] font-medium">
               Fluxo de caixa
             </h2>
             <div className="flex items-center gap-2">
@@ -247,7 +278,7 @@ export function FinanceView() {
             </div>
           </div>
           <CashFlowChart points={cashFlow} />
-          <p className="text-[length:var(--text-small-size)] text-fg-secondary">
+          <p className="text-fg-secondary text-[length:var(--text-small-size)]">
             Saldo do período:{" "}
             <span
               className={`tnum font-medium ${periodBalance(cashFlow) < 0 ? "text-overdue" : "text-fg"}`}
@@ -298,16 +329,20 @@ export function FinanceView() {
           title="Nenhum lançamento neste mês"
           description="Registre entradas e saídas para acompanhar o fechamento"
           action={
-            <Button variant="primary" leadingIcon={IconPlus} onClick={() => openForm()}>
+            <Button
+              variant="primary"
+              leadingIcon={IconPlus}
+              onClick={() => openForm()}
+            >
               Novo lançamento
             </Button>
           }
         />
       ) : (
-        <div className="overflow-hidden rounded-md border border-line">
+        <div className="border-line overflow-hidden rounded-md border">
           <table className="w-full border-collapse text-left">
             <thead>
-              <tr className="border-b border-line bg-sunken text-[length:var(--text-caption-size)] uppercase tracking-wide text-fg-muted">
+              <tr className="border-line bg-sunken text-fg-muted border-b text-[length:var(--text-caption-size)] tracking-wide uppercase">
                 <th className="px-4 py-2 font-medium">Descrição</th>
                 <th className="px-4 py-2 font-medium">Cliente</th>
                 <th className="px-4 py-2 font-medium">Vencimento</th>
@@ -322,41 +357,50 @@ export function FinanceView() {
                 return (
                   <tr
                     key={e.id}
-                    className="cursor-pointer border-b border-line last:border-0 transition-colors [transition-duration:var(--dur-fast)] hover:bg-sunken"
+                    className="border-line hover:bg-sunken cursor-pointer border-b transition-colors [transition-duration:var(--dur-fast)] last:border-0"
                     onClick={() => openForm(e)}
                   >
                     <td className="px-4 py-3">
-                      <span className="font-medium text-fg">{e.description}</span>
+                      <span className="text-fg font-medium">
+                        {e.description}
+                      </span>
                       {e.category ? (
-                        <span className="block text-[length:var(--text-caption-size)] text-fg-muted">
+                        <span className="text-fg-muted block text-[length:var(--text-caption-size)]">
                           {e.category}
                         </span>
                       ) : null}
                     </td>
-                    <td className="px-4 py-3 text-[length:var(--text-small-size)] text-fg-secondary">
-                      {e.client_id ? (clientNameById.get(e.client_id) ?? "—") : "—"}
+                    <td className="text-fg-secondary px-4 py-3 text-[length:var(--text-small-size)]">
+                      {e.client_id
+                        ? (clientNameById.get(e.client_id) ?? "—")
+                        : "—"}
                     </td>
-                    <td className="px-4 py-3 text-[length:var(--text-small-size)] text-fg-secondary">
+                    <td className="text-fg-secondary px-4 py-3 text-[length:var(--text-small-size)]">
                       {e.due_date.split("-").reverse().join("/")}
                     </td>
                     <td className="px-4 py-3">
                       <span
                         className={`text-[length:var(--text-small-size)] ${
-                          overdue ? "font-medium text-overdue" : "text-fg-secondary"
+                          overdue
+                            ? "text-overdue font-medium"
+                            : "text-fg-secondary"
                         }`}
                       >
                         {overdue ? "Vencida" : STATUS_LABEL[e.status]}
                       </span>
                     </td>
                     <td
-                      className={`px-4 py-3 text-right tnum text-[length:var(--text-small-size)] font-medium ${
+                      className={`tnum px-4 py-3 text-right text-[length:var(--text-small-size)] font-medium ${
                         e.kind === "saida" ? "text-overdue" : "text-fg"
                       }`}
                     >
                       {e.kind === "saida" ? "−" : "+"}
                       {mask(formatCentsBRL(e.amount_cents))}
                     </td>
-                    <td className="px-4 py-3 text-right" onClick={(ev) => ev.stopPropagation()}>
+                    <td
+                      className="px-4 py-3 text-right"
+                      onClick={(ev) => ev.stopPropagation()}
+                    >
                       {e.status === "previsto" ? (
                         <Button
                           variant="secondary"
@@ -364,17 +408,23 @@ export function FinanceView() {
                           onClick={() =>
                             confirmEntry.mutate({
                               id: e.id,
-                              confirmedOn: new Date().toISOString().slice(0, 10),
+                              confirmedOn: new Date()
+                                .toISOString()
+                                .slice(0, 10),
                             })
                           }
                         >
-                          {e.kind === "entrada" ? "Marcar recebido" : "Marcar pago"}
+                          {e.kind === "entrada"
+                            ? "Marcar recebido"
+                            : "Marcar pago"}
                         </Button>
                       ) : e.status === "confirmado" ? (
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => confirmEntry.mutate({ id: e.id, confirmedOn: null })}
+                          onClick={() =>
+                            confirmEntry.mutate({ id: e.id, confirmedOn: null })
+                          }
                         >
                           Reabrir
                         </Button>

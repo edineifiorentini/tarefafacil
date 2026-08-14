@@ -16,14 +16,14 @@ export function SectorProjects({ sectorId }: { sectorId: string }) {
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <span className="text-[length:var(--text-caption-size)] font-medium uppercase tracking-wide text-fg-muted">
+      <span className="text-fg-muted text-[length:var(--text-caption-size)] font-medium tracking-wide uppercase">
         Projetos
       </span>
       {projects.map((project) => (
         <Link
           key={project.id}
           href={`/projeto/${project.id}`}
-          className="rounded-full border border-line bg-card px-3 py-1 text-[length:var(--text-small-size)] text-fg-secondary transition-colors [transition-duration:var(--dur-fast)] hover:text-fg"
+          className="border-line bg-card text-fg-secondary hover:text-fg rounded-full border px-3 py-1 text-[length:var(--text-small-size)] transition-colors [transition-duration:var(--dur-fast)]"
         >
           {project.name}
         </Link>
@@ -42,7 +42,7 @@ export function SectorProjects({ sectorId }: { sectorId: string }) {
             ),
           })
         }
-        className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-[length:var(--text-small-size)] text-fg-secondary transition-colors [transition-duration:var(--dur-fast)] hover:bg-sunken hover:text-fg"
+        className="text-fg-secondary hover:bg-sunken hover:text-fg inline-flex items-center gap-1 rounded-full px-2 py-1 text-[length:var(--text-small-size)] transition-colors [transition-duration:var(--dur-fast)]"
       >
         <IconPlus size={14} stroke={1.5} />
         Projeto

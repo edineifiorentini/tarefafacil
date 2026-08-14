@@ -72,7 +72,9 @@ export function ContractsView() {
   const deleteContract = useDeleteContract(workspace.id);
   const { openPanel, closePanel } = useShell();
 
-  const [statusFilter, setStatusFilter] = useState<"__all__" | ContractStatus>("__all__");
+  const [statusFilter, setStatusFilter] = useState<"__all__" | ContractStatus>(
+    "__all__"
+  );
   const [clientFilter, setClientFilter] = useState("__all__");
   const [generateFor, setGenerateFor] = useState<Contract | null>(null);
 
@@ -85,7 +87,13 @@ export function ContractsView() {
   function openForm(contract?: Contract) {
     openPanel({
       title: contract ? "Editar contrato" : "Novo contrato",
-      node: <ContractForm mode={contract ? "edit" : "create"} contract={contract} onDone={closePanel} />,
+      node: (
+        <ContractForm
+          mode={contract ? "edit" : "create"}
+          contract={contract}
+          onDone={closePanel}
+        />
+      ),
     });
   }
 
@@ -104,7 +112,9 @@ export function ContractsView() {
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-6 py-8">
       <div className="flex flex-wrap items-center gap-3">
-        <h1 className="text-[length:var(--text-h2-size)] font-semibold text-fg">Contratos</h1>
+        <h1 className="text-fg text-[length:var(--text-h2-size)] font-semibold">
+          Contratos
+        </h1>
         <Button
           variant="primary"
           size="sm"
@@ -117,8 +127,18 @@ export function ContractsView() {
       </div>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <StatCard label="Rascunhos" value={stats.rascunhos} icon={IconFileText} tone="var(--color-fg-muted)" />
-        <StatCard label="Enviados" value={stats.enviados} icon={IconFileText} tone="var(--tone-blue)" />
+        <StatCard
+          label="Rascunhos"
+          value={stats.rascunhos}
+          icon={IconFileText}
+          tone="var(--color-fg-muted)"
+        />
+        <StatCard
+          label="Enviados"
+          value={stats.enviados}
+          icon={IconFileText}
+          tone="var(--tone-blue)"
+        />
         <StatCard
           label="Assinados / ativos"
           value={stats.assinadosAtivos}
@@ -136,7 +156,13 @@ export function ContractsView() {
       <div className="flex flex-wrap items-center gap-2">
         <div className="w-40">
           <Select
-            options={[{ value: "__all__", label: "Todas as situações" }, ...Object.entries(STATUS_LABEL).map(([value, label]) => ({ value, label }))]}
+            options={[
+              { value: "__all__", label: "Todas as situações" },
+              ...Object.entries(STATUS_LABEL).map(([value, label]) => ({
+                value,
+                label,
+              })),
+            ]}
             value={statusFilter}
             onValueChange={(v) => setStatusFilter(v as typeof statusFilter)}
             aria-label="Filtrar por situação"
@@ -144,7 +170,10 @@ export function ContractsView() {
         </div>
         <div className="w-44">
           <Select
-            options={[{ value: "__all__", label: "Todos os clientes" }, ...clients.map((c) => ({ value: c.id, label: c.name }))]}
+            options={[
+              { value: "__all__", label: "Todos os clientes" },
+              ...clients.map((c) => ({ value: c.id, label: c.name })),
+            ]}
             value={clientFilter}
             onValueChange={setClientFilter}
             aria-label="Filtrar por cliente"
@@ -160,16 +189,20 @@ export function ContractsView() {
           title="Nenhum contrato ainda"
           description="Crie o primeiro contrato para formalizar um acordo com um cliente"
           action={
-            <Button variant="primary" leadingIcon={IconPlus} onClick={() => openForm()}>
+            <Button
+              variant="primary"
+              leadingIcon={IconPlus}
+              onClick={() => openForm()}
+            >
               Novo contrato
             </Button>
           }
         />
       ) : (
-        <div className="overflow-hidden rounded-md border border-line">
+        <div className="border-line overflow-hidden rounded-md border">
           <table className="w-full border-collapse text-left">
             <thead>
-              <tr className="border-b border-line bg-sunken text-[length:var(--text-caption-size)] uppercase tracking-wide text-fg-muted">
+              <tr className="border-line bg-sunken text-fg-muted border-b text-[length:var(--text-caption-size)] tracking-wide uppercase">
                 <th className="px-4 py-2 font-medium">Contrato</th>
                 <th className="px-4 py-2 font-medium">Cliente</th>
                 <th className="px-4 py-2 font-medium">Vigência</th>
@@ -185,25 +218,29 @@ export function ContractsView() {
                 return (
                   <tr
                     key={c.id}
-                    className="cursor-pointer border-b border-line last:border-0 transition-colors [transition-duration:var(--dur-fast)] hover:bg-sunken"
+                    className="border-line hover:bg-sunken cursor-pointer border-b transition-colors [transition-duration:var(--dur-fast)] last:border-0"
                     onClick={() => openForm(c)}
                   >
                     <td className="px-4 py-3">
-                      <span className="font-medium text-fg">{c.title}</span>
+                      <span className="text-fg font-medium">{c.title}</span>
                       {c.number ? (
-                        <span className="block text-[length:var(--text-caption-size)] text-fg-muted">
+                        <span className="text-fg-muted block text-[length:var(--text-caption-size)]">
                           {c.number}
                         </span>
                       ) : null}
                     </td>
-                    <td className="px-4 py-3 text-[length:var(--text-small-size)] text-fg-secondary">
+                    <td className="text-fg-secondary px-4 py-3 text-[length:var(--text-small-size)]">
                       {clientNameById.get(c.client_id) ?? "—"}
                     </td>
-                    <td className="px-4 py-3 text-[length:var(--text-small-size)] text-fg-secondary">
-                      {c.starts_on ? c.starts_on.split("-").reverse().join("/") : "—"}
-                      {c.ends_on ? ` — ${c.ends_on.split("-").reverse().join("/")}` : ""}
+                    <td className="text-fg-secondary px-4 py-3 text-[length:var(--text-small-size)]">
+                      {c.starts_on
+                        ? c.starts_on.split("-").reverse().join("/")
+                        : "—"}
+                      {c.ends_on
+                        ? ` — ${c.ends_on.split("-").reverse().join("/")}`
+                        : ""}
                       {expiring ? (
-                        <span className="ml-2 text-[length:var(--text-caption-size)] font-medium text-overdue">
+                        <span className="text-overdue ml-2 text-[length:var(--text-caption-size)] font-medium">
                           vence em breve
                         </span>
                       ) : null}
@@ -219,16 +256,19 @@ export function ContractsView() {
                         {STATUS_LABEL[c.status]}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-right tnum text-[length:var(--text-small-size)] font-medium text-fg">
+                    <td className="tnum text-fg px-4 py-3 text-right text-[length:var(--text-small-size)] font-medium">
                       {c.amount_cents ? formatCentsBRL(c.amount_cents) : "—"}
                     </td>
-                    <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
+                    <td
+                      className="px-4 py-3 text-right"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <DropdownMenu.Root>
                         <DropdownMenu.Trigger asChild>
                           <button
                             type="button"
                             aria-label={`Ações de ${c.title}`}
-                            className="inline-flex h-7 w-7 items-center justify-center rounded-sm text-fg-muted hover:bg-sunken hover:text-fg"
+                            className="text-fg-muted hover:bg-sunken hover:text-fg inline-flex h-7 w-7 items-center justify-center rounded-sm"
                           >
                             <IconDotsVertical size={16} stroke={1.5} />
                           </button>
@@ -241,14 +281,14 @@ export function ContractsView() {
                             // (mesmo problema já corrigido em BoardColumn) —
                             // aqui abre um AlertDialog logo em seguida.
                             onCloseAutoFocus={(e) => e.preventDefault()}
-                            className="z-50 min-w-48 overflow-hidden rounded-md border border-line bg-card p-1 shadow-[var(--shadow-panel)] data-[state=closed]:[animation:tf-pop-out_var(--dur-fast)_ease-in] data-[state=open]:[animation:tf-pop-in_var(--dur-fast)_var(--ease-out)]"
+                            className="tf-glass-strong z-50 min-w-48 overflow-hidden rounded-md p-1 data-[state=closed]:[animation:tf-pop-out_var(--dur-fast)_ease-in] data-[state=open]:[animation:tf-pop-in_var(--dur-fast)_var(--ease-out)]"
                           >
                             <DropdownMenu.Item asChild>
                               <a
                                 href={`/contratos/${c.id}/imprimir`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] text-fg outline-none data-[highlighted]:bg-sunken"
+                                className="text-fg data-[highlighted]:bg-sunken flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] outline-none"
                               >
                                 <IconPrinter size={14} stroke={1.5} />
                                 Visualizar / imprimir
@@ -257,7 +297,7 @@ export function ContractsView() {
                             {c.status === "assinado" || c.status === "ativo" ? (
                               <DropdownMenu.Item
                                 onSelect={() => setGenerateFor(c)}
-                                className="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] text-fg outline-none data-[highlighted]:bg-sunken"
+                                className="text-fg data-[highlighted]:bg-sunken flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] outline-none"
                               >
                                 <IconReceipt2 size={14} stroke={1.5} />
                                 Gerar parcelas no Financeiro
@@ -265,24 +305,40 @@ export function ContractsView() {
                             ) : null}
                             {nextStatus ? (
                               <DropdownMenu.Item
-                                onSelect={() => setStatus.mutate({ id: c.id, status: nextStatus })}
-                                className="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] text-fg outline-none data-[highlighted]:bg-sunken"
+                                onSelect={() =>
+                                  setStatus.mutate({
+                                    id: c.id,
+                                    status: nextStatus,
+                                  })
+                                }
+                                className="text-fg data-[highlighted]:bg-sunken flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] outline-none"
                               >
                                 {NEXT_LABEL[c.status]}
                               </DropdownMenu.Item>
                             ) : null}
-                            {c.status !== "encerrado" && c.status !== "cancelado" ? (
+                            {c.status !== "encerrado" &&
+                            c.status !== "cancelado" ? (
                               <DropdownMenu.Item
-                                onSelect={() => setStatus.mutate({ id: c.id, status: "encerrado" })}
-                                className="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] text-fg outline-none data-[highlighted]:bg-sunken"
+                                onSelect={() =>
+                                  setStatus.mutate({
+                                    id: c.id,
+                                    status: "encerrado",
+                                  })
+                                }
+                                className="text-fg data-[highlighted]:bg-sunken flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] outline-none"
                               >
                                 Encerrar
                               </DropdownMenu.Item>
                             ) : null}
                             {c.status !== "cancelado" ? (
                               <DropdownMenu.Item
-                                onSelect={() => setStatus.mutate({ id: c.id, status: "cancelado" })}
-                                className="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] text-fg outline-none data-[highlighted]:bg-sunken"
+                                onSelect={() =>
+                                  setStatus.mutate({
+                                    id: c.id,
+                                    status: "cancelado",
+                                  })
+                                }
+                                className="text-fg data-[highlighted]:bg-sunken flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] outline-none"
                               >
                                 Cancelar
                               </DropdownMenu.Item>
@@ -292,7 +348,7 @@ export function ContractsView() {
                             {c.status === "rascunho" ? (
                               <DropdownMenu.Item
                                 onSelect={() => deleteContract.mutate(c.id)}
-                                className="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] text-overdue outline-none data-[highlighted]:bg-sunken"
+                                className="text-overdue data-[highlighted]:bg-sunken flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] outline-none"
                               >
                                 <IconTrash size={14} stroke={1.5} />
                                 Excluir rascunho

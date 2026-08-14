@@ -14,7 +14,10 @@ export async function POST(request: Request) {
   let taskId: string | undefined;
   let remove = false;
   try {
-    const body = (await request.json()) as { taskId?: string; remove?: boolean };
+    const body = (await request.json()) as {
+      taskId?: string;
+      remove?: boolean;
+    };
     taskId = body.taskId;
     remove = body.remove === true;
   } catch {

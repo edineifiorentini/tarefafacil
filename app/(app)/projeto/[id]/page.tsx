@@ -24,9 +24,7 @@ export default async function ProjectPage({
     .maybeSingle();
 
   if (!project) {
-    return (
-      <div className="p-6 text-fg-secondary">Projeto não encontrado.</div>
-    );
+    return <div className="text-fg-secondary p-6">Projeto não encontrado.</div>;
   }
 
   const period =
@@ -42,7 +40,7 @@ export default async function ProjectPage({
     <div className="mx-auto max-w-[var(--max-width-read)] px-6 py-8">
       <div className="mb-6">
         <div className="flex flex-wrap items-center gap-3">
-          <h1 className="text-[length:var(--text-h1-size)] font-medium leading-[var(--text-h1-line)] text-fg">
+          <h1 className="text-fg text-[length:var(--text-h1-size)] leading-[var(--text-h1-line)] font-medium">
             {project.name}
           </h1>
           <Badge variant={project.status === "ativo" ? "brand" : "neutral"}>
@@ -50,10 +48,10 @@ export default async function ProjectPage({
           </Badge>
         </div>
         {period ? (
-          <p className="tnum mt-1 text-fg-secondary">{period}</p>
+          <p className="tnum text-fg-secondary mt-1">{period}</p>
         ) : null}
         {project.description ? (
-          <p className="mt-2 whitespace-pre-wrap text-fg-secondary">
+          <p className="text-fg-secondary mt-2 whitespace-pre-wrap">
             {project.description}
           </p>
         ) : null}

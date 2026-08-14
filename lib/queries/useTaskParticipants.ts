@@ -34,7 +34,11 @@ export function useAddParticipant(workspaceId: string, taskId: string) {
     mutationFn: async (userId: string) => {
       const { error } = await supabase
         .from("task_participant")
-        .insert({ task_id: taskId, user_id: userId, workspace_id: workspaceId });
+        .insert({
+          task_id: taskId,
+          user_id: userId,
+          workspace_id: workspaceId,
+        });
       if (error && error.code !== "23505") throw error;
     },
     onMutate: async (userId) => {

@@ -10,10 +10,17 @@ import { Select } from "@/components/ui/Select";
 import { TextInput } from "@/components/ui/TextInput";
 import { Textarea } from "@/components/ui/Textarea";
 import { useToast } from "@/components/ui/Toast";
-import { centsToMaskedInput, formatCentsBRL, parseCurrencyToCents } from "@/lib/finance/money";
+import {
+  centsToMaskedInput,
+  formatCentsBRL,
+  parseCurrencyToCents,
+} from "@/lib/finance/money";
 import { useClients } from "@/lib/queries/useClients";
 import { useContractInstallments } from "@/lib/queries/useContractFinance";
-import { useCreateContract, useUpdateContract } from "@/lib/queries/useContracts";
+import {
+  useCreateContract,
+  useUpdateContract,
+} from "@/lib/queries/useContracts";
 import { useMembers } from "@/lib/queries/useMembers";
 import { useWorkspace } from "@/lib/queries/useWorkspace";
 import type { BillingPeriod, Contract, ContractStatus } from "@/types/database";
@@ -33,10 +40,16 @@ const PERIODS = [
   { value: "unico", label: "Pagamento único" },
 ];
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
   return (
     <label className="flex flex-col gap-1">
-      <span className="text-[length:var(--text-caption-size)] font-medium uppercase tracking-wide text-fg-muted">
+      <span className="text-fg-muted text-[length:var(--text-caption-size)] font-medium tracking-wide uppercase">
         {label}
       </span>
       {children}
@@ -59,14 +72,20 @@ export function ContractForm({
   const { data: members = [] } = useMembers(workspace.id);
   const create = useCreateContract(workspace.id);
   const update = useUpdateContract(workspace.id);
-  const { data: installments = [] } = useContractInstallments(contract?.id ?? "");
+  const { data: installments = [] } = useContractInstallments(
+    contract?.id ?? ""
+  );
 
   const [number, setNumber] = useState(contract?.number ?? "");
   const [clientId, setClientId] = useState(contract?.client_id ?? "");
-  const [responsibleId, setResponsibleId] = useState(contract?.responsible_id ?? "__none__");
+  const [responsibleId, setResponsibleId] = useState(
+    contract?.responsible_id ?? "__none__"
+  );
   const [title, setTitle] = useState(contract?.title ?? "");
   const [description, setDescription] = useState(contract?.description ?? "");
-  const [status, setStatus] = useState<ContractStatus>(contract?.status ?? "rascunho");
+  const [status, setStatus] = useState<ContractStatus>(
+    contract?.status ?? "rascunho"
+  );
   const [issuedOn, setIssuedOn] = useState(contract?.issued_on ?? "");
   const [startsOn, setStartsOn] = useState(contract?.starts_on ?? "");
   const [endsOn, setEndsOn] = useState(contract?.ends_on ?? "");
@@ -80,7 +99,9 @@ export function ContractForm({
   const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>(
     contract?.billing_period ?? "mensal"
   );
-  const [paymentMethod, setPaymentMethod] = useState(contract?.payment_method ?? "");
+  const [paymentMethod, setPaymentMethod] = useState(
+    contract?.payment_method ?? ""
+  );
   const [notes, setNotes] = useState(contract?.notes ?? "");
   const [signedAt, setSignedAt] = useState(contract?.signed_at ?? "");
   const [signedDocumentUrl, setSignedDocumentUrl] = useState(
@@ -107,7 +128,10 @@ export function ContractForm({
       starts_on: startsOn || null,
       ends_on: endsOn || null,
       auto_renew: autoRenew,
-      renew_notice_days: autoRenew && renewNoticeDays ? Number.parseInt(renewNoticeDays, 10) : null,
+      renew_notice_days:
+        autoRenew && renewNoticeDays
+          ? Number.parseInt(renewNoticeDays, 10)
+          : null,
       amount_cents: cents,
       billing_period: billingPeriod,
       payment_method: paymentMethod.trim() || null,
@@ -118,14 +142,16 @@ export function ContractForm({
     const handlers = {
       onSuccess: () => {
         toast.show({
-          message: mode === "create" ? "Contrato criado" : "Contrato atualizado",
+          message:
+            mode === "create" ? "Contrato criado" : "Contrato atualizado",
         });
         onDone();
       },
       onError: () => toast.show({ message: "Não foi possível salvar" }),
     };
     if (mode === "create") create.mutate(payload, handlers);
-    else if (contract) update.mutate({ id: contract.id, patch: payload }, handlers);
+    else if (contract)
+      update.mutate({ id: contract.id, patch: payload }, handlers);
   }
 
   return (
@@ -181,7 +207,10 @@ export function ContractForm({
         <Select
           options={[
             { value: "__none__", label: "Ninguém" },
-            ...members.map((m) => ({ value: m.user_id, label: m.display_name ?? m.email })),
+            ...members.map((m) => ({
+              value: m.user_id,
+              label: m.display_name ?? m.email,
+            })),
           ]}
           value={responsibleId}
           onValueChange={setResponsibleId}
@@ -222,7 +251,7 @@ export function ContractForm({
           onCheckedChange={(c) => setAutoRenew(c === true)}
           aria-label="Renovação automática"
         />
-        <span className="text-[length:var(--text-small-size)] text-fg">
+        <span className="text-fg text-[length:var(--text-small-size)]">
           Renovação automática
         </span>
         {autoRenew ? (
@@ -230,7 +259,9 @@ export function ContractForm({
             <TextInput
               inputMode="numeric"
               value={renewNoticeDays}
-              onChange={(e) => setRenewNoticeDays(e.target.value.replace(/\D/g, ""))}
+              onChange={(e) =>
+                setRenewNoticeDays(e.target.value.replace(/\D/g, ""))
+              }
               placeholder="dias de aviso"
               aria-label="Dias de aviso prévio"
             />
@@ -240,7 +271,11 @@ export function ContractForm({
 
       <div className="grid grid-cols-3 gap-3">
         <Field label="Valor">
-          <CurrencyInput value={amount} onChange={setAmount} aria-label="Valor" />
+          <CurrencyInput
+            value={amount}
+            onChange={setAmount}
+            aria-label="Valor"
+          />
         </Field>
         <Field label="Periodicidade">
           <Select
@@ -290,11 +325,16 @@ export function ContractForm({
       </Field>
 
       {mode === "edit" && installments.length > 0 ? (
-        <p className="rounded-md border border-line bg-sunken px-3 py-2 text-[length:var(--text-small-size)] text-fg-secondary">
-          {installments.length} parcela{installments.length === 1 ? "" : "s"} gerada
+        <p className="border-line bg-sunken text-fg-secondary rounded-md border px-3 py-2 text-[length:var(--text-small-size)]">
+          {installments.length} parcela{installments.length === 1 ? "" : "s"}{" "}
+          gerada
           {installments.length === 1 ? "" : "s"} no Financeiro{" "}
           <span className="tnum">
-            ({formatCentsBRL(installments.reduce((s, i) => s + i.amount_cents, 0))} no total)
+            (
+            {formatCentsBRL(
+              installments.reduce((s, i) => s + i.amount_cents, 0)
+            )}{" "}
+            no total)
           </span>
         </p>
       ) : null}

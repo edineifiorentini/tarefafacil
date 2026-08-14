@@ -16,7 +16,7 @@ export function ProjectProgress({
           label={`${done} de ${total} tarefas concluídas`}
         />
       </div>
-      <span className="tnum shrink-0 text-[length:var(--text-small-size)] text-fg-secondary">
+      <span className="tnum text-fg-secondary shrink-0 text-[length:var(--text-small-size)]">
         {done}/{total}
       </span>
     </div>

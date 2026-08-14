@@ -108,8 +108,14 @@ export async function pullChanges(workspaceId: string): Promise<PullResult> {
         url.searchParams.set("syncToken", syncToken);
       } else {
         const now = Date.now();
-        url.searchParams.set("timeMin", new Date(now - WINDOW_MS).toISOString());
-        url.searchParams.set("timeMax", new Date(now + WINDOW_MS).toISOString());
+        url.searchParams.set(
+          "timeMin",
+          new Date(now - WINDOW_MS).toISOString()
+        );
+        url.searchParams.set(
+          "timeMax",
+          new Date(now + WINDOW_MS).toISOString()
+        );
       }
       if (pageToken) url.searchParams.set("pageToken", pageToken);
 

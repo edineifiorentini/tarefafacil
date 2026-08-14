@@ -70,7 +70,13 @@ export function useToggleSubtask(workspaceId: string, taskId: string) {
   const key = subtasksKey(workspaceId, taskId);
 
   return useMutation({
-    mutationFn: async ({ id, completed }: { id: string; completed: boolean }) => {
+    mutationFn: async ({
+      id,
+      completed,
+    }: {
+      id: string;
+      completed: boolean;
+    }) => {
       const { error } = await supabase
         .from("subtask")
         .update({ completed_at: completed ? new Date().toISOString() : null })
@@ -83,7 +89,9 @@ export function useToggleSubtask(workspaceId: string, taskId: string) {
       const completedAt = completed ? new Date().toISOString() : null;
       qc.setQueryData<Subtask[]>(
         key,
-        previous.map((s) => (s.id === id ? { ...s, completed_at: completedAt } : s))
+        previous.map((s) =>
+          s.id === id ? { ...s, completed_at: completedAt } : s
+        )
       );
       return { previous };
     },
@@ -108,7 +116,10 @@ export function useUpdateSubtask(workspaceId: string, taskId: string) {
       title?: string;
       due_date?: string | null;
     }) => {
-      const { error } = await supabase.from("subtask").update(patch).eq("id", id);
+      const { error } = await supabase
+        .from("subtask")
+        .update(patch)
+        .eq("id", id);
       if (error) throw error;
     },
     onMutate: async ({ id, ...patch }) => {

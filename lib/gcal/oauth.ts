@@ -98,7 +98,7 @@ export class GcalAuthError extends Error {}
 export function gcalConfigured(): boolean {
   return Boolean(
     process.env.GOOGLE_CLIENT_ID &&
-      process.env.GOOGLE_CLIENT_SECRET &&
-      process.env.GOOGLE_REDIRECT_URI
+    process.env.GOOGLE_CLIENT_SECRET &&
+    process.env.GOOGLE_REDIRECT_URI
   );
 }

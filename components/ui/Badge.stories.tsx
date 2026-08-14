@@ -2,7 +2,12 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 
 import { Badge } from "./Badge";
 
-const row = { display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" as const };
+const row = {
+  display: "flex",
+  gap: 8,
+  alignItems: "center",
+  flexWrap: "wrap" as const,
+};
 
 const meta: Meta<typeof Badge> = {
   title: "Átomos/Badge",
@@ -10,7 +15,10 @@ const meta: Meta<typeof Badge> = {
   parameters: { layout: "centered" },
   args: { children: "Badge", variant: "neutral" },
   argTypes: {
-    variant: { control: "select", options: ["neutral", "brand", "overdue", "due-soon"] },
+    variant: {
+      control: "select",
+      options: ["neutral", "brand", "overdue", "due-soon"],
+    },
   },
 };
 export default meta;
@@ -54,7 +62,9 @@ export const Accessibility: Story = {
         <Badge variant="overdue">Atrasado</Badge>
         <Badge variant="due-soon">Em 48h</Badge>
       </div>
-      <p style={{ fontSize: 12, color: "var(--text-secondary)", maxWidth: 320 }}>
+      <p
+        style={{ fontSize: 12, color: "var(--text-secondary)", maxWidth: 320 }}
+      >
         Todas as combinações texto/fundo atingem ≥ 4.5:1. Cor nunca é o único
         sinal — o texto sempre descreve o estado.
       </p>

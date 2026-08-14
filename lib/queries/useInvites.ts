@@ -38,7 +38,11 @@ export function useCreateInvite(workspaceId: string) {
       } = await supabase.auth.getUser();
       const { data, error } = await supabase
         .from("workspace_invite")
-        .insert({ workspace_id: workspaceId, role, invited_by: user?.id ?? null })
+        .insert({
+          workspace_id: workspaceId,
+          role,
+          invited_by: user?.id ?? null,
+        })
         .select("*")
         .single();
       if (error) throw error;

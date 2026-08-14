@@ -2,7 +2,12 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 
 import { Tag } from "./Tag";
 
-const row = { display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" as const };
+const row = {
+  display: "flex",
+  gap: 8,
+  alignItems: "center",
+  flexWrap: "wrap" as const,
+};
 
 const meta: Meta<typeof Tag> = {
   title: "Átomos/Tag",
@@ -62,9 +67,11 @@ export const Accessibility: Story = {
       <Tag color="rosa" onRemove={() => {}}>
         removível
       </Tag>
-      <p style={{ fontSize: 12, color: "var(--text-secondary)", maxWidth: 320 }}>
-        O botão de remover tem aria-label e foco visível. As cores de setor foram
-        escolhidas para contraste do texto sobre o preenchimento.
+      <p
+        style={{ fontSize: 12, color: "var(--text-secondary)", maxWidth: 320 }}
+      >
+        O botão de remover tem aria-label e foco visível. As cores de setor
+        foram escolhidas para contraste do texto sobre o preenchimento.
       </p>
     </div>
   ),

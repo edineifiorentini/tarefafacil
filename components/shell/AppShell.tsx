@@ -46,6 +46,21 @@ export function AppShell({
           target.isContentEditable);
       if (typing || e.metaKey || e.ctrlKey || e.altKey) return;
 
+      // O mapa precisa bater com as dicas exibidas na Sidebar.
+      const jumps: Record<string, string> = {
+        "1": "/dashboard",
+        "2": "/hoje",
+        "3": "/lista",
+        "4": "/quadro",
+        "5": "/calendario",
+        "6": "/clientes",
+      };
+
+      if (jumps[e.key]) {
+        router.push(jumps[e.key]);
+        return;
+      }
+
       switch (e.key) {
         case "n":
         case "N":
@@ -55,15 +70,6 @@ export function AppShell({
         case "/":
           e.preventDefault();
           document.getElementById("app-search")?.focus();
-          break;
-        case "1":
-          router.push("/hoje");
-          break;
-        case "2":
-          router.push("/quadro");
-          break;
-        case "3":
-          router.push("/calendario");
           break;
         default:
           break;
@@ -75,8 +81,8 @@ export function AppShell({
 
   return (
     <div className="flex h-dvh">
-      {/* Sidebar — desktop (>=1024px) */}
-      <aside className="hidden w-[240px] shrink-0 border-r border-line bg-card lg:block">
+      {/* Sidebar — desktop (>=1024px). Vidro perolado, divisão só à direita. */}
+      <aside className="tf-glass-edge hidden w-[248px] shrink-0 lg:block">
         <Sidebar sectors={sectors} workspaces={workspaces} isAdmin={isAdmin} />
       </aside>
 
@@ -86,10 +92,14 @@ export function AppShell({
           <Dialog.Overlay className="fixed inset-0 z-40 bg-black/40 data-[state=closed]:[animation:tf-fade-out_var(--dur-fast)_ease-in] data-[state=open]:[animation:tf-fade-in_var(--dur-base)_var(--ease-out)] lg:hidden" />
           <Dialog.Content
             aria-describedby={undefined}
-            className="fixed inset-y-0 left-0 z-50 w-[240px] border-r border-line bg-card outline-none data-[state=closed]:[animation:tf-slide-out-left_var(--dur-base)_ease-in] data-[state=open]:[animation:tf-slide-in-left_var(--dur-slow)_var(--ease-out)] lg:hidden"
+            className="tf-glass-strong fixed inset-y-0 left-0 z-50 w-[248px] outline-none data-[state=closed]:[animation:tf-slide-out-left_var(--dur-base)_ease-in] data-[state=open]:[animation:tf-slide-in-left_var(--dur-slow)_var(--ease-out)] lg:hidden"
           >
             <Dialog.Title className="sr-only">Navegação</Dialog.Title>
-            <Sidebar sectors={sectors} workspaces={workspaces} isAdmin={isAdmin} />
+            <Sidebar
+              sectors={sectors}
+              workspaces={workspaces}
+              isAdmin={isAdmin}
+            />
           </Dialog.Content>
         </Dialog.Portal>
       </Dialog.Root>
@@ -98,7 +108,8 @@ export function AppShell({
       <div className="flex min-w-0 flex-1 flex-col">
         <TopBar />
         <GcalReconnectBanner />
-        <main className="min-h-0 flex-1 overflow-auto bg-page">{children}</main>
+        {/* Transparente: o ambiente do body aparece por baixo do conteúdo. */}
+        <main className="min-h-0 flex-1 overflow-auto">{children}</main>
       </div>
 
       {/* Painel de detalhe */}

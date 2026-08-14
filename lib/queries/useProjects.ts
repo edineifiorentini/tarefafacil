@@ -78,7 +78,8 @@ export function useCreateProject(workspaceId: string) {
     onError: (_e, _v, ctx) => {
       ctx?.snapshots.forEach(([key, data]) => qc.setQueryData(key, data));
     },
-    onSettled: () => qc.invalidateQueries({ queryKey: [PROJECTS, workspaceId] }),
+    onSettled: () =>
+      qc.invalidateQueries({ queryKey: [PROJECTS, workspaceId] }),
   });
 }
 
@@ -111,7 +112,8 @@ export function useUpdateProject(workspaceId: string) {
     onError: (_e, _v, ctx) => {
       ctx?.snapshots.forEach(([key, data]) => qc.setQueryData(key, data));
     },
-    onSettled: () => qc.invalidateQueries({ queryKey: [PROJECTS, workspaceId] }),
+    onSettled: () =>
+      qc.invalidateQueries({ queryKey: [PROJECTS, workspaceId] }),
   });
 }
 
@@ -141,6 +143,7 @@ export function useArchiveProject(workspaceId: string) {
     onError: (_e, _v, ctx) => {
       ctx?.snapshots.forEach(([key, data]) => qc.setQueryData(key, data));
     },
-    onSettled: () => qc.invalidateQueries({ queryKey: [PROJECTS, workspaceId] }),
+    onSettled: () =>
+      qc.invalidateQueries({ queryKey: [PROJECTS, workspaceId] }),
   });
 }

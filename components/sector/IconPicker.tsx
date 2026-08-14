@@ -25,7 +25,7 @@ function Grid({
 
   if (filtered.length === 0) {
     return (
-      <p className="py-2 text-[length:var(--text-small-size)] text-fg-muted">
+      <p className="text-fg-muted py-2 text-[length:var(--text-small-size)]">
         Nenhum ícone encontrado
       </p>
     );
@@ -76,10 +76,10 @@ export function IconPicker({
         value={query}
         onChange={(e) => setQuery(e.target.value)}
       />
-      <div className="max-h-56 overflow-auto rounded-sm border border-line p-1">
+      <div className="border-line max-h-56 overflow-auto rounded-sm border p-1">
         <Suspense
           fallback={
-            <p className="py-2 text-[length:var(--text-small-size)] text-fg-muted">
+            <p className="text-fg-muted py-2 text-[length:var(--text-small-size)]">
               Carregando ícones…
             </p>
           }

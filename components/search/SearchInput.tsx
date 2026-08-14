@@ -40,7 +40,7 @@ export function SearchInput({
         size={18}
         stroke={1.5}
         aria-hidden
-        className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-fg-muted"
+        className="text-fg-muted pointer-events-none absolute top-1/2 left-3 -translate-y-1/2"
       />
       <input
         ref={inputRef}
@@ -49,7 +49,7 @@ export function SearchInput({
         onChange={(e) => setLocal(e.target.value)}
         placeholder="Buscar tarefas, descrições e insights"
         aria-label="Buscar"
-        className="h-10 w-full rounded-md border border-line bg-card pr-9 pl-10 text-fg placeholder:text-fg-muted focus-visible:border-line-strong"
+        className="border-line bg-card text-fg placeholder:text-fg-muted focus-visible:border-line-strong h-10 w-full rounded-md border pr-9 pl-10"
       />
       {local ? (
         <button
@@ -60,7 +60,7 @@ export function SearchInput({
             inputRef.current?.focus();
           }}
           aria-label="Limpar busca"
-          className="absolute top-1/2 right-2 -translate-y-1/2 rounded-sm p-1 text-fg-muted hover:text-fg"
+          className="text-fg-muted hover:text-fg absolute top-1/2 right-2 -translate-y-1/2 rounded-sm p-1"
         >
           <IconX size={16} stroke={1.5} />
         </button>

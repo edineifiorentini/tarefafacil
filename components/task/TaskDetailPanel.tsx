@@ -60,7 +60,7 @@ type SaveStatus = "idle" | "saving" | "saved";
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <span className="text-[length:var(--text-caption-size)] font-medium uppercase tracking-wide text-fg-muted">
+      <span className="text-fg-muted text-[length:var(--text-caption-size)] font-medium tracking-wide uppercase">
         {label}
       </span>
       {children}
@@ -150,7 +150,7 @@ export function TaskDetailPanel({ taskId }: { taskId: string }) {
           placeholder="Título da tarefa"
           className="border-transparent bg-transparent px-0 text-[length:var(--text-h2-size)] font-semibold hover:border-transparent"
         />
-        <div className="flex h-4 items-center gap-1 text-[length:var(--text-caption-size)] text-fg-muted">
+        <div className="text-fg-muted flex h-4 items-center gap-1 text-[length:var(--text-caption-size)]">
           {status === "saving" ? (
             <>
               <IconLoader2 size={12} className="animate-spin" aria-hidden />
@@ -168,7 +168,7 @@ export function TaskDetailPanel({ taskId }: { taskId: string }) {
       <GcalEditedBadge task={task} />
 
       {cancelled ? (
-        <div className="flex items-center gap-2 rounded-md border border-line bg-sunken px-3 py-2 text-[length:var(--text-small-size)] text-fg-secondary">
+        <div className="border-line bg-sunken text-fg-secondary flex items-center gap-2 rounded-md border px-3 py-2 text-[length:var(--text-small-size)]">
           <IconBan size={16} stroke={1.5} />
           Esta demanda foi cancelada
         </div>
@@ -270,7 +270,7 @@ export function TaskDetailPanel({ taskId }: { taskId: string }) {
                 <button
                   type="button"
                   onClick={() => setTimeOpen(true)}
-                  className="inline-flex items-center gap-1 rounded-sm px-2 py-1 text-[length:var(--text-small-size)] text-fg-secondary hover:bg-sunken hover:text-fg"
+                  className="text-fg-secondary hover:bg-sunken hover:text-fg inline-flex items-center gap-1 rounded-sm px-2 py-1 text-[length:var(--text-small-size)]"
                 >
                   <IconClock size={16} stroke={1.5} />
                   Adicionar horário
@@ -293,7 +293,7 @@ export function TaskDetailPanel({ taskId }: { taskId: string }) {
 
                   {endOpen ? (
                     <>
-                      <span className="text-[length:var(--text-small-size)] text-fg-muted">
+                      <span className="text-fg-muted text-[length:var(--text-small-size)]">
                         até
                       </span>
                       <div className="w-28">
@@ -302,7 +302,9 @@ export function TaskDetailPanel({ taskId }: { taskId: string }) {
                           value={dueEndTime}
                           onChange={(e) => {
                             setDueEndTime(e.target.value);
-                            scheduleSave({ due_end_time: e.target.value || null });
+                            scheduleSave({
+                              due_end_time: e.target.value || null,
+                            });
                           }}
                           aria-label="Hora de término"
                         />
@@ -315,7 +317,7 @@ export function TaskDetailPanel({ taskId }: { taskId: string }) {
                           setDueEndTime("");
                           scheduleSave({ due_end_time: null });
                         }}
-                        className="rounded-sm p-1 text-fg-muted hover:text-fg"
+                        className="text-fg-muted hover:text-fg rounded-sm p-1"
                       >
                         <IconX size={14} stroke={1.5} />
                       </button>
@@ -324,7 +326,7 @@ export function TaskDetailPanel({ taskId }: { taskId: string }) {
                     <button
                       type="button"
                       onClick={() => setEndOpen(true)}
-                      className="inline-flex items-center gap-1 rounded-sm px-2 py-1 text-[length:var(--text-small-size)] text-fg-secondary hover:bg-sunken hover:text-fg"
+                      className="text-fg-secondary hover:bg-sunken hover:text-fg inline-flex items-center gap-1 rounded-sm px-2 py-1 text-[length:var(--text-small-size)]"
                     >
                       <IconPlus size={14} stroke={1.5} />
                       Término
@@ -340,7 +342,7 @@ export function TaskDetailPanel({ taskId }: { taskId: string }) {
                       setDueEndTime("");
                       scheduleSave({ due_time: null, due_end_time: null });
                     }}
-                    className="inline-flex items-center gap-1 rounded-sm px-2 py-1 text-[length:var(--text-caption-size)] text-fg-muted hover:bg-sunken hover:text-fg"
+                    className="text-fg-muted hover:bg-sunken hover:text-fg inline-flex items-center gap-1 rounded-sm px-2 py-1 text-[length:var(--text-caption-size)]"
                   >
                     <IconX size={14} stroke={1.5} />
                     Dia inteiro
@@ -453,12 +455,14 @@ export function TaskDetailPanel({ taskId }: { taskId: string }) {
         </TabsContent>
       </Tabs>
 
-      <div className="mt-2 flex gap-2 border-t border-line pt-4">
+      <div className="border-line mt-2 flex gap-2 border-t pt-4">
         <Button
           variant="secondary"
           size="sm"
           leadingIcon={cancelled ? IconRotate : IconBan}
-          onClick={() => toggleCancel.mutate({ id: taskId, cancel: !cancelled })}
+          onClick={() =>
+            toggleCancel.mutate({ id: taskId, cancel: !cancelled })
+          }
         >
           {cancelled ? "Reabrir demanda" : "Cancelar demanda"}
         </Button>

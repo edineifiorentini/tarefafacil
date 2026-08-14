@@ -9,7 +9,11 @@ import {
   useSensors,
   type DragEndEvent,
 } from "@dnd-kit/core";
-import { IconAlertTriangle, IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
+import {
+  IconAlertTriangle,
+  IconChevronLeft,
+  IconChevronRight,
+} from "@tabler/icons-react";
 import {
   addMonths,
   differenceInCalendarDays,
@@ -55,7 +59,7 @@ function TaskChip({ task, onOpen }: { task: Task; onOpen: () => void }) {
       onClick={onOpen}
       {...listeners}
       {...attributes}
-      className={`w-full cursor-grab truncate rounded-sm bg-sunken px-1 text-left text-[length:var(--text-caption-size)] transition-colors [transition-duration:var(--dur-fast)] hover:bg-selected ${
+      className={`bg-sunken hover:bg-selected w-full cursor-grab truncate rounded-sm px-1 text-left text-[length:var(--text-caption-size)] transition-colors [transition-duration:var(--dur-fast)] ${
         isDragging ? "opacity-50" : ""
       } ${task.completed_at ? "text-done line-through" : "text-fg"}`}
     >
@@ -80,7 +84,8 @@ function ProjectPeek({
     .map((t) => t.due_date as string)
     .sort((a, b) => a.localeCompare(b))[0];
   const overdue = open.some(
-    (t) => differenceInCalendarDays(parseISO(t.due_date as string), new Date()) < 0
+    (t) =>
+      differenceInCalendarDays(parseISO(t.due_date as string), new Date()) < 0
   );
   const period =
     project.starts_on && project.ends_on
@@ -88,11 +93,11 @@ function ProjectPeek({
       : null;
 
   return (
-    <div className="flex w-64 flex-col gap-2 rounded-md border border-line bg-card p-3 shadow-[var(--shadow-peek)]">
+    <div className="border-line bg-card flex w-64 flex-col gap-2 rounded-md border p-3 shadow-[var(--shadow-peek)]">
       <div className="flex items-center gap-2">
-        <span className="font-medium text-fg">{project.name}</span>
+        <span className="text-fg font-medium">{project.name}</span>
       </div>
-      <div className="flex items-center gap-2 text-[length:var(--text-caption-size)] text-fg-secondary">
+      <div className="text-fg-secondary flex items-center gap-2 text-[length:var(--text-caption-size)]">
         {sector ? (
           <span className="inline-flex items-center gap-1">
             <span
@@ -107,21 +112,24 @@ function ProjectPeek({
         <span>{projectStatusLabels[project.status]}</span>
       </div>
       {period ? (
-        <span className="tnum text-[length:var(--text-caption-size)] text-fg-secondary">
+        <span className="tnum text-fg-secondary text-[length:var(--text-caption-size)]">
           {period}
         </span>
       ) : null}
-      <ProgressBar value={total === 0 ? 0 : (done / total) * 100} label={`${done} de ${total} concluídas`} />
-      <span className="tnum text-[length:var(--text-caption-size)] text-fg-muted">
+      <ProgressBar
+        value={total === 0 ? 0 : (done / total) * 100}
+        label={`${done} de ${total} concluídas`}
+      />
+      <span className="tnum text-fg-muted text-[length:var(--text-caption-size)]">
         {done} de {total} tarefas
       </span>
       {nextDue ? (
-        <span className="text-[length:var(--text-caption-size)] text-fg-secondary">
+        <span className="text-fg-secondary text-[length:var(--text-caption-size)]">
           Próximo prazo: {format(parseISO(nextDue), "d MMM", { locale: ptBR })}
         </span>
       ) : null}
       {overdue ? (
-        <span className="inline-flex items-center gap-1 text-[length:var(--text-caption-size)] text-overdue">
+        <span className="text-overdue inline-flex items-center gap-1 text-[length:var(--text-caption-size)]">
           <IconAlertTriangle size={13} stroke={1.5} aria-hidden />
           Tem tarefa atrasada
         </span>
@@ -152,7 +160,7 @@ function ProjectBar({
       <HoverCard.Trigger asChild>
         <Link
           href={`/projeto/${project.id}`}
-          className="flex h-full items-center overflow-hidden px-1 text-[length:var(--text-caption-size)] text-fg"
+          className="text-fg flex h-full items-center overflow-hidden px-1 text-[length:var(--text-caption-size)]"
           style={{
             background: `color-mix(in srgb, ${color} 20%, var(--surface-card))`,
             borderLeft:
@@ -213,10 +221,10 @@ function DayCell({
       ref={setNodeRef}
       role="gridcell"
       aria-label={format(day, "EEEE, d 'de' MMMM 'de' yyyy", { locale: ptBR })}
-      className={`flex min-h-24 flex-col gap-0.5 p-1 ${today ? "bg-today" : "bg-page"} ${inMonth ? "" : "opacity-40"} ${isOver ? "ring-1 ring-inset ring-[var(--focus-ring)]" : ""}`}
+      className={`flex min-h-24 flex-col gap-0.5 p-1 ${today ? "bg-today" : "bg-page"} ${inMonth ? "" : "opacity-40"} ${isOver ? "ring-1 ring-[var(--focus-ring)] ring-inset" : ""}`}
     >
       <span
-        className={`tnum text-[length:var(--text-caption-size)] ${today ? "font-medium text-fg" : "text-fg-muted"}`}
+        className={`tnum text-[length:var(--text-caption-size)] ${today ? "text-fg font-medium" : "text-fg-muted"}`}
       >
         {format(day, "d")}
       </span>
@@ -250,7 +258,7 @@ function DayCell({
           <TaskChip key={t.id} task={t} onOpen={() => onOpen(t.id)} />
         ))}
         {dayTasks.length > 3 ? (
-          <span className="px-1 text-[length:var(--text-caption-size)] text-fg-muted">
+          <span className="text-fg-muted px-1 text-[length:var(--text-caption-size)]">
             +{dayTasks.length - 3}
           </span>
         ) : null}
@@ -313,7 +321,7 @@ export function CalendarView() {
   return (
     <div className="flex h-full flex-col p-6">
       <div className="mb-4 flex flex-wrap items-center gap-3">
-        <h2 className="text-[length:var(--text-h1-size)] font-semibold capitalize leading-[var(--text-h1-line)] text-fg">
+        <h2 className="text-fg text-[length:var(--text-h1-size)] leading-[var(--text-h1-line)] font-semibold capitalize">
           {format(month, "MMMM 'de' yyyy", { locale: ptBR })}
         </h2>
 
@@ -364,7 +372,7 @@ export function CalendarView() {
         {WEEKDAYS.map((w) => (
           <div
             key={w}
-            className="pb-1 text-center text-[length:var(--text-caption-size)] text-fg-muted"
+            className="text-fg-muted pb-1 text-center text-[length:var(--text-caption-size)]"
           >
             {w}
           </div>
@@ -375,16 +383,18 @@ export function CalendarView() {
         <div
           role="grid"
           aria-label={`Calendário de ${format(month, "MMMM 'de' yyyy", { locale: ptBR })}`}
-          className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-md border border-line"
+          className="border-line flex min-h-0 flex-1 flex-col overflow-hidden rounded-md border"
         >
           {weeks.map((week, wi) => {
-            const segments = layers.projects ? weekSegments(week, projects) : [];
+            const segments = layers.projects
+              ? weekSegments(week, projects)
+              : [];
             const maxRow = segments.reduce((m, s) => Math.max(m, s.row + 1), 0);
             return (
               <div
                 key={wi}
                 role="row"
-                className="grid flex-1 grid-cols-7 gap-px border-t border-line bg-line first:border-t-0"
+                className="border-line bg-line grid flex-1 grid-cols-7 gap-px border-t first:border-t-0"
               >
                 {week.map((day, col) => (
                   <DayCell

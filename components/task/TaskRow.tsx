@@ -41,7 +41,7 @@ export function TaskRow({
   const closed = done || cancelled;
 
   return (
-    <div className="group flex h-14 items-center gap-3 rounded-md px-3 hover:bg-sunken">
+    <div className="group hover:bg-sunken flex h-14 items-center gap-3 rounded-md px-3">
       {onSelectChange ? (
         <Checkbox
           checked={!!selected}
@@ -67,7 +67,7 @@ export function TaskRow({
           {task.title}
         </span>
         {cancelled ? (
-          <span className="inline-flex shrink-0 items-center gap-1 text-[length:var(--text-caption-size)] text-fg-muted">
+          <span className="text-fg-muted inline-flex shrink-0 items-center gap-1 text-[length:var(--text-caption-size)]">
             <IconBan size={12} stroke={2} aria-hidden />
             Cancelada
           </span>
@@ -93,7 +93,7 @@ export function TaskRow({
             <button
               type="button"
               aria-label={`Ações de ${task.title}`}
-              className="inline-flex h-7 w-7 items-center justify-center rounded-sm text-fg-muted opacity-0 transition-opacity hover:text-fg group-hover:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100"
+              className="text-fg-muted hover:text-fg inline-flex h-7 w-7 items-center justify-center rounded-sm opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100"
             >
               <IconDotsVertical size={16} stroke={1.5} />
             </button>
@@ -102,12 +102,12 @@ export function TaskRow({
             <DropdownMenu.Content
               align="end"
               sideOffset={4}
-              className="z-50 min-w-40 overflow-hidden rounded-md border border-line bg-card p-1 shadow-[var(--shadow-panel)] data-[state=closed]:[animation:tf-pop-out_var(--dur-fast)_ease-in] data-[state=open]:[animation:tf-pop-in_var(--dur-fast)_var(--ease-out)]"
+              className="tf-glass-strong z-50 min-w-40 overflow-hidden rounded-md p-1 data-[state=closed]:[animation:tf-pop-out_var(--dur-fast)_ease-in] data-[state=open]:[animation:tf-pop-in_var(--dur-fast)_var(--ease-out)]"
             >
               {onToggleCancel ? (
                 <DropdownMenu.Item
                   onSelect={() => onToggleCancel(!cancelled)}
-                  className="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] text-fg outline-none data-[highlighted]:bg-sunken"
+                  className="text-fg data-[highlighted]:bg-sunken flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] outline-none"
                 >
                   {cancelled ? (
                     <IconRotate size={16} stroke={1.5} />
@@ -119,7 +119,7 @@ export function TaskRow({
               ) : null}
               <DropdownMenu.Item
                 onSelect={onDelete}
-                className="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] text-fg outline-none data-[highlighted]:bg-sunken"
+                className="text-fg data-[highlighted]:bg-sunken flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] outline-none"
               >
                 <IconTrash size={16} stroke={1.5} />
                 Excluir

@@ -19,7 +19,7 @@ export function PendingApproval() {
 
   return (
     <div className="mx-auto flex min-h-dvh max-w-[var(--max-width-read)] flex-col items-center justify-center gap-4 px-6 text-center">
-      <h1 className="text-[length:var(--text-h2-size)] font-semibold text-fg">
+      <h1 className="text-fg text-[length:var(--text-h2-size)] font-semibold">
         Aguardando aprovação
       </h1>
       <p className="text-fg-secondary">

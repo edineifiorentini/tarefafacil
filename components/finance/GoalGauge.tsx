@@ -5,8 +5,15 @@ import type { FormEvent } from "react";
 
 import { Button } from "@/components/ui/Button";
 import { CurrencyInput } from "@/components/ui/CurrencyInput";
-import { centsToMaskedInput, formatCentsBRL, parseCurrencyToCents } from "@/lib/finance/money";
-import { useFinanceGoal, useSetFinanceGoal } from "@/lib/queries/useFinanceGoal";
+import {
+  centsToMaskedInput,
+  formatCentsBRL,
+  parseCurrencyToCents,
+} from "@/lib/finance/money";
+import {
+  useFinanceGoal,
+  useSetFinanceGoal,
+} from "@/lib/queries/useFinanceGoal";
 import { useWorkspace } from "@/lib/queries/useWorkspace";
 
 const R = 70;
@@ -14,7 +21,8 @@ const CX = 90;
 const CY = 84;
 
 function arcEndpoint(progress: number) {
-  const theta = (180 - Math.min(Math.max(progress, 0), 1) * 180) * (Math.PI / 180);
+  const theta =
+    (180 - Math.min(Math.max(progress, 0), 1) * 180) * (Math.PI / 180);
   return { x: CX + R * Math.cos(theta), y: CY - R * Math.sin(theta) };
 }
 
@@ -22,7 +30,13 @@ function arcEndpoint(progress: number) {
 // já calculado por computeFinanceStats — mesma fonte usada nos cartões, sem
 // fórmula duplicada). A barra satura em 180° acima de 100%, mas o número
 // mostra o percentual real (ex.: "134%") sem quebrar o componente.
-export function GoalGauge({ month, received }: { month: string; received: number }) {
+export function GoalGauge({
+  month,
+  received,
+}: {
+  month: string;
+  received: number;
+}) {
   const workspace = useWorkspace();
   const { data: goal } = useFinanceGoal(workspace.id, month);
   const setGoal = useSetFinanceGoal(workspace.id, month);
@@ -35,7 +49,11 @@ export function GoalGauge({ month, received }: { month: string; received: number
   const missing = Math.max(target - received, 0);
   const end = arcEndpoint(progress);
   const color =
-    percent >= 100 ? "var(--brand-600)" : percent >= 50 ? "var(--tone-amber)" : "var(--color-overdue)";
+    percent >= 100
+      ? "var(--brand-600)"
+      : percent >= 50
+        ? "var(--tone-amber)"
+        : "var(--color-overdue)";
 
   function startEdit() {
     setDraft(target > 0 ? centsToMaskedInput(target) : "");
@@ -50,8 +68,8 @@ export function GoalGauge({ month, received }: { month: string; received: number
   }
 
   return (
-    <div className="flex flex-col items-center gap-2 rounded-md border border-line bg-card p-4">
-      <h3 className="self-start text-[length:var(--text-small-size)] font-medium text-fg-secondary">
+    <div className="border-line bg-card flex flex-col items-center gap-2 rounded-md border p-4">
+      <h3 className="text-fg-secondary self-start text-[length:var(--text-small-size)] font-medium">
         Meta do mês
       </h3>
 
@@ -72,7 +90,13 @@ export function GoalGauge({ month, received }: { month: string; received: number
             strokeLinecap="round"
           />
         ) : null}
-        <text x={CX} y={CY - 8} textAnchor="middle" className="fill-fg" style={{ fontSize: 22, fontWeight: 600 }}>
+        <text
+          x={CX}
+          y={CY - 8}
+          textAnchor="middle"
+          className="fill-fg"
+          style={{ fontSize: 22, fontWeight: 600 }}
+        >
           {target > 0 ? `${percent}%` : "—"}
         </text>
       </svg>
@@ -83,11 +107,13 @@ export function GoalGauge({ month, received }: { month: string; received: number
             {formatCentsBRL(received)} de {formatCentsBRL(target)}
           </p>
           <p className="text-fg-muted">
-            {missing > 0 ? `Faltam ${formatCentsBRL(missing)}` : "Meta atingida"}
+            {missing > 0
+              ? `Faltam ${formatCentsBRL(missing)}`
+              : "Meta atingida"}
           </p>
         </div>
       ) : (
-        <p className="text-[length:var(--text-small-size)] text-fg-secondary">
+        <p className="text-fg-secondary text-[length:var(--text-small-size)]">
           Nenhuma meta definida para este mês
         </p>
       )}
@@ -95,12 +121,26 @@ export function GoalGauge({ month, received }: { month: string; received: number
       {editing ? (
         <form onSubmit={submit} className="flex items-center gap-2">
           <div className="w-32">
-            <CurrencyInput value={draft} onChange={setDraft} aria-label="Meta do mês" />
+            <CurrencyInput
+              value={draft}
+              onChange={setDraft}
+              aria-label="Meta do mês"
+            />
           </div>
-          <Button type="submit" size="sm" variant="primary" isLoading={setGoal.isPending}>
+          <Button
+            type="submit"
+            size="sm"
+            variant="primary"
+            isLoading={setGoal.isPending}
+          >
             Salvar
           </Button>
-          <Button type="button" size="sm" variant="ghost" onClick={() => setEditing(false)}>
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            onClick={() => setEditing(false)}
+          >
             Cancelar
           </Button>
         </form>

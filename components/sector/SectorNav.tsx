@@ -57,8 +57,14 @@ function SectorItem({
   guardClick: () => boolean;
 }) {
   const { setMobileNavOpen } = useShell();
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
-    useSortable({ id: sector.id });
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: sector.id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -92,7 +98,7 @@ function SectorItem({
         aria-describedby={attributes["aria-describedby"]}
         aria-roledescription={attributes["aria-roledescription"]}
         {...listeners}
-        className={`flex min-w-0 flex-1 cursor-grab items-center gap-1 py-2 pl-1 pr-1 ${
+        className={`flex min-w-0 flex-1 cursor-grab items-center gap-1 py-2 pr-1 pl-1 ${
           active ? "text-fg" : "text-fg-secondary group-hover:text-fg"
         }`}
       >
@@ -100,7 +106,7 @@ function SectorItem({
           aria-hidden
           size={14}
           stroke={1.5}
-          className={`shrink-0 text-fg-muted ${reveal}`}
+          className={`text-fg-muted shrink-0 ${reveal}`}
         />
         <span
           aria-hidden
@@ -115,7 +121,7 @@ function SectorItem({
           <button
             type="button"
             aria-label={`Ações de ${sector.name}`}
-            className={`mr-1 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-sm text-fg-muted hover:text-fg ${reveal}`}
+            className={`text-fg-muted hover:text-fg mr-1 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-sm ${reveal}`}
           >
             <IconDotsVertical size={16} stroke={1.5} />
           </button>
@@ -124,25 +130,25 @@ function SectorItem({
           <DropdownMenu.Content
             align="end"
             sideOffset={4}
-            className="z-50 min-w-40 overflow-hidden rounded-md border border-line bg-card p-1 shadow-[var(--shadow-panel)] data-[state=closed]:[animation:tf-pop-out_var(--dur-fast)_ease-in] data-[state=open]:[animation:tf-pop-in_var(--dur-fast)_var(--ease-out)]"
+            className="tf-glass-strong z-50 min-w-40 overflow-hidden rounded-md p-1 data-[state=closed]:[animation:tf-pop-out_var(--dur-fast)_ease-in] data-[state=open]:[animation:tf-pop-in_var(--dur-fast)_var(--ease-out)]"
           >
             <DropdownMenu.Item
               onSelect={onEdit}
-              className="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] text-fg outline-none data-[highlighted]:bg-sunken"
+              className="text-fg data-[highlighted]:bg-sunken flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] outline-none"
             >
               <IconPencil size={16} stroke={1.5} />
               Editar
             </DropdownMenu.Item>
             <DropdownMenu.Item
               onSelect={onArchive}
-              className="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] text-fg outline-none data-[highlighted]:bg-sunken"
+              className="text-fg data-[highlighted]:bg-sunken flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] outline-none"
             >
               <IconArchive size={16} stroke={1.5} />
               Arquivar
             </DropdownMenu.Item>
             <DropdownMenu.Item
               onSelect={onDelete}
-              className="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] text-overdue outline-none data-[highlighted]:bg-sunken"
+              className="text-overdue data-[highlighted]:bg-sunken flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] outline-none"
             >
               <IconTrash size={16} stroke={1.5} />
               Excluir
@@ -188,7 +194,7 @@ export function SectorNav({ sectors }: { sectors: Sector[] }) {
 
   if (sectors.length === 0) {
     return (
-      <p className="px-3 py-2 text-[length:var(--text-small-size)] text-fg-muted">
+      <p className="text-fg-muted px-3 py-2 text-[length:var(--text-small-size)]">
         Nenhum setor ainda
       </p>
     );
@@ -218,7 +224,11 @@ export function SectorNav({ sectors }: { sectors: Sector[] }) {
                 openPanel({
                   title: "Editar setor",
                   node: (
-                    <SectorForm mode="edit" sector={sector} onDone={closePanel} />
+                    <SectorForm
+                      mode="edit"
+                      sector={sector}
+                      onDone={closePanel}
+                    />
                   ),
                 })
               }

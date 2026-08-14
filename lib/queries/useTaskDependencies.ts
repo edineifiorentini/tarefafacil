@@ -23,7 +23,10 @@ export function useBlockedByTasks(taskId: string) {
       if (linkError) throw linkError;
       const ids = links.map((l) => l.depends_on_id);
       if (ids.length === 0) return [];
-      const { data, error } = await supabase.from("task").select("*").in("id", ids);
+      const { data, error } = await supabase
+        .from("task")
+        .select("*")
+        .in("id", ids);
       if (error) throw error;
       return data;
     },

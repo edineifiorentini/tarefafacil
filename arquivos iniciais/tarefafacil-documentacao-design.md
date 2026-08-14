@@ -11,11 +11,11 @@
 
 Este documento é a fonte de verdade para o design do TarefaFácil. Ele é dividido em três blocos:
 
-| Bloco | Seções | Para quem |
-|---|---|---|
-| Produto e decisões | 1–3 | quem decide escopo |
-| Design e sistema | 4–9 | quem desenha e implementa |
-| Operação e evolução | 10–14 | quem planeja e mede |
+| Bloco               | Seções | Para quem                 |
+| ------------------- | ------ | ------------------------- |
+| Produto e decisões  | 1–3    | quem decide escopo        |
+| Design e sistema    | 4–9    | quem desenha e implementa |
+| Operação e evolução | 10–14  | quem planeja e mede       |
 
 **Regra de manutenção:** decisões novas entram na seção 3 (ADR) com data. Nada de editar decisão antiga silenciosamente — o histórico é o que dá contexto ao próximo desenvolvedor. Um design system é produto, não projeto.
 
@@ -43,7 +43,7 @@ Distinção importante que precisa ficar registrada: SaaS é o modelo comercial;
 
 **Fase 3 em diante — equipes pequenas.** 2 a 15 pessoas, sem hierarquia complexa.
 
-**Decisão de escopo:** a interface é construída para usuário único agora. O *banco de dados* é multi-tenant desde o primeiro commit. Ver ADR-001.
+**Decisão de escopo:** a interface é construída para usuário único agora. O _banco de dados_ é multi-tenant desde o primeiro commit. Ver ADR-001.
 
 ### 1.4 Problema central
 
@@ -67,23 +67,23 @@ Chat interno, comentários, time tracking, relatórios gerenciais, automações 
 
 ### 2.1 Funcionalidades da v1
 
-| # | Funcionalidade | Prioridade |
-|---|---|---|
-| F01 | Criar, editar, concluir e excluir tarefas | obrigatória |
-| F02 | Setores com cor e ícone | obrigatória |
-| F03 | Projetos com data de início e fim | obrigatória |
-| F04 | Subtarefas (checklist com data opcional) | obrigatória |
-| F05 | Tags reutilizáveis no workspace | obrigatória |
-| F06 | Anexos (arquivo ou link) | obrigatória |
-| F07 | Insights (log datado por tarefa) | obrigatória |
-| F08 | Visão Hoje | obrigatória |
-| F09 | Quadro Kanban por setor | obrigatória |
+| #   | Funcionalidade                             | Prioridade  |
+| --- | ------------------------------------------ | ----------- |
+| F01 | Criar, editar, concluir e excluir tarefas  | obrigatória |
+| F02 | Setores com cor e ícone                    | obrigatória |
+| F03 | Projetos com data de início e fim          | obrigatória |
+| F04 | Subtarefas (checklist com data opcional)   | obrigatória |
+| F05 | Tags reutilizáveis no workspace            | obrigatória |
+| F06 | Anexos (arquivo ou link)                   | obrigatória |
+| F07 | Insights (log datado por tarefa)           | obrigatória |
+| F08 | Visão Hoje                                 | obrigatória |
+| F09 | Quadro Kanban por setor                    | obrigatória |
 | F10 | Calendário com camadas de projeto e tarefa | obrigatória |
-| F11 | Peek de projeto no calendário | obrigatória |
-| F12 | Sincronização com Google Agenda | obrigatória |
-| F13 | Busca e filtros | obrigatória |
-| F14 | Colunas de Kanban customizáveis por setor | desejável |
-| F15 | Modo escuro | desejável |
+| F11 | Peek de projeto no calendário              | obrigatória |
+| F12 | Sincronização com Google Agenda            | obrigatória |
+| F13 | Busca e filtros                            | obrigatória |
+| F14 | Colunas de Kanban customizáveis por setor  | desejável   |
+| F15 | Modo escuro                                | desejável   |
 
 ### 2.2 Regras de negócio
 
@@ -108,44 +108,52 @@ Chat interno, comentários, time tracking, relatórios gerenciais, automações 
 ## 3. Decisões arquiteturais registradas (ADR)
 
 ### ADR-001 — Multi-tenant desde o início, UX de usuário único
+
 **Data:** ago/2026
 **Decisão:** todo registro carrega `workspace_id` e o banco aplica Row Level Security desde o primeiro commit. A interface não expõe convites, papéis ou permissões na v1.
 **Motivo:** adicionar multi-tenancy depois é migração de banco com downtime e reescrita de toda a camada de acesso. Já construir a interface de equipe é over-design — você constrói para um usuário hipotético e trava a evolução do usuário real.
 **Consequência:** custo próximo de zero agora, evita reescrita na fase 3.
 
 ### ADR-002 — Subtarefa é checklist com data opcional
+
 **Data:** ago/2026
 **Decisão:** ver RN-01.
 **Motivo:** tarefa aninhada recursiva é a principal fonte de complexidade descontrolada nessa categoria de produto. A régua "precisa de arquivo ou responsável? então é tarefa" é objetiva e defensável.
 **Alternativa rejeitada:** hierarquia infinita de tarefas.
 
 ### ADR-003 — Kanban é lente, não estrutura
+
 **Data:** ago/2026
 **Decisão:** a tarefa é o dado. Kanban, calendário e lista são visualizações da mesma coleção. Arrastar no Kanban altera `status`; mover no calendário altera `due_date`.
 **Motivo:** Kanban isolado esconde prazo; calendário isolado esconde progresso. Estruturar o dado em função de uma visão inviabiliza as outras.
 
 ### ADR-004 — Board como componente genérico
+
 **Data:** ago/2026
 **Decisão:** `Board` recebe a entidade, as colunas e o renderizador de card por props. Não conhece "tarefa".
 **Motivo:** o funil de leads da fase 4 é estruturalmente o mesmo organismo — colunas, cards, movimentação. Curar o padrão existente em vez de construir um segundo board.
 **Consequência:** custo marginal agora, economia de semanas na fase 4.
 
 ### ADR-005 — Sincronização com Google Agenda em duas etapas
+
 **Data:** ago/2026
 **Decisão:** fase 1 unidirecional (app → Google); fase 2 bidirecional via watch channel e sync token.
 **Motivo:** bidirecional exige webhooks, tokens incrementais, resolução de conflito e tratamento de deleção externa. É a peça mais cara do sistema e não pode bloquear o uso real.
 
 ### ADR-006 — Storage em objeto, não em banco
+
 **Data:** ago/2026
 **Decisão:** arquivos em S3 ou compatível (Supabase Storage, R2), com URLs assinadas. Google Drive entra como "anexar por link", não como storage primário.
 **Motivo:** blob em banco destrói custo de backup e a economia unitária de um SaaS. Drive como primário significa depender da permissão do Drive do cliente.
 
 ### ADR-007 — Verde da marca não sinaliza conclusão
+
 **Data:** ago/2026
 **Decisão:** estado "concluído" é sinalizado por forma e peso (check preenchido, texto em cinza, opacidade reduzida), não por cor verde.
 **Motivo:** se a marca é verde e sucesso é verde, o sinal mais importante do produto se dissolve na identidade.
 
 ### ADR-008 — Insight é log datado, não campo único
+
 **Data:** ago/2026
 **Decisão:** insights são entradas com carimbo de data, em ordem cronológica.
 **Motivo:** campo único faz o usuário sobrescrever o próprio raciocínio. O log preserva a evolução da tarefa e vira histórico de valor no SaaS.
@@ -320,12 +328,12 @@ Na fase 1, `workspace_member` contém uma linha. A política já funciona e não
 
 ### 5.1 Navegação — quatro destinos
 
-| Destino | Pergunta que responde | Conteúdo |
-|---|---|---|
-| **Hoje** | O que preciso fazer agora? | Atrasadas, hoje, próximos 7 dias |
-| **Quadro** | Como o trabalho está fluindo? | Kanban filtrável por setor |
+| Destino        | Pergunta que responde          | Conteúdo                            |
+| -------------- | ------------------------------ | ----------------------------------- |
+| **Hoje**       | O que preciso fazer agora?     | Atrasadas, hoje, próximos 7 dias    |
+| **Quadro**     | Como o trabalho está fluindo?  | Kanban filtrável por setor          |
 | **Calendário** | Como o tempo está distribuído? | Mês com camadas de projeto e tarefa |
-| **Setores** | Onde está aquilo? | Navegação lateral persistente |
+| **Setores**    | Onde está aquilo?              | Navegação lateral persistente       |
 
 **Hoje é a tela inicial.** Não o Kanban. O Kanban responde "como está o trabalho", que é uma pergunta de revisão, não de execução diária.
 
@@ -408,7 +416,7 @@ Drag-and-drop **nunca** pode ser o único caminho. Ver seção 11.
 **Conteúdo do peek — teto de 6 informações:**
 nome · setor · período · progresso (x de y tarefas) · próximo prazo · alerta de atraso
 
-Passou de 6, virou uma segunda tela e destruiu o propósito do peek, que é decidir *se* vale abrir.
+Passou de 6, virou uma segunda tela e destruiu o propósito do peek, que é decidir _se_ vale abrir.
 
 ### 6.5 Anexar arquivo
 
@@ -439,13 +447,13 @@ Passou de 6, virou uma segunda tela e destruiu o propósito do peek, que é deci
 
 **Regras de aplicação — não negociáveis:**
 
-| Regra | Valor |
-|---|---|
-| Elementos brand-500 por tela | exatamente 1 (o botão primário) |
-| Texto e link | brand-700, nunca brand-500 |
-| Superfície selecionada, dia de hoje, coluna ativa | brand-50 / brand-100 |
-| Barras de progresso, chips, preenchimentos | brand-200 |
-| Texto sobre brand-200 ou mais claro | proibido — não atinge 4.5:1 |
+| Regra                                             | Valor                           |
+| ------------------------------------------------- | ------------------------------- |
+| Elementos brand-500 por tela                      | exatamente 1 (o botão primário) |
+| Texto e link                                      | brand-700, nunca brand-500      |
+| Superfície selecionada, dia de hoje, coluna ativa | brand-50 / brand-100            |
+| Barras de progresso, chips, preenchimentos        | brand-200                       |
+| Texto sobre brand-200 ou mais claro               | proibido — não atinge 4.5:1     |
 
 ### 7.2 Cor — semântica
 
@@ -486,14 +494,14 @@ grafite   fill #F1EFE8   text #2C2C2A   dot #888780
 
 **Família única: Inter Variable.** Com `font-feature-settings: "tnum"` em datas e números, para as colunas não dançarem.
 
-| Token | Tamanho | Peso | Entrelinha | Uso |
-|---|---|---|---|---|
-| `text-caption` | 12px | 400 | 1.4 | metadados, contadores |
-| `text-small` | 14px | 400 | 1.5 | texto secundário, labels |
-| `text-body` | 16px | 400 | 1.6 | corpo, título de tarefa |
-| `text-h3` | 20px | 500 | 1.3 | título de card, seção do painel |
-| `text-h2` | 24px | 500 | 1.25 | título de página |
-| `text-h1` | 32px | 500 | 1.2 | título de projeto |
+| Token          | Tamanho | Peso | Entrelinha | Uso                             |
+| -------------- | ------- | ---- | ---------- | ------------------------------- |
+| `text-caption` | 12px    | 400  | 1.4        | metadados, contadores           |
+| `text-small`   | 14px    | 400  | 1.5        | texto secundário, labels        |
+| `text-body`    | 16px    | 400  | 1.6        | corpo, título de tarefa         |
+| `text-h3`      | 20px    | 500  | 1.3        | título de card, seção do painel |
+| `text-h2`      | 24px    | 500  | 1.25       | título de página                |
+| `text-h1`      | 32px    | 500  | 1.2        | título de projeto               |
 
 **Dois pesos apenas: 400 e 500.** Nada de 600 ou 700 — peso pesado destrói o "calmo" pedido no briefing.
 
@@ -501,14 +509,14 @@ grafite   fill #F1EFE8   text #2C2C2A   dot #888780
 
 Base 4px. Escala restrita: `4 · 8 · 12 · 16 · 20 · 24 · 32 · 40 · 48 · 64`.
 
-| Token | Valor |
-|---|---|
-| `space-row` (altura da linha de tarefa) | 48px |
-| `space-card-pad` | 20px |
-| `space-card-gap` | 16px |
-| `space-section-gap` | 32px |
-| `space-panel-pad` | 24px |
-| `max-width-read` | 720px |
+| Token                                   | Valor |
+| --------------------------------------- | ----- |
+| `space-row` (altura da linha de tarefa) | 48px  |
+| `space-card-pad`                        | 20px  |
+| `space-card-gap`                        | 16px  |
+| `space-section-gap`                     | 32px  |
+| `space-panel-pad`                       | 24px  |
+| `max-width-read`                        | 720px |
 
 ### 7.7 Raio e elevação
 
@@ -537,10 +545,10 @@ Toda animação envolvida em `@media (prefers-reduced-motion: reduce)` cai para 
 
 ### 7.9 Camadas de token
 
-| Camada | Exemplo | Regra |
-|---|---|---|
-| Global | `--brand-500: #12A05F` | valor cru, sem semântica |
-| Alias | `--action-primary: var(--brand-500)` | significado, agnóstico de componente |
+| Camada     | Exemplo                                      | Regra                                     |
+| ---------- | -------------------------------------------- | ----------------------------------------- |
+| Global     | `--brand-500: #12A05F`                       | valor cru, sem semântica                  |
+| Alias      | `--action-primary: var(--brand-500)`         | significado, agnóstico de componente      |
 | Componente | `--button-primary-bg: var(--action-primary)` | só quando o componente exige exceção real |
 
 **Aviso registrado:** a camada de componente é onde sistemas de design apodrecem. Um cliente chegou a 5.000 tokens de componente e o sistema virou intransitável. **Só crie um token de componente quando existir uma exceção que o alias não cobre.** Na dúvida, use o alias.
@@ -553,52 +561,52 @@ Organizada por design atômico. A hierarquia é modelo mental, não processo lin
 
 ### 8.1 Átomos
 
-| Componente | Variantes | Estados |
-|---|---|---|
-| `Button` | primary, secondary, ghost, danger · sm, md | default, hover, active, focus, disabled, loading |
-| `IconButton` | ghost, subtle · sm, md | idem |
-| `TextInput` | default, error | default, hover, focus, disabled, error |
-| `Textarea` | autogrow | idem |
-| `Select` | — | idem |
-| `Checkbox` | default, round (subtarefa) | unchecked, checked, indeterminate, focus, disabled |
-| `Badge` | neutral, brand, overdue, due-soon | — |
-| `Tag` | com e sem botão de remover | default, hover, focus |
-| `Avatar` | initials, image · sm, md | — |
-| `ProgressBar` | — | — |
-| `Icon` | Tabler outline, traço 1.5px, 20px | — |
-| `Skeleton` | text, block | — |
+| Componente    | Variantes                                  | Estados                                            |
+| ------------- | ------------------------------------------ | -------------------------------------------------- |
+| `Button`      | primary, secondary, ghost, danger · sm, md | default, hover, active, focus, disabled, loading   |
+| `IconButton`  | ghost, subtle · sm, md                     | idem                                               |
+| `TextInput`   | default, error                             | default, hover, focus, disabled, error             |
+| `Textarea`    | autogrow                                   | idem                                               |
+| `Select`      | —                                          | idem                                               |
+| `Checkbox`    | default, round (subtarefa)                 | unchecked, checked, indeterminate, focus, disabled |
+| `Badge`       | neutral, brand, overdue, due-soon          | —                                                  |
+| `Tag`         | com e sem botão de remover                 | default, hover, focus                              |
+| `Avatar`      | initials, image · sm, md                   | —                                                  |
+| `ProgressBar` | —                                          | —                                                  |
+| `Icon`        | Tabler outline, traço 1.5px, 20px          | —                                                  |
+| `Skeleton`    | text, block                                | —                                                  |
 
 ### 8.2 Moléculas
 
-| Componente | Composição | Notas |
-|---|---|---|
-| `TaskRow` | Checkbox + título + SectorDot + DueChip + TagList | altura 48px; toda a linha é alvo de clique exceto o checkbox |
-| `SubtaskItem` | Checkbox round + texto + data opcional | data em `text-caption`; aviso se posterior ao prazo da tarefa |
-| `DueChip` | Icon + data formatada | cor muda por proximidade: neutro / due-soon / overdue |
-| `SectorDot` | círculo 8px + nome | cor da tabela 7.3 |
-| `TagList` | Tag[] + overflow "+N" | máximo 3 visíveis inline |
-| `AttachmentChip` | Icon por mime + nome + tamanho + remover | clique abre; não baixa direto |
-| `InsightEntry` | data + autor + corpo | somente leitura após criado; editável por 5 minutos |
-| `FieldRow` | label + controle | usado em todo o painel de detalhe |
-| `EmptyState` | Icon + título + linha de apoio + CTA | um convite, não um pedido de desculpas |
-| `PeekCard` | ver 6.4 | teto de 6 informações |
+| Componente       | Composição                                        | Notas                                                         |
+| ---------------- | ------------------------------------------------- | ------------------------------------------------------------- |
+| `TaskRow`        | Checkbox + título + SectorDot + DueChip + TagList | altura 48px; toda a linha é alvo de clique exceto o checkbox  |
+| `SubtaskItem`    | Checkbox round + texto + data opcional            | data em `text-caption`; aviso se posterior ao prazo da tarefa |
+| `DueChip`        | Icon + data formatada                             | cor muda por proximidade: neutro / due-soon / overdue         |
+| `SectorDot`      | círculo 8px + nome                                | cor da tabela 7.3                                             |
+| `TagList`        | Tag[] + overflow "+N"                             | máximo 3 visíveis inline                                      |
+| `AttachmentChip` | Icon por mime + nome + tamanho + remover          | clique abre; não baixa direto                                 |
+| `InsightEntry`   | data + autor + corpo                              | somente leitura após criado; editável por 5 minutos           |
+| `FieldRow`       | label + controle                                  | usado em todo o painel de detalhe                             |
+| `EmptyState`     | Icon + título + linha de apoio + CTA              | um convite, não um pedido de desculpas                        |
+| `PeekCard`       | ver 6.4                                           | teto de 6 informações                                         |
 
 ### 8.3 Organismos
 
-| Componente | Responsabilidade |
-|---|---|
-| `Sidebar` | navegação, lista de setores, criação de setor |
-| `TopBar` | título da visão, filtros, busca, botão de nova tarefa |
-| `QuickAdd` | criação em 3 campos |
-| `TaskDetailPanel` | edição completa da tarefa |
-| `Board` | **genérico** — ver 8.5 |
-| `BoardColumn` | cabeçalho, contador, lista de cards, drop target |
-| `TaskCard` | render de tarefa dentro do Board |
-| `TodayView` | agrupamento por atrasadas / hoje / próximos 7 dias |
-| `CalendarMonth` | grade + camada de projetos + camada de tarefas + seletor de camadas |
-| `ProjectBar` | barra de projeto, cortada por quebra de semana |
-| `TaskList` | lista filtrável e ordenável |
-| `FilterBar` | setor, tag, prioridade, prazo, status |
+| Componente        | Responsabilidade                                                    |
+| ----------------- | ------------------------------------------------------------------- |
+| `Sidebar`         | navegação, lista de setores, criação de setor                       |
+| `TopBar`          | título da visão, filtros, busca, botão de nova tarefa               |
+| `QuickAdd`        | criação em 3 campos                                                 |
+| `TaskDetailPanel` | edição completa da tarefa                                           |
+| `Board`           | **genérico** — ver 8.5                                              |
+| `BoardColumn`     | cabeçalho, contador, lista de cards, drop target                    |
+| `TaskCard`        | render de tarefa dentro do Board                                    |
+| `TodayView`       | agrupamento por atrasadas / hoje / próximos 7 dias                  |
+| `CalendarMonth`   | grade + camada de projetos + camada de tarefas + seletor de camadas |
+| `ProjectBar`      | barra de projeto, cortada por quebra de semana                      |
+| `TaskList`        | lista filtrável e ordenável                                         |
+| `FilterBar`       | setor, tag, prioridade, prazo, status                               |
 
 ### 8.4 Templates e páginas
 
@@ -614,17 +622,17 @@ O `Board` não conhece "tarefa". Recebe a entidade por props. Quando o funil de 
 
 ```ts
 interface BoardProps<T> {
-  columns: BoardColumn[]
-  items: T[]
-  getItemId: (item: T) => string
-  getColumnId: (item: T) => string
-  getPosition: (item: T) => number
-  renderCard: (item: T) => ReactNode
-  onMove: (itemId: string, toColumnId: string, toPosition: number) => void
-  onColumnCreate?: (name: string) => void
-  onColumnRename?: (id: string, name: string) => void
-  emptyColumnSlot?: (column: BoardColumn) => ReactNode
-  isLoading?: boolean
+  columns: BoardColumn[];
+  items: T[];
+  getItemId: (item: T) => string;
+  getColumnId: (item: T) => string;
+  getPosition: (item: T) => number;
+  renderCard: (item: T) => ReactNode;
+  onMove: (itemId: string, toColumnId: string, toPosition: number) => void;
+  onColumnCreate?: (name: string) => void;
+  onColumnRename?: (id: string, name: string) => void;
+  emptyColumnSlot?: (column: BoardColumn) => ReactNode;
+  isLoading?: boolean;
 }
 ```
 
@@ -632,18 +640,19 @@ interface BoardProps<T> {
 
 ```ts
 interface ButtonProps {
-  variant?: 'primary' | 'secondary' | 'ghost' | 'danger'   // default: 'secondary'
-  size?: 'sm' | 'md'                                        // default: 'md'
-  leadingIcon?: IconName
-  trailingIcon?: IconName
-  isLoading?: boolean
-  disabled?: boolean
-  onClick?: (e: MouseEvent) => void
-  children: ReactNode
+  variant?: "primary" | "secondary" | "ghost" | "danger"; // default: 'secondary'
+  size?: "sm" | "md"; // default: 'md'
+  leadingIcon?: IconName;
+  trailingIcon?: IconName;
+  isLoading?: boolean;
+  disabled?: boolean;
+  onClick?: (e: MouseEvent) => void;
+  children: ReactNode;
 }
 ```
 
 **Padrão de API para todos os componentes:**
+
 - Props obrigatórias apenas para o que o componente não funciona sem
 - Variantes como enum explícito, nunca string arbitrária
 - Composição por children antes de injeção por prop
@@ -670,23 +679,23 @@ Escopo mínimo necessário. Nada de `calendar` completo.
 
 ### 9.2 O que vira evento
 
-| Condição da tarefa | Resultado no Google |
-|---|---|
-| `gcal_sync = false` | nada. **Este é o padrão.** |
-| `due_date` sem `due_time` | evento de dia inteiro |
+| Condição da tarefa        | Resultado no Google                      |
+| ------------------------- | ---------------------------------------- |
+| `gcal_sync = false`       | nada. **Este é o padrão.**               |
+| `due_date` sem `due_time` | evento de dia inteiro                    |
 | `due_date` com `due_time` | evento com horário, duração padrão 30min |
-| Subtarefa com data | **nunca vira evento** (RN-02) |
-| Projeto | não vira evento na v1 |
+| Subtarefa com data        | **nunca vira evento** (RN-02)            |
+| Projeto                   | não vira evento na v1                    |
 
 ### 9.3 Mapeamento de campos
 
-| TarefaFácil | Google Calendar |
-|---|---|
-| `title` | `summary` |
-| `description` + link para a tarefa | `description` |
-| `due_date` / `due_time` | `start` / `end` |
-| `sector.color` | `colorId` (mapeado ao equivalente mais próximo) |
-| `id` | `extendedProperties.private.tarefafacil_task_id` |
+| TarefaFácil                        | Google Calendar                                  |
+| ---------------------------------- | ------------------------------------------------ |
+| `title`                            | `summary`                                        |
+| `description` + link para a tarefa | `description`                                    |
+| `due_date` / `due_time`            | `start` / `end`                                  |
+| `sector.color`                     | `colorId` (mapeado ao equivalente mais próximo)  |
+| `id`                               | `extendedProperties.private.tarefafacil_task_id` |
 
 O `extendedProperties` é o que permite reconhecer o evento na volta, mesmo que o usuário o tenha renomeado no Google.
 
@@ -712,12 +721,12 @@ Quando a edição vem do Google, a tarefa exibe um marcador discreto: "Editado n
 
 ### 9.7 Falhas
 
-| Falha | Comportamento |
-|---|---|
-| Token expirado | banner persistente: "Reconecte o Google Agenda" com botão |
-| Quota excedida | fila com backoff exponencial; nada é perdido |
+| Falha                     | Comportamento                                             |
+| ------------------------- | --------------------------------------------------------- |
+| Token expirado            | banner persistente: "Reconecte o Google Agenda" com botão |
+| Quota excedida            | fila com backoff exponencial; nada é perdido              |
 | Evento deletado no Google | tarefa permanece, `gcal_sync` vira false, aviso na tarefa |
-| Rede indisponível | fila local; sincroniza ao voltar |
+| Rede indisponível         | fila local; sincroniza ao voltar                          |
 
 ---
 
@@ -728,18 +737,19 @@ Quando a edição vem do Google, a tarefa exibe um marcador discreto: "Editado n
 Bucket de objetos com URLs assinadas. Cliente faz upload direto, sem passar pelo servidor de aplicação.
 
 **Convenção de caminho:**
+
 ```
 {workspace_id}/{task_id}/{attachment_id}-{filename_sanitizado}
 ```
 
 ### 10.2 Limites e validação
 
-| Parâmetro | Valor v1 |
-|---|---|
-| Tamanho máximo por arquivo | 25 MB |
-| Anexos por tarefa | 20 |
-| Cota por workspace (plano free) | 1 GB |
-| Validade da URL assinada de leitura | 5 minutos |
+| Parâmetro                           | Valor v1   |
+| ----------------------------------- | ---------- |
+| Tamanho máximo por arquivo          | 25 MB      |
+| Anexos por tarefa                   | 20         |
+| Cota por workspace (plano free)     | 1 GB       |
+| Validade da URL assinada de leitura | 5 minutos  |
 | Validade da URL assinada de escrita | 15 minutos |
 
 **Validação de tipo pelo magic number, não pela extensão.** Extensão é declaração do cliente; magic number é fato.
@@ -762,29 +772,29 @@ Excluir anexo remove o registro imediatamente e enfileira a remoção do objeto 
 
 ### 11.1 Contraste — verificado
 
-| Combinação | Razão | Situação |
-|---|---|---|
-| `text-primary` #1C1C1A sobre #FFFFFF | 16.1:1 | aprovado |
-| `text-secondary` #5F5E5A sobre #FFFFFF | 6.6:1 | aprovado |
-| `text-muted` #8E8D88 sobre #FFFFFF | 3.4:1 | **só para texto ≥ 18px ou não essencial** |
-| `brand-700` #0A6C40 sobre #FFFFFF | 6.4:1 | aprovado para texto e link |
-| `brand-500` #12A05F sobre #FFFFFF | 3.2:1 | **só componentes de interface, nunca texto pequeno** |
-| Branco sobre `brand-500` | 3.2:1 | **reprovado para texto** — botão primário usa branco sobre `brand-600` (4.6:1) |
-| `overdue` #D64545 sobre `overdue-bg` #FCEBEB | 4.9:1 | aprovado |
+| Combinação                                   | Razão  | Situação                                                                       |
+| -------------------------------------------- | ------ | ------------------------------------------------------------------------------ |
+| `text-primary` #1C1C1A sobre #FFFFFF         | 16.1:1 | aprovado                                                                       |
+| `text-secondary` #5F5E5A sobre #FFFFFF       | 6.6:1  | aprovado                                                                       |
+| `text-muted` #8E8D88 sobre #FFFFFF           | 3.4:1  | **só para texto ≥ 18px ou não essencial**                                      |
+| `brand-700` #0A6C40 sobre #FFFFFF            | 6.4:1  | aprovado para texto e link                                                     |
+| `brand-500` #12A05F sobre #FFFFFF            | 3.2:1  | **só componentes de interface, nunca texto pequeno**                           |
+| Branco sobre `brand-500`                     | 3.2:1  | **reprovado para texto** — botão primário usa branco sobre `brand-600` (4.6:1) |
+| `overdue` #D64545 sobre `overdue-bg` #FCEBEB | 4.9:1  | aprovado                                                                       |
 
 **Correção registrada:** o botão primário usa `brand-600` como fundo, não `brand-500`. `brand-500` fica para bordas, ícones e elementos não textuais.
 
 ### 11.2 Teclado
 
-| Tecla | Ação |
-|---|---|
-| `N` | nova tarefa |
-| `/` | busca |
-| `1` `2` `3` | Hoje, Quadro, Calendário |
-| `Tab` | percorre elementos interativos na ordem visual |
-| `Espaço` no card | entra e sai do modo de movimento do Kanban |
-| `Esc` | fecha painel, peek, modal, modo de movimento |
-| `Enter` no `QuickAdd` | cria e mantém aberto |
+| Tecla                 | Ação                                           |
+| --------------------- | ---------------------------------------------- |
+| `N`                   | nova tarefa                                    |
+| `/`                   | busca                                          |
+| `1` `2` `3`           | Hoje, Quadro, Calendário                       |
+| `Tab`                 | percorre elementos interativos na ordem visual |
+| `Espaço` no card      | entra e sai do modo de movimento do Kanban     |
+| `Esc`                 | fecha painel, peek, modal, modo de movimento   |
+| `Enter` no `QuickAdd` | cria e mantém aberto                           |
 
 Foco visível em **todos** os elementos interativos: anel de 2px em `brand-600` com offset de 2px. Nunca `outline: none` sem substituição.
 
@@ -815,12 +825,12 @@ Todo movimento por arraste tem equivalente por teclado e por menu de contexto (6
 
 Nenhuma informação depende exclusivamente de cor:
 
-| Informação | Cor | Reforço |
-|---|---|---|
-| Atrasado | vermelho | ícone de alerta + texto "Atrasado" |
-| Concluído | cinza | check preenchido + texto riscado |
-| Setor | cor do ponto | nome do setor sempre visível |
-| Prioridade | — | rótulo textual, não só cor |
+| Informação | Cor          | Reforço                            |
+| ---------- | ------------ | ---------------------------------- |
+| Atrasado   | vermelho     | ícone de alerta + texto "Atrasado" |
+| Concluído  | cinza        | check preenchido + texto riscado   |
+| Setor      | cor do ponto | nome do setor sempre visível       |
+| Prioridade | —            | rótulo textual, não só cor         |
 
 ### 11.7 Alvos de toque
 
@@ -831,26 +841,31 @@ Mínimo de 44×44px em qualquer contexto touch. A linha de tarefa de 48px já cu
 ## 12. Roadmap por fases
 
 ### Fase 0 — Fundação (1 a 2 semanas)
+
 Esquema do banco com RLS · tokens em código · Storybook com átomos e moléculas · `AppShell` · autenticação
 
 **Critério de saída:** login funciona, tokens aplicados, átomos documentados.
 
 ### Fase 1 — MVP pessoal (3 a 4 semanas)
+
 Setores · tarefas · subtarefas · tags · Hoje · Quadro · painel de detalhe · sincronização unidirecional com o Google
 
 **Critério de saída:** você abandona sua ferramenta atual e usa o TarefaFácil por 2 semanas seguidas. Este é o teste real, não o checklist.
 
 ### Fase 2 — Contexto completo (2 a 3 semanas)
+
 Projetos · calendário com camadas e peek · anexos · insights · busca e filtros · sincronização bidirecional
 
 **Critério de saída:** nenhum contexto de trabalho vive fora do sistema.
 
 ### Fase 3 — SaaS (4 a 6 semanas)
+
 Convites e papéis · atribuição de responsável · notificações · planos e cobrança · onboarding · página pública · exportação de dados
 
 **Critério de saída:** um estranho se cadastra, entende o produto e paga sem falar com você.
 
 ### Fase 4 — CRM e funil (3 a 4 semanas)
+
 Entidades de contato, empresa e negócio · funil reusando o `Board` genérico (ADR-004) · vínculo entre negócio e tarefas · histórico de interação
 
 **Pré-requisito:** fase 3 com usuários pagantes. Não construa a fase 4 antes de alguém pedir.
@@ -867,13 +882,13 @@ Cada um desses tem justificativa plausível e nenhum deles é o que faz alguém 
 
 ### 13.1 Fase 1 e 2 — produto funciona?
 
-| Métrica | Alvo |
-|---|---|
-| Tarefas criadas por dia útil | ≥ 5 |
-| Tempo do gatilho até a tarefa criada | < 8 segundos |
-| Percentual de tarefas com prazo | ≥ 70% |
-| Dias consecutivos de uso | ≥ 10 |
-| Tarefas concluídas com atraso | tendência de queda |
+| Métrica                              | Alvo               |
+| ------------------------------------ | ------------------ |
+| Tarefas criadas por dia útil         | ≥ 5                |
+| Tempo do gatilho até a tarefa criada | < 8 segundos       |
+| Percentual de tarefas com prazo      | ≥ 70%              |
+| Dias consecutivos de uso             | ≥ 10               |
+| Tarefas concluídas com atraso        | tendência de queda |
 
 ### 13.2 Fase 3 — negócio funciona?
 
@@ -887,20 +902,21 @@ Cobertura de componentes (percentual da UI vinda da biblioteca) · número de to
 
 ## 14. Pendências abertas
 
-| # | Pergunta | Bloqueia |
-|---|---|---|
-| P01 | Modo escuro entra na v1 ou depois? Muda o esforço da fase 0 | tokens |
-| P02 | Idioma: só pt-BR na v1, ou i18n desde o início? | copy e componentes |
-| P03 | Recorrência de tarefas: escopo mínimo (diária, semanal, mensal) ou nenhum na v1? | modelo de dados |
-| P04 | Notificações na fase 1: e-mail, push do navegador, ou nenhuma? | infra |
-| P05 | Preço e estrutura de planos | fase 3 |
-| P06 | Nome do domínio e disponibilidade da marca "TarefaFácil" | identidade |
+| #   | Pergunta                                                                         | Bloqueia           |
+| --- | -------------------------------------------------------------------------------- | ------------------ |
+| P01 | Modo escuro entra na v1 ou depois? Muda o esforço da fase 0                      | tokens             |
+| P02 | Idioma: só pt-BR na v1, ou i18n desde o início?                                  | copy e componentes |
+| P03 | Recorrência de tarefas: escopo mínimo (diária, semanal, mensal) ou nenhum na v1? | modelo de dados    |
+| P04 | Notificações na fase 1: e-mail, push do navegador, ou nenhuma?                   | infra              |
+| P05 | Preço e estrutura de planos                                                      | fase 3             |
+| P06 | Nome do domínio e disponibilidade da marca "TarefaFácil"                         | identidade         |
 
 ---
 
 ## Apêndice A — Anti-padrões a evitar
 
 **Sistema de design**
+
 - Componentes hipotéticos ("talvez a gente precise de um botão terciário")
 - Tokens de componente em excesso — a camada onde sistemas apodrecem
 - Meses de design antes do primeiro desenvolvedor envolvido
@@ -908,6 +924,7 @@ Cobertura de componentes (percentual da UI vinda da biblioteca) · número de to
 - Começar pelo Button — é jogar contra o chefe final primeiro
 
 **UX**
+
 - Lorem ipsum em revisão de design
 - WCAG como teto em vez de piso
 - Pensar em páginas antes de pensar em componentes
@@ -915,6 +932,7 @@ Cobertura de componentes (percentual da UI vinda da biblioteca) · número de to
 - Hover como único caminho para uma informação
 
 **Implementação**
+
 - Números mágicos em vez de tokens
 - Degradação graciosa em vez de aprimoramento progressivo
 - Handoff em mão única em vez de ida e volta contínua

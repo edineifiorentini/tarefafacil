@@ -14,7 +14,7 @@ import { useMembers, type Member } from "@/lib/queries/useMembers";
 import { useWorkspace } from "@/lib/queries/useWorkspace";
 
 const menuContent =
-  "z-50 min-w-44 max-h-64 overflow-auto rounded-md border border-line bg-card p-1 shadow-[var(--shadow-panel)] data-[state=closed]:[animation:tf-pop-out_var(--dur-fast)_ease-in] data-[state=open]:[animation:tf-pop-in_var(--dur-fast)_var(--ease-out)]";
+  "z-50 min-w-44 max-h-64 overflow-auto rounded-md tf-glass-strong p-1 data-[state=closed]:[animation:tf-pop-out_var(--dur-fast)_ease-in] data-[state=open]:[animation:tf-pop-in_var(--dur-fast)_var(--ease-out)]";
 const menuItem =
   "flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] text-fg outline-none data-[highlighted]:bg-sunken";
 
@@ -31,7 +31,9 @@ export function CommentList({ taskId }: { taskId: string }) {
   function mention(m: Member) {
     const name = m.display_name ?? m.email;
     setBody((b) => `${b}${b && !b.endsWith(" ") ? " " : ""}@${name} `);
-    setMentioned((ids) => (ids.includes(m.user_id) ? ids : [...ids, m.user_id]));
+    setMentioned((ids) =>
+      ids.includes(m.user_id) ? ids : [...ids, m.user_id]
+    );
   }
 
   function submit(e: React.FormEvent) {
@@ -52,7 +54,7 @@ export function CommentList({ taskId }: { taskId: string }) {
   return (
     <div className="flex flex-col gap-3">
       {comments.length === 0 ? (
-        <p className="text-[length:var(--text-small-size)] text-fg-secondary">
+        <p className="text-fg-secondary text-[length:var(--text-small-size)]">
           Nenhum comentário ainda
         </p>
       ) : (
@@ -62,20 +64,24 @@ export function CommentList({ taskId }: { taskId: string }) {
             const name = author?.display_name ?? author?.email ?? "Alguém";
             return (
               <li key={c.id} className="flex gap-2">
-                <Avatar name={name} src={author?.avatar_url ?? undefined} size="sm" />
+                <Avatar
+                  name={name}
+                  src={author?.avatar_url ?? undefined}
+                  size="sm"
+                />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-baseline gap-2">
-                    <span className="text-[length:var(--text-small-size)] font-medium text-fg">
+                    <span className="text-fg text-[length:var(--text-small-size)] font-medium">
                       {name}
                     </span>
-                    <span className="text-[length:var(--text-caption-size)] text-fg-muted">
+                    <span className="text-fg-muted text-[length:var(--text-caption-size)]">
                       {formatDistanceToNow(new Date(c.created_at), {
                         addSuffix: true,
                         locale: ptBR,
                       })}
                     </span>
                   </div>
-                  <p className="whitespace-pre-wrap text-[length:var(--text-small-size)] text-fg-secondary">
+                  <p className="text-fg-secondary text-[length:var(--text-small-size)] whitespace-pre-wrap">
                     {c.body}
                   </p>
                 </div>
@@ -98,16 +104,20 @@ export function CommentList({ taskId }: { taskId: string }) {
             <DropdownMenu.Trigger asChild>
               <button
                 type="button"
-                className="inline-flex h-7 items-center gap-1 rounded-sm px-2 text-[length:var(--text-caption-size)] text-fg-secondary transition-colors [transition-duration:var(--dur-fast)] hover:bg-sunken hover:text-fg"
+                className="text-fg-secondary hover:bg-sunken hover:text-fg inline-flex h-7 items-center gap-1 rounded-sm px-2 text-[length:var(--text-caption-size)] transition-colors [transition-duration:var(--dur-fast)]"
               >
                 <IconAt size={14} stroke={1.5} />
                 Mencionar
               </button>
             </DropdownMenu.Trigger>
             <DropdownMenu.Portal>
-              <DropdownMenu.Content align="start" sideOffset={4} className={menuContent}>
+              <DropdownMenu.Content
+                align="start"
+                sideOffset={4}
+                className={menuContent}
+              >
                 {members.length === 0 ? (
-                  <div className="px-2 py-1.5 text-[length:var(--text-small-size)] text-fg-muted">
+                  <div className="text-fg-muted px-2 py-1.5 text-[length:var(--text-small-size)]">
                     Ninguém para mencionar
                   </div>
                 ) : (

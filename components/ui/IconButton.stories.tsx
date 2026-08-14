@@ -10,7 +10,12 @@ const meta: Meta<typeof IconButton> = {
   title: "Átomos/IconButton",
   component: IconButton,
   parameters: { layout: "centered" },
-  args: { icon: IconDotsVertical, label: "Mais ações", variant: "ghost", size: "md" },
+  args: {
+    icon: IconDotsVertical,
+    label: "Mais ações",
+    variant: "ghost",
+    size: "md",
+  },
   argTypes: {
     variant: { control: "radio", options: ["ghost", "subtle"] },
     size: { control: "radio", options: ["sm", "md"] },
@@ -54,8 +59,8 @@ export const Accessibility: Story = {
     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
       <IconButton icon={IconX} label="Fechar" />
       <p style={note}>
-        `label` vira aria-label (obrigatório, pois não há texto visível). Alvo de
-        toque de 40px no tamanho md; foco visível por teclado.
+        `label` vira aria-label (obrigatório, pois não há texto visível). Alvo
+        de toque de 40px no tamanho md; foco visível por teclado.
       </p>
     </div>
   ),

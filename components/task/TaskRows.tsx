@@ -68,7 +68,9 @@ export function TaskRows({
               sector={sectorsById.get(task.sector_id)}
               onToggle={(c) => handleToggle(task, c)}
               onDelete={() => deleteTask(task)}
-              onToggleCancel={(cancel) => toggleCancel.mutate({ id: task.id, cancel })}
+              onToggleCancel={(cancel) =>
+                toggleCancel.mutate({ id: task.id, cancel })
+              }
               onOpen={() =>
                 openPanel({
                   title: "Tarefa",

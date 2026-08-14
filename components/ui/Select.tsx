@@ -42,7 +42,7 @@ export function Select({
         id={id}
         aria-label={ariaLabel}
         aria-invalid={error || undefined}
-        className={`inline-flex h-10 w-full items-center justify-between gap-2 rounded-sm border bg-card px-3 text-[length:var(--text-body-size)] text-fg transition-colors [transition-duration:var(--dur-fast)] disabled:cursor-not-allowed disabled:opacity-60 data-[placeholder]:text-fg-muted ${
+        className={`bg-card text-fg data-[placeholder]:text-fg-muted inline-flex h-10 w-full items-center justify-between gap-2 rounded-sm border px-3 text-[length:var(--text-body-size)] transition-colors [transition-duration:var(--dur-fast)] disabled:cursor-not-allowed disabled:opacity-60 ${
           error ? "border-overdue" : "border-line hover:border-line-strong"
         }`}
       >
@@ -55,14 +55,14 @@ export function Select({
         <RxSelect.Content
           position="popper"
           sideOffset={4}
-          className="z-50 min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-md border border-line bg-card shadow-[var(--shadow-panel)] data-[state=closed]:[animation:tf-pop-out_var(--dur-fast)_ease-in] data-[state=open]:[animation:tf-pop-in_var(--dur-fast)_var(--ease-out)]"
+          className="tf-glass-strong z-50 min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-md data-[state=closed]:[animation:tf-pop-out_var(--dur-fast)_ease-in] data-[state=open]:[animation:tf-pop-in_var(--dur-fast)_var(--ease-out)]"
         >
           <RxSelect.Viewport className="p-1">
             {options.map((option) => (
               <RxSelect.Item
                 key={option.value}
                 value={option.value}
-                className="relative flex cursor-pointer select-none items-center rounded-sm py-2 pl-8 pr-3 text-[length:var(--text-small-size)] text-fg outline-none data-[disabled]:cursor-not-allowed data-[highlighted]:bg-sunken data-[disabled]:opacity-60"
+                className="text-fg data-[highlighted]:bg-sunken relative flex cursor-pointer items-center rounded-sm py-2 pr-3 pl-8 text-[length:var(--text-small-size)] outline-none select-none data-[disabled]:cursor-not-allowed data-[disabled]:opacity-60"
               >
                 <RxSelect.ItemIndicator className="absolute left-2 inline-flex items-center">
                   <IconCheck size={16} stroke={2} />

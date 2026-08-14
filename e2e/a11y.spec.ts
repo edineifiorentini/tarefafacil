@@ -10,7 +10,9 @@ test.describe("Acessibilidade (axe)", () => {
   test("login sem violações", async ({ page }) => {
     await page.goto("/login");
     await page.waitForLoadState("networkidle");
-    const results = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze();
+    const results = await new AxeBuilder({ page })
+      .withTags(WCAG_TAGS)
+      .analyze();
     expect(results.violations).toEqual([]);
   });
 });

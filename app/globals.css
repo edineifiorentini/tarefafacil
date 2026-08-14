@@ -1,11 +1,14 @@
 @import "tailwindcss";
 @import "../styles/tokens.css";
 
-/* Escalas independentes de tema — viram tokens do Tailwind (rounded-*, etc.) */
+/* Escalas independentes de tema — viram tokens do Tailwind (rounded-*, etc.).
+   Raios seguem a linguagem nova: cartão 14px, campo/botão 10px, chip 8px.
+   Trocar aqui reflete em todas as telas sem editar componente. */
 @theme {
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
+  --radius-xs: 6px;
+  --radius-sm: 10px; /* campos, botões, chips */
+  --radius-md: 14px; /* cards */
+  --radius-lg: 16px; /* painéis, modais */
   --radius-full: 999px;
 }
 
@@ -25,16 +28,29 @@
   --color-brand-800: var(--brand-800);
   --color-brand-900: var(--brand-900);
 
-  /* Superfícies -> bg-page / bg-card / bg-sunken */
+  --color-accent-50: var(--accent-50);
+  --color-accent-100: var(--accent-100);
+  --color-accent-200: var(--accent-200);
+  --color-accent-300: var(--accent-300);
+  --color-accent-400: var(--accent-400);
+  --color-accent-500: var(--accent-500);
+  --color-accent-600: var(--accent-600);
+  --color-accent-700: var(--accent-700);
+
+  /* Superfícies -> bg-page / bg-card / bg-sunken / bg-subtle / bg-hover */
   --color-page: var(--surface-page);
   --color-card: var(--surface-card);
   --color-sunken: var(--surface-sunken);
+  --color-subtle: var(--surface-subtle);
+  --color-hover: var(--surface-hover);
+  --color-track: var(--fill-track);
 
   /* Texto -> text-fg / text-fg-secondary / text-fg-muted / text-fg-link */
   --color-fg: var(--text-primary);
   --color-fg-secondary: var(--text-secondary);
   --color-fg-muted: var(--text-muted);
   --color-fg-link: var(--text-link);
+  --color-on-brand: var(--text-on-brand);
 
   /* Bordas -> border-line / border-line-strong */
   --color-line: var(--border);
@@ -46,12 +62,19 @@
   --color-due-soon: var(--status-due-soon-fg);
   --color-due-soon-bg: var(--status-due-soon-bg);
   --color-done: var(--status-done-fg);
+  --color-positive: var(--status-positive-fg);
+  --color-positive-bg: var(--status-positive-bg);
+  --color-info: var(--status-info-fg);
+  --color-info-bg: var(--status-info-bg);
 
   /* Destaques -> bg-selected / bg-today / bg-fill */
   --color-selected: var(--surface-selected);
   --color-today: var(--surface-today);
   --color-fill: var(--fill-brand);
 }
+
+/* Elevação continua pela sintaxe arbitrária `shadow-[var(--shadow-card)]`,
+   convenção já usada no projeto — evita colisão de nome no @theme. */
 
 /* --------------------------------------------------------------------- */
 /* Base                                                                  */
@@ -67,6 +90,28 @@ body {
   line-height: var(--text-body-line);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+}
+
+/* Ambiente: duas tintas radiais estáticas, muito fracas, que dão ao vidro
+   algo para refratar e ao fundo uma profundidade discreta. Sem animação e
+   sem canvas — é uma pintura só, custo desprezível. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      60rem 40rem at 12% -10%,
+      color-mix(in srgb, var(--brand-600) 7%, transparent),
+      transparent 60%
+    ),
+    radial-gradient(
+      50rem 36rem at 88% 0%,
+      color-mix(in srgb, var(--accent-600) 6%, transparent),
+      transparent 55%
+    );
 }
 
 /* Números tabulares — datas e contadores não dançam nas colunas (7.5) */
@@ -88,7 +133,115 @@ button:not(:disabled),
   outline-offset: 2px;
 }
 
-/* Movimento reduzido (7.8): animações caem para ~0. */
+/* --------------------------------------------------------------------- */
+/* Liquid glass — SELETIVO                                               */
+/* Só casca (sidebar), campo de busca, botão primário, item ativo da       */
+/* navegação, tooltip, menus, popovers, modais e hover da agenda.         */
+/* Cards de dado permanecem sólidos: legibilidade acima do efeito.        */
+/* --------------------------------------------------------------------- */
+.tf-glass {
+  background: var(--surface-glass);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-highlight), var(--shadow-glass);
+}
+
+.tf-glass-strong {
+  background: var(--surface-glass-strong);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-highlight), var(--shadow-panel);
+}
+
+/* Casca lateral: mesmo vidro, mas a divisão aparece só na borda direita —
+   uma linha em volta da coluna inteira pesaria demais. */
+.tf-glass-edge {
+  background: var(--surface-glass);
+  border-right: 1px solid var(--border);
+  box-shadow: var(--glass-highlight);
+}
+
+/* O desfoque só entra quando o navegador suporta. Sem suporte, as
+   superfícies acima já são opacas o bastante para o texto continuar legível. */
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  .tf-glass,
+  .tf-glass-strong,
+  .tf-glass-edge {
+    -webkit-backdrop-filter: blur(var(--glass-blur))
+      saturate(var(--glass-saturate));
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  }
+}
+
+/* Reflexo direcional discreto: uma faixa de luz atravessa o botão no hover.
+   Só transform — não provoca reflow. */
+.tf-sheen {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.tf-sheen::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(
+    100deg,
+    transparent 30%,
+    var(--button-primary-sheen) 50%,
+    transparent 70%
+  );
+  transform: translateX(-100%);
+  transition: transform var(--dur-slow) var(--ease-out);
+}
+
+.tf-sheen:hover::after,
+.tf-sheen:focus-visible::after {
+  transform: translateX(100%);
+}
+
+/* Realce líquido do item ativo da navegação: brilho interno muito suave
+   na borda superior, sem neon. */
+.tf-liquid {
+  position: relative;
+}
+
+.tf-liquid::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.5),
+    transparent 55%
+  );
+  opacity: 0.6;
+}
+
+[data-theme="dark"] .tf-liquid::before {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.07),
+    transparent 55%
+  );
+}
+
+/* Elevação de 1–2px no hover — o teto de movimento dos cards. */
+.tf-lift {
+  transition:
+    transform var(--dur-base) var(--ease-out),
+    box-shadow var(--dur-base) var(--ease-out),
+    border-color var(--dur-base) var(--ease-out);
+}
+
+.tf-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-card-hover);
+}
+
+/* Movimento reduzido (7.8): animações caem para ~0 e o lift é desligado. */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -97,6 +250,14 @@ button:not(:disabled),
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+
+  .tf-lift:hover {
+    transform: none;
+  }
+
+  .tf-sheen::after {
+    display: none;
   }
 }
 
@@ -223,5 +384,37 @@ button:not(:disabled),
   to {
     opacity: 1;
     transform: scale(1);
+  }
+}
+
+/* Entrada de bloco: sobe 6px e aparece. Usado uma vez, na montagem. */
+@keyframes tf-rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Traço do gráfico: a linha se desenha na entrada/atualização dos dados. */
+@keyframes tf-draw {
+  from {
+    stroke-dashoffset: var(--tf-draw-length, 1000);
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Brilho do esqueleto de carregamento. */
+@keyframes tf-shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
   }
 }

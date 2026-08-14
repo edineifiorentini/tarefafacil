@@ -41,7 +41,9 @@ export function useMembers(workspaceId: string) {
     queryFn: async (): Promise<Member[]> => {
       const { data, error } = await supabase
         .from("workspace_member")
-        .select("user_id, role, status, app_user(display_name, avatar_url, email)")
+        .select(
+          "user_id, role, status, app_user(display_name, avatar_url, email)"
+        )
         .eq("workspace_id", workspaceId);
       if (error) throw error;
       type Row = {

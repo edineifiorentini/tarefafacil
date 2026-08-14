@@ -1,6 +1,13 @@
 "use client";
 
-import { IconAlertTriangle, IconChecklist, IconListCheck, IconMail, IconPencil, IconPhone } from "@tabler/icons-react";
+import {
+  IconAlertTriangle,
+  IconChecklist,
+  IconListCheck,
+  IconMail,
+  IconPencil,
+  IconPhone,
+} from "@tabler/icons-react";
 
 import { useShell } from "@/components/shell/shell-context";
 import { Button } from "@/components/ui/Button";
@@ -32,20 +39,26 @@ export function ClientDetail({ clientId }: { clientId: string }) {
     return <p className="text-fg-secondary">Carregando…</p>;
   }
 
-  const stats = computeDashboard({ tasks, sectors, clients: [client], members });
+  const stats = computeDashboard({
+    tasks,
+    sectors,
+    clients: [client],
+    members,
+  });
   const doneTotal = tasks.filter((t) => t.completed_at).length;
-  const progressPct = tasks.length > 0 ? Math.round((doneTotal / tasks.length) * 100) : 0;
+  const progressPct =
+    tasks.length > 0 ? Math.round((doneTotal / tasks.length) * 100) : 0;
 
   return (
     <div className="flex flex-col gap-5">
       <div className="flex items-start justify-between gap-3">
         <div className="flex flex-col gap-1">
-          <h2 className="text-[length:var(--text-h2-size)] font-semibold text-fg">
+          <h2 className="text-fg text-[length:var(--text-h2-size)] font-semibold">
             {client.name}
           </h2>
           <div className="flex items-center gap-2">
             <ClientStatusPill status={client.status as ClientStatus} />
-            <span className="text-[length:var(--text-caption-size)] text-fg-muted">
+            <span className="text-fg-muted text-[length:var(--text-caption-size)]">
               {client.type === "pj" ? "Pessoa jurídica" : "Pessoa física"}
             </span>
           </div>
@@ -67,24 +80,24 @@ export function ClientDetail({ clientId }: { clientId: string }) {
         </Button>
       </div>
 
-      <div className="flex flex-col gap-2 rounded-md border border-line bg-card p-4">
+      <div className="border-line bg-card flex flex-col gap-2 rounded-md border p-4">
         {client.document ? (
-          <p className="text-[length:var(--text-small-size)] text-fg">
+          <p className="text-fg text-[length:var(--text-small-size)]">
             {client.type === "pj" ? "CNPJ" : "CPF"}: {client.document}
           </p>
         ) : null}
         {client.email ? (
-          <p className="flex items-center gap-2 text-[length:var(--text-small-size)] text-fg-secondary">
+          <p className="text-fg-secondary flex items-center gap-2 text-[length:var(--text-small-size)]">
             <IconMail size={14} stroke={1.5} /> {client.email}
           </p>
         ) : null}
         {client.phone ? (
-          <p className="flex items-center gap-2 text-[length:var(--text-small-size)] text-fg-secondary">
+          <p className="text-fg-secondary flex items-center gap-2 text-[length:var(--text-small-size)]">
             <IconPhone size={14} stroke={1.5} /> {client.phone}
           </p>
         ) : null}
         {client.notes ? (
-          <p className="whitespace-pre-wrap text-[length:var(--text-small-size)] text-fg-secondary">
+          <p className="text-fg-secondary text-[length:var(--text-small-size)] whitespace-pre-wrap">
             {client.notes}
           </p>
         ) : null}
@@ -114,11 +127,11 @@ export function ClientDetail({ clientId }: { clientId: string }) {
           </div>
 
           <div className="flex flex-col gap-1">
-            <div className="flex items-center justify-between text-[length:var(--text-caption-size)] text-fg-muted">
+            <div className="text-fg-muted flex items-center justify-between text-[length:var(--text-caption-size)]">
               <span>Progresso de entregas</span>
               <span className="tnum">{progressPct}%</span>
             </div>
-            <div className="h-2 w-full overflow-hidden rounded-full bg-sunken">
+            <div className="bg-sunken h-2 w-full overflow-hidden rounded-full">
               <div
                 className="h-full rounded-full bg-[var(--brand-600)] transition-[width] [transition-duration:var(--dur-base)]"
                 style={{ width: `${progressPct}%` }}
@@ -129,14 +142,14 @@ export function ClientDetail({ clientId }: { clientId: string }) {
       ) : null}
 
       <div className="flex flex-col gap-2">
-        <h3 className="text-[length:var(--text-small-size)] font-medium text-fg-secondary">
+        <h3 className="text-fg-secondary text-[length:var(--text-small-size)] font-medium">
           Demandas{" "}
           <span className="tnum text-fg-muted">({stats.open} em aberto)</span>
         </h3>
         <TaskRows
           tasks={tasks}
           empty={
-            <p className="py-6 text-center text-fg-secondary">
+            <p className="text-fg-secondary py-6 text-center">
               Nenhuma demanda vinculada a este cliente ainda
             </p>
           }

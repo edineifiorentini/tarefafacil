@@ -79,7 +79,7 @@ export function DependencySelector({ taskId }: { taskId: string }) {
         <Popover.Trigger asChild>
           <button
             type="button"
-            className="inline-flex h-7 w-fit items-center gap-1 rounded-full border border-dashed border-line px-2 text-[length:var(--text-caption-size)] text-fg-secondary transition-colors [transition-duration:var(--dur-fast)] hover:bg-sunken hover:text-fg"
+            className="border-line text-fg-secondary hover:bg-sunken hover:text-fg inline-flex h-7 w-fit items-center gap-1 rounded-full border border-dashed px-2 text-[length:var(--text-caption-size)] transition-colors [transition-duration:var(--dur-fast)]"
           >
             <IconPlus size={12} stroke={2} />
             Bloquear por outra demanda
@@ -89,7 +89,7 @@ export function DependencySelector({ taskId }: { taskId: string }) {
           <Popover.Content
             align="start"
             sideOffset={4}
-            className="z-50 flex w-72 flex-col gap-2 rounded-md border border-line bg-card p-2 shadow-[var(--shadow-panel)] data-[state=open]:[animation:tf-pop-in_var(--dur-fast)_var(--ease-out)]"
+            className="tf-glass-strong z-50 flex w-72 flex-col gap-2 rounded-md p-2 data-[state=open]:[animation:tf-pop-in_var(--dur-fast)_var(--ease-out)]"
           >
             <TextInput
               size="sm"
@@ -101,7 +101,7 @@ export function DependencySelector({ taskId }: { taskId: string }) {
             />
             <ul className="flex max-h-48 flex-col overflow-auto">
               {candidates.length === 0 ? (
-                <li className="px-2 py-1.5 text-[length:var(--text-small-size)] text-fg-muted">
+                <li className="text-fg-muted px-2 py-1.5 text-[length:var(--text-small-size)]">
                   Nenhuma demanda encontrada
                 </li>
               ) : (
@@ -110,7 +110,7 @@ export function DependencySelector({ taskId }: { taskId: string }) {
                     <button
                       type="button"
                       onClick={() => pick(t.id)}
-                      className="w-full truncate rounded-sm px-2 py-1.5 text-left text-[length:var(--text-small-size)] text-fg hover:bg-sunken"
+                      className="text-fg hover:bg-sunken w-full truncate rounded-sm px-2 py-1.5 text-left text-[length:var(--text-small-size)]"
                     >
                       {t.title}
                     </button>

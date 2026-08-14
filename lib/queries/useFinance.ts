@@ -3,7 +3,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { createClient } from "@/lib/supabase/client";
-import type { FinanceEntry, TablesInsert, TablesUpdate } from "@/types/database";
+import type {
+  FinanceEntry,
+  TablesInsert,
+  TablesUpdate,
+} from "@/types/database";
 
 function financeKey(workspaceId: string) {
   return ["finance", workspaceId] as const;
@@ -11,10 +15,13 @@ function financeKey(workspaceId: string) {
 
 // Busca tudo (sem recorte de mês) — a agregação/filtro roda no cliente,
 // mesmo padrão do Dashboard e da view Lista de Demandas.
-export function useFinanceEntries(workspaceId: string) {
+export function useFinanceEntries(workspaceId: string, enabled = true) {
   const supabase = createClient();
   return useQuery({
     queryKey: financeKey(workspaceId),
+    // Quem não é dono/admin não enxerga lançamento (RLS): não vale a
+    // requisição que voltaria vazia.
+    enabled,
     queryFn: async (): Promise<FinanceEntry[]> => {
       const { data, error } = await supabase
         .from("finance_entry")
@@ -31,7 +38,9 @@ export function useCreateFinanceEntry(workspaceId: string) {
   const supabase = createClient();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (input: Omit<TablesInsert<"finance_entry">, "workspace_id">) => {
+    mutationFn: async (
+      input: Omit<TablesInsert<"finance_entry">, "workspace_id">
+    ) => {
       const {
         data: { user },
       } = await supabase.auth.getUser();
@@ -42,7 +51,8 @@ export function useCreateFinanceEntry(workspaceId: string) {
       });
       if (error) throw error;
     },
-    onSettled: () => qc.invalidateQueries({ queryKey: financeKey(workspaceId) }),
+    onSettled: () =>
+      qc.invalidateQueries({ queryKey: financeKey(workspaceId) }),
   });
 }
 
@@ -57,10 +67,14 @@ export function useUpdateFinanceEntry(workspaceId: string) {
       id: string;
       patch: TablesUpdate<"finance_entry">;
     }) => {
-      const { error } = await supabase.from("finance_entry").update(patch).eq("id", id);
+      const { error } = await supabase
+        .from("finance_entry")
+        .update(patch)
+        .eq("id", id);
       if (error) throw error;
     },
-    onSettled: () => qc.invalidateQueries({ queryKey: financeKey(workspaceId) }),
+    onSettled: () =>
+      qc.invalidateQueries({ queryKey: financeKey(workspaceId) }),
   });
 }
 
@@ -86,7 +100,8 @@ export function useConfirmFinanceEntry(workspaceId: string) {
         .eq("id", id);
       if (error) throw error;
     },
-    onSettled: () => qc.invalidateQueries({ queryKey: financeKey(workspaceId) }),
+    onSettled: () =>
+      qc.invalidateQueries({ queryKey: financeKey(workspaceId) }),
   });
 }
 
@@ -95,9 +110,13 @@ export function useDeleteFinanceEntry(workspaceId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("finance_entry").delete().eq("id", id);
+      const { error } = await supabase
+        .from("finance_entry")
+        .delete()
+        .eq("id", id);
       if (error) throw error;
     },
-    onSettled: () => qc.invalidateQueries({ queryKey: financeKey(workspaceId) }),
+    onSettled: () =>
+      qc.invalidateQueries({ queryKey: financeKey(workspaceId) }),
   });
 }

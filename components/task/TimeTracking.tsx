@@ -51,20 +51,31 @@ export function TimeTracking({
     if (!parsed || parsed <= 0) return;
     add.mutate(
       { minutes: parsed, note: note.trim() || null },
-      { onSuccess: () => { setMinutes(""); setNote(""); } }
+      {
+        onSuccess: () => {
+          setMinutes("");
+          setNote("");
+        },
+      }
     );
   }
 
   return (
     <div className="flex flex-col gap-3">
-      <PomodoroControl taskId={taskId} taskTitle={taskTitle} pomodoroCount={pomodoroCount} />
+      <PomodoroControl
+        taskId={taskId}
+        taskTitle={taskTitle}
+        pomodoroCount={pomodoroCount}
+      />
 
-      <p className="text-[length:var(--text-small-size)] text-fg-secondary">
-        <span className={overEstimate ? "font-medium text-overdue" : "text-fg"}>
+      <p className="text-fg-secondary text-[length:var(--text-small-size)]">
+        <span className={overEstimate ? "text-overdue font-medium" : "text-fg"}>
           {formatMinutes(total)}
         </span>{" "}
         registrados
-        {estimateMinutes ? ` de ${formatMinutes(estimateMinutes)} estimadas` : ""}
+        {estimateMinutes
+          ? ` de ${formatMinutes(estimateMinutes)} estimadas`
+          : ""}
       </p>
 
       {entries.length > 0 ? (
@@ -74,19 +85,23 @@ export function TimeTracking({
             return (
               <li
                 key={entry.id}
-                className="group flex items-center gap-2 text-[length:var(--text-caption-size)] text-fg-secondary"
+                className="group text-fg-secondary flex items-center gap-2 text-[length:var(--text-caption-size)]"
               >
-                <span className="tnum font-medium text-fg">
+                <span className="tnum text-fg font-medium">
                   {formatMinutes(entry.minutes)}
                 </span>
-                {entry.source === "pomodoro" ? <span aria-hidden>🍅</span> : null}
+                {entry.source === "pomodoro" ? (
+                  <span aria-hidden>🍅</span>
+                ) : null}
                 <span>{who?.display_name ?? who?.email ?? "Alguém"}</span>
-                {entry.note ? <span className="truncate">— {entry.note}</span> : null}
+                {entry.note ? (
+                  <span className="truncate">— {entry.note}</span>
+                ) : null}
                 <button
                   type="button"
                   aria-label="Remover apontamento"
                   onClick={() => remove.mutate(entry.id)}
-                  className="ml-auto opacity-0 transition-opacity hover:text-overdue group-hover:opacity-100"
+                  className="hover:text-overdue ml-auto opacity-0 transition-opacity group-hover:opacity-100"
                 >
                   <IconTrash size={13} stroke={1.5} />
                 </button>
@@ -116,7 +131,12 @@ export function TimeTracking({
             aria-label="Nota do apontamento"
           />
         </div>
-        <Button type="submit" size="sm" variant="secondary" leadingIcon={IconPlus}>
+        <Button
+          type="submit"
+          size="sm"
+          variant="secondary"
+          leadingIcon={IconPlus}
+        >
           Registrar
         </Button>
       </form>

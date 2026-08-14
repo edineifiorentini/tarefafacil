@@ -17,12 +17,16 @@ export interface CheckboxProps {
 }
 
 // Radix Checkbox estilizado. Variante "round" para subtarefas (design 8.1).
-export function Checkbox({ variant = "default", className, ...props }: CheckboxProps) {
+export function Checkbox({
+  variant = "default",
+  className,
+  ...props
+}: CheckboxProps) {
   const radius = variant === "round" ? "rounded-full" : "rounded-sm";
   return (
     <RxCheckbox.Root
       {...props}
-      className={`group inline-flex h-5 w-5 items-center justify-center border border-line-strong bg-card text-[var(--button-primary-fg)] transition-colors [transition-duration:var(--dur-fast)] disabled:cursor-not-allowed disabled:opacity-60 data-[state=checked]:border-transparent data-[state=checked]:bg-[var(--button-primary-bg)] data-[state=indeterminate]:border-transparent data-[state=indeterminate]:bg-[var(--button-primary-bg)] ${radius} ${className ?? ""}`}
+      className={`group border-line-strong bg-card inline-flex h-5 w-5 items-center justify-center border text-[var(--button-primary-fg)] transition-colors [transition-duration:var(--dur-fast)] disabled:cursor-not-allowed disabled:opacity-60 data-[state=checked]:border-transparent data-[state=checked]:bg-[var(--button-primary-bg)] data-[state=indeterminate]:border-transparent data-[state=indeterminate]:bg-[var(--button-primary-bg)] ${radius} ${className ?? ""}`}
     >
       <RxCheckbox.Indicator forceMount className="flex">
         <IconCheck

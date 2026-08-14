@@ -16,7 +16,9 @@ export function isPlatformAdmin(email: string | null | undefined): boolean {
 }
 
 // Retorna o usuário se for admin da plataforma; senão null.
-export async function requirePlatformAdmin(): Promise<{ email: string } | null> {
+export async function requirePlatformAdmin(): Promise<{
+  email: string;
+} | null> {
   const supabase = await createClient();
   const {
     data: { user },

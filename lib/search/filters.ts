@@ -78,7 +78,10 @@ export function useSearchFilters() {
   const pathname = usePathname();
   const sp = useSearchParams();
 
-  const filters = useMemo(() => parse(new URLSearchParams(sp.toString())), [sp]);
+  const filters = useMemo(
+    () => parse(new URLSearchParams(sp.toString())),
+    [sp]
+  );
 
   const apply = useCallback(
     (next: SearchFilters) => {

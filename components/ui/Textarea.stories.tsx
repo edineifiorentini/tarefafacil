@@ -27,7 +27,9 @@ export const Default: Story = {};
 
 export const AllVariants: Story = {
   render: () => (
-    <div style={{ display: "flex", flexDirection: "column", gap: 12, width: 320 }}>
+    <div
+      style={{ display: "flex", flexDirection: "column", gap: 12, width: 320 }}
+    >
       <Textarea placeholder="Fixo (3 linhas)" />
       <Textarea autogrow placeholder="Autogrow — cresce conforme você digita" />
     </div>
@@ -36,7 +38,9 @@ export const AllVariants: Story = {
 
 export const AllStates: Story = {
   render: () => (
-    <div style={{ display: "flex", flexDirection: "column", gap: 12, width: 320 }}>
+    <div
+      style={{ display: "flex", flexDirection: "column", gap: 12, width: 320 }}
+    >
       <Textarea placeholder="Padrão" />
       <Textarea defaultValue="Com conteúdo" />
       <Textarea placeholder="Desabilitado" disabled />
@@ -55,8 +59,13 @@ export const Responsive: Story = {
 
 export const Accessibility: Story = {
   render: () => (
-    <div style={{ display: "flex", flexDirection: "column", gap: 6, width: 320 }}>
-      <label htmlFor="a11y-ta" style={{ fontSize: 14, color: "var(--text-secondary)" }}>
+    <div
+      style={{ display: "flex", flexDirection: "column", gap: 6, width: 320 }}
+    >
+      <label
+        htmlFor="a11y-ta"
+        style={{ fontSize: 14, color: "var(--text-secondary)" }}
+      >
         Descrição
       </label>
       <Textarea id="a11y-ta" autogrow placeholder="Conte o contexto…" />

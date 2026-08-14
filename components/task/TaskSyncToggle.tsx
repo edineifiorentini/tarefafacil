@@ -21,7 +21,7 @@ export function TaskSyncToggle({ taskId }: { taskId: string }) {
   return (
     <div className="flex flex-col gap-1">
       <div className="flex items-center justify-between gap-3">
-        <span className="text-[length:var(--text-small-size)] text-fg">
+        <span className="text-fg text-[length:var(--text-small-size)]">
           Mostrar no Google Agenda
         </span>
         <button
@@ -36,7 +36,7 @@ export function TaskSyncToggle({ taskId }: { taskId: string }) {
           }`}
         >
           <span
-            className={`absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-card transition-transform [transition-duration:var(--dur-fast)] ${
+            className={`bg-card absolute top-0.5 left-0.5 h-4 w-4 rounded-full transition-transform [transition-duration:var(--dur-fast)] ${
               on ? "translate-x-4" : ""
             }`}
           />
@@ -44,7 +44,7 @@ export function TaskSyncToggle({ taskId }: { taskId: string }) {
       </div>
 
       {!connected ? (
-        <span className="text-[length:var(--text-caption-size)] text-fg-muted">
+        <span className="text-fg-muted text-[length:var(--text-caption-size)]">
           {status?.configured === false ? (
             "Integração com o Google indisponível neste ambiente"
           ) : (
@@ -57,7 +57,7 @@ export function TaskSyncToggle({ taskId }: { taskId: string }) {
           )}
         </span>
       ) : on && !task?.due_date ? (
-        <span className="text-[length:var(--text-caption-size)] text-fg-muted">
+        <span className="text-fg-muted text-[length:var(--text-caption-size)]">
           Defina um prazo para criar o evento
         </span>
       ) : null}

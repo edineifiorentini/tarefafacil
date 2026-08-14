@@ -29,7 +29,7 @@ export function GcalConnectCard() {
 
   if (status && !status.configured) {
     return (
-      <div className="rounded-md border border-line bg-card p-4">
+      <div className="border-line bg-card rounded-md border p-4">
         <p className="text-fg-secondary">
           A integração com o Google Agenda ainda não está configurada neste
           ambiente.
@@ -42,17 +42,17 @@ export function GcalConnectCard() {
   const expired = status?.status === "expired";
 
   return (
-    <div className="flex flex-col gap-3 rounded-md border border-line bg-card p-4">
+    <div className="border-line bg-card flex flex-col gap-3 rounded-md border p-4">
       <div className="flex items-start gap-3">
         <IconCalendar
           size={20}
           stroke={1.5}
-          className="mt-0.5 shrink-0 text-fg-muted"
+          className="text-fg-muted mt-0.5 shrink-0"
         />
         <div className="flex min-w-0 flex-col gap-0.5">
-          <span className="font-medium text-fg">Google Agenda</span>
+          <span className="text-fg font-medium">Google Agenda</span>
           {connected ? (
-            <span className="flex items-center gap-1 text-[length:var(--text-small-size)] text-fg-secondary">
+            <span className="text-fg-secondary flex items-center gap-1 text-[length:var(--text-small-size)]">
               {!expired ? (
                 <IconCheck size={14} stroke={1.5} className="text-fg-muted" />
               ) : null}
@@ -61,7 +61,7 @@ export function GcalConnectCard() {
                 : `Conectado${status?.email ? ` como ${status.email}` : ""}`}
             </span>
           ) : (
-            <span className="text-[length:var(--text-small-size)] text-fg-secondary">
+            <span className="text-fg-secondary text-[length:var(--text-small-size)]">
               Sincronize tarefas com a sua agenda, uma a uma
             </span>
           )}

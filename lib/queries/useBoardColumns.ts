@@ -33,8 +33,7 @@ export function useCreateColumn(workspaceId: string, sectorId: string) {
   return useMutation({
     mutationFn: async (name: string) => {
       const cols = qc.getQueryData<BoardColumn[]>(key) ?? [];
-      const position =
-        cols.reduce((m, c) => Math.max(m, c.position), -1) + 1;
+      const position = cols.reduce((m, c) => Math.max(m, c.position), -1) + 1;
       const { error } = await supabase.from("board_column").insert({
         workspace_id: workspaceId,
         sector_id: sectorId,

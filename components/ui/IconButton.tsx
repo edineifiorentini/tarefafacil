@@ -5,8 +5,10 @@ import type { IconComponent } from "./types";
 type Variant = "ghost" | "subtle";
 type Size = "sm" | "md";
 
-export interface IconButtonProps
-  extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, "type" | "children"> {
+export interface IconButtonProps extends Omit<
+  ButtonHTMLAttributes<HTMLButtonElement>,
+  "type" | "children"
+> {
   icon: IconComponent;
   /** Rótulo acessível obrigatório (não há texto visível). */
   label: string;

@@ -177,12 +177,10 @@ export function useToggleTaskComplete(workspaceId: string) {
       });
       const hadSync = !!findInSnapshots(snapshots, id)?.gcal_sync;
       const completedAt = completed ? new Date().toISOString() : null;
-      qc.setQueriesData<Task[]>(
-        { queryKey: [TASKS, workspaceId] },
-        (data) =>
-          data?.map((t) =>
-            t.id === id ? { ...t, completed_at: completedAt } : t
-          )
+      qc.setQueriesData<Task[]>({ queryKey: [TASKS, workspaceId] }, (data) =>
+        data?.map((t) =>
+          t.id === id ? { ...t, completed_at: completedAt } : t
+        )
       );
       return { snapshots, hadSync };
     },
@@ -219,18 +217,16 @@ export function useToggleTaskCancel(workspaceId: string) {
         queryKey: [TASKS, workspaceId],
       });
       const cancelledAt = cancel ? new Date().toISOString() : null;
-      qc.setQueriesData<Task[]>(
-        { queryKey: [TASKS, workspaceId] },
-        (data) =>
-          data?.map((t) =>
-            t.id === id
-              ? {
-                  ...t,
-                  cancelled_at: cancelledAt,
-                  completed_at: cancel ? null : t.completed_at,
-                }
-              : t
-          )
+      qc.setQueriesData<Task[]>({ queryKey: [TASKS, workspaceId] }, (data) =>
+        data?.map((t) =>
+          t.id === id
+            ? {
+                ...t,
+                cancelled_at: cancelledAt,
+                completed_at: cancel ? null : t.completed_at,
+              }
+            : t
+        )
       );
       return { snapshots };
     },
@@ -289,10 +285,8 @@ export function useCompleteTask(workspaceId: string) {
       });
       const hadSync = !!findInSnapshots(snapshots, id)?.gcal_sync;
       const now = new Date().toISOString();
-      qc.setQueriesData<Task[]>(
-        { queryKey: [TASKS, workspaceId] },
-        (data) =>
-          data?.map((t) => (t.id === id ? { ...t, completed_at: now } : t))
+      qc.setQueriesData<Task[]>({ queryKey: [TASKS, workspaceId] }, (data) =>
+        data?.map((t) => (t.id === id ? { ...t, completed_at: now } : t))
       );
       return { snapshots, hadSync };
     },
@@ -318,9 +312,8 @@ export function useDeleteTask(workspaceId: string) {
       const snapshots = qc.getQueriesData<Task[]>({
         queryKey: [TASKS, workspaceId],
       });
-      qc.setQueriesData<Task[]>(
-        { queryKey: [TASKS, workspaceId] },
-        (data) => data?.filter((t) => t.id !== task.id)
+      qc.setQueriesData<Task[]>({ queryKey: [TASKS, workspaceId] }, (data) =>
+        data?.filter((t) => t.id !== task.id)
       );
 
       let undone = false;
@@ -405,9 +398,8 @@ export function useUpdateTask(workspaceId: string) {
       const snapshots = qc.getQueriesData<Task[]>({
         queryKey: [TASKS, workspaceId],
       });
-      qc.setQueriesData<Task[]>(
-        { queryKey: [TASKS, workspaceId] },
-        (data) => data?.map((t) => (t.id === id ? { ...t, ...patch } : t))
+      qc.setQueriesData<Task[]>({ queryKey: [TASKS, workspaceId] }, (data) =>
+        data?.map((t) => (t.id === id ? { ...t, ...patch } : t))
       );
       const prevDetail = qc.getQueryData<Task>(taskKey(workspaceId, id));
       if (prevDetail) {
@@ -461,19 +453,17 @@ export function useMoveTask(workspaceId: string) {
         queryKey: [TASKS, workspaceId],
       });
       const completedAt = completed ? new Date().toISOString() : null;
-      qc.setQueriesData<Task[]>(
-        { queryKey: [TASKS, workspaceId] },
-        (data) =>
-          data?.map((t) =>
-            t.id === id
-              ? {
-                  ...t,
-                  column_id: columnId,
-                  position,
-                  completed_at: completedAt,
-                }
-              : t
-          )
+      qc.setQueriesData<Task[]>({ queryKey: [TASKS, workspaceId] }, (data) =>
+        data?.map((t) =>
+          t.id === id
+            ? {
+                ...t,
+                column_id: columnId,
+                position,
+                completed_at: completedAt,
+              }
+            : t
+        )
       );
       return { snapshots };
     },

@@ -26,15 +26,15 @@ export function DetailPanel() {
         <Dialog.Overlay className="fixed inset-0 z-40 bg-black/40 data-[state=closed]:[animation:tf-fade-out_var(--dur-fast)_ease-in] data-[state=open]:[animation:tf-fade-in_var(--dur-base)_var(--ease-out)] xl:bg-transparent" />
         <Dialog.Content
           aria-describedby={undefined}
-          className="fixed inset-y-0 right-0 z-50 flex w-full max-w-[400px] flex-col border-l border-line bg-card shadow-[var(--shadow-panel)] outline-none data-[state=closed]:[animation:tf-slide-out-right_var(--dur-base)_ease-in] data-[state=open]:[animation:tf-slide-in-right_var(--dur-slow)_var(--ease-out)]"
+          className="border-line tf-glass-strong fixed inset-y-0 right-0 z-50 flex w-full max-w-[400px] flex-col border-l outline-none data-[state=closed]:[animation:tf-slide-out-right_var(--dur-base)_ease-in] data-[state=open]:[animation:tf-slide-in-right_var(--dur-slow)_var(--ease-out)]"
         >
-          <div className="flex items-center justify-between border-b border-line p-[var(--space-panel-pad)]">
-            <Dialog.Title className="text-[length:var(--text-h3-size)] font-medium text-fg">
+          <div className="border-line flex items-center justify-between border-b p-[var(--space-panel-pad)]">
+            <Dialog.Title className="text-fg text-[length:var(--text-h3-size)] font-medium">
               {panel?.title}
             </Dialog.Title>
             <Dialog.Close
               aria-label="Fechar painel"
-              className="inline-flex h-8 w-8 items-center justify-center rounded-sm text-fg-secondary transition-colors [transition-duration:var(--dur-fast)] hover:text-fg"
+              className="text-fg-secondary hover:text-fg inline-flex h-8 w-8 items-center justify-center rounded-sm transition-colors [transition-duration:var(--dur-fast)]"
             >
               <IconX size={20} stroke={1.5} />
             </Dialog.Close>

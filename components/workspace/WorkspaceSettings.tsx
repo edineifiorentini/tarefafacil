@@ -1,6 +1,12 @@
 "use client";
 
-import { IconCheck, IconCopy, IconDownload, IconTrash, IconX } from "@tabler/icons-react";
+import {
+  IconCheck,
+  IconCopy,
+  IconDownload,
+  IconTrash,
+  IconX,
+} from "@tabler/icons-react";
 import { useState } from "react";
 
 import { Avatar } from "@/components/ui/Avatar";
@@ -90,7 +96,7 @@ export function WorkspaceSettings() {
   return (
     <section className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
-        <h2 className="text-[length:var(--text-small-size)] font-medium text-fg-secondary">
+        <h2 className="text-fg-secondary text-[length:var(--text-small-size)] font-medium">
           Workspace
         </h2>
         <div className="flex items-center gap-2">
@@ -113,14 +119,14 @@ export function WorkspaceSettings() {
 
       {canManage && pending.length > 0 ? (
         <div className="flex flex-col gap-2">
-          <h2 className="text-[length:var(--text-small-size)] font-medium text-fg-secondary">
+          <h2 className="text-fg-secondary text-[length:var(--text-small-size)] font-medium">
             Solicitações pendentes
           </h2>
           <ul className="flex flex-col gap-1">
             {pending.map((m) => (
               <li
                 key={m.user_id}
-                className="flex items-center gap-3 rounded-md border border-line bg-card px-3 py-2"
+                className="border-line bg-card flex items-center gap-3 rounded-md border px-3 py-2"
               >
                 <Avatar
                   name={m.display_name ?? m.email}
@@ -128,10 +134,10 @@ export function WorkspaceSettings() {
                   size="sm"
                 />
                 <div className="flex min-w-0 flex-col">
-                  <span className="truncate text-[length:var(--text-small-size)] text-fg">
+                  <span className="text-fg truncate text-[length:var(--text-small-size)]">
                     {m.display_name ?? m.email}
                   </span>
-                  <span className="truncate text-[length:var(--text-caption-size)] text-fg-muted">
+                  <span className="text-fg-muted truncate text-[length:var(--text-caption-size)]">
                     {m.email} · quer entrar como {ROLE_LABELS[m.role]}
                   </span>
                 </div>
@@ -148,7 +154,7 @@ export function WorkspaceSettings() {
                     type="button"
                     onClick={() => removeMember.mutate(m.user_id)}
                     aria-label={`Recusar ${m.display_name ?? m.email}`}
-                    className="rounded-sm p-1 text-fg-muted hover:text-fg"
+                    className="text-fg-muted hover:text-fg rounded-sm p-1"
                   >
                     <IconX size={16} stroke={1.5} />
                   </button>
@@ -160,7 +166,7 @@ export function WorkspaceSettings() {
       ) : null}
 
       <div className="flex flex-col gap-2">
-        <h2 className="text-[length:var(--text-small-size)] font-medium text-fg-secondary">
+        <h2 className="text-fg-secondary text-[length:var(--text-small-size)] font-medium">
           Membros{" "}
           <span className="tnum text-fg-muted">
             ({active.length}/{seatLimit})
@@ -173,7 +179,7 @@ export function WorkspaceSettings() {
             return (
               <li
                 key={m.user_id}
-                className="flex items-center gap-3 rounded-md border border-line bg-card px-3 py-2"
+                className="border-line bg-card flex items-center gap-3 rounded-md border px-3 py-2"
               >
                 <Avatar
                   name={m.display_name ?? m.email}
@@ -181,11 +187,11 @@ export function WorkspaceSettings() {
                   size="sm"
                 />
                 <div className="flex min-w-0 flex-col">
-                  <span className="truncate text-[length:var(--text-small-size)] text-fg">
+                  <span className="text-fg truncate text-[length:var(--text-small-size)]">
                     {m.display_name ?? m.email}
                     {isSelf ? " (você)" : ""}
                   </span>
-                  <span className="truncate text-[length:var(--text-caption-size)] text-fg-muted">
+                  <span className="text-fg-muted truncate text-[length:var(--text-caption-size)]">
                     {m.email}
                   </span>
                 </div>
@@ -212,7 +218,7 @@ export function WorkspaceSettings() {
                       type="button"
                       onClick={() => removeMember.mutate(m.user_id)}
                       aria-label={`Remover ${m.display_name ?? m.email}`}
-                      className="rounded-sm p-1 text-fg-muted hover:text-fg"
+                      className="text-fg-muted hover:text-fg rounded-sm p-1"
                     >
                       <IconTrash size={16} stroke={1.5} />
                     </button>
@@ -226,7 +232,7 @@ export function WorkspaceSettings() {
 
       {canManage ? (
         <div className="flex flex-col gap-2">
-          <h2 className="text-[length:var(--text-small-size)] font-medium text-fg-secondary">
+          <h2 className="text-fg-secondary text-[length:var(--text-small-size)] font-medium">
             Convidar
           </h2>
           <div className="flex items-center gap-2">
@@ -250,7 +256,7 @@ export function WorkspaceSettings() {
           </div>
 
           {seatsFull ? (
-            <p className="text-[length:var(--text-caption-size)] text-fg-muted">
+            <p className="text-fg-muted text-[length:var(--text-caption-size)]">
               Equipe cheia ({seatLimit} assentos). Remova um membro ou aumente o
               plano para convidar mais.
             </p>
@@ -261,10 +267,10 @@ export function WorkspaceSettings() {
               {invites.map((inv) => (
                 <li
                   key={inv.id}
-                  className="flex items-center gap-2 rounded-md border border-line bg-card px-3 py-2 text-[length:var(--text-small-size)]"
+                  className="border-line bg-card flex items-center gap-2 rounded-md border px-3 py-2 text-[length:var(--text-small-size)]"
                 >
                   <Badge variant="neutral">{ROLE_LABELS[inv.role]}</Badge>
-                  <code className="min-w-0 flex-1 truncate text-fg-secondary">
+                  <code className="text-fg-secondary min-w-0 flex-1 truncate">
                     {inviteLink(inv.token)}
                   </code>
                   <button
@@ -273,11 +279,9 @@ export function WorkspaceSettings() {
                     onClick={() =>
                       void navigator.clipboard
                         .writeText(inviteLink(inv.token))
-                        .then(() =>
-                          toast.show({ message: "Link copiado" })
-                        )
+                        .then(() => toast.show({ message: "Link copiado" }))
                     }
-                    className="rounded-sm p-1 text-fg-muted hover:text-fg"
+                    className="text-fg-muted hover:text-fg rounded-sm p-1"
                   >
                     <IconCopy size={16} stroke={1.5} />
                   </button>
@@ -285,7 +289,7 @@ export function WorkspaceSettings() {
                     type="button"
                     aria-label="Revogar convite"
                     onClick={() => revokeInvite.mutate(inv.id)}
-                    className="rounded-sm p-1 text-fg-muted hover:text-fg"
+                    className="text-fg-muted hover:text-fg rounded-sm p-1"
                   >
                     <IconTrash size={16} stroke={1.5} />
                   </button>
@@ -297,12 +301,12 @@ export function WorkspaceSettings() {
       ) : null}
 
       <div className="flex flex-col gap-2">
-        <h2 className="text-[length:var(--text-small-size)] font-medium text-fg-secondary">
+        <h2 className="text-fg-secondary text-[length:var(--text-small-size)] font-medium">
           Dados
         </h2>
         <a
           href="/api/export"
-          className="inline-flex h-8 w-fit items-center gap-2 rounded-sm border border-line bg-card px-3 text-[length:var(--text-small-size)] text-fg hover:bg-sunken"
+          className="border-line bg-card text-fg hover:bg-sunken inline-flex h-8 w-fit items-center gap-2 rounded-sm border px-3 text-[length:var(--text-small-size)]"
         >
           <IconDownload size={16} stroke={1.5} />
           Exportar tudo em JSON

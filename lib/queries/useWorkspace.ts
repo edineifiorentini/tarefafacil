@@ -14,7 +14,11 @@ export function WorkspaceProvider({
   workspace: Workspace;
   children: ReactNode;
 }) {
-  return createElement(WorkspaceContext.Provider, { value: workspace }, children);
+  return createElement(
+    WorkspaceContext.Provider,
+    { value: workspace },
+    children
+  );
 }
 
 /** Workspace ativo. Lança se usado fora do WorkspaceProvider. */

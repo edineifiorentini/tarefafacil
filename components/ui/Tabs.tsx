@@ -21,7 +21,7 @@ export function Tabs({
 
 export function TabsList({ children }: { children: ReactNode }) {
   return (
-    <RadixTabs.List className="flex items-center gap-4 border-b border-line">
+    <RadixTabs.List className="border-line flex items-center gap-4 border-b">
       {children}
     </RadixTabs.List>
   );
@@ -37,7 +37,7 @@ export function TabsTrigger({
   return (
     <RadixTabs.Trigger
       value={value}
-      className="relative -mb-px border-b-2 border-transparent px-1 py-2 text-[length:var(--text-small-size)] text-fg-secondary outline-none transition-colors [transition-duration:var(--dur-fast)] hover:text-fg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-ring)] data-[state=active]:border-[var(--brand-600)] data-[state=active]:font-medium data-[state=active]:text-fg"
+      className="text-fg-secondary hover:text-fg data-[state=active]:text-fg relative -mb-px border-b-2 border-transparent px-1 py-2 text-[length:var(--text-small-size)] transition-colors [transition-duration:var(--dur-fast)] outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-ring)] data-[state=active]:border-[var(--brand-600)] data-[state=active]:font-medium"
     >
       {children}
     </RadixTabs.Trigger>

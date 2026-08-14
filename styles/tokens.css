@@ -11,23 +11,40 @@
  * Modo escuro em [data-theme="dark"] e como fallback de prefers-color-scheme.
  * As camadas de escala (raio, tipografia, espaçamento, movimento) vivem no
  * @theme de app/globals.css e não mudam entre os modos.
+ *
+ * Direção visual (ago/2026): pearl claro, azul/lilás como assinatura,
+ * liquid glass SELETIVO (casca e overlays), cards de dado quase sólidos.
+ * Proporção alvo: ~80% superfície sólida, ~15% translúcida, ~5% efeito.
  * ===================================================================== */
 
 /* ---------------------------------------------------------------------
  * CAMADA 1 — GLOBAL (cru, independente de tema)
  * ------------------------------------------------------------------- */
 :root {
-  /* Rampa da marca (7.1) */
-  --brand-50: #f0faf3;
-  --brand-100: #d6f2e0;
-  --brand-200: #a9e4c2;
-  --brand-300: #7ad3a2;
-  --brand-400: #45bc7f;
-  --brand-500: #12a05f; /* ação primária (borda/ícone, não texto) */
-  --brand-600: #0d8850; /* fundo do botão primário — 4.6:1 c/ branco */
-  --brand-700: #0a6c40; /* texto e link — 6.4:1 em branco */
-  --brand-800: #08512f;
-  --brand-900: #063a22;
+  /* Rampa da marca — azul primário (7.1). O 600 é o fundo do botão
+     primário: 4.9:1 com branco. O 700 é texto/link sobre claro: 6.9:1. */
+  --brand-50: #eff5ff;
+  --brand-100: #dbe8fe;
+  --brand-200: #bfd7fe;
+  --brand-300: #93bbfd;
+  --brand-400: #6096fa;
+  --brand-500: #3b76f6; /* borda/ícone — não usar como texto sobre branco */
+  --brand-600: #2563eb; /* fundo do botão primário — 4.9:1 c/ branco */
+  --brand-700: #1d4ed8; /* texto e link — 6.9:1 em branco */
+  --brand-800: #1e40af;
+  --brand-900: #1e3a8a;
+
+  /* Rampa de acento — lilás. Segunda metade do gradiente-assinatura. */
+  --accent-50: #f5f3ff;
+  --accent-100: #ede9fe;
+  --accent-200: #ddd6fe;
+  --accent-300: #c4b5fd;
+  --accent-400: #a78bfa;
+  --accent-500: #8b5cf6;
+  --accent-600: #7c3aed; /* lilás secundário */
+  --accent-700: #6d28d9;
+  --accent-800: #5b21b6;
+  --accent-900: #4c1d95;
 
   /* Tons de status/coluna do Kanban (forma moderna). Verde fica de fora:
      não é status. O fundo pastel é calculado por color-mix sobre a superfície,
@@ -37,33 +54,45 @@
   --tone-amber: #f59e0b;
   --tone-rose: #ec4899;
   --tone-cyan: #06b6d4;
-  --tone-neutral: #9a9a95; /* coluna "concluído" — cinza, nunca verde */
+  --tone-neutral: #98a2b3; /* coluna "concluído" — cinza, nunca verde */
 
   /* Tags vibrantes: fundo saturado + texto branco. Cada fundo passa 4.5:1
      com o branco (texto pequeno). Cores fortes o bastante para o tema escuro
      também. Verde fica de fora (não é "concluído"). */
   --tag-fg: #ffffff;
   --tag-violeta: #6d28d9; /* 7.4:1 c/ branco */
-  --tag-azul: #1d4ed8; /* 6.5:1 */
+  --tag-azul: #1d4ed8; /* 6.9:1 */
   --tag-coral: #be123c; /* 6.0:1 */
   --tag-rosa: #be185d; /* 6.0:1 */
   --tag-grafite: #374151; /* 9.0:1 */
 
-  /* Neutros crus (derivados de 7.4) */
+  /* Neutros crus — grafite frio (substituem os neutros quentes anteriores) */
   --neutral-0: #ffffff;
-  --neutral-50: #fbfbfa;
-  --neutral-100: #f4f4f2;
-  --ink-900: #1c1c1a;
-  --ink-600: #5f5e5a;
-  --ink-400: #8e8d88;
+  --neutral-50: #f5f7fb; /* fundo da aplicação */
+  --neutral-100: #eef1f6;
+  --neutral-200: #e4e8f0;
+  --ink-900: #1d1d1f; /* texto primário */
+  --ink-600: #667085; /* texto secundário — 4.9:1 em #F5F7FB */
+  --ink-400: #98a2b3; /* texto terciário — só ≥18px ou não essencial */
 
-  /* Espaçamento nomeado (7.6) */
+  /* Grafite cru para bordas e sombras (RGB para compor alpha) */
+  --graphite-rgb: 16, 24, 40;
+
+  /* Funcionais — usados por status e dados, nunca como decoração */
+  --positive: #10b981; /* verde: só dado financeiro positivo */
+  --positive-strong: #047857; /* texto verde sobre claro — 4.8:1 */
+  --negative: #ef4444;
+  --warning: #f59e0b;
+
+  /* Espaçamento nomeado (7.6) — escala de 4px */
   --space-row: 48px; /* altura da linha de tarefa */
   --space-card-pad: 20px;
   --space-card-gap: 16px;
+  --space-block-gap: 20px; /* respiro entre blocos do dashboard */
   --space-section-gap: 32px;
   --space-panel-pad: 24px;
   --max-width-read: 720px;
+  --max-width-app: 1440px;
 
   /* Tipografia — tamanho / entrelinha / peso (7.5) */
   --text-caption-size: 12px;
@@ -72,26 +101,48 @@
   --text-small-line: 1.5;
   --text-body-size: 16px;
   --text-body-line: 1.6;
-  --text-h3-size: 20px;
-  --text-h3-line: 1.3;
-  --text-h2-size: 24px;
-  --text-h2-line: 1.25;
-  --text-h1-size: 32px;
+  --text-h3-size: 18px;
+  --text-h3-line: 1.35;
+  --text-h2-size: 22px;
+  --text-h2-line: 1.3;
+  --text-h1-size: 27px;
   --text-h1-line: 1.2;
+  --text-metric-size: 32px; /* valor de indicador */
+  --text-metric-line: 1.1;
   --font-weight-regular: 400;
   --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 680;
 
-  /* Movimento (7.8) */
-  --dur-fast: 120ms;
-  --dur-base: 180ms;
-  --dur-slow: 240ms;
-  --ease-out: cubic-bezier(0.2, 0, 0, 1);
+  /* Movimento (7.8) — janela de 180–260ms com curva suave */
+  --dur-fast: 140ms;
+  --dur-base: 200ms;
+  --dur-slow: 260ms;
+  --ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ease-spring: cubic-bezier(0.34, 1.2, 0.64, 1);
+
+  /* Vidro — desfoque controlado, uma camada só por região */
+  --glass-blur: 20px;
+  --glass-saturate: 180%;
+
+  /* Gradiente-assinatura: azul → lilás. Aparece em pontos estratégicos
+     (marca, série de gráfico, realce do item ativo), nunca como fundo global. */
+  --gradient-brand: linear-gradient(
+    135deg,
+    var(--brand-600),
+    var(--accent-600)
+  );
+  --gradient-brand-soft: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--brand-600) 12%, transparent),
+    color-mix(in srgb, var(--accent-600) 12%, transparent)
+  );
 
   /* Componente — botão danger. Vermelho + branco funciona nos dois modos,
      então fica na camada global (independente de tema). Branco atinge >=4.5:1. */
-  --button-danger-bg: #c0392b;
-  --button-danger-bg-hover: #a93226;
-  --button-danger-bg-active: #922b21;
+  --button-danger-bg: #dc2626;
+  --button-danger-bg-hover: #b91c1c;
+  --button-danger-bg-active: #991b1b;
   --button-danger-fg: #ffffff;
 }
 
@@ -106,62 +157,94 @@
   --surface-page: var(--neutral-50);
   --surface-card: var(--neutral-0);
   --surface-sunken: var(--neutral-100);
+  --surface-subtle: rgba(255, 255, 255, 0.6);
+
+  /* Vidro — sidebar, busca, menus, tooltip, modais */
+  --surface-glass: rgba(255, 255, 255, 0.72);
+  --surface-glass-strong: rgba(255, 255, 255, 0.86);
+  --glass-border: rgba(255, 255, 255, 0.7);
+  --glass-highlight: inset 0 1px 0 0 rgba(255, 255, 255, 0.65);
 
   /* Texto (7.4) */
   --text-primary: var(--ink-900);
   --text-secondary: var(--ink-600);
-  --text-muted: var(--ink-400); /* 3.4:1 — só ≥18px ou não essencial */
+  --text-muted: var(--ink-400); /* 3.1:1 — só ≥18px ou não essencial */
+  --text-on-brand: #ffffff;
 
-  /* Bordas (7.4) */
-  --border: rgba(0, 0, 0, 0.08);
-  --border-strong: rgba(0, 0, 0, 0.14);
+  /* Bordas (7.4) — grafite frio com alpha baixo */
+  --border: rgba(var(--graphite-rgb), 0.08);
+  --border-strong: rgba(var(--graphite-rgb), 0.12);
 
   /* Link e texto de marca — nunca brand-500 (7.1) */
   --text-link: var(--brand-700);
 
-  /* Superfícies de destaque (selecionado, hoje, coluna ativa) */
+  /* Superfícies de destaque (selecionado, hoje, coluna ativa, hover de linha) */
   --surface-selected: var(--brand-50);
   --surface-today: var(--brand-100);
+  --surface-hover: rgba(37, 99, 235, 0.05); /* azul extremamente suave */
 
   /* Preenchimentos (barras de progresso, chips) */
   --fill-brand: var(--brand-200);
+  --fill-track: rgba(var(--graphite-rgb), 0.07);
 
   /* Anel de foco (11.2) */
   --focus-ring: var(--brand-600);
 
   /* Status semântico (7.2) */
-  --status-overdue-fg: #d64545;
-  --status-overdue-bg: #fcebeb;
-  --status-due-soon-fg: #ba7517;
-  --status-due-soon-bg: #faeeda;
-  --status-done-fg: #888780; /* concluído: cinza, não verde (ADR-007) */
+  --status-overdue-fg: #dc2626;
+  --status-overdue-bg: #fef2f2;
+  --status-due-soon-fg: #b45309;
+  --status-due-soon-bg: #fffbeb;
+  --status-done-fg: #98a2b3; /* concluído: cinza, não verde (ADR-007) */
+  --status-positive-fg: var(--positive-strong);
+  --status-positive-bg: #ecfdf5;
+  --status-info-fg: var(--brand-700);
+  --status-info-bg: var(--brand-50);
 
   /* Setores — fill / text / dot (7.3). Nenhum verde. */
-  --sector-violeta-fill: #eeedfe;
-  --sector-violeta-text: #3c3489;
-  --sector-violeta-dot: #7f77dd;
-  --sector-azul-fill: #e6f1fb;
-  --sector-azul-text: #0c447c;
-  --sector-azul-dot: #378add;
-  --sector-coral-fill: #faece7;
-  --sector-coral-text: #712b13;
-  --sector-coral-dot: #d85a30;
-  --sector-rosa-fill: #fbeaf0;
-  --sector-rosa-text: #72243e;
-  --sector-rosa-dot: #d4537e;
-  --sector-grafite-fill: #f1efe8;
-  --sector-grafite-text: #2c2c2a;
-  --sector-grafite-dot: #888780;
+  --sector-violeta-fill: #f5f3ff;
+  --sector-violeta-text: #5b21b6;
+  --sector-violeta-dot: #8b5cf6;
+  --sector-azul-fill: #eff5ff;
+  --sector-azul-text: #1e40af;
+  --sector-azul-dot: #3b82f6;
+  --sector-coral-fill: #fff1ed;
+  --sector-coral-text: #9a3412;
+  --sector-coral-dot: #f97316;
+  --sector-rosa-fill: #fdf2f8;
+  --sector-rosa-text: #9d174d;
+  --sector-rosa-dot: #ec4899;
+  --sector-grafite-fill: #f2f4f7;
+  --sector-grafite-text: #344054;
+  --sector-grafite-dot: #98a2b3;
 
-  /* Elevação (7.7) — só em conteúdo flutuante */
-  --shadow-panel: 0 1px 3px rgba(0, 0, 0, 0.06), 0 8px 24px rgba(0, 0, 0, 0.08);
-  --shadow-peek: 0 2px 8px rgba(0, 0, 0, 0.1);
+  /* Elevação (7.7) — ambiente: alpha baixo, difusão grande, pouco deslocamento */
+  --shadow-card:
+    0 1px 2px rgba(var(--graphite-rgb), 0.04),
+    0 8px 24px -12px rgba(var(--graphite-rgb), 0.1);
+  --shadow-card-hover:
+    0 2px 4px rgba(var(--graphite-rgb), 0.05),
+    0 14px 32px -12px rgba(var(--graphite-rgb), 0.14);
+  --shadow-glass: 0 8px 32px -8px rgba(var(--graphite-rgb), 0.12);
+  --shadow-panel:
+    0 1px 2px rgba(var(--graphite-rgb), 0.05),
+    0 16px 48px -12px rgba(var(--graphite-rgb), 0.18);
+  --shadow-peek: 0 2px 8px -2px rgba(var(--graphite-rgb), 0.1);
 
-  /* Componente — botão primário (correção 11.1: brand-600, não brand-500) */
-  --button-primary-bg: var(--brand-600);
-  --button-primary-bg-hover: var(--brand-700);
-  --button-primary-bg-active: var(--brand-800);
+  /* Gráficos — séries e grade */
+  --chart-1: var(--brand-600); /* série primária (entregues, recebido) */
+  --chart-2: var(--accent-600); /* série secundária (planejadas) */
+  --chart-3: var(--positive); /* financeiro positivo */
+  --chart-4: var(--negative); /* despesa/atraso */
+  --chart-grid: rgba(var(--graphite-rgb), 0.06);
+  --chart-crosshair: rgba(var(--graphite-rgb), 0.18);
+
+  /* Componente — botão primário (grafite profundo, como a referência) */
+  --button-primary-bg: #1d2939;
+  --button-primary-bg-hover: #101828;
+  --button-primary-bg-active: #0c111d;
   --button-primary-fg: #ffffff;
+  --button-primary-sheen: rgba(255, 255, 255, 0.16);
 }
 
 /* ---------------------------------------------------------------------
@@ -172,65 +255,94 @@
   color-scheme: dark;
 
   /* Superfícies — card é mais claro que a página (elevação por luz) */
-  --surface-page: #131316;
-  --surface-card: #1c1c20;
-  --surface-sunken: #0e0e10;
+  --surface-page: #0f1117;
+  --surface-card: #171a21;
+  --surface-sunken: #0b0d12;
+  --surface-subtle: rgba(255, 255, 255, 0.03);
+
+  /* Vidro */
+  --surface-glass: rgba(23, 26, 33, 0.72);
+  --surface-glass-strong: rgba(23, 26, 33, 0.88);
+  --glass-border: rgba(255, 255, 255, 0.09);
+  --glass-highlight: inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
 
   /* Texto */
-  --text-primary: #ececea;
-  --text-secondary: #b4b3ae;
-  --text-muted: #8a8985; /* não essencial / ≥18px */
+  --text-primary: #f0f2f6;
+  --text-secondary: #a3aec1;
+  --text-muted: #7d8799; /* não essencial / ≥18px */
+  --text-on-brand: #ffffff;
 
   /* Bordas */
-  --border: rgba(255, 255, 255, 0.1);
-  --border-strong: rgba(255, 255, 255, 0.16);
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.14);
 
   /* Link — marca clareada para contrastar no escuro */
   --text-link: var(--brand-300);
 
   /* Superfícies de destaque — tinta de marca translúcida */
-  --surface-selected: rgba(18, 160, 95, 0.16);
-  --surface-today: rgba(18, 160, 95, 0.24);
+  --surface-selected: rgba(37, 99, 235, 0.18);
+  --surface-today: rgba(37, 99, 235, 0.26);
+  --surface-hover: rgba(96, 150, 250, 0.08);
 
   /* Preenchimentos */
-  --fill-brand: rgba(18, 160, 95, 0.32);
+  --fill-brand: rgba(37, 99, 235, 0.38);
+  --fill-track: rgba(255, 255, 255, 0.08);
 
   /* Anel de foco — brand-400 é visível sobre superfícies escuras */
   --focus-ring: var(--brand-400);
 
   /* Status semântico — matizes clareados + fundo translúcido */
-  --status-overdue-fg: #f08a8a;
-  --status-overdue-bg: rgba(214, 69, 69, 0.16);
-  --status-due-soon-fg: #e0a94a;
-  --status-due-soon-bg: rgba(186, 117, 23, 0.16);
-  --status-done-fg: #8f8e88;
+  --status-overdue-fg: #fca5a5;
+  --status-overdue-bg: rgba(239, 68, 68, 0.16);
+  --status-due-soon-fg: #fcd34d;
+  --status-due-soon-bg: rgba(245, 158, 11, 0.16);
+  --status-done-fg: #7d8799;
+  --status-positive-fg: #6ee7b7;
+  --status-positive-bg: rgba(16, 185, 129, 0.16);
+  --status-info-fg: var(--brand-300);
+  --status-info-bg: rgba(37, 99, 235, 0.16);
 
   /* Setores — fill vira tinta escura translúcida; text clareado; dot vívido */
-  --sector-violeta-fill: rgba(127, 119, 221, 0.18);
-  --sector-violeta-text: #b9b2f0;
-  --sector-violeta-dot: #8b83e4;
-  --sector-azul-fill: rgba(55, 138, 221, 0.18);
-  --sector-azul-text: #8fc0f0;
-  --sector-azul-dot: #4d97e6;
-  --sector-coral-fill: rgba(216, 90, 48, 0.18);
-  --sector-coral-text: #f0a488;
-  --sector-coral-dot: #e0714b;
-  --sector-rosa-fill: rgba(212, 83, 126, 0.18);
-  --sector-rosa-text: #f09cbb;
-  --sector-rosa-dot: #de6a92;
-  --sector-grafite-fill: rgba(150, 149, 142, 0.2);
-  --sector-grafite-text: #c6c5bf;
-  --sector-grafite-dot: #a8a7a2;
+  --sector-violeta-fill: rgba(139, 92, 246, 0.18);
+  --sector-violeta-text: #c4b5fd;
+  --sector-violeta-dot: #a78bfa;
+  --sector-azul-fill: rgba(59, 130, 246, 0.18);
+  --sector-azul-text: #93bbfd;
+  --sector-azul-dot: #6096fa;
+  --sector-coral-fill: rgba(249, 115, 22, 0.18);
+  --sector-coral-text: #fdba74;
+  --sector-coral-dot: #fb923c;
+  --sector-rosa-fill: rgba(236, 72, 153, 0.18);
+  --sector-rosa-text: #f9a8d4;
+  --sector-rosa-dot: #f472b6;
+  --sector-grafite-fill: rgba(152, 162, 179, 0.18);
+  --sector-grafite-text: #cbd5e1;
+  --sector-grafite-dot: #98a2b3;
 
   /* Elevação — sombras mais densas no escuro */
-  --shadow-panel: 0 1px 3px rgba(0, 0, 0, 0.5), 0 8px 24px rgba(0, 0, 0, 0.6);
-  --shadow-peek: 0 2px 8px rgba(0, 0, 0, 0.6);
+  --shadow-card:
+    0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px -12px rgba(0, 0, 0, 0.6);
+  --shadow-card-hover:
+    0 2px 4px rgba(0, 0, 0, 0.45), 0 14px 32px -12px rgba(0, 0, 0, 0.7);
+  --shadow-glass: 0 8px 32px -8px rgba(0, 0, 0, 0.55);
+  --shadow-panel:
+    0 1px 2px rgba(0, 0, 0, 0.5), 0 16px 48px -12px rgba(0, 0, 0, 0.7);
+  --shadow-peek: 0 2px 8px -2px rgba(0, 0, 0, 0.55);
 
-  /* Botão primário — brand-600 mantém 4.6:1 com branco em qualquer fundo */
-  --button-primary-bg: var(--brand-600);
-  --button-primary-bg-hover: var(--brand-700);
-  --button-primary-bg-active: var(--brand-800);
-  --button-primary-fg: #ffffff;
+  /* Gráficos */
+  --chart-1: var(--brand-400);
+  --chart-2: var(--accent-400);
+  --chart-3: #34d399;
+  --chart-4: #f87171;
+  --chart-grid: rgba(255, 255, 255, 0.06);
+  --chart-crosshair: rgba(255, 255, 255, 0.2);
+
+  /* Botão primário — no escuro inverte para superfície clara/vidro forte */
+  --button-primary-bg: #e8eaf0;
+  --button-primary-bg-hover: #ffffff;
+  --button-primary-bg-active: #d4d8e2;
+  --button-primary-fg: #101828;
+  --button-primary-sheen: rgba(255, 255, 255, 0.5);
 }
 
 /* Fallback: sistema em escuro e sem tema explícito escolhido pelo usuário.
@@ -238,44 +350,69 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
-    --surface-page: #131316;
-    --surface-card: #1c1c20;
-    --surface-sunken: #0e0e10;
-    --text-primary: #ececea;
-    --text-secondary: #b4b3ae;
-    --text-muted: #8a8985;
-    --border: rgba(255, 255, 255, 0.1);
-    --border-strong: rgba(255, 255, 255, 0.16);
+    --surface-page: #0f1117;
+    --surface-card: #171a21;
+    --surface-sunken: #0b0d12;
+    --surface-subtle: rgba(255, 255, 255, 0.03);
+    --surface-glass: rgba(23, 26, 33, 0.72);
+    --surface-glass-strong: rgba(23, 26, 33, 0.88);
+    --glass-border: rgba(255, 255, 255, 0.09);
+    --glass-highlight: inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+    --text-primary: #f0f2f6;
+    --text-secondary: #a3aec1;
+    --text-muted: #7d8799;
+    --text-on-brand: #ffffff;
+    --border: rgba(255, 255, 255, 0.08);
+    --border-strong: rgba(255, 255, 255, 0.14);
     --text-link: var(--brand-300);
-    --surface-selected: rgba(18, 160, 95, 0.16);
-    --surface-today: rgba(18, 160, 95, 0.24);
-    --fill-brand: rgba(18, 160, 95, 0.32);
+    --surface-selected: rgba(37, 99, 235, 0.18);
+    --surface-today: rgba(37, 99, 235, 0.26);
+    --surface-hover: rgba(96, 150, 250, 0.08);
+    --fill-brand: rgba(37, 99, 235, 0.38);
+    --fill-track: rgba(255, 255, 255, 0.08);
     --focus-ring: var(--brand-400);
-    --status-overdue-fg: #f08a8a;
-    --status-overdue-bg: rgba(214, 69, 69, 0.16);
-    --status-due-soon-fg: #e0a94a;
-    --status-due-soon-bg: rgba(186, 117, 23, 0.16);
-    --status-done-fg: #8f8e88;
-    --sector-violeta-fill: rgba(127, 119, 221, 0.18);
-    --sector-violeta-text: #b9b2f0;
-    --sector-violeta-dot: #8b83e4;
-    --sector-azul-fill: rgba(55, 138, 221, 0.18);
-    --sector-azul-text: #8fc0f0;
-    --sector-azul-dot: #4d97e6;
-    --sector-coral-fill: rgba(216, 90, 48, 0.18);
-    --sector-coral-text: #f0a488;
-    --sector-coral-dot: #e0714b;
-    --sector-rosa-fill: rgba(212, 83, 126, 0.18);
-    --sector-rosa-text: #f09cbb;
-    --sector-rosa-dot: #de6a92;
-    --sector-grafite-fill: rgba(150, 149, 142, 0.2);
-    --sector-grafite-text: #c6c5bf;
-    --sector-grafite-dot: #a8a7a2;
-    --shadow-panel: 0 1px 3px rgba(0, 0, 0, 0.5), 0 8px 24px rgba(0, 0, 0, 0.6);
-    --shadow-peek: 0 2px 8px rgba(0, 0, 0, 0.6);
-    --button-primary-bg: var(--brand-600);
-    --button-primary-bg-hover: var(--brand-700);
-    --button-primary-bg-active: var(--brand-800);
-    --button-primary-fg: #ffffff;
+    --status-overdue-fg: #fca5a5;
+    --status-overdue-bg: rgba(239, 68, 68, 0.16);
+    --status-due-soon-fg: #fcd34d;
+    --status-due-soon-bg: rgba(245, 158, 11, 0.16);
+    --status-done-fg: #7d8799;
+    --status-positive-fg: #6ee7b7;
+    --status-positive-bg: rgba(16, 185, 129, 0.16);
+    --status-info-fg: var(--brand-300);
+    --status-info-bg: rgba(37, 99, 235, 0.16);
+    --sector-violeta-fill: rgba(139, 92, 246, 0.18);
+    --sector-violeta-text: #c4b5fd;
+    --sector-violeta-dot: #a78bfa;
+    --sector-azul-fill: rgba(59, 130, 246, 0.18);
+    --sector-azul-text: #93bbfd;
+    --sector-azul-dot: #6096fa;
+    --sector-coral-fill: rgba(249, 115, 22, 0.18);
+    --sector-coral-text: #fdba74;
+    --sector-coral-dot: #fb923c;
+    --sector-rosa-fill: rgba(236, 72, 153, 0.18);
+    --sector-rosa-text: #f9a8d4;
+    --sector-rosa-dot: #f472b6;
+    --sector-grafite-fill: rgba(152, 162, 179, 0.18);
+    --sector-grafite-text: #cbd5e1;
+    --sector-grafite-dot: #98a2b3;
+    --shadow-card:
+      0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px -12px rgba(0, 0, 0, 0.6);
+    --shadow-card-hover:
+      0 2px 4px rgba(0, 0, 0, 0.45), 0 14px 32px -12px rgba(0, 0, 0, 0.7);
+    --shadow-glass: 0 8px 32px -8px rgba(0, 0, 0, 0.55);
+    --shadow-panel:
+      0 1px 2px rgba(0, 0, 0, 0.5), 0 16px 48px -12px rgba(0, 0, 0, 0.7);
+    --shadow-peek: 0 2px 8px -2px rgba(0, 0, 0, 0.55);
+    --chart-1: var(--brand-400);
+    --chart-2: var(--accent-400);
+    --chart-3: #34d399;
+    --chart-4: #f87171;
+    --chart-grid: rgba(255, 255, 255, 0.06);
+    --chart-crosshair: rgba(255, 255, 255, 0.2);
+    --button-primary-bg: #e8eaf0;
+    --button-primary-bg-hover: #ffffff;
+    --button-primary-bg-active: #d4d8e2;
+    --button-primary-fg: #101828;
+    --button-primary-sheen: rgba(255, 255, 255, 0.5);
   }
 }

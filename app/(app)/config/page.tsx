@@ -20,7 +20,7 @@ export default async function ConfigPage({
   return (
     <div className="mx-auto flex max-w-[var(--max-width-read)] flex-col gap-6 px-6 py-8">
       <div className="flex flex-col gap-1">
-        <h1 className="text-[length:var(--text-h2-size)] font-semibold text-fg">
+        <h1 className="text-fg text-[length:var(--text-h2-size)] font-semibold">
           Configurações
         </h1>
         <p className="text-fg-secondary">Integrações e preferências</p>
@@ -29,14 +29,14 @@ export default async function ConfigPage({
       {message ? (
         <p
           role="status"
-          className="rounded-md border border-line bg-card px-3 py-2 text-[length:var(--text-small-size)] text-fg-secondary"
+          className="border-line bg-card text-fg-secondary rounded-md border px-3 py-2 text-[length:var(--text-small-size)]"
         >
           {message}
         </p>
       ) : null}
 
       <section className="flex flex-col gap-2">
-        <h2 className="text-[length:var(--text-small-size)] font-medium text-fg-secondary">
+        <h2 className="text-fg-secondary text-[length:var(--text-small-size)] font-medium">
           Integrações
         </h2>
         <GcalConnectCard />

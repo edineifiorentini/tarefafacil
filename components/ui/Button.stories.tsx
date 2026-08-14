@@ -78,7 +78,9 @@ export const Accessibility: Story = {
   render: () => (
     <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
       <Button variant="primary">Foco visível (Tab)</Button>
-      <p style={{ fontSize: 12, color: "var(--text-secondary)", maxWidth: 320 }}>
+      <p
+        style={{ fontSize: 12, color: "var(--text-secondary)", maxWidth: 320 }}
+      >
         Foco por teclado mostra o anel de 2px (token de foco). O botão primário
         usa brand-600 com texto branco (≥ 4.5:1). Estado de carregamento usa
         aria-busy; desabilitado bloqueia interação.

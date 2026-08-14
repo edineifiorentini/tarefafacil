@@ -6,18 +6,16 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { Database } from "@/types/database";
 
-import {
-  deleteEvent,
-  insertEvent,
-  patchEvent,
-  taskToEvent,
-} from "./events";
+import { deleteEvent, insertEvent, patchEvent, taskToEvent } from "./events";
 import { GcalAuthError } from "./oauth";
 import { getConnection, getFreshAccessToken } from "./tokens";
 
 export type OutboundResult =
   | { ok: true; eventId?: string; skipped?: boolean }
-  | { ok: false; error: "not_connected" | "reauth" | "sync_failed" | "not_found" };
+  | {
+      ok: false;
+      error: "not_connected" | "reauth" | "sync_failed" | "not_found";
+    };
 
 export async function reconcileOutbound(params: {
   supabase: SupabaseClient<Database>;
@@ -66,7 +64,12 @@ export async function reconcileOutbound(params: {
       const createMeet = task.gcal_add_meet && !task.gcal_meet_url;
       const body = taskToEvent(task, sector, { appUrl, timeZone, createMeet });
       const result = task.gcal_event_id
-        ? await patchEvent(accessToken, task.gcal_event_id, body, task.gcal_etag)
+        ? await patchEvent(
+            accessToken,
+            task.gcal_event_id,
+            body,
+            task.gcal_etag
+          )
         : await insertEvent(accessToken, body);
 
       await supabase

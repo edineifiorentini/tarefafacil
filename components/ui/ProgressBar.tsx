@@ -2,10 +2,20 @@ export interface ProgressBarProps {
   /** 0 a 100. */
   value: number;
   label?: string;
+  /** Token de cor do preenchimento. Sem valor, usa a tinta da marca. */
+  color?: string;
+  /** Espessura fina (4px) para listas densas; padrão 8px. */
+  thin?: boolean;
   className?: string;
 }
 
-export function ProgressBar({ value, label, className }: ProgressBarProps) {
+export function ProgressBar({
+  value,
+  label,
+  color,
+  thin = false,
+  className,
+}: ProgressBarProps) {
   const clamped = Math.max(0, Math.min(100, value));
   return (
     <div
@@ -14,11 +24,14 @@ export function ProgressBar({ value, label, className }: ProgressBarProps) {
       aria-valuemin={0}
       aria-valuemax={100}
       aria-label={label}
-      className={`h-2 w-full overflow-hidden rounded-full bg-sunken ${className ?? ""}`}
+      className={`${thin ? "h-1.5" : "h-2"} bg-track w-full overflow-hidden rounded-full ${className ?? ""}`}
     >
       <div
-        className="h-full rounded-full bg-[var(--fill-brand)]"
-        style={{ width: `${clamped}%` }}
+        className="h-full rounded-full transition-[width] [transition-duration:var(--dur-slow)] [transition-timing-function:var(--ease-out)]"
+        style={{
+          width: `${clamped}%`,
+          background: color ?? "var(--fill-brand)",
+        }}
       />
     </div>
   );

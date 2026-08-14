@@ -1,4 +1,8 @@
-import { IconAlertTriangle, IconArrowDown, IconArrowUp } from "@tabler/icons-react";
+import {
+  IconAlertTriangle,
+  IconArrowDown,
+  IconArrowUp,
+} from "@tabler/icons-react";
 
 import type { IconComponent } from "@/components/ui/types";
 import type { TaskPriority } from "@/types/database";

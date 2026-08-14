@@ -37,11 +37,11 @@ export function GenerateInstallmentsDialog({
     <AlertDialog.Root open onOpenChange={onOpenChange}>
       <AlertDialog.Portal>
         <AlertDialog.Overlay className="fixed inset-0 z-50 bg-black/40" />
-        <AlertDialog.Content className="fixed left-1/2 top-1/2 z-50 w-[min(28rem,92vw)] -translate-x-1/2 -translate-y-1/2 rounded-md border border-line bg-card p-5 text-left shadow-[var(--shadow-panel)]">
-          <AlertDialog.Title className="text-[length:var(--text-h3-size)] font-semibold text-fg">
+        <AlertDialog.Content className="tf-glass-strong fixed top-1/2 left-1/2 z-50 w-[min(28rem,92vw)] -translate-x-1/2 -translate-y-1/2 rounded-md p-5 text-left">
+          <AlertDialog.Title className="text-fg text-[length:var(--text-h3-size)] font-semibold">
             Gerar parcelas no Financeiro
           </AlertDialog.Title>
-          <AlertDialog.Description className="mt-2 text-fg-secondary">
+          <AlertDialog.Description className="text-fg-secondary mt-2">
             {planned.length === 0
               ? "Este contrato precisa de valor e início de vigência preenchidos para gerar parcelas."
               : missing.length === 0
@@ -64,7 +64,9 @@ export function GenerateInstallmentsDialog({
                           message: `${count} parcela${count === 1 ? "" : "s"} criada${count === 1 ? "" : "s"} no Financeiro`,
                         }),
                       onError: () =>
-                        toast.show({ message: "Não foi possível gerar as parcelas" }),
+                        toast.show({
+                          message: "Não foi possível gerar as parcelas",
+                        }),
                     });
                   }}
                 >

@@ -8,7 +8,11 @@ export type PlannedInstallment = {
   amountCents: number;
 };
 
-const STEP_MONTHS: Record<string, number> = { mensal: 1, trimestral: 3, anual: 12 };
+const STEP_MONTHS: Record<string, number> = {
+  mensal: 1,
+  trimestral: 3,
+  anual: 12,
+};
 const DEFAULT_MAX = 12; // vigência sem fim definido: gera 1 ano por vez
 
 // Deriva as parcelas previstas de um contrato (spec §13.1) a partir de
@@ -16,15 +20,28 @@ const DEFAULT_MAX = 12; // vigência sem fim definido: gera 1 ano por vez
 // idempotência (isso é responsabilidade de quem grava, comparando com o
 // que já existe por source_id+installment_number).
 export function planInstallments(
-  contract: Pick<Contract, "amount_cents" | "starts_on" | "ends_on" | "billing_period">,
+  contract: Pick<
+    Contract,
+    "amount_cents" | "starts_on" | "ends_on" | "billing_period"
+  >,
   maxOccurrences: number = DEFAULT_MAX
 ): PlannedInstallment[] {
-  if (!contract.amount_cents || contract.amount_cents <= 0 || !contract.starts_on) {
+  if (
+    !contract.amount_cents ||
+    contract.amount_cents <= 0 ||
+    !contract.starts_on
+  ) {
     return [];
   }
 
   if (!contract.billing_period || contract.billing_period === "unico") {
-    return [{ number: 1, dueDate: contract.starts_on, amountCents: contract.amount_cents }];
+    return [
+      {
+        number: 1,
+        dueDate: contract.starts_on,
+        amountCents: contract.amount_cents,
+      },
+    ];
   }
 
   const step = STEP_MONTHS[contract.billing_period] ?? 1;

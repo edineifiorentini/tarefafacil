@@ -6,8 +6,10 @@ import type { IconComponent } from "./types";
 type Variant = "primary" | "secondary" | "ghost" | "danger";
 type Size = "sm" | "md";
 
-export interface ButtonProps
-  extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, "type"> {
+export interface ButtonProps extends Omit<
+  ButtonHTMLAttributes<HTMLButtonElement>,
+  "type"
+> {
   variant?: Variant;
   size?: Size;
   leadingIcon?: IconComponent;

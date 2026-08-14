@@ -18,7 +18,7 @@ export default async function SectorPage({
 
   return (
     <div className="flex h-full flex-col gap-5 p-6">
-      <h2 className="text-[length:var(--text-h1-size)] font-semibold leading-[var(--text-h1-line)] text-fg">
+      <h2 className="text-fg text-[length:var(--text-h1-size)] leading-[var(--text-h1-line)] font-semibold">
         {sector?.name ?? "Setor"}
       </h2>
       <SectorProjects sectorId={id} />

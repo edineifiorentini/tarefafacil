@@ -23,7 +23,7 @@ export function TaskMeetToggle({ taskId }: { taskId: string }) {
 
   return (
     <div className="flex flex-col gap-1">
-      <label className="flex items-center gap-2 text-[length:var(--text-small-size)] text-fg">
+      <label className="text-fg flex items-center gap-2 text-[length:var(--text-small-size)]">
         <Checkbox
           checked={on}
           onCheckedChange={(c) => toggle.mutate({ id: taskId, on: c === true })}
@@ -39,7 +39,7 @@ export function TaskMeetToggle({ taskId }: { taskId: string }) {
             href={task.gcal_meet_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-[length:var(--text-caption-size)] text-fg-link"
+            className="text-fg-link inline-flex items-center gap-1 text-[length:var(--text-caption-size)]"
           >
             <IconVideo size={14} stroke={1.5} />
             Entrar no Meet
@@ -51,14 +51,14 @@ export function TaskMeetToggle({ taskId }: { taskId: string }) {
                 .writeText(task.gcal_meet_url as string)
                 .then(() => toast.show({ message: "Link do Meet copiado" }))
             }
-            className="inline-flex items-center gap-1 text-[length:var(--text-caption-size)] text-fg-secondary hover:text-fg"
+            className="text-fg-secondary hover:text-fg inline-flex items-center gap-1 text-[length:var(--text-caption-size)]"
           >
             <IconCopy size={14} stroke={1.5} />
             Copiar link
           </button>
         </div>
       ) : !connected ? (
-        <span className="text-[length:var(--text-caption-size)] text-fg-muted">
+        <span className="text-fg-muted text-[length:var(--text-caption-size)]">
           Conecte o Google Agenda para criar reuniões
         </span>
       ) : null}

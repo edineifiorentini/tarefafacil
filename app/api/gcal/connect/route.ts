@@ -8,7 +8,9 @@ import { consentUrl, gcalConfigured } from "@/lib/gcal/oauth";
 // num cookie httpOnly para validar no callback (CSRF).
 export async function GET(request: Request) {
   if (!gcalConfigured()) {
-    return NextResponse.redirect(new URL("/config?gcal=indisponivel", request.url));
+    return NextResponse.redirect(
+      new URL("/config?gcal=indisponivel", request.url)
+    );
   }
 
   const ctx = await requireUserAndWorkspace();

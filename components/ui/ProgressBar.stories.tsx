@@ -23,7 +23,9 @@ export const Default: Story = {};
 
 export const AllVariants: Story = {
   render: () => (
-    <div style={{ display: "flex", flexDirection: "column", gap: 12, width: 280 }}>
+    <div
+      style={{ display: "flex", flexDirection: "column", gap: 12, width: 280 }}
+    >
       <ProgressBar value={0} label="0%" />
       <ProgressBar value={35} label="35%" />
       <ProgressBar value={100} label="100%" />
@@ -33,7 +35,9 @@ export const AllVariants: Story = {
 
 export const AllStates: Story = {
   render: () => (
-    <div style={{ display: "flex", flexDirection: "column", gap: 12, width: 280 }}>
+    <div
+      style={{ display: "flex", flexDirection: "column", gap: 12, width: 280 }}
+    >
       <ProgressBar value={-20} label="abaixo do mínimo (clamp 0)" />
       <ProgressBar value={140} label="acima do máximo (clamp 100)" />
     </div>
@@ -50,7 +54,9 @@ export const Responsive: Story = {
 
 export const Accessibility: Story = {
   render: () => (
-    <div style={{ display: "flex", flexDirection: "column", gap: 8, width: 280 }}>
+    <div
+      style={{ display: "flex", flexDirection: "column", gap: 8, width: 280 }}
+    >
       <ProgressBar value={60} label="6 de 10 tarefas concluídas" />
       <p style={{ fontSize: 12, color: "var(--text-secondary)" }}>
         role=progressbar com aria-valuenow/min/max e aria-label descritivo.

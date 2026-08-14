@@ -61,13 +61,13 @@ export function NotificationBell() {
               ? `${count} pedido${count > 1 ? "s" : ""} de entrada`
               : "Notificações"
           }
-          className="relative inline-flex h-9 w-9 items-center justify-center rounded-sm text-fg-secondary transition-colors [transition-duration:var(--dur-fast)] hover:bg-sunken hover:text-fg"
+          className="text-fg-secondary hover:bg-sunken hover:text-fg relative inline-flex h-9 w-9 items-center justify-center rounded-sm transition-colors [transition-duration:var(--dur-fast)]"
         >
           <IconBell size={20} stroke={1.5} />
           {count > 0 ? (
             <span
               aria-hidden
-              className="tnum absolute -right-0.5 -top-0.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--brand-600)] px-1 text-[length:var(--text-caption-size)] font-medium text-[var(--button-primary-fg)]"
+              className="tnum absolute -top-0.5 -right-0.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--brand-600)] px-1 text-[length:var(--text-caption-size)] font-medium text-[var(--button-primary-fg)]"
             >
               {count}
             </span>
@@ -78,14 +78,14 @@ export function NotificationBell() {
         <Popover.Content
           align="end"
           sideOffset={8}
-          className="z-50 flex w-80 flex-col gap-2 rounded-md border border-line bg-card p-3 shadow-[var(--shadow-panel)] data-[state=open]:[animation:tf-pop-in_var(--dur-fast)_var(--ease-out)]"
+          className="tf-glass-strong z-50 flex w-80 flex-col gap-2 rounded-md p-3 data-[state=open]:[animation:tf-pop-in_var(--dur-fast)_var(--ease-out)]"
         >
-          <p className="px-1 text-[length:var(--text-caption-size)] font-medium uppercase tracking-wide text-fg-muted">
+          <p className="text-fg-muted px-1 text-[length:var(--text-caption-size)] font-medium tracking-wide uppercase">
             Pedidos de entrada
           </p>
 
           {count === 0 ? (
-            <p className="px-1 py-3 text-[length:var(--text-small-size)] text-fg-secondary">
+            <p className="text-fg-secondary px-1 py-3 text-[length:var(--text-small-size)]">
               Nenhum pedido pendente
             </p>
           ) : (
@@ -98,10 +98,10 @@ export function NotificationBell() {
                     className="flex items-center gap-2 rounded-sm px-1 py-1.5"
                   >
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-[length:var(--text-small-size)] font-medium text-fg">
+                      <p className="text-fg truncate text-[length:var(--text-small-size)] font-medium">
                         {name}
                       </p>
-                      <p className="truncate text-[length:var(--text-caption-size)] text-fg-muted">
+                      <p className="text-fg-muted truncate text-[length:var(--text-caption-size)]">
                         {m.email} · {ROLE_LABEL[m.role] ?? m.role}
                       </p>
                     </div>

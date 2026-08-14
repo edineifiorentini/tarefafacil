@@ -16,11 +16,7 @@ export async function POST() {
 
   const conn = await getConnection(ctx.workspaceId);
   if (conn) {
-    await stopWatch(
-      ctx.workspaceId,
-      conn.channel_id,
-      conn.channel_resource_id
-    );
+    await stopWatch(ctx.workspaceId, conn.channel_id, conn.channel_resource_id);
     if (conn.refresh_token) await revokeToken(conn.refresh_token);
   }
   await deleteConnection(ctx.workspaceId);

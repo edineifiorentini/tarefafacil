@@ -24,10 +24,11 @@ export function SearchView() {
     setDueRange,
     clearAll,
   } = useSearchFilters();
-  const { data: results, isFetching, isPending } = useSearch(
-    workspace.id,
-    filters
-  );
+  const {
+    data: results,
+    isFetching,
+    isPending,
+  } = useSearch(workspace.id, filters);
 
   const count = results?.length ?? 0;
 
@@ -47,7 +48,7 @@ export function SearchView() {
           <button
             type="button"
             onClick={clearAll}
-            className="text-[length:var(--text-small-size)] text-fg-link"
+            className="text-fg-link text-[length:var(--text-small-size)]"
           >
             Limpar filtros
           </button>
@@ -70,7 +71,7 @@ export function SearchView() {
         <div className="flex flex-col gap-2">
           <span
             aria-live="polite"
-            className="text-[length:var(--text-caption-size)] text-fg-muted"
+            className="text-fg-muted text-[length:var(--text-caption-size)]"
           >
             {count === 1 ? "1 resultado" : `${count} resultados`}
           </span>

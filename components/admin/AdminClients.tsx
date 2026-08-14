@@ -76,7 +76,9 @@ function ClientRowItem({ client }: { client: ClientRow }) {
   const setSuspended = useMutation({
     mutationFn: (suspended: boolean) => patch({ suspended }),
     onSuccess: (_d, suspended) => {
-      toast.show({ message: suspended ? "Cliente bloqueado" : "Cliente liberado" });
+      toast.show({
+        message: suspended ? "Cliente bloqueado" : "Cliente liberado",
+      });
       invalidate();
     },
     onError: () => toast.show({ message: "Não foi possível atualizar" }),
@@ -112,11 +114,11 @@ function ClientRowItem({ client }: { client: ClientRow }) {
   const accessBad = client.suspended || client.expired;
 
   return (
-    <tr className="border-t border-line">
+    <tr className="border-line border-t">
       <td className="px-3 py-2">
         <div className="flex flex-col">
           <span className="text-fg">{client.name}</span>
-          <span className="text-[length:var(--text-caption-size)] text-fg-muted">
+          <span className="text-fg-muted text-[length:var(--text-caption-size)]">
             {client.owner_email ?? "—"}
           </span>
         </div>
@@ -172,7 +174,7 @@ function ClientRowItem({ client }: { client: ClientRow }) {
               <button
                 type="button"
                 aria-label={`Ações de ${client.name}`}
-                className="inline-flex h-8 w-8 items-center justify-center rounded-sm text-fg-muted hover:bg-sunken hover:text-fg data-[state=open]:bg-sunken"
+                className="text-fg-muted hover:bg-sunken hover:text-fg data-[state=open]:bg-sunken inline-flex h-8 w-8 items-center justify-center rounded-sm"
               >
                 <IconDotsVertical size={16} stroke={1.5} />
               </button>
@@ -181,7 +183,7 @@ function ClientRowItem({ client }: { client: ClientRow }) {
               <DropdownMenu.Content
                 align="end"
                 sideOffset={4}
-                className="z-50 min-w-48 overflow-hidden rounded-md border border-line bg-card p-1 shadow-[var(--shadow-panel)] data-[state=open]:[animation:tf-pop-in_var(--dur-fast)_var(--ease-out)]"
+                className="tf-glass-strong z-50 min-w-48 overflow-hidden rounded-md p-1 data-[state=open]:[animation:tf-pop-in_var(--dur-fast)_var(--ease-out)]"
               >
                 {PERIODS.map((p) => (
                   <DropdownMenu.Item
@@ -198,7 +200,7 @@ function ClientRowItem({ client }: { client: ClientRow }) {
                 >
                   Acesso sem limite
                 </DropdownMenu.Item>
-                <DropdownMenu.Separator className="my-1 h-px bg-line" />
+                <DropdownMenu.Separator className="bg-line my-1 h-px" />
                 {client.suspended ? (
                   <DropdownMenu.Item
                     onSelect={() => setSuspended.mutate(false)}
@@ -214,13 +216,13 @@ function ClientRowItem({ client }: { client: ClientRow }) {
                     Bloquear acesso
                   </DropdownMenu.Item>
                 )}
-                <DropdownMenu.Separator className="my-1 h-px bg-line" />
+                <DropdownMenu.Separator className="bg-line my-1 h-px" />
                 <DropdownMenu.Item
                   onSelect={(e) => {
                     e.preventDefault();
                     setConfirmDelete(true);
                   }}
-                  className="cursor-pointer rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] text-overdue outline-none data-[highlighted]:bg-sunken"
+                  className="text-overdue data-[highlighted]:bg-sunken cursor-pointer rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] outline-none"
                 >
                   Remover cliente
                 </DropdownMenu.Item>
@@ -232,11 +234,11 @@ function ClientRowItem({ client }: { client: ClientRow }) {
         <AlertDialog.Root open={confirmDelete} onOpenChange={setConfirmDelete}>
           <AlertDialog.Portal>
             <AlertDialog.Overlay className="fixed inset-0 z-50 bg-black/40" />
-            <AlertDialog.Content className="fixed left-1/2 top-1/2 z-50 w-[min(28rem,92vw)] -translate-x-1/2 -translate-y-1/2 rounded-md border border-line bg-card p-5 text-left shadow-[var(--shadow-panel)]">
-              <AlertDialog.Title className="text-[length:var(--text-h3-size)] font-semibold text-fg">
+            <AlertDialog.Content className="tf-glass-strong fixed top-1/2 left-1/2 z-50 w-[min(28rem,92vw)] -translate-x-1/2 -translate-y-1/2 rounded-md p-5 text-left">
+              <AlertDialog.Title className="text-fg text-[length:var(--text-h3-size)] font-semibold">
                 Remover {client.name}?
               </AlertDialog.Title>
-              <AlertDialog.Description className="mt-2 text-fg-secondary">
+              <AlertDialog.Description className="text-fg-secondary mt-2">
                 Apaga o workspace e todos os dados dele (setores, tarefas,
                 projetos, anexos), de forma permanente. A conta de login do dono
                 não é apagada. Não dá para desfazer.
@@ -314,9 +316,9 @@ function CreateClient() {
         e.preventDefault();
         if (name.trim() && email.trim()) create.mutate();
       }}
-      className="flex flex-wrap items-end gap-2 rounded-md border border-line bg-card p-3"
+      className="border-line bg-card flex flex-wrap items-end gap-2 rounded-md border p-3"
     >
-      <label className="flex flex-col gap-1 text-[length:var(--text-caption-size)] text-fg-secondary">
+      <label className="text-fg-secondary flex flex-col gap-1 text-[length:var(--text-caption-size)]">
         Nome do cliente
         <div className="w-56">
           <TextInput
@@ -327,7 +329,7 @@ function CreateClient() {
           />
         </div>
       </label>
-      <label className="flex flex-col gap-1 text-[length:var(--text-caption-size)] text-fg-secondary">
+      <label className="text-fg-secondary flex flex-col gap-1 text-[length:var(--text-caption-size)]">
         E-mail do dono
         <div className="w-64">
           <TextInput
@@ -339,10 +341,20 @@ function CreateClient() {
           />
         </div>
       </label>
-      <Button type="submit" variant="primary" size="sm" isLoading={create.isPending}>
+      <Button
+        type="submit"
+        variant="primary"
+        size="sm"
+        isLoading={create.isPending}
+      >
         Criar
       </Button>
-      <Button type="button" variant="ghost" size="sm" onClick={() => setOpen(false)}>
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        onClick={() => setOpen(false)}
+      >
         Cancelar
       </Button>
     </form>
@@ -364,7 +376,7 @@ export function AdminClients() {
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 px-6 py-8">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex flex-col gap-1">
-          <h1 className="text-[length:var(--text-h2-size)] font-semibold text-fg">
+          <h1 className="text-fg text-[length:var(--text-h2-size)] font-semibold">
             Clientes
           </h1>
           <p className="text-fg-secondary">
@@ -379,9 +391,9 @@ export function AdminClients() {
       ) : !data || data.length === 0 ? (
         <p className="text-fg-secondary">Nenhum workspace ainda.</p>
       ) : (
-        <div className="overflow-x-auto rounded-md border border-line">
+        <div className="border-line overflow-x-auto rounded-md border">
           <table className="w-full text-left text-[length:var(--text-small-size)]">
-            <thead className="text-[length:var(--text-caption-size)] text-fg-muted">
+            <thead className="text-fg-muted text-[length:var(--text-caption-size)]">
               <tr>
                 <th className="px-3 py-2 font-medium">Workspace</th>
                 <th className="px-3 py-2 font-medium">Membros</th>

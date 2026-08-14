@@ -50,7 +50,9 @@ export const Accessibility: Story = {
   render: () => (
     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
       <Avatar name="Edinei Fiorentini" />
-      <p style={{ fontSize: 12, color: "var(--text-secondary)", maxWidth: 320 }}>
+      <p
+        style={{ fontSize: 12, color: "var(--text-secondary)", maxWidth: 320 }}
+      >
         Imagem usa alt com o nome; iniciais usam aria-label. Contraste
         texto/fundo ≥ 4.5:1.
       </p>

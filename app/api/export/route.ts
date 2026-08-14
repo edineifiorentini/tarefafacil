@@ -25,7 +25,10 @@ export async function GET() {
     taskTags,
   ] = await Promise.all([
     supabase.from("workspace").select("*").eq("id", workspaceId).single(),
-    supabase.from("workspace_member").select("*").eq("workspace_id", workspaceId),
+    supabase
+      .from("workspace_member")
+      .select("*")
+      .eq("workspace_id", workspaceId),
     supabase.from("sector").select("*").eq("workspace_id", workspaceId),
     supabase.from("board_column").select("*").eq("workspace_id", workspaceId),
     supabase.from("project").select("*").eq("workspace_id", workspaceId),
@@ -55,9 +58,9 @@ export async function GET() {
   return new NextResponse(JSON.stringify(payload, null, 2), {
     headers: {
       "content-type": "application/json",
-      "content-disposition": `attachment; filename="tarefafacil-export-${
-        new Date().toISOString().slice(0, 10)
-      }.json"`,
+      "content-disposition": `attachment; filename="tarefafacil-export-${new Date()
+        .toISOString()
+        .slice(0, 10)}.json"`,
     },
   });
 }

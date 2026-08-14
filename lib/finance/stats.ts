@@ -10,7 +10,10 @@ export type FinanceStats = {
 
 // "Vencido" é derivado — não existe como status guardado (mesmo padrão de
 // "atrasada" nas Demandas): previsto + vencimento no passado.
-export function isOverdue(entry: FinanceEntry, now: Date = new Date()): boolean {
+export function isOverdue(
+  entry: FinanceEntry,
+  now: Date = new Date()
+): boolean {
   if (entry.status !== "previsto") return false;
   const today = now.toISOString().slice(0, 10);
   return entry.due_date < today;
@@ -45,8 +48,13 @@ export function computeFinanceStats(
   return { recebido, despesas, lucro: recebido - despesas, aReceber, aPagar };
 }
 
-export function entriesForMonth(entries: FinanceEntry[], monthISO: string): FinanceEntry[] {
+export function entriesForMonth(
+  entries: FinanceEntry[],
+  monthISO: string
+): FinanceEntry[] {
   return entries.filter(
-    (e) => e.due_date.slice(0, 7) === monthISO || e.confirmed_at?.slice(0, 7) === monthISO
+    (e) =>
+      e.due_date.slice(0, 7) === monthISO ||
+      e.confirmed_at?.slice(0, 7) === monthISO
   );
 }

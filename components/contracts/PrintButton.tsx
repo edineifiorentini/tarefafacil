@@ -9,7 +9,11 @@ import { Button } from "@/components/ui/Button";
 export function PrintButton() {
   return (
     <div className="mx-auto flex w-full max-w-3xl justify-end px-10 py-4 print:hidden">
-      <Button variant="primary" leadingIcon={IconPrinter} onClick={() => window.print()}>
+      <Button
+        variant="primary"
+        leadingIcon={IconPrinter}
+        onClick={() => window.print()}
+      >
         Imprimir / salvar em PDF
       </Button>
     </div>

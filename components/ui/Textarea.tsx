@@ -3,8 +3,7 @@
 import { useCallback } from "react";
 import type { TextareaHTMLAttributes } from "react";
 
-export interface TextareaProps
-  extends TextareaHTMLAttributes<HTMLTextAreaElement> {
+export interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
   autogrow?: boolean;
   error?: boolean;
 }
@@ -42,7 +41,7 @@ export function Textarea({
       onInput={handleInput}
       rows={autogrow ? 1 : 3}
       aria-invalid={error || undefined}
-      className={`w-full rounded-sm border bg-card px-3 py-2 text-[length:var(--text-body-size)] text-fg transition-colors [transition-duration:var(--dur-fast)] placeholder:text-fg-muted disabled:cursor-not-allowed disabled:opacity-60 ${
+      className={`bg-card text-fg placeholder:text-fg-muted w-full rounded-sm border px-3 py-2 text-[length:var(--text-body-size)] transition-colors [transition-duration:var(--dur-fast)] disabled:cursor-not-allowed disabled:opacity-60 ${
         error ? "border-overdue" : "border-line hover:border-line-strong"
       } ${autogrow ? "resize-none overflow-hidden" : "resize-y"} ${
         className ?? ""

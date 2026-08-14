@@ -13,7 +13,7 @@ import {
 import { useWorkspace } from "@/lib/queries/useWorkspace";
 
 const menuContent =
-  "z-50 min-w-48 max-h-64 overflow-auto rounded-md border border-line bg-card p-1 shadow-[var(--shadow-panel)] data-[state=closed]:[animation:tf-pop-out_var(--dur-fast)_ease-in] data-[state=open]:[animation:tf-pop-in_var(--dur-fast)_var(--ease-out)]";
+  "z-50 min-w-48 max-h-64 overflow-auto rounded-md tf-glass-strong p-1 data-[state=closed]:[animation:tf-pop-out_var(--dur-fast)_ease-in] data-[state=open]:[animation:tf-pop-in_var(--dur-fast)_var(--ease-out)]";
 const menuItem =
   "flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] text-fg outline-none data-[highlighted]:bg-sunken";
 
@@ -33,7 +33,9 @@ export function ParticipantsSelector({
   const add = useAddParticipant(workspace.id, taskId);
   const remove = useRemoveParticipant(workspace.id, taskId);
 
-  const participants = members.filter((m) => participantIds.includes(m.user_id));
+  const participants = members.filter((m) =>
+    participantIds.includes(m.user_id)
+  );
   const available = members.filter(
     (m) => !participantIds.includes(m.user_id) && m.user_id !== excludeUserId
   );
@@ -45,7 +47,7 @@ export function ParticipantsSelector({
         return (
           <span
             key={m.user_id}
-            className="inline-flex items-center gap-1.5 rounded-full border border-line bg-card py-0.5 pl-1 pr-2 text-[length:var(--text-caption-size)] text-fg"
+            className="border-line bg-card text-fg inline-flex items-center gap-1.5 rounded-full border py-0.5 pr-2 pl-1 text-[length:var(--text-caption-size)]"
           >
             <Avatar name={name} src={m.avatar_url ?? undefined} size="sm" />
             {name}
@@ -65,16 +67,20 @@ export function ParticipantsSelector({
         <DropdownMenu.Trigger asChild>
           <button
             type="button"
-            className="inline-flex h-7 items-center gap-1 rounded-full border border-dashed border-line px-2 text-[length:var(--text-caption-size)] text-fg-secondary transition-colors [transition-duration:var(--dur-fast)] hover:bg-sunken hover:text-fg"
+            className="border-line text-fg-secondary hover:bg-sunken hover:text-fg inline-flex h-7 items-center gap-1 rounded-full border border-dashed px-2 text-[length:var(--text-caption-size)] transition-colors [transition-duration:var(--dur-fast)]"
           >
             <IconPlus size={12} stroke={2} />
             Adicionar
           </button>
         </DropdownMenu.Trigger>
         <DropdownMenu.Portal>
-          <DropdownMenu.Content align="start" sideOffset={4} className={menuContent}>
+          <DropdownMenu.Content
+            align="start"
+            sideOffset={4}
+            className={menuContent}
+          >
             {available.length === 0 ? (
-              <div className="px-2 py-1.5 text-[length:var(--text-small-size)] text-fg-muted">
+              <div className="text-fg-muted px-2 py-1.5 text-[length:var(--text-small-size)]">
                 Ninguém mais para adicionar
               </div>
             ) : (

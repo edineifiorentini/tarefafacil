@@ -22,11 +22,11 @@ export function ConfirmCompleteDialog({
     <AlertDialog.Root open={open} onOpenChange={onOpenChange}>
       <AlertDialog.Portal>
         <AlertDialog.Overlay className="fixed inset-0 z-[90] bg-black/40 data-[state=closed]:[animation:tf-fade-out_var(--dur-fast)_ease-in] data-[state=open]:[animation:tf-fade-in_var(--dur-base)_var(--ease-out)]" />
-        <AlertDialog.Content className="fixed left-1/2 top-1/2 z-[95] w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-lg border border-line bg-card p-6 shadow-[var(--shadow-panel)] data-[state=closed]:[animation:tf-dialog-out_var(--dur-fast)_ease-in] data-[state=open]:[animation:tf-dialog-in_var(--dur-base)_var(--ease-out)]">
-          <AlertDialog.Title className="text-[length:var(--text-h3-size)] font-medium text-fg">
+        <AlertDialog.Content className="tf-glass-strong fixed top-1/2 left-1/2 z-[95] w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-lg p-6 data-[state=closed]:[animation:tf-dialog-out_var(--dur-fast)_ease-in] data-[state=open]:[animation:tf-dialog-in_var(--dur-base)_var(--ease-out)]">
+          <AlertDialog.Title className="text-fg text-[length:var(--text-h3-size)] font-medium">
             Concluir tarefa?
           </AlertDialog.Title>
-          <AlertDialog.Description className="mt-2 text-fg-secondary">
+          <AlertDialog.Description className="text-fg-secondary mt-2">
             {count} {count === 1 ? "etapa em aberto" : "etapas em aberto"}.
             Concluir mesmo assim?
           </AlertDialog.Description>

@@ -84,7 +84,7 @@ export function ClientsView() {
             aria-hidden
             size={18}
             stroke={1.5}
-            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-fg-muted"
+            className="text-fg-muted pointer-events-none absolute top-1/2 left-3 -translate-y-1/2"
           />
           <input
             type="search"
@@ -92,11 +92,15 @@ export function ClientsView() {
             placeholder="Buscar cliente…"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="w-full rounded-full border border-line bg-page py-2 pl-10 pr-4 text-[length:var(--text-small-size)] text-fg transition-colors [transition-duration:var(--dur-fast)] placeholder:text-fg-muted focus-visible:border-line-strong"
+            className="border-line bg-page text-fg placeholder:text-fg-muted focus-visible:border-line-strong w-full rounded-full border py-2 pr-4 pl-10 text-[length:var(--text-small-size)] transition-colors [transition-duration:var(--dur-fast)]"
           />
         </div>
 
-        <div className="flex flex-wrap gap-1" role="tablist" aria-label="Situação">
+        <div
+          className="flex flex-wrap gap-1"
+          role="tablist"
+          aria-label="Situação"
+        >
           {FILTERS.map((f) => (
             <button
               key={f.value}
@@ -106,7 +110,7 @@ export function ClientsView() {
               onClick={() => setFilter(f.value)}
               className={`rounded-full px-3 py-1.5 text-[length:var(--text-small-size)] transition-colors [transition-duration:var(--dur-fast)] ${
                 filter === f.value
-                  ? "bg-selected font-medium text-fg"
+                  ? "bg-selected text-fg font-medium"
                   : "text-fg-secondary hover:bg-sunken hover:text-fg"
               }`}
             >
@@ -139,14 +143,14 @@ export function ClientsView() {
           }
         />
       ) : visible.length === 0 ? (
-        <p className="py-8 text-center text-fg-secondary">
+        <p className="text-fg-secondary py-8 text-center">
           Nenhum cliente encontrado para esse filtro
         </p>
       ) : (
-        <div className="overflow-hidden rounded-md border border-line">
+        <div className="border-line overflow-hidden rounded-md border">
           <table className="w-full border-collapse text-left">
             <thead>
-              <tr className="border-b border-line bg-sunken text-[length:var(--text-caption-size)] uppercase tracking-wide text-fg-muted">
+              <tr className="border-line bg-sunken text-fg-muted border-b text-[length:var(--text-caption-size)] tracking-wide uppercase">
                 <th className="px-4 py-2 font-medium">Nome</th>
                 <th className="px-4 py-2 font-medium">Situação</th>
                 <th className="hidden px-4 py-2 font-medium sm:table-cell">
@@ -169,12 +173,12 @@ export function ClientsView() {
                       openClient(c);
                     }
                   }}
-                  className="cursor-pointer border-b border-line last:border-0 transition-colors [transition-duration:var(--dur-fast)] hover:bg-sunken focus-visible:bg-sunken focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]"
+                  className="border-line hover:bg-sunken focus-visible:bg-sunken cursor-pointer border-b transition-colors [transition-duration:var(--dur-fast)] last:border-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]"
                 >
                   <td className="px-4 py-3">
-                    <span className="font-medium text-fg">{c.name}</span>
+                    <span className="text-fg font-medium">{c.name}</span>
                     {c.fantasy_name ? (
-                      <span className="block text-[length:var(--text-caption-size)] text-fg-muted">
+                      <span className="text-fg-muted block text-[length:var(--text-caption-size)]">
                         {c.fantasy_name}
                       </span>
                     ) : null}
@@ -182,10 +186,10 @@ export function ClientsView() {
                   <td className="px-4 py-3">
                     <ClientStatusPill status={c.status as ClientStatus} />
                   </td>
-                  <td className="hidden px-4 py-3 text-[length:var(--text-small-size)] text-fg-secondary sm:table-cell">
+                  <td className="text-fg-secondary hidden px-4 py-3 text-[length:var(--text-small-size)] sm:table-cell">
                     {c.document ?? "—"}
                   </td>
-                  <td className="hidden px-4 py-3 text-[length:var(--text-small-size)] text-fg-secondary md:table-cell">
+                  <td className="text-fg-secondary hidden px-4 py-3 text-[length:var(--text-small-size)] md:table-cell">
                     {c.email ?? c.phone ?? "—"}
                   </td>
                 </tr>
@@ -200,11 +204,11 @@ export function ClientsView() {
 
 function Indicator({ label, value }: { label: string; value: number }) {
   return (
-    <div className="flex flex-col gap-1 rounded-md border border-line bg-card p-4">
-      <span className="text-[length:var(--text-caption-size)] uppercase tracking-wide text-fg-muted">
+    <div className="border-line bg-card flex flex-col gap-1 rounded-md border p-4">
+      <span className="text-fg-muted text-[length:var(--text-caption-size)] tracking-wide uppercase">
         {label}
       </span>
-      <span className="tnum text-[length:var(--text-h2-size)] font-semibold text-fg">
+      <span className="tnum text-fg text-[length:var(--text-h2-size)] font-semibold">
         {value}
       </span>
     </div>

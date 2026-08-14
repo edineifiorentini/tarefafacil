@@ -100,7 +100,10 @@ export function useUpdateSector(workspaceId: string) {
       id,
       ...patch
     }: { id: string } & Partial<SectorInput>) => {
-      const { error } = await supabase.from("sector").update(patch).eq("id", id);
+      const { error } = await supabase
+        .from("sector")
+        .update(patch)
+        .eq("id", id);
       if (error) throw error;
     },
     onMutate: async ({ id, ...patch }) => {

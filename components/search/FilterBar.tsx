@@ -27,7 +27,7 @@ const STATUS = [
 ];
 
 const menuContent =
-  "z-50 min-w-48 overflow-hidden rounded-md border border-line bg-card p-1 shadow-[var(--shadow-panel)] data-[state=closed]:[animation:tf-pop-out_var(--dur-fast)_ease-in] data-[state=open]:[animation:tf-pop-in_var(--dur-fast)_var(--ease-out)]";
+  "z-50 min-w-48 overflow-hidden rounded-md tf-glass-strong p-1 data-[state=closed]:[animation:tf-pop-out_var(--dur-fast)_ease-in] data-[state=open]:[animation:tf-pop-in_var(--dur-fast)_var(--ease-out)]";
 const menuItem =
   "flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] text-fg outline-none data-[highlighted]:bg-sunken";
 
@@ -51,7 +51,7 @@ function TriggerButton({
     >
       {children}
       {count ? (
-        <span className="tnum rounded-full bg-fill px-1.5 text-[length:var(--text-caption-size)] text-fg">
+        <span className="tnum bg-fill text-fg rounded-full px-1.5 text-[length:var(--text-caption-size)]">
           {count}
         </span>
       ) : null}
@@ -79,9 +79,13 @@ function MultiMenu({
         </TriggerButton>
       </DropdownMenu.Trigger>
       <DropdownMenu.Portal>
-        <DropdownMenu.Content align="start" sideOffset={4} className={menuContent}>
+        <DropdownMenu.Content
+          align="start"
+          sideOffset={4}
+          className={menuContent}
+        >
           {options.length === 0 ? (
-            <div className="px-2 py-1.5 text-[length:var(--text-small-size)] text-fg-muted">
+            <div className="text-fg-muted px-2 py-1.5 text-[length:var(--text-small-size)]">
               Nada aqui ainda
             </div>
           ) : (
@@ -158,7 +162,11 @@ export function FilterBar({
           </TriggerButton>
         </DropdownMenu.Trigger>
         <DropdownMenu.Portal>
-          <DropdownMenu.Content align="start" sideOffset={4} className={menuContent}>
+          <DropdownMenu.Content
+            align="start"
+            sideOffset={4}
+            className={menuContent}
+          >
             {STATUS.map((s) => (
               <DropdownMenu.Item
                 key={s.label}
@@ -185,9 +193,9 @@ export function FilterBar({
           <Popover.Content
             align="start"
             sideOffset={4}
-            className="z-50 flex w-64 flex-col gap-3 rounded-md border border-line bg-card p-3 shadow-[var(--shadow-panel)] data-[state=open]:[animation:tf-pop-in_var(--dur-fast)_var(--ease-out)]"
+            className="tf-glass-strong z-50 flex w-64 flex-col gap-3 rounded-md p-3 data-[state=open]:[animation:tf-pop-in_var(--dur-fast)_var(--ease-out)]"
           >
-            <label className="flex flex-col gap-1 text-[length:var(--text-caption-size)] text-fg-secondary">
+            <label className="text-fg-secondary flex flex-col gap-1 text-[length:var(--text-caption-size)]">
               De
               <TextInput
                 type="date"
@@ -196,7 +204,7 @@ export function FilterBar({
                 aria-label="Prazo de"
               />
             </label>
-            <label className="flex flex-col gap-1 text-[length:var(--text-caption-size)] text-fg-secondary">
+            <label className="text-fg-secondary flex flex-col gap-1 text-[length:var(--text-caption-size)]">
               Até
               <TextInput
                 type="date"
@@ -209,7 +217,7 @@ export function FilterBar({
               <button
                 type="button"
                 onClick={() => onDueRange(null, null)}
-                className="inline-flex items-center gap-1 self-start text-[length:var(--text-caption-size)] text-fg-link"
+                className="text-fg-link inline-flex items-center gap-1 self-start text-[length:var(--text-caption-size)]"
               >
                 <IconX size={12} stroke={1.5} />
                 Limpar prazo
@@ -229,9 +237,9 @@ export function FilterBar({
           <Popover.Content
             align="start"
             sideOffset={4}
-            className="z-50 flex w-56 flex-col gap-2 rounded-md border border-line bg-card p-3 shadow-[var(--shadow-panel)] data-[state=open]:[animation:tf-pop-in_var(--dur-fast)_var(--ease-out)]"
+            className="tf-glass-strong z-50 flex w-56 flex-col gap-2 rounded-md p-3 data-[state=open]:[animation:tf-pop-in_var(--dur-fast)_var(--ease-out)]"
           >
-            <label className="flex flex-col gap-1 text-[length:var(--text-caption-size)] text-fg-secondary">
+            <label className="text-fg-secondary flex flex-col gap-1 text-[length:var(--text-caption-size)]">
               Tipo de demanda
               <TextInput
                 value={filters.service}
@@ -244,7 +252,7 @@ export function FilterBar({
               <button
                 type="button"
                 onClick={() => onService("")}
-                className="inline-flex items-center gap-1 self-start text-[length:var(--text-caption-size)] text-fg-link"
+                className="text-fg-link inline-flex items-center gap-1 self-start text-[length:var(--text-caption-size)]"
               >
                 <IconX size={12} stroke={1.5} />
                 Limpar

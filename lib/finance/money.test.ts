@@ -1,6 +1,21 @@
 import { describe, expect, it } from "vitest";
 
-import { centsToMaskedInput, maskCurrencyInput, parseCurrencyToCents } from "./money";
+import {
+  centsToMaskedInput,
+  formatCompactBRL,
+  maskCurrencyInput,
+  parseCurrencyToCents,
+} from "./money";
+
+describe("formatCompactBRL", () => {
+  it("encurta milhares e milhões para o eixo do gráfico", () => {
+    expect(formatCompactBRL(15_000_000)).toBe("150k");
+    expect(formatCompactBRL(128_400_000)).toBe("1,3M");
+    expect(formatCompactBRL(200_000_000)).toBe("2M");
+    expect(formatCompactBRL(50_000)).toBe("500");
+    expect(formatCompactBRL(0)).toBe("0");
+  });
+});
 
 describe("maskCurrencyInput", () => {
   it("sem vírgula, completa com ,00 e separa milhar", () => {

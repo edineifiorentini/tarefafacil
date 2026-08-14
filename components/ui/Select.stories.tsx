@@ -32,8 +32,14 @@ export const Default: Story = {};
 
 export const AllVariants: Story = {
   render: () => (
-    <div style={{ display: "flex", flexDirection: "column", gap: 12, width: 240 }}>
-      <Select options={options} placeholder="Sem valor" aria-label="Sem valor" />
+    <div
+      style={{ display: "flex", flexDirection: "column", gap: 12, width: 240 }}
+    >
+      <Select
+        options={options}
+        placeholder="Sem valor"
+        aria-label="Sem valor"
+      />
       <Select options={options} defaultValue="alta" aria-label="Com valor" />
     </div>
   ),
@@ -41,10 +47,17 @@ export const AllVariants: Story = {
 
 export const AllStates: Story = {
   render: () => (
-    <div style={{ display: "flex", flexDirection: "column", gap: 12, width: 240 }}>
+    <div
+      style={{ display: "flex", flexDirection: "column", gap: 12, width: 240 }}
+    >
       <Select options={options} placeholder="Padrão" aria-label="Padrão" />
       <Select options={options} placeholder="Erro" error aria-label="Erro" />
-      <Select options={options} placeholder="Desabilitado" disabled aria-label="Desabilitado" />
+      <Select
+        options={options}
+        placeholder="Desabilitado"
+        disabled
+        aria-label="Desabilitado"
+      />
     </div>
   ),
 };
@@ -52,15 +65,24 @@ export const AllStates: Story = {
 export const Responsive: Story = {
   render: () => (
     <div style={{ width: "100%" }}>
-      <Select options={options} placeholder="Largura total" aria-label="Largura total" />
+      <Select
+        options={options}
+        placeholder="Largura total"
+        aria-label="Largura total"
+      />
     </div>
   ),
 };
 
 export const Accessibility: Story = {
   render: () => (
-    <div style={{ display: "flex", flexDirection: "column", gap: 6, width: 240 }}>
-      <label htmlFor="a11y-select" style={{ fontSize: 14, color: "var(--text-secondary)" }}>
+    <div
+      style={{ display: "flex", flexDirection: "column", gap: 6, width: 240 }}
+    >
+      <label
+        htmlFor="a11y-select"
+        style={{ fontSize: 14, color: "var(--text-secondary)" }}
+      >
         Prioridade
       </label>
       <Select id="a11y-select" options={options} placeholder="Selecione" />
