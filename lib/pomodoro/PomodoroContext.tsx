@@ -14,6 +14,7 @@ import type { ReactNode } from "react";
 import { useToast } from "@/components/ui/Toast";
 import { PomodoroWidget } from "@/components/pomodoro/PomodoroWidget";
 import { playChime } from "@/lib/pomodoro/chime";
+import { notifyPhaseComplete, requestNotifyPermission } from "@/lib/pomodoro/notify";
 import { createClient } from "@/lib/supabase/client";
 import { useWorkspace } from "@/lib/queries/useWorkspace";
 
@@ -167,6 +168,10 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
       });
       playChime();
       toast.show({ message: `Pomodoro concluído em "${active.taskTitle}"` });
+      notifyPhaseComplete(
+        "Pomodoro concluído 🍅",
+        `"${active.taskTitle}" — hora da pausa.`
+      );
       const next = nextAfterWork(active);
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setActive(next);
@@ -174,6 +179,10 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
     } else {
       playChime();
       toast.show({ message: "Pausa concluída — pronto para o próximo pomodoro" });
+      notifyPhaseComplete(
+        "Pausa concluída",
+        `Pronto para o próximo pomodoro em "${active.taskTitle}".`
+      );
       setActive(null);
       savePersisted(null);
     }
@@ -188,6 +197,9 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
   }, [active, tick]);
 
   const start = useCallback((taskId: string, taskTitle: string) => {
+    // Pedido de permissão precisa vir de um gesto do usuário (o clique em
+    // "Iniciar pomodoro" é exatamente isso) — navegadores ignoram fora dele.
+    void requestNotifyPermission();
     const next = freshSession(taskId, taskTitle, 0);
     setActive(next);
     savePersisted(next);

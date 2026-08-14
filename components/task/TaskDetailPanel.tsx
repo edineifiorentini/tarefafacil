@@ -16,6 +16,7 @@ import type { ReactNode } from "react";
 import { useShell } from "@/components/shell/shell-context";
 import { Button } from "@/components/ui/Button";
 import { Select } from "@/components/ui/Select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
 import { TextInput } from "@/components/ui/TextInput";
 import { Textarea } from "@/components/ui/Textarea";
 import { useClients } from "@/lib/queries/useClients";
@@ -173,270 +174,284 @@ export function TaskDetailPanel({ taskId }: { taskId: string }) {
         </div>
       ) : null}
 
-      <div className="grid grid-cols-2 gap-3">
-        <Field label="Setor">
-          <Select
-            options={sectors.map((s) => ({ value: s.id, label: s.name }))}
-            value={sectorId}
-            onValueChange={(v) => {
-              setSectorId(v);
-              scheduleSave({ sector_id: v });
-            }}
-            aria-label="Setor"
-          />
-        </Field>
-        <Field label="Prioridade">
-          <Select
-            options={PRIORITIES}
-            value={priority}
-            onValueChange={(v) => {
-              setPriority(v);
-              scheduleSave({ priority: v as TaskPriority });
-            }}
-            aria-label="Prioridade"
-          />
-        </Field>
-      </div>
+      <Tabs defaultValue="detalhes">
+        <TabsList>
+          <TabsTrigger value="detalhes">Detalhes</TabsTrigger>
+          <TabsTrigger value="trabalho">Trabalho</TabsTrigger>
+          <TabsTrigger value="atividade">Atividade</TabsTrigger>
+        </TabsList>
 
-      <Field label="Projeto">
-        <Select
-          options={[
-            { value: "__none__", label: "Nenhum" },
-            ...projects.map((p) => ({ value: p.id, label: p.name })),
-          ]}
-          value={projectId ?? "__none__"}
-          onValueChange={(v) => {
-            const pid = v === "__none__" ? null : v;
-            setProjectId(pid);
-            scheduleSave({ project_id: pid });
-          }}
-          aria-label="Projeto"
-        />
-      </Field>
-
-      <Field label="Cliente">
-        <Select
-          options={[
-            { value: "__none__", label: "Nenhum" },
-            ...clients.map((c) => ({ value: c.id, label: c.name })),
-          ]}
-          value={clientId ?? "__none__"}
-          onValueChange={(v) => {
-            const cid = v === "__none__" ? null : v;
-            setClientId(cid);
-            scheduleSave({ client_id: cid });
-          }}
-          aria-label="Cliente"
-        />
-      </Field>
-
-      <Field label="Tipo de demanda">
-        <TextInput
-          value={service}
-          onChange={(e) => {
-            setService(e.target.value);
-            scheduleSave({ service: e.target.value || null });
-          }}
-          placeholder="Ex.: Design, Suporte, Consultoria…"
-          aria-label="Tipo de demanda"
-        />
-      </Field>
-
-      <Field label="Prazo">
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="w-44">
-            <TextInput
-              type="date"
-              value={dueDate ?? ""}
-              onChange={(e) => {
-                setDueDate(e.target.value);
-                scheduleSave({ due_date: e.target.value || null });
-              }}
-              aria-label="Data do prazo"
-            />
+        <TabsContent value="detalhes">
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Setor">
+              <Select
+                options={sectors.map((s) => ({ value: s.id, label: s.name }))}
+                value={sectorId}
+                onValueChange={(v) => {
+                  setSectorId(v);
+                  scheduleSave({ sector_id: v });
+                }}
+                aria-label="Setor"
+              />
+            </Field>
+            <Field label="Prioridade">
+              <Select
+                options={PRIORITIES}
+                value={priority}
+                onValueChange={(v) => {
+                  setPriority(v);
+                  scheduleSave({ priority: v as TaskPriority });
+                }}
+                aria-label="Prioridade"
+              />
+            </Field>
           </div>
 
-          {/* Horário é opt-in: só aparece quando há data e o usuário pede. */}
-          {dueDate && !timeOpen ? (
-            <button
-              type="button"
-              onClick={() => setTimeOpen(true)}
-              className="inline-flex items-center gap-1 rounded-sm px-2 py-1 text-[length:var(--text-small-size)] text-fg-secondary hover:bg-sunken hover:text-fg"
-            >
-              <IconClock size={16} stroke={1.5} />
-              Adicionar horário
-            </button>
-          ) : null}
+          <Field label="Projeto">
+            <Select
+              options={[
+                { value: "__none__", label: "Nenhum" },
+                ...projects.map((p) => ({ value: p.id, label: p.name })),
+              ]}
+              value={projectId ?? "__none__"}
+              onValueChange={(v) => {
+                const pid = v === "__none__" ? null : v;
+                setProjectId(pid);
+                scheduleSave({ project_id: pid });
+              }}
+              aria-label="Projeto"
+            />
+          </Field>
 
-          {dueDate && timeOpen ? (
-            <>
-              <div className="w-28">
+          <Field label="Cliente">
+            <Select
+              options={[
+                { value: "__none__", label: "Nenhum" },
+                ...clients.map((c) => ({ value: c.id, label: c.name })),
+              ]}
+              value={clientId ?? "__none__"}
+              onValueChange={(v) => {
+                const cid = v === "__none__" ? null : v;
+                setClientId(cid);
+                scheduleSave({ client_id: cid });
+              }}
+              aria-label="Cliente"
+            />
+          </Field>
+
+          <Field label="Tipo de demanda">
+            <TextInput
+              value={service}
+              onChange={(e) => {
+                setService(e.target.value);
+                scheduleSave({ service: e.target.value || null });
+              }}
+              placeholder="Ex.: Design, Suporte, Consultoria…"
+              aria-label="Tipo de demanda"
+            />
+          </Field>
+
+          <Field label="Prazo">
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="w-44">
                 <TextInput
-                  type="time"
-                  value={dueTime}
+                  type="date"
+                  value={dueDate ?? ""}
                   onChange={(e) => {
-                    setDueTime(e.target.value);
-                    scheduleSave({ due_time: e.target.value || null });
+                    setDueDate(e.target.value);
+                    scheduleSave({ due_date: e.target.value || null });
                   }}
-                  aria-label="Hora de início"
+                  aria-label="Data do prazo"
                 />
               </div>
 
-              {endOpen ? (
+              {/* Horário é opt-in: só aparece quando há data e o usuário pede. */}
+              {dueDate && !timeOpen ? (
+                <button
+                  type="button"
+                  onClick={() => setTimeOpen(true)}
+                  className="inline-flex items-center gap-1 rounded-sm px-2 py-1 text-[length:var(--text-small-size)] text-fg-secondary hover:bg-sunken hover:text-fg"
+                >
+                  <IconClock size={16} stroke={1.5} />
+                  Adicionar horário
+                </button>
+              ) : null}
+
+              {dueDate && timeOpen ? (
                 <>
-                  <span className="text-[length:var(--text-small-size)] text-fg-muted">
-                    até
-                  </span>
                   <div className="w-28">
                     <TextInput
                       type="time"
-                      value={dueEndTime}
+                      value={dueTime}
                       onChange={(e) => {
-                        setDueEndTime(e.target.value);
-                        scheduleSave({ due_end_time: e.target.value || null });
+                        setDueTime(e.target.value);
+                        scheduleSave({ due_time: e.target.value || null });
                       }}
-                      aria-label="Hora de término"
+                      aria-label="Hora de início"
                     />
                   </div>
+
+                  {endOpen ? (
+                    <>
+                      <span className="text-[length:var(--text-small-size)] text-fg-muted">
+                        até
+                      </span>
+                      <div className="w-28">
+                        <TextInput
+                          type="time"
+                          value={dueEndTime}
+                          onChange={(e) => {
+                            setDueEndTime(e.target.value);
+                            scheduleSave({ due_end_time: e.target.value || null });
+                          }}
+                          aria-label="Hora de término"
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        aria-label="Remover término"
+                        onClick={() => {
+                          setEndOpen(false);
+                          setDueEndTime("");
+                          scheduleSave({ due_end_time: null });
+                        }}
+                        className="rounded-sm p-1 text-fg-muted hover:text-fg"
+                      >
+                        <IconX size={14} stroke={1.5} />
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setEndOpen(true)}
+                      className="inline-flex items-center gap-1 rounded-sm px-2 py-1 text-[length:var(--text-small-size)] text-fg-secondary hover:bg-sunken hover:text-fg"
+                    >
+                      <IconPlus size={14} stroke={1.5} />
+                      Término
+                    </button>
+                  )}
+
                   <button
                     type="button"
-                    aria-label="Remover término"
                     onClick={() => {
+                      setTimeOpen(false);
                       setEndOpen(false);
+                      setDueTime("");
                       setDueEndTime("");
-                      scheduleSave({ due_end_time: null });
+                      scheduleSave({ due_time: null, due_end_time: null });
                     }}
-                    className="rounded-sm p-1 text-fg-muted hover:text-fg"
+                    className="inline-flex items-center gap-1 rounded-sm px-2 py-1 text-[length:var(--text-caption-size)] text-fg-muted hover:bg-sunken hover:text-fg"
                   >
                     <IconX size={14} stroke={1.5} />
+                    Dia inteiro
                   </button>
                 </>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => setEndOpen(true)}
-                  className="inline-flex items-center gap-1 rounded-sm px-2 py-1 text-[length:var(--text-small-size)] text-fg-secondary hover:bg-sunken hover:text-fg"
-                >
-                  <IconPlus size={14} stroke={1.5} />
-                  Término
-                </button>
-              )}
+              ) : null}
+            </div>
+            <TaskMeetToggle taskId={taskId} />
+          </Field>
 
-              <button
-                type="button"
-                onClick={() => {
-                  setTimeOpen(false);
-                  setEndOpen(false);
-                  setDueTime("");
-                  setDueEndTime("");
-                  scheduleSave({ due_time: null, due_end_time: null });
+          <TaskSyncToggle taskId={taskId} />
+
+          <Field label="Responsável">
+            <Select
+              options={[
+                { value: "__none__", label: "Ninguém" },
+                ...members.map((m) => ({
+                  value: m.user_id,
+                  label: m.display_name ?? m.email,
+                })),
+              ]}
+              value={assigneeId ?? "__none__"}
+              onValueChange={(v) => {
+                const aid = v === "__none__" ? null : v;
+                setAssigneeId(aid);
+                scheduleSave({ assignee_id: aid });
+              }}
+              aria-label="Responsável"
+            />
+          </Field>
+
+          <Field label="Participantes">
+            <ParticipantsSelector taskId={taskId} excludeUserId={assigneeId} />
+          </Field>
+
+          <Field label="Tags">
+            <TagSelector taskId={taskId} />
+          </Field>
+
+          <Field label="Descrição">
+            <Textarea
+              autogrow
+              value={description ?? ""}
+              onChange={(e) => {
+                setDescription(e.target.value);
+                scheduleSave({ description: e.target.value || null });
+              }}
+              placeholder="Adicione detalhes…"
+              aria-label="Descrição"
+            />
+          </Field>
+        </TabsContent>
+
+        <TabsContent value="trabalho">
+          <Field label="Estimativa (horas)">
+            <div className="w-24">
+              <TextInput
+                inputMode="decimal"
+                value={estimateHours}
+                onChange={(e) => {
+                  const v = e.target.value.replace(/[^0-9.,]/g, "");
+                  setEstimateHours(v);
+                  const hours = Number.parseFloat(v.replace(",", "."));
+                  scheduleSave({
+                    estimate_minutes:
+                      Number.isFinite(hours) && hours > 0
+                        ? Math.round(hours * 60)
+                        : null,
+                  });
                 }}
-                className="inline-flex items-center gap-1 rounded-sm px-2 py-1 text-[length:var(--text-caption-size)] text-fg-muted hover:bg-sunken hover:text-fg"
-              >
-                <IconX size={14} stroke={1.5} />
-                Dia inteiro
-              </button>
-            </>
-          ) : null}
-        </div>
-        <TaskMeetToggle taskId={taskId} />
-      </Field>
+                placeholder="Ex.: 2.5"
+                aria-label="Estimativa em horas"
+              />
+            </div>
+          </Field>
 
-      <TaskSyncToggle taskId={taskId} />
+          <Field label="Tempo registrado">
+            <TimeTracking
+              taskId={taskId}
+              taskTitle={title || task.title}
+              estimateMinutes={task.estimate_minutes}
+            />
+          </Field>
 
-      <Field label="Responsável">
-        <Select
-          options={[
-            { value: "__none__", label: "Ninguém" },
-            ...members.map((m) => ({
-              value: m.user_id,
-              label: m.display_name ?? m.email,
-            })),
-          ]}
-          value={assigneeId ?? "__none__"}
-          onValueChange={(v) => {
-            const aid = v === "__none__" ? null : v;
-            setAssigneeId(aid);
-            scheduleSave({ assignee_id: aid });
-          }}
-          aria-label="Responsável"
-        />
-      </Field>
+          <Field label="Bloqueada por">
+            <DependencySelector taskId={taskId} />
+          </Field>
 
-      <Field label="Participantes">
-        <ParticipantsSelector taskId={taskId} excludeUserId={assigneeId} />
-      </Field>
+          <Field label="Subtarefas">
+            <SubtaskList taskId={taskId} parentDue={dueDate || null} />
+          </Field>
 
-      <Field label="Tags">
-        <TagSelector taskId={taskId} />
-      </Field>
+          <Field label="Anexos">
+            <AttachmentList taskId={taskId} />
+          </Field>
+        </TabsContent>
 
-      <Field label="Descrição">
-        <Textarea
-          autogrow
-          value={description ?? ""}
-          onChange={(e) => {
-            setDescription(e.target.value);
-            scheduleSave({ description: e.target.value || null });
-          }}
-          placeholder="Adicione detalhes…"
-          aria-label="Descrição"
-        />
-      </Field>
+        <TabsContent value="atividade">
+          <Field label="Insights">
+            <InsightLog taskId={taskId} />
+          </Field>
 
-      <Field label="Estimativa (horas)">
-        <div className="w-24">
-          <TextInput
-            inputMode="decimal"
-            value={estimateHours}
-            onChange={(e) => {
-              const v = e.target.value.replace(/[^0-9.,]/g, "");
-              setEstimateHours(v);
-              const hours = Number.parseFloat(v.replace(",", "."));
-              scheduleSave({
-                estimate_minutes:
-                  Number.isFinite(hours) && hours > 0
-                    ? Math.round(hours * 60)
-                    : null,
-              });
-            }}
-            placeholder="Ex.: 2.5"
-            aria-label="Estimativa em horas"
-          />
-        </div>
-      </Field>
+          <Field label="Comentários">
+            <CommentList taskId={taskId} />
+          </Field>
 
-      <Field label="Tempo registrado">
-        <TimeTracking
-          taskId={taskId}
-          taskTitle={title || task.title}
-          estimateMinutes={task.estimate_minutes}
-        />
-      </Field>
-
-      <Field label="Bloqueada por">
-        <DependencySelector taskId={taskId} />
-      </Field>
-
-      <Field label="Subtarefas">
-        <SubtaskList taskId={taskId} parentDue={dueDate || null} />
-      </Field>
-
-      <Field label="Anexos">
-        <AttachmentList taskId={taskId} />
-      </Field>
-
-      <Field label="Insights">
-        <InsightLog taskId={taskId} />
-      </Field>
-
-      <Field label="Comentários">
-        <CommentList taskId={taskId} />
-      </Field>
-
-      <Field label="Histórico">
-        <TaskActivityLog taskId={taskId} sectorId={task.sector_id} />
-      </Field>
+          <Field label="Histórico">
+            <TaskActivityLog taskId={taskId} sectorId={task.sector_id} />
+          </Field>
+        </TabsContent>
+      </Tabs>
 
       <div className="mt-2 flex gap-2 border-t border-line pt-4">
         <Button
