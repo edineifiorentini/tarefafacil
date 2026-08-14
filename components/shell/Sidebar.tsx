@@ -6,6 +6,7 @@ import {
   IconLayoutDashboard,
   IconLayoutKanban,
   IconLayoutList,
+  IconMoneybag,
   IconPlus,
   IconSearch,
   IconSettings,
@@ -19,6 +20,7 @@ import { LogoutButton } from "@/components/auth/LogoutButton";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { SectorForm } from "@/components/sector/SectorForm";
 import { SectorNav } from "@/components/sector/SectorNav";
+import { useCurrentUserId, useMembers } from "@/lib/queries/useMembers";
 import { useSectors } from "@/lib/queries/useSectors";
 import { useWorkspace } from "@/lib/queries/useWorkspace";
 import type { Sector, Workspace } from "@/types/database";
@@ -58,6 +60,10 @@ export function Sidebar({
   const workspace = useWorkspace();
   const { data: sectors = [] } = useSectors(workspace.id, initialSectors);
   const { openPanel, closePanel, setMobileNavOpen } = useShell();
+  const { data: myId } = useCurrentUserId();
+  const { data: members = [] } = useMembers(workspace.id);
+  const myRole = members.find((m) => m.user_id === myId)?.role;
+  const canManageFinance = myRole === "owner" || myRole === "admin";
 
   function isActive(href: string) {
     return pathname === href || pathname.startsWith(`${href}/`);
@@ -90,6 +96,19 @@ export function Sidebar({
               </Link>
             </li>
           ))}
+          {canManageFinance ? (
+            <li>
+              <Link
+                href="/financeiro"
+                aria-current={isActive("/financeiro") ? "page" : undefined}
+                onClick={() => setMobileNavOpen(false)}
+                className={navItemClass(isActive("/financeiro"))}
+              >
+                <IconMoneybag size={20} stroke={1.5} />
+                <span className="flex-1">Financeiro</span>
+              </Link>
+            </li>
+          ) : null}
         </ul>
       </nav>
 

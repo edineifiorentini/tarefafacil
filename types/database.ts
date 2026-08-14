@@ -26,6 +26,8 @@ export type TaskPriority =
   | "urgente";
 export type AttachmentKind = "file" | "link";
 export type TaskTimeSource = "manual" | "pomodoro";
+export type FinanceKind = "entrada" | "saida";
+export type FinanceStatus = "previsto" | "confirmado" | "cancelado";
 export type GcalStatus = "active" | "expired" | "revoked";
 export type ClientType = "pf" | "pj";
 export type ClientStatus = "prospecto" | "ativo" | "pausado" | "encerrado";
@@ -594,6 +596,57 @@ export type Database = {
         };
         Relationships: [];
       };
+      finance_entry: {
+        Row: {
+          id: string;
+          workspace_id: string;
+          kind: FinanceKind;
+          description: string;
+          amount_cents: number;
+          status: FinanceStatus;
+          due_date: string;
+          confirmed_at: string | null;
+          category: string | null;
+          client_id: string | null;
+          notes: string | null;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          workspace_id: string;
+          kind: FinanceKind;
+          description: string;
+          amount_cents: number;
+          status?: FinanceStatus;
+          due_date: string;
+          confirmed_at?: string | null;
+          category?: string | null;
+          client_id?: string | null;
+          notes?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          workspace_id?: string;
+          kind?: FinanceKind;
+          description?: string;
+          amount_cents?: number;
+          status?: FinanceStatus;
+          due_date?: string;
+          confirmed_at?: string | null;
+          category?: string | null;
+          client_id?: string | null;
+          notes?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       client: {
         Row: {
           id: string;
@@ -796,3 +849,4 @@ export type TaskActivity = Tables<"task_activity">;
 export type TaskComment = Tables<"task_comment">;
 export type TaskTimeEntry = Tables<"task_time_entry">;
 export type TaskDependency = Tables<"task_dependency">;
+export type FinanceEntry = Tables<"finance_entry">;
