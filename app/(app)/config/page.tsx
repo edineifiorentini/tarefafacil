@@ -1,4 +1,5 @@
 import { GcalConnectCard } from "@/components/gcal/GcalConnectCard";
+import { OrgProfileForm } from "@/components/workspace/OrgProfileForm";
 import { WorkspaceSettings } from "@/components/workspace/WorkspaceSettings";
 
 const GCAL_MESSAGES: Record<string, string> = {
@@ -35,6 +36,8 @@ export default async function ConfigPage({
         </h2>
         <GcalConnectCard />
       </section>
+
+      <OrgProfileForm />
 
       <WorkspaceSettings />
     </div>

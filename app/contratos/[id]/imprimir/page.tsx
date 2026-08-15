@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { PrintButton } from "@/components/contracts/PrintButton";
 import { formatCentsBRL } from "@/lib/finance/money";
 import { createClient } from "@/lib/supabase/server";
+import { documentLabel } from "@/lib/validation/document";
 
 const BILLING_LABEL: Record<string, string> = {
   unico: "Pagamento único",
@@ -41,18 +42,28 @@ export default async function ContractPrintPage({
     .maybeSingle();
   if (!contract) notFound();
 
-  const [{ data: client }, { data: workspace }] = await Promise.all([
-    supabase
-      .from("client")
-      .select("*")
-      .eq("id", contract.client_id)
-      .maybeSingle(),
-    supabase
-      .from("workspace")
-      .select("*")
-      .eq("id", contract.workspace_id)
-      .maybeSingle(),
-  ]);
+  const [{ data: client }, { data: workspace }, { data: org }] =
+    await Promise.all([
+      supabase
+        .from("client")
+        .select("*")
+        .eq("id", contract.client_id)
+        .maybeSingle(),
+      supabase
+        .from("workspace")
+        .select("*")
+        .eq("id", contract.workspace_id)
+        .maybeSingle(),
+      supabase
+        .from("workspace_profile")
+        .select("*")
+        .eq("workspace_id", contract.workspace_id)
+        .maybeSingle(),
+    ]);
+
+  // Razão social cadastrada tem precedência; sem ela, cai no nome do
+  // workspace para o documento nunca sair sem identificar o contratado.
+  const contractedName = org?.legal_name?.trim() || (workspace?.name ?? "—");
 
   return (
     <div className="bg-page min-h-dvh print:bg-white">
@@ -74,22 +85,62 @@ export default async function ContractPrintPage({
           <h2 className="text-fg-secondary mb-1 text-sm font-semibold tracking-wide uppercase print:text-black">
             Contratante
           </h2>
-          <p>{client?.name ?? "Cliente não encontrado"}</p>
+          <p className="font-medium">
+            {client?.name ?? "Cliente não encontrado"}
+          </p>
           {client?.fantasy_name ? <p>{client.fantasy_name}</p> : null}
           <p>
-            {client?.type === "pj" ? "CNPJ" : "CPF"}:{" "}
+            {client ? documentLabel(client.type) : "Documento"}:{" "}
             {client?.document ?? "não informado"}
           </p>
+          {client?.address ? (
+            <p className="whitespace-pre-wrap">{client.address}</p>
+          ) : null}
           <p>
             {client?.email ?? "—"} · {client?.phone ?? "—"}
           </p>
+          {client?.representative_name ? (
+            <p>
+              Representado por {client.representative_name}
+              {client.representative_document
+                ? `, CPF ${client.representative_document}`
+                : ""}
+            </p>
+          ) : null}
         </section>
 
         <section className="mb-6">
           <h2 className="text-fg-secondary mb-1 text-sm font-semibold tracking-wide uppercase print:text-black">
             Contratado
           </h2>
-          <p>{workspace?.name ?? "—"}</p>
+          <p className="font-medium">{contractedName}</p>
+          {org?.document ? <p>CNPJ: {org.document}</p> : null}
+          {org?.state_registration ? (
+            <p>Inscrição estadual: {org.state_registration}</p>
+          ) : null}
+          {org?.address ? (
+            <p className="whitespace-pre-wrap">{org.address}</p>
+          ) : null}
+          {org?.email || org?.phone ? (
+            <p>
+              {org.email ?? "—"} · {org.phone ?? "—"}
+            </p>
+          ) : null}
+          {org?.representative_name ? (
+            <p>
+              Representado por {org.representative_name}
+              {org.representative_role ? ` (${org.representative_role})` : ""}
+              {org.representative_document
+                ? `, CPF ${org.representative_document}`
+                : ""}
+            </p>
+          ) : null}
+          {!org ? (
+            <p className="text-fg-muted text-sm print:text-black">
+              Complete os dados da organização em Configurações para que
+              apareçam aqui.
+            </p>
+          ) : null}
         </section>
 
         <section className="mb-6">
@@ -146,16 +197,24 @@ export default async function ContractPrintPage({
           </section>
         ) : null}
 
+        {/* Assina quem tem poder para isso: o representante legal quando
+            cadastrado, senão a própria parte. */}
         <section className="mt-16 grid grid-cols-2 gap-8">
           <div className="text-center">
             <div className="border-line border-t pt-2 print:border-black">
-              {client?.name ?? "Contratante"}
+              {client?.representative_name ?? client?.name ?? "Contratante"}
             </div>
+            <p className="text-fg-muted mt-1 text-sm print:text-black">
+              {client?.name ?? "Contratante"}
+            </p>
           </div>
           <div className="text-center">
             <div className="border-line border-t pt-2 print:border-black">
-              {workspace?.name ?? "Contratado"}
+              {org?.representative_name ?? contractedName}
             </div>
+            <p className="text-fg-muted mt-1 text-sm print:text-black">
+              {contractedName}
+            </p>
           </div>
         </section>
 

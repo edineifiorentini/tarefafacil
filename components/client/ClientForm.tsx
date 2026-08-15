@@ -4,10 +4,12 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 
 import { Button } from "@/components/ui/Button";
+import { DocumentInput } from "@/components/ui/DocumentInput";
 import { Select } from "@/components/ui/Select";
 import { TextInput } from "@/components/ui/TextInput";
 import { Textarea } from "@/components/ui/Textarea";
 import { useToast } from "@/components/ui/Toast";
+import { documentLabel } from "@/lib/validation/document";
 import { useCreateClient, useUpdateClient } from "@/lib/queries/useClients";
 import { useWorkspace } from "@/lib/queries/useWorkspace";
 import type { Client, ClientStatus, ClientType } from "@/types/database";
@@ -62,6 +64,11 @@ export function ClientForm({
   const [phone, setPhone] = useState(client?.phone ?? "");
   const [status, setStatus] = useState<ClientStatus>(client?.status ?? "ativo");
   const [notes, setNotes] = useState(client?.notes ?? "");
+  const [address, setAddress] = useState(client?.address ?? "");
+  const [repName, setRepName] = useState(client?.representative_name ?? "");
+  const [repDocument, setRepDocument] = useState(
+    client?.representative_document ?? ""
+  );
 
   const busy = create.isPending || update.isPending;
 
@@ -77,6 +84,9 @@ export function ClientForm({
       phone: phone.trim() || null,
       status,
       notes: notes.trim() || null,
+      address: address.trim() || null,
+      representative_name: repName.trim() || null,
+      representative_document: repDocument.trim() || null,
     };
     const handlers = {
       onSuccess: () => {
@@ -132,11 +142,12 @@ export function ClientForm({
       ) : null}
 
       <div className="grid grid-cols-2 gap-3">
-        <Field label={type === "pj" ? "CNPJ" : "CPF"}>
-          <TextInput
+        <Field label={documentLabel(type)}>
+          <DocumentInput
             value={documentId}
-            onChange={(e) => setDocumentId(e.target.value)}
-            aria-label="Documento"
+            onChange={setDocumentId}
+            type={type}
+            aria-label={`${documentLabel(type)} do cliente`}
           />
         </Field>
         <Field label="Telefone">
@@ -156,6 +167,37 @@ export function ClientForm({
           aria-label="E-mail"
         />
       </Field>
+
+      {/* Identificação para contrato: sem isto o documento gerado fica
+          incompleto do lado do contratante. */}
+      <Field label="Endereço">
+        <Textarea
+          autogrow
+          value={address}
+          onChange={(e) => setAddress(e.target.value)}
+          placeholder="Rua, número, bairro, cidade/UF, CEP"
+          aria-label="Endereço do cliente"
+        />
+      </Field>
+
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="Representante legal">
+          <TextInput
+            value={repName}
+            onChange={(e) => setRepName(e.target.value)}
+            placeholder="Quem assina pelo cliente"
+            aria-label="Nome do representante legal"
+          />
+        </Field>
+        <Field label="CPF do representante">
+          <DocumentInput
+            value={repDocument}
+            onChange={setRepDocument}
+            type="pf"
+            aria-label="CPF do representante legal"
+          />
+        </Field>
+      </div>
 
       <Field label="Observações">
         <Textarea
