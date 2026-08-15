@@ -39,7 +39,7 @@ export function TaskCard({
     <button
       type="button"
       onClick={onOpen}
-      className="border-line bg-card hover:border-line-strong w-full rounded-lg border p-3.5 text-left transition-[border-color,box-shadow] [transition-duration:var(--dur-fast)] hover:shadow-[var(--shadow-peek)]"
+      className="tf-lift border-line bg-card hover:border-line-strong w-full rounded-md border p-3.5 text-left shadow-[var(--shadow-card)]"
     >
       <p
         className={`pr-6 text-[length:var(--text-small-size)] font-medium ${
@@ -80,9 +80,9 @@ export function TaskCard({
 
       {pct !== null ? (
         <div className="mt-2.5 flex items-center gap-2">
-          <div className="bg-sunken h-1.5 flex-1 overflow-hidden rounded-full">
+          <div className="bg-track h-1.5 flex-1 overflow-hidden rounded-full">
             <div
-              className="h-full rounded-full bg-[var(--fill-brand)]"
+              className="h-full rounded-full bg-[var(--chart-1)] transition-[width] [transition-duration:var(--dur-slow)]"
               style={{ width: `${pct}%` }}
             />
           </div>

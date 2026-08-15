@@ -25,7 +25,8 @@ export function QuadroView() {
   }
 
   return (
-    <div className="flex h-full flex-col gap-4 p-6">
+    // Sem espaço no topo: a barra superior já respira acima do conteúdo.
+    <div className="flex h-full flex-col gap-4 px-4 pb-6 lg:px-6">
       <div className="w-56">
         <Select
           options={sectors.map((s) => ({ value: s.id, label: s.name }))}

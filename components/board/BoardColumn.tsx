@@ -83,7 +83,9 @@ export function BoardColumn({
   return (
     <section
       aria-label={`${name}, ${count} ${count === 1 ? "item" : "itens"}`}
-      className="bg-sunken flex w-72 shrink-0 flex-col rounded-md"
+      // Borda define a coluna: no fundo pearl novo, o cinza da superfície
+      // rebaixada sozinho quase não se distingue da página.
+      className="border-line bg-sunken flex w-72 shrink-0 flex-col rounded-md border"
     >
       <header className="flex items-center gap-2 px-3 py-2">
         {editing ? (

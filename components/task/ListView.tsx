@@ -4,6 +4,7 @@ import {
   IconBan,
   IconCheck,
   IconLayoutList,
+  IconSearch,
   IconTrash,
   IconX,
 } from "@tabler/icons-react";
@@ -160,146 +161,174 @@ export function ListView() {
     setSelected(new Set());
   }
 
+  const totalVisible = groups.reduce((sum, g) => sum + g.tasks.length, 0);
+
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 px-6 py-8">
-      <div className="flex flex-wrap items-center gap-2">
-        <div className="w-56">
-          <input
-            type="search"
-            value={filters.q}
-            onChange={(e) => setFilters((f) => ({ ...f, q: e.target.value }))}
-            placeholder="Buscar por título…"
-            aria-label="Buscar demandas"
-            className="border-line bg-card text-fg placeholder:text-fg-muted h-8 w-full rounded-sm border px-2 text-[length:var(--text-small-size)]"
-          />
-        </div>
-        <div className="w-36">
-          <Select
-            options={STATUS_OPTIONS}
-            value={filters.status}
-            onValueChange={(v) =>
-              setFilters((f) => ({ ...f, status: v as ListFilters["status"] }))
-            }
-            aria-label="Status"
-          />
-        </div>
-        <div className="w-40">
-          <Select
-            options={[
-              { value: "__all__", label: "Todos os setores" },
-              ...sectors.map((s) => ({ value: s.id, label: s.name })),
-            ]}
-            value={filters.sectorIds[0] ?? "__all__"}
-            onValueChange={(v) =>
-              setFilters((f) => ({
-                ...f,
-                sectorIds: v === "__all__" ? [] : [v],
-              }))
-            }
-            aria-label="Setor"
-          />
-        </div>
-        <div className="w-36">
-          <Select
-            options={PRIORITY_OPTIONS}
-            value={filters.priorities[0] ?? "__all__"}
-            onValueChange={(v) =>
-              setFilters((f) => ({
-                ...f,
-                priorities: v === "__all__" ? [] : [v],
-              }))
-            }
-            aria-label="Prioridade"
-          />
-        </div>
-        <div className="w-40">
-          <Select
-            options={[
-              { value: "__all__", label: "Todos os clientes" },
-              ...clients.map((c) => ({ value: c.id, label: c.name })),
-            ]}
-            value={filters.clientId ?? "__all__"}
-            onValueChange={(v) =>
-              setFilters((f) => ({
-                ...f,
-                clientId: v === "__all__" ? null : v,
-              }))
-            }
-            aria-label="Cliente"
-          />
-        </div>
-        <div className="w-40">
-          <Select
-            options={[
-              { value: "__all__", label: "Todos os responsáveis" },
-              ...members.map((m) => ({
-                value: m.user_id,
-                label: m.display_name ?? m.email,
-              })),
-            ]}
-            value={filters.assigneeId ?? "__all__"}
-            onValueChange={(v) =>
-              setFilters((f) => ({
-                ...f,
-                assigneeId: v === "__all__" ? null : v,
-              }))
-            }
-            aria-label="Responsável"
-          />
-        </div>
-        <div className="w-40">
-          <Select
-            options={DUE_OPTIONS}
-            value={
-              filters.dueWithinDays ? String(filters.dueWithinDays) : "__all__"
-            }
-            onValueChange={(v) =>
-              setFilters((f) => ({
-                ...f,
-                dueWithinDays:
-                  v === "__all__" ? null : (Number(v) as 7 | 14 | 30),
-              }))
-            }
-            aria-label="Prazo"
-          />
+    <div className="mx-auto flex w-full max-w-[var(--max-width-app)] flex-col gap-[var(--space-block-gap)] px-4 pb-8 lg:px-6">
+      {/* Barra de ferramentas contida: busca, filtros e, à direita, o que
+          controla a apresentação (agrupar/ordenar). */}
+      <div className="border-line bg-card flex flex-col gap-3 rounded-md border p-3 shadow-[var(--shadow-card)]">
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="relative min-w-56 flex-1">
+            <IconSearch
+              aria-hidden
+              size={16}
+              stroke={1.75}
+              className="text-fg-muted pointer-events-none absolute top-1/2 left-3 -translate-y-1/2"
+            />
+            <input
+              type="search"
+              value={filters.q}
+              onChange={(e) => setFilters((f) => ({ ...f, q: e.target.value }))}
+              placeholder="Buscar por título…"
+              aria-label="Buscar demandas"
+              className="border-line bg-page text-fg placeholder:text-fg-muted h-9 w-full rounded-sm border pr-3 pl-9 text-[length:var(--text-small-size)]"
+            />
+          </div>
+
+          <div className="ml-auto flex items-center gap-2">
+            <div className="w-40">
+              <Select
+                options={GROUP_OPTIONS}
+                value={groupBy}
+                onValueChange={(v) => setGroupBy(v as GroupBy)}
+                aria-label="Agrupar por"
+              />
+            </div>
+            <div className="w-36">
+              <Select
+                options={SORT_OPTIONS}
+                value={sortBy}
+                onValueChange={(v) => setSortBy(v as SortBy)}
+                aria-label="Ordenar por"
+              />
+            </div>
+          </div>
         </div>
 
-        {hasFilters ? (
-          <button
-            type="button"
-            onClick={() => setFilters(EMPTY_LIST_FILTERS)}
-            className="text-fg-link text-[length:var(--text-small-size)]"
-          >
-            Limpar filtros
-          </button>
-        ) : null}
-
-        <div className="ml-auto flex items-center gap-2">
+        <div className="border-line flex flex-wrap items-center gap-2 border-t pt-3">
+          <div className="w-36">
+            <Select
+              options={STATUS_OPTIONS}
+              value={filters.status}
+              onValueChange={(v) =>
+                setFilters((f) => ({
+                  ...f,
+                  status: v as ListFilters["status"],
+                }))
+              }
+              aria-label="Status"
+            />
+          </div>
           <div className="w-40">
             <Select
-              options={GROUP_OPTIONS}
-              value={groupBy}
-              onValueChange={(v) => setGroupBy(v as GroupBy)}
-              aria-label="Agrupar por"
+              options={[
+                { value: "__all__", label: "Todos os setores" },
+                ...sectors.map((s) => ({ value: s.id, label: s.name })),
+              ]}
+              value={filters.sectorIds[0] ?? "__all__"}
+              onValueChange={(v) =>
+                setFilters((f) => ({
+                  ...f,
+                  sectorIds: v === "__all__" ? [] : [v],
+                }))
+              }
+              aria-label="Setor"
             />
           </div>
           <div className="w-36">
             <Select
-              options={SORT_OPTIONS}
-              value={sortBy}
-              onValueChange={(v) => setSortBy(v as SortBy)}
-              aria-label="Ordenar por"
+              options={PRIORITY_OPTIONS}
+              value={filters.priorities[0] ?? "__all__"}
+              onValueChange={(v) =>
+                setFilters((f) => ({
+                  ...f,
+                  priorities: v === "__all__" ? [] : [v],
+                }))
+              }
+              aria-label="Prioridade"
             />
+          </div>
+          <div className="w-40">
+            <Select
+              options={[
+                { value: "__all__", label: "Todos os clientes" },
+                ...clients.map((c) => ({ value: c.id, label: c.name })),
+              ]}
+              value={filters.clientId ?? "__all__"}
+              onValueChange={(v) =>
+                setFilters((f) => ({
+                  ...f,
+                  clientId: v === "__all__" ? null : v,
+                }))
+              }
+              aria-label="Cliente"
+            />
+          </div>
+          <div className="w-40">
+            <Select
+              options={[
+                { value: "__all__", label: "Todos os responsáveis" },
+                ...members.map((m) => ({
+                  value: m.user_id,
+                  label: m.display_name ?? m.email,
+                })),
+              ]}
+              value={filters.assigneeId ?? "__all__"}
+              onValueChange={(v) =>
+                setFilters((f) => ({
+                  ...f,
+                  assigneeId: v === "__all__" ? null : v,
+                }))
+              }
+              aria-label="Responsável"
+            />
+          </div>
+          <div className="w-40">
+            <Select
+              options={DUE_OPTIONS}
+              value={
+                filters.dueWithinDays
+                  ? String(filters.dueWithinDays)
+                  : "__all__"
+              }
+              onValueChange={(v) =>
+                setFilters((f) => ({
+                  ...f,
+                  dueWithinDays:
+                    v === "__all__" ? null : (Number(v) as 7 | 14 | 30),
+                }))
+              }
+              aria-label="Prazo"
+            />
+          </div>
+
+          <div className="ml-auto flex items-center gap-3">
+            <span
+              aria-live="polite"
+              className="tnum text-fg-secondary text-[length:var(--text-small-size)]"
+            >
+              {totalVisible} demanda{totalVisible === 1 ? "" : "s"}
+            </span>
+            {hasFilters ? (
+              <button
+                type="button"
+                onClick={() => setFilters(EMPTY_LIST_FILTERS)}
+                className="text-fg-link text-[length:var(--text-small-size)] hover:underline"
+              >
+                Limpar filtros
+              </button>
+            ) : null}
           </div>
         </div>
       </div>
 
       {selected.size > 0 ? (
-        <div className="border-line bg-selected sticky top-0 z-10 flex items-center gap-2 rounded-md border px-3 py-2">
+        <div className="tf-glass-strong sticky top-2 z-10 flex flex-wrap items-center gap-2 rounded-md px-3 py-2">
           <span className="tnum text-fg text-[length:var(--text-small-size)] font-medium">
             {selected.size} selecionada{selected.size === 1 ? "" : "s"}
           </span>
-          <div className="ml-auto flex items-center gap-2">
+          <div className="ml-auto flex flex-wrap items-center gap-2">
             <Button
               variant="secondary"
               size="sm"
@@ -351,18 +380,23 @@ export function ListView() {
           }
         />
       ) : (
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-[var(--space-block-gap)]">
           {groups.map((group) => (
-            <section key={group.key} className="flex flex-col">
+            <section
+              key={group.key}
+              className="border-line bg-card overflow-hidden rounded-md border shadow-[var(--shadow-card)]"
+            >
               {groupBy !== "none" ? (
-                <h2 className="text-fg-muted mb-1 px-1 text-[length:var(--text-caption-size)] font-medium tracking-wide uppercase">
-                  {group.label}{" "}
-                  <span className="tnum text-fg-muted">
-                    ({group.tasks.length})
+                <header className="border-line flex items-center gap-2 border-b px-4 py-2.5">
+                  <h2 className="text-fg text-[length:var(--text-small-size)] font-semibold">
+                    {group.label}
+                  </h2>
+                  <span className="tnum bg-sunken text-fg-secondary rounded-xs px-1.5 py-0.5 text-[length:var(--text-caption-size)] font-medium">
+                    {group.tasks.length}
                   </span>
-                </h2>
+                </header>
               ) : null}
-              <ul className="flex flex-col">
+              <ul className="flex flex-col p-1">
                 {group.tasks.map((task) => (
                   <li key={task.id}>
                     <TaskRow
