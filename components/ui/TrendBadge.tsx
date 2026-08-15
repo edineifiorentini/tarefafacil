@@ -42,7 +42,7 @@ export function TrendBadge({
 
   return (
     <span
-      className="inline-flex items-center gap-0.5 rounded-xs px-1.5 py-0.5 text-[length:var(--text-caption-size)] font-medium"
+      className="inline-flex items-center gap-0.5 rounded-xs px-1.5 py-0.5 text-[length:var(--text-caption-size)] font-medium whitespace-nowrap"
       style={{
         color: tone,
         background: `color-mix(in srgb, ${tone} 10%, transparent)`,

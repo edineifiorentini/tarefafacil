@@ -28,7 +28,7 @@ export function PriorityBadge({ priority }: { priority: TaskPriority }) {
   const Icon = meta.icon;
   return (
     <span
-      className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[length:var(--text-caption-size)] font-medium"
+      className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[length:var(--text-caption-size)] font-medium whitespace-nowrap"
       style={{
         color: meta.tone,
         background: `color-mix(in srgb, ${meta.tone} 14%, transparent)`,

@@ -22,7 +22,7 @@ export function Tag({ children, color = "neutral", onRemove }: TagProps) {
   return (
     <span
       style={style}
-      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[length:var(--text-caption-size)] ${
+      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[length:var(--text-caption-size)] whitespace-nowrap ${
         colored ? "" : "bg-sunken text-fg-secondary"
       }`}
     >

@@ -34,7 +34,7 @@ export function DueChip({
 
   return (
     <span
-      className={`tnum inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[length:var(--text-caption-size)] ${tone}`}
+      className={`tnum inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[length:var(--text-caption-size)] whitespace-nowrap ${tone}`}
     >
       <Glyph size={12} stroke={1.5} aria-hidden />
       {overdue ? <span className="sr-only">Atrasado: </span> : null}

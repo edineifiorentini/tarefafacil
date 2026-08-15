@@ -314,7 +314,7 @@ export function ListView() {
               <button
                 type="button"
                 onClick={() => setFilters(EMPTY_LIST_FILTERS)}
-                className="text-fg-link text-[length:var(--text-small-size)] hover:underline"
+                className="text-fg-link text-[length:var(--text-small-size)] whitespace-nowrap hover:underline"
               >
                 Limpar filtros
               </button>

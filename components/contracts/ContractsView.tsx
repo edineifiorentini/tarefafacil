@@ -245,7 +245,7 @@ export function ContractsView() {
                     </td>
                     <td className="px-4 py-3">
                       <span
-                        className="inline-flex items-center rounded-full px-2 py-0.5 text-[length:var(--text-caption-size)] font-medium"
+                        className="inline-flex items-center rounded-full px-2 py-0.5 text-[length:var(--text-caption-size)] font-medium whitespace-nowrap"
                         style={{
                           color: STATUS_TONE[c.status],
                           background: `color-mix(in srgb, ${STATUS_TONE[c.status]} 14%, transparent)`,

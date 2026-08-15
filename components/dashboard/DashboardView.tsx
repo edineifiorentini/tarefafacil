@@ -223,16 +223,16 @@ export function DashboardView() {
                   entregas
                 </span>
               </p>
-              <div className="mt-1.5 flex items-center gap-2">
+              <div className="mt-1.5 flex flex-wrap items-center gap-2">
                 <TrendBadge value={deliveryChange} label="vs. mês anterior" />
-                <span className="text-fg-muted text-[length:var(--text-caption-size)]">
+                <span className="text-fg-muted text-[length:var(--text-caption-size)] whitespace-nowrap">
                   vs. mês anterior
                 </span>
               </div>
             </div>
 
             <div className="text-fg-secondary flex items-center gap-4 text-[length:var(--text-caption-size)]">
-              <span className="inline-flex items-center gap-1.5">
+              <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
                 <span
                   aria-hidden
                   className="h-2 w-2 rounded-full"
@@ -240,7 +240,7 @@ export function DashboardView() {
                 />
                 Entregues
               </span>
-              <span className="inline-flex items-center gap-1.5">
+              <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
                 <span
                   aria-hidden
                   className="h-2 w-2 rounded-full"
@@ -280,7 +280,7 @@ export function DashboardView() {
           actions={
             <a
               href="/lista"
-              className="text-fg-link text-[length:var(--text-small-size)] hover:underline"
+              className="text-fg-link text-[length:var(--text-small-size)] whitespace-nowrap hover:underline"
             >
               Ver todas
             </a>
@@ -437,7 +437,7 @@ export function DashboardView() {
               </div>
               <div className="flex flex-col items-end gap-1">
                 <TrendBadge value={revenue.growth} label={`vs. ${year - 1}`} />
-                <span className="text-fg-muted text-[length:var(--text-caption-size)]">
+                <span className="text-fg-muted text-[length:var(--text-caption-size)] whitespace-nowrap">
                   vs. {year - 1}
                 </span>
               </div>

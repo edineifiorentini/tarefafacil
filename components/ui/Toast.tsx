@@ -51,7 +51,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                 toast.onAction?.();
                 setToast(null);
               }}
-              className="text-fg-link text-[length:var(--text-small-size)] font-medium"
+              className="text-fg-link text-[length:var(--text-small-size)] font-medium whitespace-nowrap"
             >
               {toast.actionLabel}
             </button>

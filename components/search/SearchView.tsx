@@ -48,7 +48,7 @@ export function SearchView() {
           <button
             type="button"
             onClick={clearAll}
-            className="text-fg-link text-[length:var(--text-small-size)]"
+            className="text-fg-link text-[length:var(--text-small-size)] whitespace-nowrap"
           >
             Limpar filtros
           </button>

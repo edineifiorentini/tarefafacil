@@ -192,7 +192,7 @@ export function TopBar() {
           onClick={() =>
             openPanel({ title: "Nova tarefa", node: <QuickAdd /> })
           }
-          className="tf-sheen inline-flex h-11 items-center gap-2 rounded-sm bg-[var(--button-primary-bg)] px-4 text-[length:var(--text-small-size)] font-medium text-[var(--button-primary-fg)] shadow-[var(--shadow-peek)] transition-colors [transition-duration:var(--dur-fast)] hover:bg-[var(--button-primary-bg-hover)]"
+          className="tf-sheen inline-flex h-11 items-center gap-2 rounded-sm bg-[var(--button-primary-bg)] px-4 text-[length:var(--text-small-size)] font-medium whitespace-nowrap text-[var(--button-primary-fg)] shadow-[var(--shadow-peek)] transition-colors [transition-duration:var(--dur-fast)] hover:bg-[var(--button-primary-bg-hover)]"
         >
           <IconPlus size={18} stroke={2} aria-hidden />
           <span className="hidden sm:inline">Nova tarefa</span>

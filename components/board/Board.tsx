@@ -167,7 +167,7 @@ function AddColumn({ onCreate }: { onCreate: (name: string) => void }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="border-line text-fg-secondary hover:bg-hover hover:text-fg flex h-10 w-72 shrink-0 items-center gap-2 rounded-md border border-dashed px-3 text-[length:var(--text-small-size)] transition-colors [transition-duration:var(--dur-fast)]"
+        className="border-line text-fg-secondary hover:bg-hover hover:text-fg flex h-10 w-72 shrink-0 items-center gap-2 rounded-md border border-dashed px-3 text-[length:var(--text-small-size)] whitespace-nowrap transition-colors [transition-duration:var(--dur-fast)]"
       >
         <IconPlus size={16} stroke={1.5} />
         Adicionar coluna
@@ -199,7 +199,7 @@ function AddColumn({ onCreate }: { onCreate: (name: string) => void }) {
       <div className="flex gap-2">
         <button
           type="submit"
-          className="h-8 rounded-sm bg-[var(--button-primary-bg)] px-3 text-[length:var(--text-small-size)] text-[var(--button-primary-fg)] hover:bg-[var(--button-primary-bg-hover)]"
+          className="h-8 rounded-sm bg-[var(--button-primary-bg)] px-3 text-[length:var(--text-small-size)] whitespace-nowrap text-[var(--button-primary-fg)] hover:bg-[var(--button-primary-bg-hover)]"
         >
           Adicionar
         </button>

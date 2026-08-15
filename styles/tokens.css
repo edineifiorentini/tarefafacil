@@ -94,20 +94,31 @@
   --max-width-read: 720px;
   --max-width-app: 1440px;
 
-  /* Tipografia — tamanho / entrelinha / peso (7.5) */
+  /* Tipografia — tamanho / entrelinha / peso (7.5)
+   *
+   * Título e métrica são FLUIDOS: acompanham a largura da janela em vez de
+   * saltar em breakpoints. Num monitor menor eles encolhem alguns pixels e
+   * continuam numa linha só, em vez de quebrar ou serem cortados.
+   * Corpo, apoio e legenda ficam fixos — encolher texto de leitura piora a
+   * legibilidade, que é o que o tamanho deveria proteger.
+   */
   --text-caption-size: 12px;
   --text-caption-line: 1.4;
   --text-small-size: 14px;
   --text-small-line: 1.5;
   --text-body-size: 16px;
   --text-body-line: 1.6;
-  --text-h3-size: 18px;
+  --text-h3-size: clamp(16px, 0.48vw + 11.1px, 18px);
   --text-h3-line: 1.35;
-  --text-h2-size: 22px;
+  --text-h2-size: clamp(19px, 0.72vw + 11.6px, 22px);
   --text-h2-line: 1.3;
-  --text-h1-size: 27px;
+  --text-h1-size: clamp(22px, 0.96vw + 13px, 27px);
   --text-h1-line: 1.2;
-  --text-metric-size: 32px; /* valor de indicador */
+  --text-metric-size: clamp(
+    26px,
+    1.2vw + 14.7px,
+    32px
+  ); /* valor de indicador */
   --text-metric-line: 1.1;
   --font-weight-regular: 400;
   --font-weight-medium: 500;

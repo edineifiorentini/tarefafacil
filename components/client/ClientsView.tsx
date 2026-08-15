@@ -108,7 +108,7 @@ export function ClientsView() {
               role="tab"
               aria-selected={filter === f.value}
               onClick={() => setFilter(f.value)}
-              className={`rounded-full px-3 py-1.5 text-[length:var(--text-small-size)] transition-colors [transition-duration:var(--dur-fast)] ${
+              className={`rounded-full px-3 py-1.5 text-[length:var(--text-small-size)] whitespace-nowrap transition-colors [transition-duration:var(--dur-fast)] ${
                 filter === f.value
                   ? "bg-selected text-fg font-medium"
                   : "text-fg-secondary hover:bg-hover hover:text-fg"

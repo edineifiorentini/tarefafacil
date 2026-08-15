@@ -38,7 +38,7 @@ function InsightEntry({
           <button
             type="button"
             onClick={() => setEditing(true)}
-            className="text-fg-link text-[length:var(--text-caption-size)]"
+            className="text-fg-link text-[length:var(--text-caption-size)] whitespace-nowrap"
           >
             Editar
           </button>

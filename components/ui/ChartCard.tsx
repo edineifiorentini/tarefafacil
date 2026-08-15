@@ -61,9 +61,14 @@ export function ChartCard({
           className="group border-line text-fg-link hover:bg-hover flex items-center gap-2 border-t px-[var(--space-card-pad)] py-3 text-[length:var(--text-small-size)] transition-colors [transition-duration:var(--dur-fast)]"
         >
           {FooterIcon ? (
-            <FooterIcon size={16} stroke={1.75} aria-hidden />
+            <FooterIcon
+              size={16}
+              stroke={1.75}
+              aria-hidden
+              className="shrink-0"
+            />
           ) : null}
-          <span className="flex-1">{footer.label}</span>
+          <span className="flex-1 truncate">{footer.label}</span>
           <IconChevronRight
             size={16}
             stroke={1.75}
