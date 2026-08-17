@@ -7,7 +7,9 @@ com o Google Agenda. SaaS multi-tenant.
 
 - `docs/design.md` — fonte de verdade para tokens, componentes, regras de
   negócio e acessibilidade. Consulte antes de decidir qualquer coisa visual.
-- `docs/build.md` — plano de construção em etapas (E00…E18).
+- `docs/build.md` — plano de construção em etapas (E00…E18), todas concluídas.
+- `docs/roadmap.md` — o que ainda não existe, por que foi adiado e o que
+  precisa ser decidido antes. Consulte antes de propor "o que vem agora".
 
 ## Stack
 

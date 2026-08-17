@@ -14,3 +14,4 @@ As convenções, comandos e regras do projeto vivem em `CLAUDE.md`. Referências
 
 - `docs/design.md` — design, tokens, regras de negócio, acessibilidade.
 - `docs/build.md` — plano de construção em etapas (E00…E18).
+- `docs/roadmap.md` — pendências, adiamentos registrados e decisões abertas.
