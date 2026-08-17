@@ -30,6 +30,8 @@ export type BillingPeriod = "unico" | "mensal" | "trimestral" | "anual";
 export type GcalStatus = "active" | "expired" | "revoked";
 export type ClientType = "pf" | "pj";
 export type ClientStatus = "prospecto" | "ativo" | "pausado" | "encerrado";
+/** Notificação de evento. Alerta de prazo é derivado, não tem linha. */
+export type NotificationKind = "mencao" | "atribuicao" | "comentario";
 
 export type Database = {
   public: {
@@ -820,6 +822,40 @@ export type Database = {
         };
         Relationships: [];
       };
+      notification: {
+        Row: {
+          id: string;
+          workspace_id: string;
+          user_id: string;
+          kind: NotificationKind;
+          entity_type: "task";
+          entity_id: string;
+          actor_id: string | null;
+          title: string;
+          body: string | null;
+          read_at: string | null;
+          created_at: string;
+        };
+        // Só os triggers escrevem (não há policy de insert para o cliente),
+        // mas o tipo existe para o gerado bater com o banco.
+        Insert: {
+          id?: string;
+          workspace_id: string;
+          user_id: string;
+          kind: NotificationKind;
+          entity_type: "task";
+          entity_id: string;
+          actor_id?: string | null;
+          title: string;
+          body?: string | null;
+          read_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          read_at?: string | null;
+        };
+        Relationships: [];
+      };
       client: {
         Row: {
           id: string;
@@ -1081,3 +1117,4 @@ export type FinanceEntry = Tables<"finance_entry">;
 export type Contract = Tables<"contract">;
 export type ContractTemplate = Tables<"contract_template">;
 export type FinanceGoal = Tables<"finance_goal">;
+export type Notification = Tables<"notification">;

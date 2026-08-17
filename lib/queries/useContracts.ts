@@ -15,9 +15,15 @@ function contractsKey(workspaceId: string) {
   return ["contracts", workspaceId] as const;
 }
 
-export function useContracts(workspaceId: string) {
+/**
+ * `enabled` segue o mesmo critério de `useFinanceEntries`: contrato é visível
+ * só para dono/admin (RLS), então não vale disparar a consulta para quem vai
+ * receber lista vazia.
+ */
+export function useContracts(workspaceId: string, enabled = true) {
   const supabase = createClient();
   return useQuery({
+    enabled,
     queryKey: contractsKey(workspaceId),
     queryFn: async (): Promise<Contract[]> => {
       const { data, error } = await supabase
