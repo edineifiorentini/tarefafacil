@@ -54,6 +54,7 @@ export function AppShell({
         "4": "/quadro",
         "5": "/calendario",
         "6": "/clientes",
+        "7": "/chat",
       };
 
       if (jumps[e.key]) {

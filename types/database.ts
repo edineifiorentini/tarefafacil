@@ -32,6 +32,9 @@ export type ClientType = "pf" | "pj";
 export type ClientStatus = "prospecto" | "ativo" | "pausado" | "encerrado";
 /** Notificação de evento. Alerta de prazo é derivado, não tem linha. */
 export type NotificationKind = "mencao" | "atribuicao" | "comentario";
+/** A que o clique da notificação leva. */
+export type NotificationEntity = "task" | "chat_channel";
+export type ChatMessageKind = "humano" | "sistema";
 
 export type Database = {
   public: {
@@ -822,13 +825,73 @@ export type Database = {
         };
         Relationships: [];
       };
+      chat_channel: {
+        Row: {
+          id: string;
+          workspace_id: string;
+          sector_id: string | null;
+          name: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          workspace_id: string;
+          sector_id?: string | null;
+          name: string;
+          created_at?: string;
+        };
+        Update: { name?: string };
+        Relationships: [];
+      };
+      chat_message: {
+        Row: {
+          id: string;
+          workspace_id: string;
+          channel_id: string;
+          author_id: string | null;
+          kind: ChatMessageKind;
+          body: string;
+          mentioned_user_ids: string[];
+          entity_type: "task" | null;
+          entity_id: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          workspace_id: string;
+          channel_id: string;
+          author_id?: string | null;
+          kind?: ChatMessageKind;
+          body: string;
+          mentioned_user_ids?: string[];
+          entity_type?: "task" | null;
+          entity_id?: string | null;
+          created_at?: string;
+        };
+        Update: never;
+        Relationships: [];
+      };
+      chat_read_state: {
+        Row: {
+          channel_id: string;
+          user_id: string;
+          last_read_at: string;
+        };
+        Insert: {
+          channel_id: string;
+          user_id: string;
+          last_read_at?: string;
+        };
+        Update: { last_read_at?: string };
+        Relationships: [];
+      };
       notification: {
         Row: {
           id: string;
           workspace_id: string;
           user_id: string;
           kind: NotificationKind;
-          entity_type: "task";
+          entity_type: NotificationEntity;
           entity_id: string;
           actor_id: string | null;
           title: string;
@@ -843,7 +906,7 @@ export type Database = {
           workspace_id: string;
           user_id: string;
           kind: NotificationKind;
-          entity_type: "task";
+          entity_type: NotificationEntity;
           entity_id: string;
           actor_id?: string | null;
           title: string;
@@ -1118,3 +1181,6 @@ export type Contract = Tables<"contract">;
 export type ContractTemplate = Tables<"contract_template">;
 export type FinanceGoal = Tables<"finance_goal">;
 export type Notification = Tables<"notification">;
+export type ChatChannel = Tables<"chat_channel">;
+export type ChatMessage = Tables<"chat_message">;
+export type ChatReadState = Tables<"chat_read_state">;

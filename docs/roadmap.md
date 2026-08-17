@@ -10,48 +10,34 @@ Ordem dentro de cada bloco é sugestão, não compromisso.
 
 ## 1. Chat interno da equipe
 
-Pedido do dono em 17/ago/2026. Hoje a conversa sobre uma demanda vive nos
-comentários dela; não há lugar para o que atravessa demandas ("alguém pega o
-evento de sexta?", "o cliente ligou").
+Pedido do dono em 17/ago/2026. Rodada 1 entregue na migration 0038.
 
-**Escopo pedido**
+**Decisões tomadas** (e o motivo, para não serem refeitas por engano)
 
-- Conversa entre membros do workspace;
-- Marcações (`@fulano`) integradas às notificações que já existem;
-- Aviso automático quando uma demanda ou projeto é criado;
-- Aviso automático de tempo do projeto (prazo chegando, estourado);
-- Correlatos: anexar arquivo, responder mensagem, marcar como lida.
+- **Canal por setor, mais o "Geral".** É a taxonomia que a barra lateral já
+  usa; uma segunda faria a equipe decidir duas vezes onde cada assunto mora.
+- **Sem Realtime.** Websocket é conexão aberta por aba e entra na conta.
+  Busca a cada 6s enquanto a tela está aberta e visível resolve para equipe
+  pequena com custo previsível. Trocar só com número medido.
+- **Aviso de demanda criada vai para o canal; prazo continua no sino.** Um é
+  fato passado (histórico da equipe), o outro é estado atual (caixa de
+  entrada pessoal). Fazer os dois nos dois lugares duplicaria o ruído.
+- **Filha de recorrência não avisa.** Uma demanda semanal encheria o canal
+  com o mesmo texto toda semana.
+- **`viewer` lê e não escreve**, mesmo critério do resto do app.
+- **Não lidas por `last_read_at`** em (canal, usuário). Uma linha de leitura
+  por mensagem seriam 50 mil linhas para 10 pessoas e 5 mil mensagens.
 
-**O que já está pronto e deve ser reusado**
+**Rodada 2 — o que ficou de fora**
 
-- `public.notification` + triggers `security definer` (migration 0037) — o
-  padrão de "quem escreve é o banco, não o cliente" vale igual para o chat;
-- O parser de `@menção` dos comentários (`mentioned_user_ids`);
-- O sino, que já separa alerta de evento e já sabe abrir o item clicado.
-
-**Decisões a tomar antes de escrever código**
-
-1. **Onde a conversa mora.** Canal por setor (a barra lateral já organiza o
-   trabalho assim) é o candidato natural; canal por projeto e mensagem direta
-   entre duas pessoas são escopos adicionais. Escolher um para a primeira
-   rodada — os três de uma vez viram um produto dentro do produto.
-2. **Tempo real ou não.** Supabase Realtime resolve, mas é conexão aberta por
-   aba e entra na conta. A alternativa honesta para uma equipe pequena é
-   polling com `refetchInterval` enquanto o chat está aberto. Medir antes de
-   assumir que precisa de websocket.
-3. **Avisos automáticos: mensagem ou notificação?** "Demanda criada" pode
-   virar linha no chat (histórico da equipe) ou notificação no sino (caixa de
-   entrada pessoal). Fazer os dois duplica o ruído. Recomendação: aviso de
-   criação vai para o canal do setor; aviso de prazo continua sendo alerta
-   derivado no sino, porque é estado, não evento.
-4. **Retenção.** Chat cresce rápido e nunca é apagado por ninguém. Definir
-   janela e índice antes de a tabela ter 100 mil linhas.
-5. **Quem lê o quê.** Canal de setor é visível a quem tem o setor; `viewer`
-   escreve ou só lê? A RLS precisa da resposta antes da tabela existir.
-
-**Cuidado conhecido:** contagem de não lidas por pessoa por canal é o que
-costuma ficar caro. Guardar `last_read_at` por (usuário, canal) e contar por
-`created_at >` é mais barato que uma linha de leitura por mensagem.
+- Mensagem direta entre duas pessoas;
+- Anexo e resposta a uma mensagem específica;
+- Paginação para trás (hoje carrega as 50 últimas do canal);
+- **Retenção.** Chat cresce e ninguém apaga. Definir janela antes de a tabela
+  passar de algumas dezenas de milhares de linhas;
+- O contador lateral olha uma janela de 300 mensagens recentes do workspace.
+  É teto de segurança, não paginação: se estourar, a contagem precisa descer
+  para o banco.
 
 ---
 

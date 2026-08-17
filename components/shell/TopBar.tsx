@@ -43,6 +43,10 @@ const staticPages: Record<string, PageMeta> = {
     title: "Clientes",
     subtitle: "Carteira, situação e demandas por cliente.",
   },
+  "/chat": {
+    title: "Chat",
+    subtitle: "Conversa da equipe por setor.",
+  },
   "/busca": {
     title: "Buscar",
     subtitle: "Encontre demandas por texto e filtros.",

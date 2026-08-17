@@ -9,6 +9,7 @@ import {
   IconLayoutList,
   IconMoneybag,
   IconPlus,
+  IconMessages,
   IconSearch,
   IconSettings,
   IconSun,
@@ -55,6 +56,7 @@ const destinations: Destination[] = [
     hint: "5",
   },
   { href: "/clientes", label: "Clientes", icon: IconUsers, hint: "6" },
+  { href: "/chat", label: "Chat", icon: IconMessages, hint: "7" },
   { href: "/busca", label: "Buscar", icon: IconSearch, hint: "/" },
 ];
 

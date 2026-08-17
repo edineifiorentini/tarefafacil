@@ -21,7 +21,8 @@ export type AlertKind =
 export type FeedTarget =
   | { type: "task"; id: string }
   | { type: "contract"; id: string }
-  | { type: "finance"; id: string };
+  | { type: "finance"; id: string }
+  | { type: "chat"; id: string };
 
 export type DerivedAlert = {
   /** Estável entre renders: mesma condição, mesma chave. */
@@ -54,7 +55,10 @@ export function toFeedEvent(row: Notification): FeedEvent {
     kind: row.kind,
     title: row.title,
     detail: row.body,
-    target: { type: "task", id: row.entity_id },
+    target:
+      row.entity_type === "chat_channel"
+        ? { type: "chat", id: row.entity_id }
+        : { type: "task", id: row.entity_id },
     readAt: row.read_at,
     createdAt: row.created_at,
   };

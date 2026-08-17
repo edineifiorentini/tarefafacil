@@ -147,6 +147,10 @@ export function NotificationBell() {
       openPanel({ title: "Tarefa", node: <TaskDetailPanel taskId={target.id} /> });
       return;
     }
+    if (target.type === "chat") {
+      router.push(`/chat?canal=${target.id}`);
+      return;
+    }
     router.push(target.type === "contract" ? "/contratos" : "/financeiro");
   }
 
