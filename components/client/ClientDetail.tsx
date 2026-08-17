@@ -18,6 +18,7 @@ import { useClientDetail, useClientTasks } from "@/lib/queries/useClients";
 import { useMembers } from "@/lib/queries/useMembers";
 import { useSectors } from "@/lib/queries/useSectors";
 import { useWorkspace } from "@/lib/queries/useWorkspace";
+import { documentLabel, maskDocument } from "@/lib/validation/document";
 import type { ClientStatus } from "@/types/database";
 
 import { ClientForm } from "./ClientForm";
@@ -83,7 +84,8 @@ export function ClientDetail({ clientId }: { clientId: string }) {
       <div className="border-line bg-card flex flex-col gap-2 rounded-md border p-4">
         {client.document ? (
           <p className="text-fg text-[length:var(--text-small-size)]">
-            {client.type === "pj" ? "CNPJ" : "CPF"}: {client.document}
+            {documentLabel(client.type)}:{" "}
+            {maskDocument(client.document, client.type)}
           </p>
         ) : null}
         {client.email ? (

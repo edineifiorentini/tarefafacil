@@ -321,7 +321,9 @@ export function CalendarView() {
   return (
     <div className="flex h-full flex-col p-6">
       <div className="mb-4 flex flex-wrap items-center gap-3">
-        <h2 className="text-fg text-[length:var(--text-h1-size)] leading-[var(--text-h1-line)] font-semibold capitalize">
+        {/* first-letter e não capitalize: `capitalize` deixava "Agosto De
+            2026". Sentence case — só a primeira letra sobe. */}
+        <h2 className="text-fg text-[length:var(--text-h1-size)] leading-[var(--text-h1-line)] font-semibold first-letter:uppercase">
           {format(month, "MMMM 'de' yyyy", { locale: ptBR })}
         </h2>
 

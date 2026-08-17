@@ -1,5 +1,10 @@
 import { formatCentsBRL } from "@/lib/finance/money";
-import { documentLabel } from "@/lib/validation/document";
+import {
+  documentLabel,
+  maskCNPJ,
+  maskCPF,
+  maskDocument,
+} from "@/lib/validation/document";
 import type { Client, Contract, WorkspaceProfile } from "@/types/database";
 
 /**
@@ -140,23 +145,31 @@ export function buildTemplateContext(input: {
 
     "cliente.nome": client?.name ?? "",
     "cliente.fantasia": client?.fantasy_name ?? "",
-    "cliente.documento": client?.document ?? "",
+    // Documento sempre formatado: o banco guarda como foi digitado, mas num
+    // contrato "07270498710" não é um CPF, é um número solto.
+    "cliente.documento": client?.document
+      ? maskDocument(client.document, client.type)
+      : "",
     "cliente.documento_rotulo": client ? documentLabel(client.type) : "",
     "cliente.endereco": client?.address ?? "",
     "cliente.email": client?.email ?? "",
     "cliente.telefone": client?.phone ?? "",
     "cliente.representante": client?.representative_name ?? "",
-    "cliente.representante_documento": client?.representative_document ?? "",
+    "cliente.representante_documento": client?.representative_document
+      ? maskCPF(client.representative_document)
+      : "",
 
     "contratado.nome": org?.legal_name ?? "",
-    "contratado.documento": org?.document ?? "",
+    "contratado.documento": org?.document ? maskCNPJ(org.document) : "",
     "contratado.ie": org?.state_registration ?? "",
     "contratado.endereco": org?.address ?? "",
     "contratado.email": org?.email ?? "",
     "contratado.telefone": org?.phone ?? "",
     "contratado.representante": org?.representative_name ?? "",
     "contratado.representante_cargo": org?.representative_role ?? "",
-    "contratado.representante_documento": org?.representative_document ?? "",
+    "contratado.representante_documento": org?.representative_document
+      ? maskCPF(org.representative_document)
+      : "",
 
     "data.hoje": today,
   };

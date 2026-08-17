@@ -32,8 +32,10 @@ export function MetricCard({
   series?: number[];
 }) {
   return (
-    <article className="tf-lift border-line bg-card rounded-md border p-[var(--space-card-pad)] shadow-[var(--shadow-card)]">
-      <div className="flex gap-4">
+    <article className="@container tf-lift border-line bg-card rounded-md border p-[var(--space-card-pad)] shadow-[var(--shadow-card)]">
+      {/* gap-3 e não gap-4: em 1280 com a grade de 4 colunas, os 4px extras
+          eram o que faltava para "Taxa de conclusão" caber sem reticências. */}
+      <div className="flex gap-3">
         <IconTile icon={icon} tone={tone} />
 
         <div className="flex min-w-0 flex-1 flex-col gap-1">
@@ -56,11 +58,10 @@ export function MetricCard({
               ) : null}
             </div>
 
-            {/* O micrográfico some na faixa em que a grade já é de 4 colunas
-                mas a janela ainda é estreita (1280–1535px com a barra
-                lateral): ali sobra pouco para o número, que é o que importa. */}
+            {/* Abaixo de 20rem de cartão o micrográfico some: ali o número é
+                o que importa. A regra vive em `tf-spark-slot`. */}
             {series && series.length > 1 ? (
-              <div className="hidden shrink-0 sm:block xl:hidden 2xl:block">
+              <div className="tf-spark-slot shrink-0">
                 <Sparkline values={series} color={tone} />
               </div>
             ) : null}

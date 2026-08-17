@@ -42,12 +42,16 @@ export function Select({
         id={id}
         aria-label={ariaLabel}
         aria-invalid={error || undefined}
-        className={`bg-card text-fg data-[placeholder]:text-fg-muted inline-flex h-10 w-full items-center justify-between gap-2 rounded-sm border px-3 text-[length:var(--text-body-size)] transition-colors [transition-duration:var(--dur-fast)] disabled:cursor-not-allowed disabled:opacity-60 ${
+        className={`bg-card text-fg data-[placeholder]:text-fg-muted inline-flex h-10 w-full items-center justify-between gap-2 overflow-hidden rounded-sm border px-3 text-[length:var(--text-body-size)] whitespace-nowrap transition-colors [transition-duration:var(--dur-fast)] disabled:cursor-not-allowed disabled:opacity-60 ${
           error ? "border-overdue" : "border-line hover:border-line-strong"
         }`}
       >
-        <RxSelect.Value placeholder={placeholder} />
-        <RxSelect.Icon>
+        {/* Rótulo longo ("Todos os responsáveis") corta com reticências em vez
+            de quebrar o gatilho em duas linhas e empurrar a seta para fora. */}
+        <span className="min-w-0 flex-1 truncate text-left">
+          <RxSelect.Value placeholder={placeholder} />
+        </span>
+        <RxSelect.Icon className="shrink-0">
           <IconChevronDown size={18} stroke={1.5} className="text-fg-muted" />
         </RxSelect.Icon>
       </RxSelect.Trigger>

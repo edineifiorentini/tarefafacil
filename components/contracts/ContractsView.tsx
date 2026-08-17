@@ -59,6 +59,9 @@ const NEXT_LABEL: Partial<Record<ContractStatus, string>> = {
   assinado: "Ativar contrato",
 };
 
+/** Filtro com a largura do próprio rótulo — ver `ListView`. */
+const FILTER_W = "max-w-60";
+
 export function ContractsView() {
   const workspace = useWorkspace();
   const { data: myId } = useCurrentUserId();
@@ -144,7 +147,7 @@ export function ContractsView() {
           tone="var(--brand-600)"
         />
         <StatCard
-          label="Valor mensal contratado"
+          label="Valor mensal"
           value={formatCentsBRL(stats.valorMensalCents)}
           icon={IconFileText}
           tone="var(--color-fg)"
@@ -152,7 +155,7 @@ export function ContractsView() {
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
-        <div className="w-40">
+        <div className={FILTER_W}>
           <Select
             options={[
               { value: "__all__", label: "Todas as situações" },
@@ -166,7 +169,7 @@ export function ContractsView() {
             aria-label="Filtrar por situação"
           />
         </div>
-        <div className="w-44">
+        <div className={FILTER_W}>
           <Select
             options={[
               { value: "__all__", label: "Todos os clientes" },

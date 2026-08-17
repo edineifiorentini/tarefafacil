@@ -241,6 +241,61 @@ button:not(:disabled),
   box-shadow: var(--shadow-card-hover);
 }
 
+/* Slot do micrográfico no cartão de indicador: só aparece quando o próprio
+   cartão tem largura. É consulta de contêiner, não de janela — o cartão muda
+   de tamanho com a grade e com a barra lateral, e adivinhar por breakpoint de
+   viewport erra nas duas pontas. O limite é medido no content box do cartão
+   (a consulta ignora o padding): 17.5rem é o ponto em que ícone + número +
+   micrográfico param de brigar. */
+.tf-spark-slot {
+  display: none;
+}
+
+@container (min-width: 17.5rem) {
+  .tf-spark-slot {
+    display: block;
+  }
+}
+
+/* Etiqueta de setor na linha da agenda: é a informação secundária da linha,
+   então é a primeira a sair quando o cartão estreita. Sem isso o título da
+   demanda — que é o que se lê — era espremido a alguns pixels. */
+.tf-agenda-sector {
+  display: none;
+}
+
+@container (min-width: 26rem) {
+  .tf-agenda-sector {
+    display: inline-flex;
+  }
+}
+
+/* Rótulo da situação na agenda: em cartão estreito sobra só a bolinha, e o
+   texto vira sr-only — continua no leitor de tela, então a cor nunca fica
+   sozinha comunicando estado. */
+.tf-agenda-state-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+@container (min-width: 22rem) {
+  .tf-agenda-state-label {
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 0;
+    overflow: visible;
+    clip-path: none;
+  }
+}
+
 /* Movimento reduzido (7.8): animações caem para ~0 e o lift é desligado. */
 @media (prefers-reduced-motion: reduce) {
   *,

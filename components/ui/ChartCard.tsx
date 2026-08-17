@@ -34,11 +34,14 @@ export function ChartCard({
 
   return (
     <section
-      className={`border-line bg-card flex flex-col rounded-md border shadow-[var(--shadow-card)] ${className ?? ""}`}
+      className={`@container border-line bg-card flex flex-col rounded-md border shadow-[var(--shadow-card)] ${className ?? ""}`}
     >
-      <header className="flex items-start gap-3 p-[var(--space-card-pad)] pb-3">
+      {/* O título tem piso de 10rem: se as ações (seletor de período, link)
+          não couberem ao lado, elas descem para a linha seguinte em vez de
+          reduzir "Entrega do mês" a "Entreg…". */}
+      <header className="flex flex-wrap items-start gap-x-3 gap-y-2 p-[var(--space-card-pad)] pb-3">
         <IconTile icon={icon} tone={tone} size="sm" />
-        <div className="min-w-0 flex-1">
+        <div className="min-w-40 flex-1">
           <h2 className="text-fg truncate text-[length:var(--text-h3-size)] leading-[var(--text-h3-line)] font-semibold">
             {title}
           </h2>
@@ -48,7 +51,7 @@ export function ChartCard({
             </p>
           ) : null}
         </div>
-        {actions ? <div className="shrink-0">{actions}</div> : null}
+        {actions ? <div className="ml-auto shrink-0">{actions}</div> : null}
       </header>
 
       <div className="min-w-0 flex-1 px-[var(--space-card-pad)] pb-[var(--space-card-pad)]">

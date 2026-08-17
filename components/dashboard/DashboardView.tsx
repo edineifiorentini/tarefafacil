@@ -50,6 +50,9 @@ import { AgendaItem } from "./AgendaItem";
 
 const WEEKS = 8;
 
+/** Seletor com a largura do próprio rótulo — ver `ListView`. */
+const FILTER_W = "max-w-60";
+
 /** Últimos 12 meses como opções do seletor. */
 function monthOptions(current: string) {
   return Array.from({ length: 12 }, (_, i) => {
@@ -205,7 +208,7 @@ export function DashboardView() {
           title="Entrega do mês"
           className="xl:col-span-2"
           actions={
-            <div className="w-36">
+            <div className={FILTER_W}>
               <Select
                 options={monthOptions(currentMonthISO())}
                 value={month}
@@ -277,14 +280,8 @@ export function DashboardView() {
           icon={IconCalendarMonth}
           title="Próximas entregas"
           subtitle={`Hoje, ${todayLabel}`}
-          actions={
-            <a
-              href="/lista"
-              className="text-fg-link text-[length:var(--text-small-size)] whitespace-nowrap hover:underline"
-            >
-              Ver todas
-            </a>
-          }
+          // Sem link no cabeçalho: o rodapé já é a saída do cartão e cada item
+          // abre a demanda. Dois "ver mais" só espremiam o título.
           footer={{
             label: "Ver calendário completo",
             href: "/calendario",
@@ -311,10 +308,12 @@ export function DashboardView() {
         </ChartCard>
       </div>
 
-      {/* Linha 3 — setor, equipe e faturamento */}
+      {/* Linha 3 — setor, equipe e faturamento.
+          Três colunas só a partir de 2xl: em 1280 o cartão fica com 310px e
+          nem o título ("Faturamento anual") nem o nome de uma pessoa cabem. */}
       <div
         className={`grid gap-[var(--space-block-gap)] lg:grid-cols-2 ${
-          canSeeFinance ? "xl:grid-cols-3" : ""
+          canSeeFinance ? "2xl:grid-cols-3" : ""
         }`}
       >
         <ChartCard
@@ -414,8 +413,11 @@ export function DashboardView() {
             icon={IconCoin}
             title="Faturamento anual"
             tone="var(--chart-3)"
+            // Enquanto a linha tem duas colunas, ocupa as duas: sobra é melhor
+            // que um cartão órfão de meia largura na terceira posição.
+            className="lg:col-span-2 2xl:col-span-1"
             actions={
-              <div className="w-24">
+              <div className={FILTER_W}>
                 <Select
                   options={yearOptions}
                   value={String(year)}

@@ -4,7 +4,12 @@ import { PrintButton } from "@/components/contracts/PrintButton";
 import { buildTemplateContext, renderTemplate } from "@/lib/contracts/template";
 import { formatCentsBRL } from "@/lib/finance/money";
 import { createClient } from "@/lib/supabase/server";
-import { documentLabel } from "@/lib/validation/document";
+import {
+  documentLabel,
+  maskCNPJ,
+  maskCPF,
+  maskDocument,
+} from "@/lib/validation/document";
 
 const BILLING_LABEL: Record<string, string> = {
   unico: "Pagamento único",
@@ -143,7 +148,9 @@ export default async function ContractPrintPage({
               {client?.fantasy_name ? <p>{client.fantasy_name}</p> : null}
               <p>
                 {client ? documentLabel(client.type) : "Documento"}:{" "}
-                {client?.document ?? "não informado"}
+                {client?.document
+                  ? maskDocument(client.document, client.type)
+                  : "não informado"}
               </p>
               {client?.address ? (
                 <p className="whitespace-pre-wrap">{client.address}</p>
@@ -155,7 +162,7 @@ export default async function ContractPrintPage({
                 <p>
                   Representado por {client.representative_name}
                   {client.representative_document
-                    ? `, CPF ${client.representative_document}`
+                    ? `, CPF ${maskCPF(client.representative_document)}`
                     : ""}
                 </p>
               ) : null}
@@ -166,7 +173,7 @@ export default async function ContractPrintPage({
                 Contratado
               </h2>
               <p className="font-medium">{contractedName}</p>
-              {org?.document ? <p>CNPJ: {org.document}</p> : null}
+              {org?.document ? <p>CNPJ: {maskCNPJ(org.document)}</p> : null}
               {org?.state_registration ? (
                 <p>Inscrição estadual: {org.state_registration}</p>
               ) : null}
@@ -185,7 +192,7 @@ export default async function ContractPrintPage({
                     ? ` (${org.representative_role})`
                     : ""}
                   {org.representative_document
-                    ? `, CPF ${org.representative_document}`
+                    ? `, CPF ${maskCPF(org.representative_document)}`
                     : ""}
                 </p>
               ) : null}

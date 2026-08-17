@@ -10,11 +10,18 @@ export function StatusChip({
   label,
   tone,
   variant = "solid",
+  labelClassName,
 }: {
   label: string;
   /** Token de cor (`var(--tone-blue)`), nunca hex literal. */
   tone: string;
   variant?: "solid" | "dot";
+  /**
+   * Classes do rótulo na forma `dot`. Serve para escondê-lo visualmente em
+   * espaço apertado (`sr-only`) sem perder o texto para leitor de tela — a
+   * bolinha continua, e cor sozinha nunca comunica situação.
+   */
+  labelClassName?: string;
 }) {
   if (variant === "dot") {
     return (
@@ -24,14 +31,17 @@ export function StatusChip({
           className="h-2 w-2 shrink-0 rounded-full"
           style={{ background: tone }}
         />
-        {label}
+        <span className={labelClassName}>{label}</span>
       </span>
     );
   }
 
   return (
     <span
-      className="inline-flex items-center rounded-xs px-2 py-0.5 text-[length:var(--text-caption-size)] font-medium whitespace-nowrap"
+      // Nome de setor é conteúdo do usuário e pode ser longo: nunca quebra em
+      // duas linhas, mas corta com reticências se o pai apertar.
+      className="inline-flex max-w-full items-center overflow-hidden rounded-xs px-2 py-0.5 text-[length:var(--text-caption-size)] font-medium text-ellipsis whitespace-nowrap"
+      title={label}
       style={{
         color: tone,
         background: `color-mix(in srgb, ${tone} 12%, transparent)`,

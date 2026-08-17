@@ -96,7 +96,10 @@ export function TopBar() {
   }
 
   return (
-    <header className="flex items-center gap-3 px-4 py-4 lg:px-6">
+    // Em tela estreita o título desce para a própria linha: disputando espaço
+    // com menu, busca, sino, conta e "Nova tarefa", sobravam 63px e "Visão
+    // geral" virava "Vis…". Título de página não pode sair cortado.
+    <header className="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-4 lg:flex-nowrap lg:px-6">
       <button
         type="button"
         aria-label="Abrir navegação"
@@ -106,7 +109,7 @@ export function TopBar() {
         <IconMenu2 size={20} stroke={1.75} />
       </button>
 
-      <div className="min-w-0 flex-1">
+      <div className="order-last w-full min-w-0 lg:order-none lg:w-auto lg:flex-1">
         <h1 className="text-fg truncate text-[length:var(--text-h1-size)] leading-[var(--text-h1-line)] font-bold tracking-[-0.01em]">
           {title}
         </h1>
@@ -117,7 +120,7 @@ export function TopBar() {
         ) : null}
       </div>
 
-      <div className="flex shrink-0 items-center gap-2">
+      <div className="ml-auto flex shrink-0 items-center gap-2 lg:ml-0">
         <form onSubmit={submitSearch} className="relative hidden md:block">
           <IconSearch
             aria-hidden

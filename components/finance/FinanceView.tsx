@@ -57,6 +57,9 @@ const STATUS_LABEL: Record<FinanceStatus, string> = {
   cancelado: "Cancelada",
 };
 
+/** Filtro com a largura do próprio rótulo — ver `ListView`. */
+const FILTER_W = "max-w-60";
+
 export function FinanceView() {
   const workspace = useWorkspace();
   const { data: myId } = useCurrentUserId();
@@ -244,7 +247,7 @@ export function FinanceView() {
               Fluxo de caixa
             </h2>
             <div className="flex items-center gap-2">
-              <div className="w-32">
+              <div className={FILTER_W}>
                 <Select
                   options={[
                     { value: "realizado", label: "Realizado" },
@@ -255,7 +258,7 @@ export function FinanceView() {
                   aria-label="Modo do fluxo de caixa"
                 />
               </div>
-              <div className="w-24">
+              <div className={FILTER_W}>
                 <Select
                   options={[
                     { value: "3", label: "3 meses" },
@@ -286,7 +289,7 @@ export function FinanceView() {
       <InvoiceSummary entries={monthEntries} onOpen={openForm} />
 
       <div className="flex flex-wrap items-center gap-2">
-        <div className="w-36">
+        <div className={FILTER_W}>
           <Select
             options={[
               { value: "__all__", label: "Todos os tipos" },
@@ -298,7 +301,7 @@ export function FinanceView() {
             aria-label="Filtrar por tipo"
           />
         </div>
-        <div className="w-40">
+        <div className={FILTER_W}>
           <Select
             options={[
               { value: "__all__", label: "Todas as situações" },

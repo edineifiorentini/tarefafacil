@@ -51,13 +51,18 @@ export function AgendaItem({
       </span>
 
       {sector ? (
-        <span className="hidden shrink-0 lg:inline-flex">
+        <span className="tf-agenda-sector max-w-24 min-w-0 shrink">
           <StatusChip label={sector.name} tone={sector.color} />
         </span>
       ) : null}
 
-      <span className="hidden shrink-0 sm:inline-flex">
-        <StatusChip label={meta.label} tone={meta.tone} variant="dot" />
+      <span className="shrink-0">
+        <StatusChip
+          label={meta.label}
+          tone={meta.tone}
+          variant="dot"
+          labelClassName="tf-agenda-state-label"
+        />
       </span>
 
       <IconChevronRight

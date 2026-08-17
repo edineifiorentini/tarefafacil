@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useClients } from "@/lib/queries/useClients";
 import { useWorkspace } from "@/lib/queries/useWorkspace";
+import { maskDocument } from "@/lib/validation/document";
 import type { Client, ClientStatus } from "@/types/database";
 
 import { ClientDetail } from "./ClientDetail";
@@ -187,7 +188,9 @@ export function ClientsView() {
                     <ClientStatusPill status={c.status as ClientStatus} />
                   </td>
                   <td className="text-fg-secondary hidden px-4 py-3 text-[length:var(--text-small-size)] sm:table-cell">
-                    {c.document ?? "—"}
+                    {c.document
+                      ? maskDocument(c.document, c.type as "pf" | "pj")
+                      : "—"}
                   </td>
                   <td className="text-fg-secondary hidden px-4 py-3 text-[length:var(--text-small-size)] md:table-cell">
                     {c.email ?? c.phone ?? "—"}

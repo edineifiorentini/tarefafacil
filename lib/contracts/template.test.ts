@@ -110,6 +110,23 @@ describe("buildTemplateContext", () => {
     expect(pf["cliente.documento_rotulo"]).toBe("CPF");
   });
 
+  it("formata documento guardado só com dígitos", () => {
+    // O banco guarda o que foi digitado; num contrato "07270498710" não é um
+    // CPF, é um número solto.
+    const cru = buildTemplateContext({
+      contract: contract(),
+      client: client({ type: "pf", document: "07270498710" }),
+      org: org({ document: "04252011000110" }),
+      today: "15/08/2026",
+    });
+    expect(cru["cliente.documento"]).toBe("072.704.987-10");
+    expect(cru["contratado.documento"]).toBe("04.252.011/0001-10");
+  });
+
+  it("documento já formatado não é formatado duas vezes", () => {
+    expect(ctx["cliente.documento"]).toBe("11.222.333/0001-81");
+  });
+
   it("partes ausentes viram string vazia, não 'undefined'", () => {
     const semDados = buildTemplateContext({
       contract: contract(),

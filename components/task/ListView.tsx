@@ -81,6 +81,13 @@ const SORT_OPTIONS: { value: SortBy; label: string }[] = [
   { value: "updated", label: "Atualização" },
 ];
 
+/**
+ * Cada filtro tem a largura do próprio rótulo, com teto. Largura fixa cortava
+ * "Todos os responsáveis" — e um filtro que não diz o que está filtrando não
+ * serve. A barra já quebra em outra linha quando falta espaço.
+ */
+const FILTER_W = "max-w-60";
+
 export function ListView() {
   const workspace = useWorkspace();
   const { data: tasks = [], isLoading } = useTasks(workspace.id);
@@ -187,7 +194,7 @@ export function ListView() {
           </div>
 
           <div className="ml-auto flex items-center gap-2">
-            <div className="w-40">
+            <div className={FILTER_W}>
               <Select
                 options={GROUP_OPTIONS}
                 value={groupBy}
@@ -195,7 +202,7 @@ export function ListView() {
                 aria-label="Agrupar por"
               />
             </div>
-            <div className="w-36">
+            <div className={FILTER_W}>
               <Select
                 options={SORT_OPTIONS}
                 value={sortBy}
@@ -207,7 +214,7 @@ export function ListView() {
         </div>
 
         <div className="border-line flex flex-wrap items-center gap-2 border-t pt-3">
-          <div className="w-36">
+          <div className={FILTER_W}>
             <Select
               options={STATUS_OPTIONS}
               value={filters.status}
@@ -220,7 +227,7 @@ export function ListView() {
               aria-label="Status"
             />
           </div>
-          <div className="w-40">
+          <div className={FILTER_W}>
             <Select
               options={[
                 { value: "__all__", label: "Todos os setores" },
@@ -236,7 +243,7 @@ export function ListView() {
               aria-label="Setor"
             />
           </div>
-          <div className="w-36">
+          <div className={FILTER_W}>
             <Select
               options={PRIORITY_OPTIONS}
               value={filters.priorities[0] ?? "__all__"}
@@ -249,7 +256,7 @@ export function ListView() {
               aria-label="Prioridade"
             />
           </div>
-          <div className="w-40">
+          <div className={FILTER_W}>
             <Select
               options={[
                 { value: "__all__", label: "Todos os clientes" },
@@ -265,7 +272,7 @@ export function ListView() {
               aria-label="Cliente"
             />
           </div>
-          <div className="w-40">
+          <div className={FILTER_W}>
             <Select
               options={[
                 { value: "__all__", label: "Todos os responsáveis" },
@@ -284,7 +291,7 @@ export function ListView() {
               aria-label="Responsável"
             />
           </div>
-          <div className="w-40">
+          <div className={FILTER_W}>
             <Select
               options={DUE_OPTIONS}
               value={
