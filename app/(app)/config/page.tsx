@@ -1,3 +1,4 @@
+import { ContractTemplateManager } from "@/components/contracts/ContractTemplateManager";
 import { GcalConnectCard } from "@/components/gcal/GcalConnectCard";
 import { OrgProfileForm } from "@/components/workspace/OrgProfileForm";
 import { WorkspaceSettings } from "@/components/workspace/WorkspaceSettings";
@@ -19,7 +20,9 @@ export default async function ConfigPage({
   const message = gcal ? GCAL_MESSAGES[gcal] : null;
 
   return (
-    <div className="mx-auto flex max-w-[var(--max-width-read)] flex-col gap-6 px-6 py-8">
+    // Mais largo que a coluna de leitura: o editor de modelos precisa de
+    // espaço para o texto e o painel de variáveis lado a lado.
+    <div className="mx-auto flex w-full max-w-4xl flex-col gap-8 px-4 pb-8 lg:px-6">
       {/* O título está na barra superior. */}
       {message ? (
         <p
@@ -38,6 +41,8 @@ export default async function ConfigPage({
       </section>
 
       <OrgProfileForm />
+
+      <ContractTemplateManager />
 
       <WorkspaceSettings />
     </div>

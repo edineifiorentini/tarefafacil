@@ -7,9 +7,11 @@ import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { CurrencyInput } from "@/components/ui/CurrencyInput";
 import { Select } from "@/components/ui/Select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
 import { TextInput } from "@/components/ui/TextInput";
 import { Textarea } from "@/components/ui/Textarea";
 import { useToast } from "@/components/ui/Toast";
+import { buildTemplateContext } from "@/lib/contracts/template";
 import {
   centsToMaskedInput,
   formatCentsBRL,
@@ -17,13 +19,22 @@ import {
 } from "@/lib/finance/money";
 import { useClients } from "@/lib/queries/useClients";
 import { useContractInstallments } from "@/lib/queries/useContractFinance";
+import { useContractTemplates } from "@/lib/queries/useContractTemplates";
 import {
   useCreateContract,
   useUpdateContract,
 } from "@/lib/queries/useContracts";
 import { useMembers } from "@/lib/queries/useMembers";
+import { useOrgProfile } from "@/lib/queries/useOrgProfile";
 import { useWorkspace } from "@/lib/queries/useWorkspace";
 import type { BillingPeriod, Contract, ContractStatus } from "@/types/database";
+
+import { ContractPreview } from "./ContractPreview";
+
+/** Fora do corpo do componente: ler o relógio no render fere a regra de pureza. */
+function todayLabel(): string {
+  return new Date().toLocaleDateString("pt-BR");
+}
 
 const STATUSES = [
   { value: "rascunho", label: "Rascunho" },
@@ -107,8 +118,40 @@ export function ContractForm({
   const [signedDocumentUrl, setSignedDocumentUrl] = useState(
     contract?.signed_document_url ?? ""
   );
+  const [templateId, setTemplateId] = useState(
+    contract?.template_id ?? "__none__"
+  );
+
+  const { data: templates = [] } = useContractTemplates(workspace.id);
+  const { data: org = null } = useOrgProfile(workspace.id);
 
   const busy = create.isPending || update.isPending;
+
+  // Prévia: usa o texto congelado quando já existe (contrato enviado) e o
+  // modelo ao vivo enquanto é rascunho.
+  const selectedTemplate = templates.find((t) => t.id === templateId);
+  const previewBody = contract?.body_snapshot ?? selectedTemplate?.body ?? null;
+  const previewContext = buildTemplateContext({
+    contract: {
+      ...(contract ?? ({} as Contract)),
+      number: number.trim() || null,
+      title: title.trim(),
+      description: description.trim() || null,
+      issued_on: issuedOn || null,
+      starts_on: startsOn || null,
+      ends_on: endsOn || null,
+      renew_notice_days:
+        autoRenew && renewNoticeDays
+          ? Number.parseInt(renewNoticeDays, 10)
+          : null,
+      amount_cents: amount.trim() ? parseCurrencyToCents(amount) : null,
+      billing_period: billingPeriod,
+      payment_method: paymentMethod.trim() || null,
+    } as Contract,
+    client: clients.find((c) => c.id === clientId) ?? null,
+    org,
+    today: todayLabel(),
+  });
 
   function submit(e: FormEvent) {
     e.preventDefault();
@@ -138,6 +181,7 @@ export function ContractForm({
       notes: notes.trim() || null,
       signed_at: signedAt || null,
       signed_document_url: signedDocumentUrl.trim() || null,
+      template_id: templateId === "__none__" ? null : templateId,
     };
     const handlers = {
       onSuccess: () => {
@@ -156,188 +200,227 @@ export function ContractForm({
 
   return (
     <form onSubmit={submit} className="flex flex-col gap-4">
-      <div className="grid grid-cols-2 gap-3">
-        <Field label="Número">
-          <TextInput
-            value={number}
-            onChange={(e) => setNumber(e.target.value)}
-            placeholder="Ex.: CT-0001"
-            aria-label="Número do contrato"
-          />
-        </Field>
-        <Field label="Situação">
-          <Select
-            options={STATUSES}
-            value={status}
-            onValueChange={(v) => setStatus(v as ContractStatus)}
-            aria-label="Situação"
-          />
-        </Field>
-      </div>
+      <Tabs defaultValue="dados">
+        <TabsList>
+          <TabsTrigger value="dados">Dados</TabsTrigger>
+          <TabsTrigger value="previa">Prévia</TabsTrigger>
+        </TabsList>
 
-      <Field label="Cliente">
-        <Select
-          options={clients.map((c) => ({ value: c.id, label: c.name }))}
-          value={clientId}
-          onValueChange={setClientId}
-          aria-label="Cliente"
-        />
-      </Field>
-
-      <Field label="Título do serviço">
-        <TextInput
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="Ex.: Manutenção mensal de site"
-          aria-label="Título do serviço"
-        />
-      </Field>
-
-      <Field label="Descrição / escopo">
-        <Textarea
-          autogrow
-          value={description ?? ""}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="O que será entregue…"
-          aria-label="Descrição"
-        />
-      </Field>
-
-      <Field label="Responsável interno">
-        <Select
-          options={[
-            { value: "__none__", label: "Ninguém" },
-            ...members.map((m) => ({
-              value: m.user_id,
-              label: m.display_name ?? m.email,
-            })),
-          ]}
-          value={responsibleId}
-          onValueChange={setResponsibleId}
-          aria-label="Responsável interno"
-        />
-      </Field>
-
-      <div className="grid grid-cols-3 gap-3">
-        <Field label="Emissão">
-          <TextInput
-            type="date"
-            value={issuedOn ?? ""}
-            onChange={(e) => setIssuedOn(e.target.value)}
-            aria-label="Data de emissão"
-          />
-        </Field>
-        <Field label="Início da vigência">
-          <TextInput
-            type="date"
-            value={startsOn ?? ""}
-            onChange={(e) => setStartsOn(e.target.value)}
-            aria-label="Início da vigência"
-          />
-        </Field>
-        <Field label="Fim da vigência">
-          <TextInput
-            type="date"
-            value={endsOn ?? ""}
-            onChange={(e) => setEndsOn(e.target.value)}
-            aria-label="Fim da vigência"
-          />
-        </Field>
-      </div>
-
-      <div className="flex items-center gap-2">
-        <Checkbox
-          checked={autoRenew}
-          onCheckedChange={(c) => setAutoRenew(c === true)}
-          aria-label="Renovação automática"
-        />
-        <span className="text-fg text-[length:var(--text-small-size)]">
-          Renovação automática
-        </span>
-        {autoRenew ? (
-          <div className="ml-2 w-28">
-            <TextInput
-              inputMode="numeric"
-              value={renewNoticeDays}
-              onChange={(e) =>
-                setRenewNoticeDays(e.target.value.replace(/\D/g, ""))
-              }
-              placeholder="dias de aviso"
-              aria-label="Dias de aviso prévio"
+        <TabsContent value="previa">
+          <Field label="Modelo do contrato">
+            <Select
+              options={[
+                { value: "__none__", label: "Sem modelo" },
+                ...templates.map((t) => ({
+                  value: t.id,
+                  label: `${t.name} (v${t.version})`,
+                })),
+              ]}
+              value={templateId}
+              onValueChange={setTemplateId}
+              aria-label="Modelo do contrato"
             />
+          </Field>
+
+          {contract?.body_snapshot ? (
+            <p className="border-line bg-sunken text-fg-secondary rounded-md border px-3 py-2 text-[length:var(--text-caption-size)]">
+              Texto congelado quando o contrato saiu de rascunho. Editar o
+              modelo não altera este documento.
+            </p>
+          ) : null}
+
+          <ContractPreview
+            body={previewBody}
+            context={previewContext}
+            emptyMessage="Escolha um modelo para ver o texto do contrato preenchido com os dados reais"
+          />
+        </TabsContent>
+
+        <TabsContent value="dados">
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Número">
+              <TextInput
+                value={number}
+                onChange={(e) => setNumber(e.target.value)}
+                placeholder="Ex.: CT-0001"
+                aria-label="Número do contrato"
+              />
+            </Field>
+            <Field label="Situação">
+              <Select
+                options={STATUSES}
+                value={status}
+                onValueChange={(v) => setStatus(v as ContractStatus)}
+                aria-label="Situação"
+              />
+            </Field>
           </div>
-        ) : null}
-      </div>
 
-      <div className="grid grid-cols-3 gap-3">
-        <Field label="Valor">
-          <CurrencyInput
-            value={amount}
-            onChange={setAmount}
-            aria-label="Valor"
-          />
-        </Field>
-        <Field label="Periodicidade">
-          <Select
-            options={PERIODS}
-            value={billingPeriod}
-            onValueChange={(v) => setBillingPeriod(v as BillingPeriod)}
-            aria-label="Periodicidade"
-          />
-        </Field>
-        <Field label="Forma de pagamento">
-          <TextInput
-            value={paymentMethod ?? ""}
-            onChange={(e) => setPaymentMethod(e.target.value)}
-            placeholder="Ex.: Pix, boleto…"
-            aria-label="Forma de pagamento"
-          />
-        </Field>
-      </div>
+          <Field label="Cliente">
+            <Select
+              options={clients.map((c) => ({ value: c.id, label: c.name }))}
+              value={clientId}
+              onValueChange={setClientId}
+              aria-label="Cliente"
+            />
+          </Field>
 
-      <div className="grid grid-cols-2 gap-3">
-        <Field label="Data da assinatura">
-          <TextInput
-            type="date"
-            value={signedAt ?? ""}
-            onChange={(e) => setSignedAt(e.target.value)}
-            aria-label="Data da assinatura"
-          />
-        </Field>
-        <Field label="Link do documento assinado">
-          <TextInput
-            value={signedDocumentUrl ?? ""}
-            onChange={(e) => setSignedDocumentUrl(e.target.value)}
-            placeholder="https://…"
-            aria-label="Link do documento assinado"
-          />
-        </Field>
-      </div>
+          <Field label="Título do serviço">
+            <TextInput
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Ex.: Manutenção mensal de site"
+              aria-label="Título do serviço"
+            />
+          </Field>
 
-      <Field label="Observações">
-        <Textarea
-          autogrow
-          value={notes ?? ""}
-          onChange={(e) => setNotes(e.target.value)}
-          placeholder="Cláusulas adicionais, notas internas…"
-          aria-label="Observações"
-        />
-      </Field>
+          <Field label="Descrição / escopo">
+            <Textarea
+              autogrow
+              value={description ?? ""}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="O que será entregue…"
+              aria-label="Descrição"
+            />
+          </Field>
 
-      {mode === "edit" && installments.length > 0 ? (
-        <p className="border-line bg-sunken text-fg-secondary rounded-md border px-3 py-2 text-[length:var(--text-small-size)]">
-          {installments.length} parcela{installments.length === 1 ? "" : "s"}{" "}
-          gerada
-          {installments.length === 1 ? "" : "s"} no Financeiro{" "}
-          <span className="tnum">
-            (
-            {formatCentsBRL(
-              installments.reduce((s, i) => s + i.amount_cents, 0)
-            )}{" "}
-            no total)
-          </span>
-        </p>
-      ) : null}
+          <Field label="Responsável interno">
+            <Select
+              options={[
+                { value: "__none__", label: "Ninguém" },
+                ...members.map((m) => ({
+                  value: m.user_id,
+                  label: m.display_name ?? m.email,
+                })),
+              ]}
+              value={responsibleId}
+              onValueChange={setResponsibleId}
+              aria-label="Responsável interno"
+            />
+          </Field>
+
+          <div className="grid grid-cols-3 gap-3">
+            <Field label="Emissão">
+              <TextInput
+                type="date"
+                value={issuedOn ?? ""}
+                onChange={(e) => setIssuedOn(e.target.value)}
+                aria-label="Data de emissão"
+              />
+            </Field>
+            <Field label="Início da vigência">
+              <TextInput
+                type="date"
+                value={startsOn ?? ""}
+                onChange={(e) => setStartsOn(e.target.value)}
+                aria-label="Início da vigência"
+              />
+            </Field>
+            <Field label="Fim da vigência">
+              <TextInput
+                type="date"
+                value={endsOn ?? ""}
+                onChange={(e) => setEndsOn(e.target.value)}
+                aria-label="Fim da vigência"
+              />
+            </Field>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Checkbox
+              checked={autoRenew}
+              onCheckedChange={(c) => setAutoRenew(c === true)}
+              aria-label="Renovação automática"
+            />
+            <span className="text-fg text-[length:var(--text-small-size)]">
+              Renovação automática
+            </span>
+            {autoRenew ? (
+              <div className="ml-2 w-28">
+                <TextInput
+                  inputMode="numeric"
+                  value={renewNoticeDays}
+                  onChange={(e) =>
+                    setRenewNoticeDays(e.target.value.replace(/\D/g, ""))
+                  }
+                  placeholder="dias de aviso"
+                  aria-label="Dias de aviso prévio"
+                />
+              </div>
+            ) : null}
+          </div>
+
+          <div className="grid grid-cols-3 gap-3">
+            <Field label="Valor">
+              <CurrencyInput
+                value={amount}
+                onChange={setAmount}
+                aria-label="Valor"
+              />
+            </Field>
+            <Field label="Periodicidade">
+              <Select
+                options={PERIODS}
+                value={billingPeriod}
+                onValueChange={(v) => setBillingPeriod(v as BillingPeriod)}
+                aria-label="Periodicidade"
+              />
+            </Field>
+            <Field label="Forma de pagamento">
+              <TextInput
+                value={paymentMethod ?? ""}
+                onChange={(e) => setPaymentMethod(e.target.value)}
+                placeholder="Ex.: Pix, boleto…"
+                aria-label="Forma de pagamento"
+              />
+            </Field>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Data da assinatura">
+              <TextInput
+                type="date"
+                value={signedAt ?? ""}
+                onChange={(e) => setSignedAt(e.target.value)}
+                aria-label="Data da assinatura"
+              />
+            </Field>
+            <Field label="Link do documento assinado">
+              <TextInput
+                value={signedDocumentUrl ?? ""}
+                onChange={(e) => setSignedDocumentUrl(e.target.value)}
+                placeholder="https://…"
+                aria-label="Link do documento assinado"
+              />
+            </Field>
+          </div>
+
+          <Field label="Observações">
+            <Textarea
+              autogrow
+              value={notes ?? ""}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Cláusulas adicionais, notas internas…"
+              aria-label="Observações"
+            />
+          </Field>
+
+          {mode === "edit" && installments.length > 0 ? (
+            <p className="border-line bg-sunken text-fg-secondary rounded-md border px-3 py-2 text-[length:var(--text-small-size)]">
+              {installments.length} parcela
+              {installments.length === 1 ? "" : "s"} gerada
+              {installments.length === 1 ? "" : "s"} no Financeiro{" "}
+              <span className="tnum">
+                (
+                {formatCentsBRL(
+                  installments.reduce((s, i) => s + i.amount_cents, 0)
+                )}{" "}
+                no total)
+              </span>
+            </p>
+          ) : null}
+        </TabsContent>
+      </Tabs>
 
       <div className="flex justify-end gap-2">
         <Button type="button" variant="ghost" onClick={onDone}>

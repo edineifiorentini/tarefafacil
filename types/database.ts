@@ -718,6 +718,10 @@ export type Database = {
           notes: string | null;
           signed_at: string | null;
           signed_document_url: string | null;
+          template_id: string | null;
+          template_version: number | null;
+          body_snapshot: string | null;
+          snapshot_at: string | null;
           created_by: string | null;
           created_at: string;
           updated_at: string;
@@ -742,6 +746,10 @@ export type Database = {
           notes?: string | null;
           signed_at?: string | null;
           signed_document_url?: string | null;
+          template_id?: string | null;
+          template_version?: number | null;
+          body_snapshot?: string | null;
+          snapshot_at?: string | null;
           created_by?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -766,6 +774,46 @@ export type Database = {
           notes?: string | null;
           signed_at?: string | null;
           signed_document_url?: string | null;
+          template_id?: string | null;
+          template_version?: number | null;
+          body_snapshot?: string | null;
+          snapshot_at?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      contract_template: {
+        Row: {
+          id: string;
+          workspace_id: string;
+          name: string;
+          body: string;
+          version: number;
+          archived_at: string | null;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          workspace_id: string;
+          name: string;
+          body?: string;
+          version?: number;
+          archived_at?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          workspace_id?: string;
+          name?: string;
+          body?: string;
+          version?: number;
+          archived_at?: string | null;
           created_by?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -1031,4 +1079,5 @@ export type TaskTimeEntry = Tables<"task_time_entry">;
 export type TaskDependency = Tables<"task_dependency">;
 export type FinanceEntry = Tables<"finance_entry">;
 export type Contract = Tables<"contract">;
+export type ContractTemplate = Tables<"contract_template">;
 export type FinanceGoal = Tables<"finance_goal">;

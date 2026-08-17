@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+import { freezeContractBody } from "@/lib/contracts/snapshot";
 import { createClient } from "@/lib/supabase/client";
 import type {
   Contract,
@@ -101,6 +102,13 @@ export function useSetContractStatus(workspaceId: string) {
         .update(patch)
         .eq("id", id);
       if (error) throw error;
+
+      // Spec §9.4: ao deixar de ser rascunho o texto é congelado. A partir
+      // daqui nem editar o modelo nem corrigir o cadastro do cliente muda
+      // o documento — o que foi enviado é o que vale.
+      if (status !== "rascunho") {
+        await freezeContractBody(supabase, id);
+      }
 
       // Spec §13.1.6: cancelar o contrato cancela as parcelas futuras AINDA
       // NÃO pagas geradas a partir dele — as já confirmadas (recebidas)

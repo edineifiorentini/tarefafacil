@@ -19,6 +19,12 @@ export default defineConfig({
     projects: [
       {
         plugins: [react()],
+        // O "@/" do tsconfig precisa existir aqui também. Sem isto só
+        // importação de TIPO funcionava (some na transformação); qualquer
+        // valor de runtime importado por "@/" quebrava o teste.
+        resolve: {
+          alias: { "@": path.resolve(dirname, ".") },
+        },
         test: {
           name: "unit",
           environment: "jsdom",
