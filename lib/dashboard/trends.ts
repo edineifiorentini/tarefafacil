@@ -1,9 +1,6 @@
 import {
-  eachWeekOfInterval,
-  endOfMonth,
   endOfWeek,
   parseISO,
-  startOfMonth,
   subWeeks,
 } from "date-fns";
 
@@ -133,23 +130,26 @@ export function deliveriesByWeek(
   tasks: Task[],
   monthISO: string
 ): DeliveriesByWeek {
-  const monthStart = startOfMonth(parseISO(`${monthISO}-01`));
-  const monthEnd = endOfMonth(monthStart);
-  const weekStarts = eachWeekOfInterval(
-    { start: monthStart, end: monthEnd },
-    { weekStartsOn: 1 }
-  );
+  // Dia 0 do mês seguinte, em UTC, é o último dia deste mês. Usar
+  // endOfMonth() aqui daria 23:59 LOCAL e, num fuso atrás de UTC, o
+  // getUTCDate() cairia no dia 1º do mês seguinte.
+  const [year, month] = monthISO.split("-").map(Number);
+  const lastDay = new Date(Date.UTC(year, month, 0)).getUTCDate();
 
+  // Fatias de 7 dias contadas do dia 1, com a última absorvendo o resto.
+  // Semana ISO não serve aqui: ela atravessa a virada do mês e produz 5 ou 6
+  // baldes, sendo o primeiro e o último de 1 ou 2 dias — o gráfico fica
+  // esparso e "Sem 6" não quer dizer nada para quem lê um fechamento mensal.
+  const WEEKS = 4;
   const labels: string[] = [];
   const delivered: number[] = [];
   const planned: number[] = [];
 
-  weekStarts.forEach((weekStart, index) => {
-    const weekEnd = endOfWeek(weekStart, { weekStartsOn: 1 });
-    const from = weekStart < monthStart ? monthStart : weekStart;
-    const to = weekEnd > monthEnd ? monthEnd : weekEnd;
-    const fromISO = isoDay(from);
-    const toISO = isoDay(to);
+  for (let index = 0; index < WEEKS; index += 1) {
+    const firstDay = index * 7 + 1;
+    const closingDay = index === WEEKS - 1 ? lastDay : (index + 1) * 7;
+    const fromISO = `${monthISO}-${String(firstDay).padStart(2, "0")}`;
+    const toISO = `${monthISO}-${String(closingDay).padStart(2, "0")}`;
 
     labels.push(`Sem ${index + 1}`);
 
@@ -167,7 +167,7 @@ export function deliveriesByWeek(
         return t.due_date >= fromISO && t.due_date <= toISO;
       }).length
     );
-  });
+  }
 
   return {
     labels,

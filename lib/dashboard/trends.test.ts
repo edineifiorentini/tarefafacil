@@ -175,6 +175,38 @@ describe("percentChange / pointChange", () => {
 });
 
 describe("deliveriesByWeek", () => {
+  it("sempre devolve 4 semanas, sem os baldes de 1 dia da semana ISO", () => {
+    // Agosto/2026 começa num sábado: por semana ISO daria 6 baldes, com o
+    // primeiro cobrindo 2 dias e o último cobrindo 1.
+    const result = deliveriesByWeek([], "2026-08");
+    expect(result.labels).toEqual(["Sem 1", "Sem 2", "Sem 3", "Sem 4"]);
+  });
+
+  it("a última semana absorve o resto do mês", () => {
+    const tasks = [
+      task({ completed_at: "2026-08-31T10:00:00Z" }), // dia 31 cai na Sem 4
+      task({ completed_at: "2026-08-22T10:00:00Z" }), // início da Sem 4
+    ];
+    const result = deliveriesByWeek(tasks, "2026-08");
+    expect(result.delivered).toEqual([0, 0, 0, 2]);
+  });
+
+  it("distribui pelos dias 1-7, 8-14, 15-21, 22-fim", () => {
+    const tasks = [
+      task({ completed_at: "2026-08-03T10:00:00Z" }),
+      task({ completed_at: "2026-08-10T10:00:00Z" }),
+      task({ completed_at: "2026-08-17T10:00:00Z" }),
+    ];
+    expect(deliveriesByWeek(tasks, "2026-08").delivered).toEqual([1, 1, 1, 0]);
+  });
+
+  it("funciona em fevereiro (mês curto)", () => {
+    const tasks = [task({ completed_at: "2026-02-28T10:00:00Z" })];
+    const result = deliveriesByWeek(tasks, "2026-02");
+    expect(result.labels).toHaveLength(4);
+    expect(result.delivered).toEqual([0, 0, 0, 1]);
+  });
+
   it("separa entregues (conclusão) de planejadas (prazo)", () => {
     const tasks = [
       task({ completed_at: "2026-08-04T10:00:00Z", due_date: "2026-08-04" }),
