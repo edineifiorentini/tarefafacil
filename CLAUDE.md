@@ -43,6 +43,13 @@ Radix UI · TanStack Query · dnd-kit · Zod · Storybook 9 · Vitest · Playwri
    Ele será reusado pelo funil de CRM (fase 4).
 9. Subtarefa nunca gera evento no Google Agenda.
 10. Sincronização com o Google é opt-in por tarefa, padrão desligado.
+11. **Toda tarefa pertence a um setor.** `task.sector_id` é `not null` com
+    `on delete restrict`, e o workspace nasce com o setor "Geral"
+    (migration 0043) para ninguém ficar preso em zero. É regra de produto,
+    decidida pelo dono em 18/ago/2026 — não torne o campo opcional para
+    "facilitar" um formulário. Se um dia existir tarefa sem setor, o quadro,
+    a barra lateral, a busca, o painel e a etiqueta do chat precisam todos
+    de um balde "sem setor".
 
 ## Cores
 
