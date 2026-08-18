@@ -48,6 +48,7 @@ import { TaskMeetToggle } from "./TaskMeetToggle";
 import { TaskSyncToggle } from "./TaskSyncToggle";
 import { TimeTracking } from "./TimeTracking";
 import { ConfirmDeleteDialog } from "./ConfirmDeleteDialog";
+import { SharePanel } from "./SharePanel";
 
 const PRIORITIES = [
   { value: "sem_prioridade", label: "Sem prioridade" },
@@ -441,6 +442,8 @@ export function TaskDetailPanel({ taskId }: { taskId: string }) {
           <Field label="Anexos">
             <AttachmentList taskId={taskId} />
           </Field>
+
+          <SharePanel workspaceId={workspace.id} taskId={taskId} />
         </TabsContent>
 
         <TabsContent value="atividade">

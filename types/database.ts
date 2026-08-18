@@ -876,6 +876,32 @@ export type Database = {
         };
         Relationships: [];
       };
+      share_link: {
+        Row: {
+          id: string;
+          workspace_id: string;
+          entity_type: "task";
+          entity_id: string;
+          token: string;
+          label: string | null;
+          expires_at: string;
+          revoked_at: string | null;
+          view_count: number;
+          last_viewed_at: string | null;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          workspace_id: string;
+          entity_type: "task";
+          entity_id: string;
+          label?: string | null;
+          expires_at?: string;
+          created_by?: string | null;
+        };
+        Update: { revoked_at?: string | null; label?: string | null };
+        Relationships: [];
+      };
       audit_log: {
         Row: {
           id: string;
@@ -1211,6 +1237,10 @@ export type Database = {
         Args: { canal: string };
         Returns: undefined;
       };
+      register_share_view: {
+        Args: { p_token: string };
+        Returns: undefined;
+      };
       open_direct_channel: {
         Args: { ws: string; other: string };
         /** id do canal direto — reaproveita o existente ou cria. */
@@ -1291,4 +1321,5 @@ export type ChatMessage = Tables<"chat_message">;
 export type ChatReadState = Tables<"chat_read_state">;
 export type ChatChannelMember = Tables<"chat_channel_member">;
 export type AuditLog = Tables<"audit_log">;
+export type ShareLink = Tables<"share_link">;
 export type FinanceRecurrence = Tables<"finance_recurrence">;

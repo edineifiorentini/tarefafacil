@@ -40,6 +40,8 @@ export async function proxy(request: NextRequest) {
     // Aceite de convite: a própria página decide login/redirect (precisa
     // renderizar mesmo sem sessão para preservar o token no /login?next=).
     path.startsWith("/convite") ||
+    // Link público de demanda: quem abre não tem conta, por definição.
+    path.startsWith("/d/") ||
     // Webhook do Google: chamado sem sessão (o Google não tem cookie).
     path.startsWith("/api/gcal/webhook");
 

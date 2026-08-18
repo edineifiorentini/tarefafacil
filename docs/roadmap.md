@@ -96,10 +96,15 @@ chegou à barra lateral.
 
 A central de notificações saiu (2b7084c). Restam:
 
-- **Link público revogável** (spec §11). Compartilhar uma demanda ou uma visão
-  filtrada com cliente externo, sem login: token, validade, revogação e um
-  recorte que nunca inclui financeiro. É a peça que falta para o cliente
-  acompanhar sem virar membro.
+- ~~**Link público revogável**~~ Entregue na migration 0046, para DEMANDA.
+  A fatia pública é montada campo a campo em `lib/share/publicTask.ts`
+  (marcado `server-only`), não filtrada na interface — máscara visual não é
+  controle de acesso (§15). Expira sempre (`expires_at` NOT NULL, padrão 30
+  dias), revogar não apaga a linha, e o contador de aberturas responde "o
+  cliente chegou a olhar?".
+
+  Falta compartilhar uma VISÃO filtrada (lista), que o §11 também prevê —
+  exige decidir que recorte de lista é seguro expor.
 - **Permissões granulares.** Hoje são quatro papéis para o workspace inteiro.
   O spec pede recorte por setor e por cliente, e transferir responsabilidades
   antes de remover alguém.
