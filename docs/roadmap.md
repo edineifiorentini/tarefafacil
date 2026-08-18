@@ -61,6 +61,17 @@ descrita acima.
   inexistente (defeito achado em produção, migration 0041). A mensagem fica
   — "Fulano criou a demanda X" continua verdade —, só o link some.
 
+**Pontas soltas da rodada 3** — o back-end existe, a interface não. Não é
+ideia para depois: é função pela metade, e o código morto engana quem ler.
+
+- `add_group_members` e `leave_group_channel` existem como RPC e como
+  hook, **sem tela**. Hoje dá para criar um grupo com participantes e nunca
+  mais mexer neles, nem sair.
+- Renomear grupo não existe em lugar nenhum.
+- `useChatUnreadTotal` foi escrito e **não está ligado** ao item "Chat" da
+  barra lateral. Sem esse contador, só se descobre mensagem nova abrindo o
+  chat — o que anula boa parte do valor de ter chat.
+
 **Rodada 4 — o que ficou de fora**
 
 - Anexo em mensagem (reusar o storage que as demandas já usam);
@@ -92,7 +103,24 @@ A central de notificações saiu (2b7084c). Restam:
   — e-mail, renovação do `watch` do Google, limpeza de anexo. Criar a
   infraestrutura antes disso é inventar problema.
 
-## 3. Fase 9 — qualidade e lançamento
+## 3. Lacunas contra o MVP do spec (§22)
+
+O spec lista o que considera essencial para o MVP comercial. Quase tudo
+existe; falta:
+
+- **Testes críticos.** Não há nenhum teste ponta a ponta. Os três últimos
+  defeitos — relógio preso na montagem, painel em UTC contra sino em local,
+  aviso apontando para demanda apagada — passaram por 191 testes de unidade
+  porque nenhum estava na lógica pura: estavam na ligação entre dado e tela.
+  Enquanto essa classe só for descoberta por alguém reparando, toda função
+  nova entra com o mesmo ponto cego.
+- **Auditoria de operações sensíveis.** Existe histórico por demanda; falta
+  o log do workspace (login, convite, troca de papel, exclusão). Está
+  listado em §22 como parte do essencial, não como evolução.
+- **Recorrências no Financeiro.** Parcela de contrato gera lançamento;
+  recorrência própria ("aluguel todo dia 5") não existe.
+
+## 4. Fase 9 — qualidade e lançamento
 
 - Testes ponta a ponta no Playwright cobrindo os fluxos críticos;
 - Desempenho das queries principais com volume realista;
@@ -103,7 +131,7 @@ A central de notificações saiu (2b7084c). Restam:
 
 ---
 
-## 4. Dívidas e adiamentos registrados
+## 5. Dívidas e adiamentos registrados
 
 Cada item aqui foi uma decisão consciente, não esquecimento.
 
@@ -117,3 +145,23 @@ Cada item aqui foi uma decisão consciente, não esquecimento.
 | `events.watch` do Google em produção | Precisa de URL pública estável. |
 | Crons (limpeza de anexo 30d, renovação do watch) | Ver "jobs observáveis" acima. |
 | Marketing e onboarding guiado (E18) | Adiado no fechamento da E18. |
+| Contador de não lidas no banco | Hoje o chat conta sobre uma janela de 300 mensagens no cliente. Só vira problema com volume. |
+
+---
+
+## 6. Ambiente de desenvolvimento
+
+O Next avisa `Slow filesystem detected` (468ms num benchmark que costuma dar
+dezenas de milissegundos) — o projeto está num disco lento. Isso já custou
+boot de 17s, build de 4min e dois travamentos do runner de teste por processo
+órfão. Mover `.next` ou o projeto para o SSD antes de investigar lentidão
+como se fosse problema de código.
+
+---
+
+## 7. Testes pendentes
+
+`docs/testes-pendentes.md` lista o que foi construído e não pôde ser
+verificado rodando. O item mais importante é o isolamento da conversa direta
+com dois usuários logados — o único com consequência de privacidade e o
+único impossível de provar com uma sessão só.
