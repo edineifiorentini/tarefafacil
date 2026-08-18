@@ -2,11 +2,11 @@
 
 import {
   IconAlertTriangle,
-  IconHash,
   IconMessagePlus,
   IconMessages,
   IconSpeakerphone,
   IconUser,
+  IconUsersGroup,
 } from "@tabler/icons-react";
 import { DropdownMenu } from "radix-ui";
 import { useEffect, useMemo, useState } from "react";
@@ -15,7 +15,9 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { useToast } from "@/components/ui/Toast";
 import {
   deadlinesLabel,
+  filterBySector,
   sectorDeadlines,
+  sectorsInUse,
   sortChannelViews,
   toChannelViews,
 } from "@/lib/chat/channels";
@@ -30,11 +32,13 @@ import {
   useRecentMessages,
 } from "@/lib/queries/useChat";
 import { useCurrentUserId, useMembers } from "@/lib/queries/useMembers";
+import { useSectors } from "@/lib/queries/useSectors";
 import { useTasks } from "@/lib/queries/useTasks";
 import { useWorkspace } from "@/lib/queries/useWorkspace";
 
 import { MessageComposer } from "./MessageComposer";
 import { MessageList } from "./MessageList";
+import { NewGroupDialog } from "./NewGroupDialog";
 
 const menuContent =
   "z-50 max-h-64 min-w-48 overflow-auto rounded-md tf-glass-strong p-1 data-[state=closed]:[animation:tf-pop-out_var(--dur-fast)_ease-in] data-[state=open]:[animation:tf-pop-in_var(--dur-fast)_var(--ease-out)]";
@@ -42,15 +46,20 @@ const menuItem =
   "flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] text-fg outline-none data-[highlighted]:bg-hover";
 
 /**
- * Chat da equipe. Canal por setor, "Geral" e conversas diretas — a mesma
- * taxonomia da barra lateral, para ninguém decidir duas vezes onde um
- * assunto mora.
+ * Chat da equipe.
+ *
+ * Três lugares: "Geral" (todo o workspace), grupos (você escolhe quem entra)
+ * e conversas diretas. Setor NÃO é um canal — é etiqueta da mensagem, com
+ * filtro no topo. Doze salas de setor partiam a conversa em pedaços que
+ * ninguém acompanhava; uma sala com etiqueta mantém o assunto localizável
+ * sem espalhar a equipe.
  */
 export function ChatView({ initialChannelId }: { initialChannelId?: string }) {
   const workspace = useWorkspace();
   const toast = useToast();
   const { data: myId } = useCurrentUserId();
   const { data: members = [] } = useMembers(workspace.id);
+  const { data: sectors = [] } = useSectors(workspace.id);
   const { data: channels = [], isLoading } = useChatChannels(workspace.id);
   const { data: channelMembers = [] } = useChannelMembers(workspace.id);
   const { data: readState = [] } = useChatReadState(workspace.id);
@@ -60,6 +69,8 @@ export function ChatView({ initialChannelId }: { initialChannelId?: string }) {
     initialChannelId ?? null
   );
   const [replyTo, setReplyTo] = useState<string | null>(null);
+  const [sectorFilter, setSectorFilter] = useState<string | null>(null);
+  const [groupOpen, setGroupOpen] = useState(false);
 
   const membersByChannel = useMemo(() => {
     const m = new Map<string, string[]>();
@@ -93,6 +104,18 @@ export function ChatView({ initialChannelId }: { initialChannelId?: string }) {
   const openDirect = useOpenDirectChannel(workspace.id);
 
   const messages = useMemo(() => query.data?.pages.flat() ?? [], [query.data]);
+  const visiveis = useMemo(
+    () => filterBySector(messages, sectorFilter),
+    [messages, sectorFilter]
+  );
+
+  const nomeSetor = useMemo(
+    () => new Map(sectors.map((s) => [s.id, s.name])),
+    [sectors]
+  );
+  // Só oferece filtro do que realmente aparece na conversa — uma lista com
+  // doze setores dos quais ninguém falou é ruído.
+  const filtros = useMemo(() => sectorsInUse(messages), [messages]);
 
   const unread = useMemo(
     () => unreadByChannel(recent, readState, myId ?? null),
@@ -101,16 +124,17 @@ export function ChatView({ initialChannelId }: { initialChannelId?: string }) {
 
   // Relógio lido uma vez: o resumo não pode mudar no meio de um render.
   const [now] = useState(() => new Date());
-  const resumo = atual?.channel.sector_id
-    ? deadlinesLabel(sectorDeadlines(tasks, atual.channel.sector_id, now))
+  const resumo = sectorFilter
+    ? deadlinesLabel(sectorDeadlines(tasks, sectorFilter, now))
     : null;
 
-  // Trocar de canal cancela a resposta em curso — responder a uma mensagem
-  // de outra conversa não faria sentido. É consequência do clique, não
-  // sincronização com sistema externo, então mora aqui e não num efeito.
+  // Trocar de canal zera resposta e filtro — os dois pertencem à conversa
+  // que estava aberta. É consequência do clique, não sincronização com
+  // sistema externo, então mora aqui e não num efeito.
   function selecionarCanal(id: string) {
     setChannelId(id);
     setReplyTo(null);
+    setSectorFilter(null);
   }
 
   const ultima = messages[0]?.created_at;
@@ -156,8 +180,8 @@ export function ChatView({ initialChannelId }: { initialChannelId?: string }) {
       <div className="p-6">
         <EmptyState
           icon={IconMessages}
-          title="Nenhum canal ainda"
-          description="Os canais nascem com os setores. Crie um setor para a equipe ter onde conversar"
+          title="Chat indisponível"
+          description="O canal geral do workspace não foi encontrado. Recarregue a página"
         />
       </div>
     );
@@ -166,13 +190,21 @@ export function ChatView({ initialChannelId }: { initialChannelId?: string }) {
   return (
     <div className="flex h-full min-h-0">
       <nav
-        aria-label="Canais"
+        aria-label="Conversas"
         className="border-line hidden w-56 shrink-0 flex-col gap-0.5 overflow-y-auto border-r p-3 md:flex"
       >
         <div className="flex items-center gap-1 px-2 pb-1">
           <p className="text-fg-muted flex-1 text-[length:var(--text-caption-size)] font-medium tracking-wide whitespace-nowrap uppercase">
-            Canais
+            Conversas
           </p>
+          <button
+            type="button"
+            aria-label="Novo grupo"
+            onClick={() => setGroupOpen(true)}
+            className="text-fg-secondary hover:bg-hover hover:text-fg inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-xs transition-colors [transition-duration:var(--dur-fast)]"
+          >
+            <IconUsersGroup size={16} stroke={1.75} />
+          </button>
           <DropdownMenu.Root>
             <DropdownMenu.Trigger asChild>
               <button
@@ -218,9 +250,9 @@ export function ChatView({ initialChannelId }: { initialChannelId?: string }) {
           const Icon =
             v.channel.kind === "geral"
               ? IconSpeakerphone
-              : v.channel.kind === "direta"
-                ? IconUser
-                : IconHash;
+              : v.channel.kind === "grupo"
+                ? IconUsersGroup
+                : IconUser;
           return (
             <button
               key={v.channel.id}
@@ -256,7 +288,7 @@ export function ChatView({ initialChannelId }: { initialChannelId?: string }) {
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <div className="border-line flex items-center gap-2 border-b px-4 py-2 md:hidden">
           <label htmlFor="canal" className="sr-only">
-            Canal
+            Conversa
           </label>
           <select
             id="canal"
@@ -276,8 +308,29 @@ export function ChatView({ initialChannelId }: { initialChannelId?: string }) {
           </select>
         </div>
 
-        {/* Resumo do SETOR, agregado. O sino cuida do pessoal e por demanda —
-            por isso os dois convivem sem repetir a mesma informação. */}
+        {filtros.length > 0 ? (
+          <div className="border-line flex flex-wrap items-center gap-1.5 border-b px-4 py-2">
+            <span className="text-fg-muted text-[length:var(--text-caption-size)] whitespace-nowrap">
+              Assunto:
+            </span>
+            <FiltroChip
+              label="Tudo"
+              active={sectorFilter === null}
+              onClick={() => setSectorFilter(null)}
+            />
+            {filtros.map((id) => (
+              <FiltroChip
+                key={id}
+                label={nomeSetor.get(id) ?? "Setor"}
+                active={sectorFilter === id}
+                onClick={() => setSectorFilter(id)}
+              />
+            ))}
+          </div>
+        ) : null}
+
+        {/* Resumo do SETOR filtrado, agregado. O sino cuida do pessoal e por
+            demanda — por isso os dois convivem sem repetir a informação. */}
         {resumo ? (
           <div className="border-line text-fg-secondary flex items-center gap-2 border-b px-4 py-2 text-[length:var(--text-caption-size)]">
             <IconAlertTriangle
@@ -286,14 +339,18 @@ export function ChatView({ initialChannelId }: { initialChannelId?: string }) {
               aria-hidden
               className="shrink-0 text-[var(--color-overdue)]"
             />
-            <span className="truncate">Prazos do setor: {resumo}</span>
+            <span className="truncate">
+              Prazos de {nomeSetor.get(sectorFilter as string)}: {resumo}
+            </span>
           </div>
         ) : null}
 
         <MessageList
-          messages={messages}
+          messages={visiveis}
           isLoading={query.isLoading}
           channelName={atual?.label ?? ""}
+          sectorNames={nomeSetor}
+          filtered={sectorFilter !== null}
           hasMore={!!query.hasNextPage}
           isLoadingMore={query.isFetchingNextPage}
           onLoadMore={() => query.fetchNextPage()}
@@ -310,7 +367,39 @@ export function ChatView({ initialChannelId }: { initialChannelId?: string }) {
           />
         ) : null}
       </div>
+
+      <NewGroupDialog
+        workspaceId={workspace.id}
+        open={groupOpen}
+        onOpenChange={setGroupOpen}
+        onCreated={selecionarCanal}
+      />
     </div>
+  );
+}
+
+function FiltroChip({
+  label,
+  active,
+  onClick,
+}: {
+  label: string;
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={`rounded-full px-2.5 py-0.5 text-[length:var(--text-caption-size)] whitespace-nowrap transition-colors [transition-duration:var(--dur-fast)] ${
+        active
+          ? "bg-[var(--brand-600)] font-medium text-[var(--button-primary-fg)]"
+          : "bg-sunken text-fg-secondary hover:text-fg"
+      }`}
+    >
+      {label}
+    </button>
   );
 }
 

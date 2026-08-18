@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import type { ChatChannel, Task } from "@/types/database";
+import type { ChatChannel, ChatMessage, Task } from "@/types/database";
 
 import {
   deadlinesLabel,
+  filterBySector,
   sectorDeadlines,
+  sectorsInUse,
   sortChannelViews,
   toChannelViews,
 } from "./channels";
@@ -18,9 +20,10 @@ function channel(partial: Partial<ChatChannel>): ChatChannel {
     id: crypto.randomUUID(),
     workspace_id: "ws",
     sector_id: null,
-    kind: "setor",
+    kind: "grupo",
     dm_key: null,
     name: "Canal",
+    created_by: null,
     created_at: "2026-08-01T00:00:00Z",
     ...partial,
   } as ChatChannel;
@@ -43,14 +46,17 @@ const nomes: Record<string, string> = { [EU]: "Eu", [OUTRO]: "Maria" };
 const nameOf = (id: string) => nomes[id] ?? "Alguém";
 
 describe("toChannelViews", () => {
-  it("canal de setor usa o próprio nome", () => {
+  it("grupo usa o próprio nome", () => {
     const views = toChannelViews(
-      [channel({ name: "Obras", sector_id: "s1" })],
+      [channel({ name: "Campanha eleitoral" })],
       new Map(),
       EU,
       nameOf
     );
-    expect(views[0]).toMatchObject({ label: "Obras", otherUserId: null });
+    expect(views[0]).toMatchObject({
+      label: "Campanha eleitoral",
+      otherUserId: null,
+    });
   });
 
   it("conversa direta se chama pela outra pessoa", () => {
@@ -81,13 +87,13 @@ describe("toChannelViews", () => {
 });
 
 describe("sortChannelViews", () => {
-  it("geral, setores em ordem, diretas por último", () => {
+  it("geral, grupos em ordem, diretas por último", () => {
     const views = toChannelViews(
       [
-        channel({ kind: "setor", name: "Obras", sector_id: "s2" }),
+        channel({ kind: "grupo", name: "Obras" }),
         channel({ kind: "direta", name: "", dm_key: "x" }),
         channel({ kind: "geral", name: "Geral" }),
-        channel({ kind: "setor", name: "Agricultura", sector_id: "s1" }),
+        channel({ kind: "grupo", name: "Agricultura" }),
       ],
       new Map(),
       EU,
@@ -144,5 +150,56 @@ describe("deadlinesLabel", () => {
     expect(deadlinesLabel({ overdue: 2, today: 3, soon: 0 })).toBe(
       "2 atrasadas · 3 vencem hoje"
     );
+  });
+});
+
+function msg(partial: Partial<ChatMessage>): ChatMessage {
+  return {
+    id: crypto.randomUUID(),
+    workspace_id: "ws",
+    channel_id: "c1",
+    author_id: EU,
+    kind: "humano",
+    body: "oi",
+    mentioned_user_ids: [],
+    entity_type: null,
+    entity_id: null,
+    reply_to_id: null,
+    sector_id: null,
+    created_at: "2026-08-17T10:00:00Z",
+    ...partial,
+  } as ChatMessage;
+}
+
+describe("filterBySector", () => {
+  it("sem filtro devolve tudo", () => {
+    const ms = [msg({}), msg({ sector_id: "s1" })];
+    expect(filterBySector(ms, null)).toHaveLength(2);
+  });
+
+  it("com filtro, mensagem sem etiqueta some", () => {
+    // Quem filtrou "Obras" quer as de Obras, não o resto misturado.
+    const ms = [
+      msg({ body: "sem etiqueta" }),
+      msg({ body: "de obras", sector_id: "s1" }),
+      msg({ body: "de outro", sector_id: "s2" }),
+    ];
+    expect(filterBySector(ms, "s1").map((m) => m.body)).toEqual(["de obras"]);
+  });
+});
+
+describe("sectorsInUse", () => {
+  it("lista os setores citados, sem repetir", () => {
+    const ms = [
+      msg({ sector_id: "s1" }),
+      msg({ sector_id: "s1" }),
+      msg({ sector_id: "s2" }),
+      msg({}),
+    ];
+    expect(sectorsInUse(ms).sort()).toEqual(["s1", "s2"]);
+  });
+
+  it("conversa sem etiqueta nenhuma não oferece filtro", () => {
+    expect(sectorsInUse([msg({}), msg({})])).toEqual([]);
   });
 });

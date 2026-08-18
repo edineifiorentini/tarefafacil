@@ -35,7 +35,7 @@ export type NotificationKind = "mencao" | "atribuicao" | "comentario";
 /** A que o clique da notificação leva. */
 export type NotificationEntity = "task" | "chat_channel";
 export type ChatMessageKind = "humano" | "sistema";
-export type ChatChannelKind = "geral" | "setor" | "direta";
+export type ChatChannelKind = "geral" | "grupo" | "direta";
 
 export type Database = {
   public: {
@@ -835,6 +835,7 @@ export type Database = {
           /** Par canônico dos participantes numa conversa direta. */
           dm_key: string | null;
           name: string;
+          created_by: string | null;
           created_at: string;
         };
         Insert: {
@@ -859,6 +860,8 @@ export type Database = {
           entity_type: "task" | null;
           entity_id: string | null;
           reply_to_id: string | null;
+          /** Etiqueta de assunto — o setor de que a mensagem trata. */
+          sector_id: string | null;
           created_at: string;
         };
         Insert: {
@@ -872,6 +875,7 @@ export type Database = {
           entity_type?: "task" | null;
           entity_id?: string | null;
           reply_to_id?: string | null;
+          sector_id?: string | null;
           created_at?: string;
         };
         Update: never;
@@ -1123,6 +1127,18 @@ export type Database = {
     };
     Views: Record<never, never>;
     Functions: {
+      create_group_channel: {
+        Args: { ws: string; nome: string; membros: string[] };
+        Returns: string;
+      };
+      add_group_members: {
+        Args: { canal: string; membros: string[] };
+        Returns: undefined;
+      };
+      leave_group_channel: {
+        Args: { canal: string };
+        Returns: undefined;
+      };
       open_direct_channel: {
         Args: { ws: string; other: string };
         /** id do canal direto — reaproveita o existente ou cria. */

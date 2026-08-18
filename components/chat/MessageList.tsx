@@ -29,6 +29,8 @@ export function MessageList({
   messages,
   isLoading,
   channelName,
+  sectorNames,
+  filtered,
   hasMore,
   isLoadingMore,
   onLoadMore,
@@ -37,6 +39,10 @@ export function MessageList({
   messages: ChatMessage[];
   isLoading: boolean;
   channelName: string;
+  /** id do setor -> nome, para a etiqueta da mensagem. */
+  sectorNames: Map<string, string>;
+  /** Há filtro de assunto ativo — muda o texto do estado vazio. */
+  filtered: boolean;
   hasMore: boolean;
   isLoadingMore: boolean;
   onLoadMore: () => void;
@@ -71,11 +77,19 @@ export function MessageList({
   if (messages.length === 0) {
     return (
       <div className="flex flex-1 items-center justify-center p-6">
-        <EmptyState
-          icon={IconMessage2}
-          title={`Nada em ${channelName} ainda`}
-          description="Escreva a primeira mensagem. Demandas criadas neste setor também aparecem aqui"
-        />
+        {filtered ? (
+          <EmptyState
+            icon={IconMessage2}
+            title="Nada com esse assunto"
+            description="Nenhuma mensagem foi etiquetada com este setor. Escolha 'Tudo' para ver a conversa inteira"
+          />
+        ) : (
+          <EmptyState
+            icon={IconMessage2}
+            title={`Nada em ${channelName} ainda`}
+            description="Escreva a primeira mensagem. Demandas criadas também aparecem aqui"
+          />
+        )}
       </div>
     );
   }
@@ -132,6 +146,11 @@ export function MessageList({
                       className="shrink-0"
                     />
                     <span className="truncate">{msg.body}</span>
+                    {msg.sector_id ? (
+                      <span className="bg-sunken shrink-0 truncate rounded-xs px-1.5">
+                        {sectorNames.get(msg.sector_id) ?? "Setor"}
+                      </span>
+                    ) : null}
                   </button>
                 </div>
               );
@@ -187,6 +206,11 @@ export function MessageList({
                       >
                         {hora(msg.created_at)}
                       </time>
+                      {msg.sector_id ? (
+                        <span className="bg-sunken text-fg-secondary shrink-0 truncate rounded-xs px-1.5 text-[length:var(--text-caption-size)]">
+                          {sectorNames.get(msg.sector_id) ?? "Setor"}
+                        </span>
+                      ) : null}
                     </div>
                   )}
                   <p className="text-fg text-[length:var(--text-small-size)] wrap-anywhere whitespace-pre-wrap">

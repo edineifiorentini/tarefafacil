@@ -1,13 +1,18 @@
-import type { ChatChannel, Task } from "@/types/database";
+import type { ChatChannel, ChatMessage, Task } from "@/types/database";
 
 import { todayISO } from "@/lib/notifications/derive";
 
 /**
  * Regras de apresentação dos canais.
  *
- * Conversa direta não tem nome guardado: o nome dela é a outra pessoa. Vale
- * a pena resolver isso aqui, e não no banco, porque o mesmo canal se chama
- * "Maria" para mim e "João" para ela.
+ * Três tipos convivem: "Geral" (todo o workspace), grupo (participantes
+ * escolhidos) e conversa direta. Setor NÃO é canal — é etiqueta da
+ * mensagem, para o assunto se achar por filtro sem partir a conversa em
+ * salas que ninguém acompanha.
+ *
+ * Conversa direta não tem nome guardado: o nome dela é a outra pessoa. Isso
+ * se resolve aqui, e não no banco, porque o mesmo canal se chama "Maria"
+ * para mim e "João" para ela.
  */
 
 export type ChannelView = {
@@ -18,10 +23,6 @@ export type ChannelView = {
   otherUserId: string | null;
 };
 
-/**
- * Monta os rótulos. `membersByChannel` traz os participantes das conversas
- * diretas; `nameOf` resolve id → nome de exibição.
- */
 export function toChannelViews(
   channels: ChatChannel[],
   membersByChannel: Map<string, string[]>,
@@ -44,17 +45,37 @@ export function toChannelViews(
 }
 
 /**
- * Ordem da lista: Geral, setores em ordem alfabética, conversas diretas no
- * fim. É a ordem de quem procura — o canal de trabalho primeiro, a conversa
- * pontual depois.
+ * Ordem da lista: Geral, grupos, conversas diretas — do mais coletivo ao
+ * mais pontual, que é a ordem em que se procura.
  */
 export function sortChannelViews(views: ChannelView[]): ChannelView[] {
-  const peso = { geral: 0, setor: 1, direta: 2 } as const;
+  const peso = { geral: 0, grupo: 1, direta: 2 } as const;
   return [...views].sort((a, b) => {
     const p = peso[a.channel.kind] - peso[b.channel.kind];
     if (p !== 0) return p;
     return a.label.localeCompare(b.label, "pt-BR");
   });
+}
+
+/**
+ * Filtra a conversa por etiqueta de setor.
+ *
+ * Mensagem sem etiqueta some quando há filtro: quem filtrou "Obras" quer as
+ * de Obras, não o resto misturado. Sem filtro, tudo aparece.
+ */
+export function filterBySector(
+  messages: ChatMessage[],
+  sectorId: string | null
+): ChatMessage[] {
+  if (!sectorId) return messages;
+  return messages.filter((m) => m.sector_id === sectorId);
+}
+
+/** Setores que aparecem na conversa — vira a lista de filtros oferecidos. */
+export function sectorsInUse(messages: ChatMessage[]): string[] {
+  const vistos = new Set<string>();
+  for (const m of messages) if (m.sector_id) vistos.add(m.sector_id);
+  return [...vistos];
 }
 
 export type SectorDeadlines = {
@@ -63,16 +84,17 @@ export type SectorDeadlines = {
   soon: number;
 };
 
-/** Janela de "logo mais" do resumo do canal. */
+/** Janela de "logo mais" do resumo. */
 const SOON_DAYS = 3;
 
 /**
- * Resumo de prazos do setor, para o topo do canal.
+ * Resumo de prazos de um setor, mostrado quando a conversa está filtrada por
+ * ele.
  *
  * Não é o mesmo que o sino: lá o alerta é PESSOAL e por demanda ("sua
  * demanda X atrasou"); aqui é do SETOR e agregado ("2 atrasadas"). Um serve
- * para agir, o outro para a equipe saber como está o setor — por isso os
- * dois podem existir sem virar ruído repetido.
+ * para agir, o outro para a equipe saber como o setor está — por isso os
+ * dois convivem sem virar ruído repetido.
  */
 export function sectorDeadlines(
   tasks: Task[],

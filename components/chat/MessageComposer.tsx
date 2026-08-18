@@ -1,6 +1,6 @@
 "use client";
 
-import { IconAt, IconSend, IconX } from "@tabler/icons-react";
+import { IconAt, IconSend, IconTag, IconX } from "@tabler/icons-react";
 import { DropdownMenu } from "radix-ui";
 import { useState } from "react";
 
@@ -12,6 +12,7 @@ import {
   useMembers,
   type Member,
 } from "@/lib/queries/useMembers";
+import { useSectors } from "@/lib/queries/useSectors";
 import type { ChatMessage } from "@/types/database";
 
 const menuContent =
@@ -39,9 +40,14 @@ export function MessageComposer({
 }) {
   const { data: myId } = useCurrentUserId();
   const { data: members = [] } = useMembers(workspaceId);
+  const { data: sectors = [] } = useSectors(workspaceId);
   const send = useSendMessage(workspaceId, channelId);
   const [body, setBody] = useState("");
   const [mentioned, setMentioned] = useState<string[]>([]);
+  // Etiqueta de assunto: opcional, e some depois de enviar — carregar a
+  // etiqueta anterior para a próxima mensagem etiquetaria coisa errada.
+  const [sectorId, setSectorId] = useState<string | null>(null);
+  const setorEscolhido = sectors.find((x) => x.id === sectorId);
 
   // Não faz sentido se mencionar: o trigger ignora e a lista polui.
   const mencionaveis = members.filter(
@@ -64,11 +70,17 @@ export function MessageComposer({
       return nome && texto.includes(`@${nome}`);
     });
     send.mutate(
-      { body: texto, mentionedUserIds: citados, replyToId: replyTo?.id ?? null },
+      {
+        body: texto,
+        mentionedUserIds: citados,
+        replyToId: replyTo?.id ?? null,
+        sectorId,
+      },
       {
         onSuccess: () => {
           setBody("");
           setMentioned([]);
+          setSectorId(null);
           onCancelReply();
         },
       }
@@ -125,7 +137,7 @@ export function MessageComposer({
         aria-label={`Nova mensagem em ${channelName}`}
       />
 
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <DropdownMenu.Root>
           <DropdownMenu.Trigger asChild>
             <button
@@ -161,10 +173,52 @@ export function MessageComposer({
           </DropdownMenu.Portal>
         </DropdownMenu.Root>
 
+        <DropdownMenu.Root>
+          <DropdownMenu.Trigger asChild>
+            <button
+              type="button"
+              className={`inline-flex h-7 shrink-0 items-center gap-1 rounded-sm px-2 text-[length:var(--text-caption-size)] whitespace-nowrap transition-colors [transition-duration:var(--dur-fast)] ${
+                setorEscolhido
+                  ? "text-fg-link bg-selected font-medium"
+                  : "text-fg-secondary hover:bg-hover hover:text-fg"
+              }`}
+            >
+              <IconTag size={14} stroke={1.5} />
+              {setorEscolhido ? setorEscolhido.name : "Etiqueta"}
+            </button>
+          </DropdownMenu.Trigger>
+          <DropdownMenu.Portal>
+            <DropdownMenu.Content
+              align="start"
+              sideOffset={4}
+              className={menuContent}
+            >
+              {setorEscolhido ? (
+                <DropdownMenu.Item
+                  onSelect={() => setSectorId(null)}
+                  className={menuItem}
+                >
+                  Sem etiqueta
+                </DropdownMenu.Item>
+              ) : null}
+              {sectors.map((setor) => (
+                <DropdownMenu.Item
+                  key={setor.id}
+                  onSelect={() => setSectorId(setor.id)}
+                  className={menuItem}
+                >
+                  {setor.name}
+                </DropdownMenu.Item>
+              ))}
+            </DropdownMenu.Content>
+          </DropdownMenu.Portal>
+        </DropdownMenu.Root>
+
         <Button
           type="submit"
           size="sm"
           variant="primary"
+          className="ml-auto"
           leadingIcon={IconSend}
           disabled={!body.trim()}
           isLoading={send.isPending}

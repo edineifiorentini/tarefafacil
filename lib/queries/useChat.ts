@@ -117,6 +117,76 @@ export function useOpenDirectChannel(workspaceId: string) {
 }
 
 /**
+ * Criar grupo. RPC pelo mesmo motivo de `open_direct_channel`: criar exige
+ * gravar participante para várias pessoas, e a policy de escrita de canal é
+ * só de owner/admin.
+ */
+export function useCreateGroupChannel(workspaceId: string) {
+  const supabase = createClient();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      name,
+      memberIds,
+    }: {
+      name: string;
+      memberIds: string[];
+    }): Promise<string> => {
+      const { data, error } = await supabase.rpc("create_group_channel", {
+        ws: workspaceId,
+        nome: name,
+        membros: memberIds,
+      });
+      if (error) throw error;
+      return data as string;
+    },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: channelsKey(workspaceId) });
+      qc.invalidateQueries({ queryKey: membersKey(workspaceId) });
+    },
+  });
+}
+
+export function useAddGroupMembers(workspaceId: string) {
+  const supabase = createClient();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      channelId,
+      memberIds,
+    }: {
+      channelId: string;
+      memberIds: string[];
+    }) => {
+      const { error } = await supabase.rpc("add_group_members", {
+        canal: channelId,
+        membros: memberIds,
+      });
+      if (error) throw error;
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: membersKey(workspaceId) }),
+  });
+}
+
+/** Sair do grupo. Tirar outra pessoa é moderação, que ainda não existe. */
+export function useLeaveGroupChannel(workspaceId: string) {
+  const supabase = createClient();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (channelId: string) => {
+      const { error } = await supabase.rpc("leave_group_channel", {
+        canal: channelId,
+      });
+      if (error) throw error;
+    },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: channelsKey(workspaceId) });
+      qc.invalidateQueries({ queryKey: membersKey(workspaceId) });
+    },
+  });
+}
+
+/**
  * Conversa paginada para trás.
  *
  * O cursor é o `created_at` da mensagem mais antiga já carregada, não um
@@ -192,10 +262,13 @@ export function useSendMessage(workspaceId: string, channelId: string) {
       body,
       mentionedUserIds,
       replyToId,
+      sectorId,
     }: {
       body: string;
       mentionedUserIds: string[];
       replyToId?: string | null;
+      /** Etiqueta de assunto. Opcional — a maioria das mensagens não tem. */
+      sectorId?: string | null;
     }) => {
       const {
         data: { user },
@@ -207,6 +280,7 @@ export function useSendMessage(workspaceId: string, channelId: string) {
         body,
         mentioned_user_ids: mentionedUserIds,
         reply_to_id: replyToId ?? null,
+        sector_id: sectorId ?? null,
       });
       if (error) throw error;
     },

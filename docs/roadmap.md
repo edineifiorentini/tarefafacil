@@ -14,8 +14,12 @@ Pedido do dono em 17/ago/2026. Rodada 1 entregue na migration 0038.
 
 **Decisões tomadas** (e o motivo, para não serem refeitas por engano)
 
-- **Canal por setor, mais o "Geral".** É a taxonomia que a barra lateral já
-  usa; uma segunda faria a equipe decidir duas vezes onde cada assunto mora.
+- **Um "Geral", grupos e conversas diretas. Setor é ETIQUETA, não canal.**
+  A rodada 1 criou um canal por setor; na prática isso partia a conversa em
+  doze salas que ninguém acompanhava. Revisto pelo dono em 18/ago/2026: uma
+  sala só, com etiqueta de assunto e filtro, mantém o tema localizável sem
+  espalhar a equipe. Migração 0040 moveu as mensagens existentes para o
+  Geral preservando o setor como etiqueta.
 - **Sem Realtime.** Websocket é conexão aberta por aba e entra na conta.
   Busca a cada 6s enquanto a tela está aberta e visível resolve para equipe
   pequena com custo previsível. Trocar só com número medido.
@@ -44,7 +48,20 @@ mensagem, paginação para trás e resumo de prazos do setor no topo do canal.
 - Paginação por cursor de `created_at`, não offset: com mensagem nova
   chegando, offset repetiria e pularia linhas entre páginas.
 
-**Rodada 3 — o que ficou de fora**
+**Rodada 3 entregue** (migrations 0040 e 0041): grupos com participantes
+escolhidos, etiqueta de setor na mensagem com filtro, e a virada do modelo
+descrita acima.
+
+- Grupo é privado como a conversa direta: `can_read_channel` exige
+  participação. Criar é RPC `create_group_channel` — pelo mesmo motivo do
+  `open_direct_channel`.
+- Sair do grupo existe; tirar outra pessoa não. Moderação é decisão que este
+  produto ainda não tomou, e fingir que tomou seria pior.
+- Apagar uma demanda deixava o aviso dela no chat apontando para um id
+  inexistente (defeito achado em produção, migration 0041). A mensagem fica
+  — "Fulano criou a demanda X" continua verdade —, só o link some.
+
+**Rodada 4 — o que ficou de fora**
 
 - Anexo em mensagem (reusar o storage que as demandas já usam);
 - **Retenção.** Chat cresce e ninguém apaga. Definir janela antes de a tabela
