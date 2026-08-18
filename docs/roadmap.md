@@ -134,9 +134,11 @@ existe; falta:
   `source_type = 'recurrence'`, que é o que garante não duplicar parcela
   vinda de contrato (§8.9).
 
-  Falta o "editar esta e as futuras" na interface: o hook
-  `useUpdateRecurrence` já aceita `applyToFuture` e nunca toca em
-  confirmada, mas nenhuma tela chama.
+  O "editar esta e as futuras" do §8.9 está completo: a regra tem editor com
+  três alcances — só a regra, as previstas de hoje em diante, ou toda a
+  série ainda não realizada. Confirmada nunca muda, verificado no banco.
+  "Apenas esta ocorrência" não virou opção do editor de propósito: uma
+  ocorrência é um lançamento comum e já se edita na lista do mês.
 
 ## 4. Fase 9 — qualidade e lançamento
 

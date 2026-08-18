@@ -25,6 +25,8 @@ import {
 } from "@/lib/queries/useFinanceRecurrence";
 import type { FinanceRecurrence } from "@/types/database";
 
+import { RecurrenceEditor } from "./RecurrenceEditor";
+
 const FREQ_OPTIONS = Object.entries(FREQUENCY_LABEL).map(([value, label]) => ({
   value,
   label,
@@ -46,6 +48,7 @@ export function RecurrenceSection({ workspaceId }: { workspaceId: string }) {
   const remove = useDeleteRecurrence(workspaceId);
 
   const [aberto, setAberto] = useState(false);
+  const [editando, setEditando] = useState<string | null>(null);
   const [kind, setKind] = useState<"entrada" | "saida">("saida");
   const [description, setDescription] = useState("");
   const [valor, setValor] = useState("");
@@ -226,7 +229,8 @@ export function RecurrenceSection({ workspaceId }: { workspaceId: string }) {
       ) : (
         <ul className="divide-line divide-y">
           {rules.map((r) => (
-            <li key={r.id} className="flex flex-wrap items-center gap-2 py-2.5">
+            <li key={r.id} className="flex flex-col gap-2 py-2.5">
+              <div className="flex flex-wrap items-center gap-2">
               <div className="min-w-0 flex-1">
                 <p
                   className={`text-[length:var(--text-small-size)] font-medium ${
@@ -252,6 +256,13 @@ export function RecurrenceSection({ workspaceId }: { workspaceId: string }) {
                 </p>
               </div>
 
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setEditando(editando === r.id ? null : r.id)}
+              >
+                Editar
+              </Button>
               <Button
                 size="sm"
                 variant="ghost"
@@ -291,6 +302,15 @@ export function RecurrenceSection({ workspaceId }: { workspaceId: string }) {
               >
                 <IconTrash size={16} stroke={1.75} />
               </Button>
+              </div>
+
+              {editando === r.id ? (
+                <RecurrenceEditor
+                  workspaceId={workspaceId}
+                  rule={r}
+                  onDone={() => setEditando(null)}
+                />
+              ) : null}
             </li>
           ))}
         </ul>
