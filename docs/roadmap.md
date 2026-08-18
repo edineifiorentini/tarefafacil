@@ -126,8 +126,17 @@ existe; falta:
 - ~~**Auditoria de operações sensíveis.**~~ Entregue (migration 0044). Falta
   só o registro de LOGIN, que não sai de trigger em tabela — precisa de
   gancho no Supabase Auth.
-- **Recorrências no Financeiro.** Parcela de contrato gera lançamento;
-  recorrência própria ("aluguel todo dia 5") não existe.
+- ~~**Recorrências no Financeiro.**~~ Entregue na migration 0045. A REGRA é
+  uma linha em `finance_recurrence`; cada OCORRÊNCIA é um lançamento
+  normal, com situação e nota fiscal próprias — ocorrência virtual não
+  poderia ser confirmada. Idempotência reaproveita o índice único de
+  (source_type, source_id, installment_number) da 0033, com
+  `source_type = 'recurrence'`, que é o que garante não duplicar parcela
+  vinda de contrato (§8.9).
+
+  Falta o "editar esta e as futuras" na interface: o hook
+  `useUpdateRecurrence` já aceita `applyToFuture` e nunca toca em
+  confirmada, mas nenhuma tela chama.
 
 ## 4. Fase 9 — qualidade e lançamento
 
@@ -157,6 +166,7 @@ Cada item aqui foi uma decisão consciente, não esquecimento.
 | Contador de não lidas no banco | Hoje o chat conta sobre uma janela de 300 mensagens no cliente. Só vira problema com volume. |
 | Retenção da trilha de auditoria | `audit_log` só cresce, e é imutável de propósito. Definir janela e arquivamento antes de virar volume. |
 | Registro de login na auditoria | Exige gancho no Supabase Auth; trigger em tabela não alcança. |
+| Geração automática de recorrência | Hoje "Gerar previsões" é botão. Renovar o horizonte sozinho exige job — ver "jobs observáveis". |
 
 ---
 

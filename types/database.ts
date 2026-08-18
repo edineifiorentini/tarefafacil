@@ -38,6 +38,8 @@ export type ChatMessageKind = "humano" | "sistema";
 export type ChatChannelKind = "geral" | "grupo" | "direta";
 /** Trilha de auditoria do workspace. */
 export type AuditAction = "criou" | "alterou" | "excluiu";
+/** Periodicidade de lançamento recorrente. "unico" não é recorrência. */
+export type RecurrenceFrequency = "mensal" | "trimestral" | "anual";
 
 export type Database = {
   public: {
@@ -828,6 +830,52 @@ export type Database = {
         };
         Relationships: [];
       };
+      finance_recurrence: {
+        Row: {
+          id: string;
+          workspace_id: string;
+          kind: FinanceKind;
+          description: string;
+          amount_cents: number;
+          category: string | null;
+          client_id: string | null;
+          frequency: RecurrenceFrequency;
+          starts_on: string;
+          ends_on: string | null;
+          active: boolean;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          workspace_id: string;
+          kind: FinanceKind;
+          description: string;
+          amount_cents: number;
+          category?: string | null;
+          client_id?: string | null;
+          frequency: RecurrenceFrequency;
+          starts_on: string;
+          ends_on?: string | null;
+          active?: boolean;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          description?: string;
+          amount_cents?: number;
+          category?: string | null;
+          client_id?: string | null;
+          frequency?: RecurrenceFrequency;
+          starts_on?: string;
+          ends_on?: string | null;
+          active?: boolean;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       audit_log: {
         Row: {
           id: string;
@@ -1243,3 +1291,4 @@ export type ChatMessage = Tables<"chat_message">;
 export type ChatReadState = Tables<"chat_read_state">;
 export type ChatChannelMember = Tables<"chat_channel_member">;
 export type AuditLog = Tables<"audit_log">;
+export type FinanceRecurrence = Tables<"finance_recurrence">;

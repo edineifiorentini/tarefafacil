@@ -49,6 +49,7 @@ import { CashFlowChart } from "./CashFlowChart";
 import { FinanceEntryForm } from "./FinanceEntryForm";
 import { GoalGauge } from "./GoalGauge";
 import { InvoiceSummary } from "./InvoiceSummary";
+import { RecurrenceSection } from "./RecurrenceSection";
 
 const HIDE_KEY = "tf-finance-hide-values";
 const STATUS_LABEL: Record<FinanceStatus, string> = {
@@ -315,6 +316,8 @@ export function FinanceView() {
           />
         </div>
       </div>
+
+      <RecurrenceSection workspaceId={workspace.id} />
 
       {isLoading ? (
         <p className="text-fg-secondary">Carregando…</p>
