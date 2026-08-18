@@ -14,6 +14,8 @@ import { useWorkspace } from "@/lib/queries/useWorkspace";
 import { sectorOptions } from "@/lib/sectors/options";
 import { quickAddSchema, type QuickAddInput } from "@/lib/validation/task";
 
+import { SectorForm } from "@/components/sector/SectorForm";
+
 import { TaskDetailPanel } from "./TaskDetailPanel";
 
 export function QuickAdd({ defaultSectorId }: { defaultSectorId?: string }) {
@@ -21,7 +23,7 @@ export function QuickAdd({ defaultSectorId }: { defaultSectorId?: string }) {
   const { data: sectors = [] } = useSectors(workspace.id);
   const createTask = useCreateTask(workspace.id);
   const toast = useToast();
-  const { openPanel } = useShell();
+  const { openPanel, closePanel } = useShell();
 
   const {
     register,
@@ -75,11 +77,28 @@ export function QuickAdd({ defaultSectorId }: { defaultSectorId?: string }) {
     setFocus("title");
   }
 
+  // Workspace novo já nasce com um setor (migration 0043), então isto só
+  // aparece se alguém apagar todos. Ainda assim é um botão, não uma frase:
+  // um aviso que manda fazer algo sem oferecer o caminho é um beco sem saída.
   if (sectors.length === 0) {
     return (
-      <p className="text-fg-secondary text-[length:var(--text-small-size)]">
-        Crie um setor antes de adicionar tarefas.
-      </p>
+      <div className="flex flex-col items-start gap-3">
+        <p className="text-fg-secondary text-[length:var(--text-small-size)]">
+          Tarefas ficam dentro de um setor, e não há nenhum ainda.
+        </p>
+        <Button
+          variant="primary"
+          size="sm"
+          onClick={() =>
+            openPanel({
+              title: "Novo setor",
+              node: <SectorForm mode="create" onDone={closePanel} />,
+            })
+          }
+        >
+          Criar setor
+        </Button>
+      </div>
     );
   }
 
