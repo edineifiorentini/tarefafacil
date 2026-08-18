@@ -43,9 +43,14 @@ import {
   useMarkNotificationRead,
   useNotifications,
 } from "@/lib/queries/useNotifications";
+import { useAsOf } from "@/lib/queries/useAsOf";
 import { useTasks } from "@/lib/queries/useTasks";
 import { useWorkspace } from "@/lib/queries/useWorkspace";
-import type { NotificationKind } from "@/types/database";
+import type { NotificationKind, Task } from "@/types/database";
+
+/** Identidade estável: `?? []` criaria um array novo a cada render e
+    invalidaria todos os useMemo que dependem de `tasks`. */
+const SEM_TAREFAS: Task[] = [];
 
 const ROLE_LABEL: Record<string, string> = {
   admin: "Admin",
@@ -98,7 +103,8 @@ export function NotificationBell() {
   const myRole = members.find((m) => m.user_id === myId)?.role;
   const canManage = myRole === "owner" || myRole === "admin";
 
-  const { data: tasks = [] } = useTasks(workspace.id);
+  const tasksQuery = useTasks(workspace.id);
+  const tasks = tasksQuery.data ?? SEM_TAREFAS;
   const { data: contracts = [] } = useContracts(workspace.id, canManage);
   const { data: financeEntries = [] } = useFinanceEntries(
     workspace.id,
@@ -111,9 +117,9 @@ export function NotificationBell() {
   const approve = useApproveMember(workspace.id);
   const remove = useRemoveMember(workspace.id);
 
-  // Relógio lido uma vez, na montagem: os alertas não podem mudar de texto
-  // no meio de uma renderização.
-  const [now] = useState(() => new Date());
+  // Mesmo motivo do painel: preso na montagem, "atrasada há 3 dias" não
+  // sumia depois de entregar a demanda.
+  const now = useAsOf(tasksQuery.dataUpdatedAt);
 
   const feed = useMemo(
     () =>

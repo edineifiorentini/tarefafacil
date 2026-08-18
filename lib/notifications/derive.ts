@@ -1,5 +1,6 @@
-import { differenceInCalendarDays, format, parseISO } from "date-fns";
+import { differenceInCalendarDays, parseISO } from "date-fns";
 
+import { localDayISO } from "@/lib/dates/day";
 import type { Contract, FinanceEntry, Task } from "@/types/database";
 
 import type { DerivedAlert, FeedEvent, FeedItem } from "./types";
@@ -24,10 +25,12 @@ const CONTRACT_SOON_DAYS = 30;
 /** Janela de parcela a vencer. */
 const FINANCE_SOON_DAYS = 7;
 
-/** Data de hoje no fuso local, como `YYYY-MM-DD`. */
-export function todayISO(now: Date): string {
-  return format(now, "yyyy-MM-dd");
-}
+/**
+ * Data de hoje no fuso local. Reexporta `localDayISO` para não haver duas
+ * respostas para "que dia é hoje" no código — foi assim que o painel (UTC) e
+ * o sino (local) passaram a discordar por três horas toda noite.
+ */
+export const todayISO = localDayISO;
 
 /** Dias de calendário entre duas datas ISO. Negativo = a primeira já passou. */
 function daysUntil(dateISO: string, todayIso: string): number {

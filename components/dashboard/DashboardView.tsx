@@ -44,9 +44,16 @@ import { useFinanceEntries } from "@/lib/queries/useFinance";
 import { useCurrentUserId, useMembers } from "@/lib/queries/useMembers";
 import { useSectors } from "@/lib/queries/useSectors";
 import { useTasks } from "@/lib/queries/useTasks";
+import { useAsOf } from "@/lib/queries/useAsOf";
 import { useWorkspace } from "@/lib/queries/useWorkspace";
 
+import type { Task } from "@/types/database";
+
 import { AgendaItem } from "./AgendaItem";
+
+/** Identidade estável: `?? []` criaria um array novo a cada render e
+    invalidaria todos os useMemo que dependem de `tasks`. */
+const SEM_TAREFAS: Task[] = [];
 
 const WEEKS = 8;
 
@@ -63,7 +70,9 @@ function monthOptions(current: string) {
 
 export function DashboardView() {
   const ws = useWorkspace();
-  const { data: tasks = [], isLoading } = useTasks(ws.id);
+  const tasksQuery = useTasks(ws.id);
+  const tasks = tasksQuery.data ?? SEM_TAREFAS;
+  const isLoading = tasksQuery.isLoading;
   const { data: sectors = [] } = useSectors(ws.id);
   const { data: clients = [] } = useClients(ws.id);
   const { data: members = [] } = useMembers(ws.id);
@@ -74,9 +83,11 @@ export function DashboardView() {
   const canSeeFinance = myRole === "owner" || myRole === "admin";
   const { data: financeEntries = [] } = useFinanceEntries(ws.id, canSeeFinance);
 
-  // Relógio lido uma vez, na montagem: mantém as séries estáveis entre
-  // renders e não lê o relógio durante a renderização.
-  const [now] = useState(nowInstant);
+  // O "agora" vem do instante em que os dados chegaram, não da montagem.
+  // Preso na montagem, concluir uma demanda com o painel aberto não mexia em
+  // indicador nenhum: `completed_at <= now` era falso para tudo que
+  // acontecesse depois de abrir a tela.
+  const now = useAsOf(tasksQuery.dataUpdatedAt);
   const [month, setMonth] = useState(currentMonthISO);
   const [year, setYear] = useState(() => nowInstant().getFullYear());
 

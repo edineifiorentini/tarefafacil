@@ -286,3 +286,29 @@ describe("revenueByMonth", () => {
     expect(revenueByMonth(entries, 2026).growth).toBe(0);
   });
 });
+
+describe("fuso: entrega da noite", () => {
+  it("conclusão às 22h conta no dia local, não no dia seguinte em UTC", () => {
+    // Em UTC-3, 22h do dia 19 é dia 20 em UTC. Com slice(0,10) do ISO essa
+    // entrega caía na Sem 4 (22-fim) em vez da Sem 3 (15-21).
+    const noite = new Date(2026, 7, 19, 22, 0);
+    const tasks = [task({ completed_at: noite.toISOString() })];
+    const result = deliveriesByWeek(tasks, "2026-08");
+    expect(result.delivered).toEqual([0, 0, 1, 0]);
+  });
+
+  it("conclusão no dia 31 à noite não vaza para o mês seguinte", () => {
+    // O pior caso: fechamento do mês perdendo a última entrega.
+    const virada = new Date(2026, 7, 31, 22, 30);
+    const tasks = [task({ completed_at: virada.toISOString() })];
+    expect(deliveredInMonth(tasks, "2026-08")).toBe(1);
+    expect(deliveredInMonth(tasks, "2026-09")).toBe(0);
+  });
+
+  it("atraso usa o dia local — 22h não antecipa o vencimento", () => {
+    // Uma demanda para hoje não pode aparecer como atrasada às 22h.
+    const noite = new Date(2026, 7, 19, 22, 0);
+    const hoje = task({ due_date: "2026-08-19" });
+    expect(overdueAt(hoje, noite)).toBe(false);
+  });
+});

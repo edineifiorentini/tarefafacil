@@ -4,6 +4,7 @@ import {
   subWeeks,
 } from "date-fns";
 
+import { localDayISO, localDayOf, localMonthOf } from "@/lib/dates/day";
 import type { FinanceEntry, Task } from "@/types/database";
 
 /**
@@ -12,9 +13,7 @@ import type { FinanceEntry, Task } from "@/types/database";
  * número é inventado para preencher gráfico.
  */
 
-function isoDay(instant: Date): string {
-  return instant.toISOString().slice(0, 10);
-}
+
 
 /**
  * Instante atual. Fica aqui, fora de qualquer corpo de render: o React
@@ -41,7 +40,7 @@ export function doneBy(task: Task, instant: Date): boolean {
 /** Estava aberta E com o prazo já vencido naquele instante. */
 export function overdueAt(task: Task, instant: Date): boolean {
   if (!openAt(task, instant)) return false;
-  return !!task.due_date && task.due_date < isoDay(instant);
+  return !!task.due_date && task.due_date < localDayISO(instant);
 }
 
 /**
@@ -156,7 +155,7 @@ export function deliveriesByWeek(
     delivered.push(
       tasks.filter((t) => {
         if (t.cancelled_at || !t.completed_at) return false;
-        const day = t.completed_at.slice(0, 10);
+        const day = localDayOf(t.completed_at);
         return day >= fromISO && day <= toISO;
       }).length
     );
@@ -183,7 +182,7 @@ export function deliveredInMonth(tasks: Task[], monthISO: string): number {
     (t) =>
       !t.cancelled_at &&
       !!t.completed_at &&
-      t.completed_at.slice(0, 7) === monthISO
+      localMonthOf(t.completed_at) === monthISO
   ).length;
 }
 
@@ -203,7 +202,7 @@ export function upcomingDeliveries(
   now: Date,
   limit = 4
 ): UpcomingDelivery[] {
-  const today = isoDay(now);
+  const today = localDayISO(now);
 
   return tasks
     .filter((t) => !t.cancelled_at && !!t.due_date && t.due_date >= today)

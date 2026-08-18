@@ -33,13 +33,19 @@ import {
 } from "@/lib/queries/useChat";
 import { useCurrentUserId, useMembers } from "@/lib/queries/useMembers";
 import { useSectors } from "@/lib/queries/useSectors";
+import { useAsOf } from "@/lib/queries/useAsOf";
 import { useTasks } from "@/lib/queries/useTasks";
 import { useWorkspace } from "@/lib/queries/useWorkspace";
 import { sortSectorIdsByName } from "@/lib/sectors/options";
+import type { Task } from "@/types/database";
 
 import { MessageComposer } from "./MessageComposer";
 import { MessageList } from "./MessageList";
 import { NewGroupDialog } from "./NewGroupDialog";
+
+/** Identidade estável: `?? []` criaria um array novo a cada render e
+    invalidaria todos os useMemo que dependem de `tasks`. */
+const SEM_TAREFAS: Task[] = [];
 
 const menuContent =
   "z-50 max-h-64 min-w-48 overflow-auto rounded-md tf-glass-strong p-1 data-[state=closed]:[animation:tf-pop-out_var(--dur-fast)_ease-in] data-[state=open]:[animation:tf-pop-in_var(--dur-fast)_var(--ease-out)]";
@@ -64,7 +70,8 @@ export function ChatView({ initialChannelId }: { initialChannelId?: string }) {
   const { data: channels = [], isLoading } = useChatChannels(workspace.id);
   const { data: channelMembers = [] } = useChannelMembers(workspace.id);
   const { data: readState = [] } = useChatReadState(workspace.id);
-  const { data: tasks = [] } = useTasks(workspace.id);
+  const tasksQuery = useTasks(workspace.id);
+  const tasks = tasksQuery.data ?? SEM_TAREFAS;
 
   const [channelId, setChannelId] = useState<string | null>(
     initialChannelId ?? null
@@ -127,8 +134,9 @@ export function ChatView({ initialChannelId }: { initialChannelId?: string }) {
     [recent, readState, myId]
   );
 
-  // Relógio lido uma vez: o resumo não pode mudar no meio de um render.
-  const [now] = useState(() => new Date());
+  // Mesmo motivo do painel: o resumo de prazos precisa reagir a quem
+  // conclui uma demanda com o chat aberto.
+  const now = useAsOf(tasksQuery.dataUpdatedAt);
   const resumo = sectorFilter
     ? deadlinesLabel(sectorDeadlines(tasks, sectorFilter, now))
     : null;
