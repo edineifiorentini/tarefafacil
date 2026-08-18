@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Select } from "@/components/ui/Select";
 import { useSectors } from "@/lib/queries/useSectors";
 import { useWorkspace } from "@/lib/queries/useWorkspace";
+import { sectorOptions } from "@/lib/sectors/options";
 
 import { KanbanBoard } from "./KanbanBoard";
 
@@ -29,7 +30,7 @@ export function QuadroView() {
     <div className="flex h-full flex-col gap-4 px-4 pb-6 lg:px-6">
       <div className="w-56">
         <Select
-          options={sectors.map((s) => ({ value: s.id, label: s.name }))}
+          options={sectorOptions(sectors)}
           value={active}
           onValueChange={setSelected}
           aria-label="Setor do quadro"

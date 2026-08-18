@@ -36,6 +36,7 @@ import {
   useTasks,
 } from "@/lib/queries/useTasks";
 import { useWorkspace } from "@/lib/queries/useWorkspace";
+import { sectorOptions } from "@/lib/sectors/options";
 import type { Task } from "@/types/database";
 
 import { ConfirmCompleteDialog } from "./ConfirmCompleteDialog";
@@ -231,7 +232,7 @@ export function ListView() {
             <Select
               options={[
                 { value: "__all__", label: "Todos os setores" },
-                ...sectors.map((s) => ({ value: s.id, label: s.name })),
+                ...sectorOptions(sectors),
               ]}
               value={filters.sectorIds[0] ?? "__all__"}
               onValueChange={(v) =>

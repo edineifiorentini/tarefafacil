@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/Textarea";
 import { useCreateProject, useUpdateProject } from "@/lib/queries/useProjects";
 import { useSectors } from "@/lib/queries/useSectors";
 import { useWorkspace } from "@/lib/queries/useWorkspace";
+import { sectorOptions } from "@/lib/sectors/options";
 import {
   projectSchema,
   projectStatusLabels,
@@ -99,7 +100,7 @@ export function ProjectForm({
             Setor
           </span>
           <Select
-            options={sectors.map((s) => ({ value: s.id, label: s.name }))}
+            options={sectorOptions(sectors)}
             value={sectorId}
             onValueChange={(v) =>
               setValue("sector_id", v, { shouldValidate: true })

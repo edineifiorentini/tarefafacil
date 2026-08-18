@@ -35,6 +35,7 @@ import { useCurrentUserId, useMembers } from "@/lib/queries/useMembers";
 import { useSectors } from "@/lib/queries/useSectors";
 import { useTasks } from "@/lib/queries/useTasks";
 import { useWorkspace } from "@/lib/queries/useWorkspace";
+import { sortSectorIdsByName } from "@/lib/sectors/options";
 
 import { MessageComposer } from "./MessageComposer";
 import { MessageList } from "./MessageList";
@@ -114,8 +115,12 @@ export function ChatView({ initialChannelId }: { initialChannelId?: string }) {
     [sectors]
   );
   // Só oferece filtro do que realmente aparece na conversa — uma lista com
-  // doze setores dos quais ninguém falou é ruído.
-  const filtros = useMemo(() => sectorsInUse(messages), [messages]);
+  // doze setores dos quais ninguém falou é ruído. Em ordem alfabética, que é
+  // como se procura um nome.
+  const filtros = useMemo(
+    () => sortSectorIdsByName(sectorsInUse(messages), nomeSetor),
+    [messages, nomeSetor]
+  );
 
   const unread = useMemo(
     () => unreadByChannel(recent, readState, myId ?? null),

@@ -9,6 +9,7 @@ import { useSectors } from "@/lib/queries/useSectors";
 import { useAllTags } from "@/lib/queries/useTags";
 import type { SearchFilters } from "@/lib/search/filters";
 import { useWorkspace } from "@/lib/queries/useWorkspace";
+import { sectorOptions } from "@/lib/sectors/options";
 
 const PRIORITIES = [
   { value: "urgente", label: "Urgente" },
@@ -138,7 +139,7 @@ export function FilterBar({
     <div className="flex flex-wrap items-center gap-2">
       <MultiMenu
         label="Setor"
-        options={sectors.map((s) => ({ value: s.id, label: s.name }))}
+        options={sectorOptions(sectors)}
         selected={filters.sectors}
         onToggle={(v) => onToggle("sectors", v)}
       />

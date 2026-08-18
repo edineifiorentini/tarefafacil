@@ -31,6 +31,7 @@ import {
   useUpdateTask,
 } from "@/lib/queries/useTasks";
 import { useWorkspace } from "@/lib/queries/useWorkspace";
+import { sectorOptions } from "@/lib/sectors/options";
 import type { TablesUpdate, TaskPriority } from "@/types/database";
 
 import { GcalEditedBadge } from "@/components/gcal/GcalEditedBadge";
@@ -185,7 +186,7 @@ export function TaskDetailPanel({ taskId }: { taskId: string }) {
           <div className="grid grid-cols-2 gap-3">
             <Field label="Setor">
               <Select
-                options={sectors.map((s) => ({ value: s.id, label: s.name }))}
+                options={sectorOptions(sectors)}
                 value={sectorId}
                 onValueChange={(v) => {
                   setSectorId(v);

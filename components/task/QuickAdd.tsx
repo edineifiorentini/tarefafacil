@@ -9,6 +9,7 @@ import { TextInput } from "@/components/ui/TextInput";
 import { useSectors } from "@/lib/queries/useSectors";
 import { useCreateTask } from "@/lib/queries/useTasks";
 import { useWorkspace } from "@/lib/queries/useWorkspace";
+import { sectorOptions } from "@/lib/sectors/options";
 import { quickAddSchema, type QuickAddInput } from "@/lib/validation/task";
 
 export function QuickAdd({ defaultSectorId }: { defaultSectorId?: string }) {
@@ -71,7 +72,7 @@ export function QuickAdd({ defaultSectorId }: { defaultSectorId?: string }) {
       <div className="flex items-center gap-2">
         <div className="min-w-0 flex-1">
           <Select
-            options={sectors.map((s) => ({ value: s.id, label: s.name }))}
+            options={sectorOptions(sectors)}
             value={sectorId}
             onValueChange={(v) =>
               setValue("sector_id", v, { shouldValidate: true })

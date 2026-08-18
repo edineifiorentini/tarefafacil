@@ -13,6 +13,7 @@ import {
   type Member,
 } from "@/lib/queries/useMembers";
 import { useSectors } from "@/lib/queries/useSectors";
+import { sortSectorsByName } from "@/lib/sectors/options";
 import type { ChatMessage } from "@/types/database";
 
 const menuContent =
@@ -201,7 +202,7 @@ export function MessageComposer({
                   Sem etiqueta
                 </DropdownMenu.Item>
               ) : null}
-              {sectors.map((setor) => (
+              {sortSectorsByName(sectors).map((setor) => (
                 <DropdownMenu.Item
                   key={setor.id}
                   onSelect={() => setSectorId(setor.id)}
