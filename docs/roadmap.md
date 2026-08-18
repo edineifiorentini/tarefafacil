@@ -61,16 +61,22 @@ descrita acima.
   inexistente (defeito achado em produção, migration 0041). A mensagem fica
   — "Fulano criou a demanda X" continua verdade —, só o link some.
 
-**Pontas soltas da rodada 3** — o back-end existe, a interface não. Não é
-ideia para depois: é função pela metade, e o código morto engana quem ler.
+**Pontas soltas fechadas** (migration 0042): gestão de participantes,
+renomear e sair do grupo ganharam interface, e o contador de não lidas
+chegou à barra lateral.
 
-- `add_group_members` e `leave_group_channel` existem como RPC e como
-  hook, **sem tela**. Hoje dá para criar um grupo com participantes e nunca
-  mais mexer neles, nem sair.
-- Renomear grupo não existe em lugar nenhum.
-- `useChatUnreadTotal` foi escrito e **não está ligado** ao item "Chat" da
-  barra lateral. Sem esse contador, só se descobre mensagem nova abrindo o
-  chat — o que anula boa parte do valor de ter chat.
+- Nasceu um cabeçalho de canal. Além de abrigar as ações do grupo, ele diz
+  em que conversa você está — o nome só existia na lista lateral, que some
+  em tela estreita.
+- Renomear é RPC `rename_group_channel`: a policy de canal é de
+  owner/admin, e quem cria um grupo pode ser membro comum — seria dono de um
+  grupo que não consegue renomear. Renomeia quem criou, ou quem administra.
+- O contador da barra lateral busca a cada 60s, não a cada 6s como a tela do
+  chat: ali importa ficar sabendo que chegou algo, não ver no segundo em que
+  chega — e a barra lateral existe em toda tela do app.
+- `useChatUnreadTotal` mudou de casa (de `ChatView` para
+  `lib/queries/useChat`): importá-lo do componente arrastaria a interface
+  inteira do chat para o bundle de todas as páginas.
 
 **Rodada 4 — o que ficou de fora**
 

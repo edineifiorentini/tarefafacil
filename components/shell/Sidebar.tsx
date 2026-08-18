@@ -22,6 +22,7 @@ import { LogoutButton } from "@/components/auth/LogoutButton";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { SectorForm } from "@/components/sector/SectorForm";
 import { SectorNav } from "@/components/sector/SectorNav";
+import { useChatUnreadTotal } from "@/lib/queries/useChat";
 import { useCurrentUserId, useMembers } from "@/lib/queries/useMembers";
 import { useSectors } from "@/lib/queries/useSectors";
 import { useWorkspace } from "@/lib/queries/useWorkspace";
@@ -83,10 +84,13 @@ function NavItem({
   destination,
   active,
   onNavigate,
+  badge = 0,
 }: {
   destination: Destination;
   active: boolean;
   onNavigate: () => void;
+  /** Não lidas. Zero não desenha nada. */
+  badge?: number;
 }) {
   const { href, label, icon: Icon, hint } = destination;
   return (
@@ -99,7 +103,14 @@ function NavItem({
       >
         <Icon size={20} stroke={1.75} aria-hidden />
         <span className="flex-1 truncate">{label}</span>
-        {hint ? (
+        {badge > 0 ? (
+          <span
+            aria-label={`${badge} não lidas`}
+            className="tnum shrink-0 rounded-full bg-[var(--brand-600)] px-1.5 text-[length:var(--text-caption-size)] font-medium text-[var(--button-primary-fg)]"
+          >
+            {badge > 99 ? "99+" : badge}
+          </span>
+        ) : hint ? (
           <kbd
             aria-hidden
             className="tnum border-line text-fg-muted rounded-xs border px-1 text-[length:var(--text-caption-size)] opacity-0 transition-opacity [transition-duration:var(--dur-fast)] group-focus-within:opacity-100 group-hover:opacity-100"
@@ -129,6 +140,9 @@ export function Sidebar({
   const { data: members = [] } = useMembers(workspace.id);
   const myRole = members.find((m) => m.user_id === myId)?.role;
   const canManageBusiness = myRole === "owner" || myRole === "admin";
+  // O contador é o que faz alguém lembrar de abrir o chat: sem ele, só se
+  // descobre mensagem nova entrando lá.
+  const chatUnread = useChatUnreadTotal(workspace.id, myId ?? null);
 
   function isActive(href: string) {
     return pathname === href || pathname.startsWith(`${href}/`);
@@ -150,6 +164,7 @@ export function Sidebar({
               destination={destination}
               active={isActive(destination.href)}
               onNavigate={closeMobile}
+              badge={destination.href === "/chat" ? chatUnread : 0}
             />
           ))}
           {canManageBusiness

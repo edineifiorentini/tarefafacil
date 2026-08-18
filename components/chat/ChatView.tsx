@@ -21,7 +21,7 @@ import {
   sortChannelViews,
   toChannelViews,
 } from "@/lib/chat/channels";
-import { badgeLabel, totalUnread, unreadByChannel } from "@/lib/chat/unread";
+import { badgeLabel, unreadByChannel } from "@/lib/chat/unread";
 import {
   useChannelMembers,
   useChatChannels,
@@ -39,6 +39,7 @@ import { useWorkspace } from "@/lib/queries/useWorkspace";
 import { sortSectorIdsByName } from "@/lib/sectors/options";
 import type { Task } from "@/types/database";
 
+import { ChannelHeader } from "./ChannelHeader";
 import { MessageComposer } from "./MessageComposer";
 import { MessageList } from "./MessageList";
 import { NewGroupDialog } from "./NewGroupDialog";
@@ -102,6 +103,9 @@ export function ChatView({ initialChannelId }: { initialChannelId?: string }) {
       ),
     [channels, membersByChannel, myId, nameOf]
   );
+
+  const myRole = members.find((m) => m.user_id === myId)?.role;
+  const canAdmin = myRole === "owner" || myRole === "admin";
 
   const active = channelId ?? views[0]?.channel.id ?? null;
   const atual = views.find((v) => v.channel.id === active);
@@ -299,6 +303,19 @@ export function ChatView({ initialChannelId }: { initialChannelId?: string }) {
       </nav>
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+        {atual ? (
+          <ChannelHeader
+            workspaceId={workspace.id}
+            channel={atual.channel}
+            label={atual.label}
+            memberIds={membersByChannel.get(atual.channel.id) ?? []}
+            myId={myId ?? null}
+            canAdmin={canAdmin}
+            // Saiu do grupo: ele some da lista, então volta para o Geral.
+            onLeft={() => setChannelId(null)}
+          />
+        ) : null}
+
         <div className="border-line flex items-center gap-2 border-b px-4 py-2 md:hidden">
           <label htmlFor="canal" className="sr-only">
             Conversa
@@ -416,11 +433,3 @@ function FiltroChip({
   );
 }
 
-/** Total para o menu lateral do app. */
-export function useChatUnreadTotal(): number {
-  const workspace = useWorkspace();
-  const { data: myId } = useCurrentUserId();
-  const { data: recent = [] } = useRecentMessages(workspace.id, false);
-  const { data: readState = [] } = useChatReadState(workspace.id);
-  return totalUnread(unreadByChannel(recent, readState, myId ?? null));
-}

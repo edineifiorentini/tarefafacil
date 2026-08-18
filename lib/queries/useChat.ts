@@ -7,6 +7,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 
+import { totalUnread, unreadByChannel } from "@/lib/chat/unread";
 import { createClient } from "@/lib/supabase/client";
 import type {
   ChatChannel,
@@ -33,6 +34,8 @@ const PAGE = 50;
  * precisa de contagem no banco, não no cliente.
  */
 const UNREAD_WINDOW = 300;
+/** Ritmo do contador na barra lateral — presente em toda tela do app. */
+const SIDEBAR_POLL_MS = 60_000;
 
 function channelsKey(workspaceId: string) {
   return ["chatChannels", workspaceId] as const;
@@ -165,6 +168,21 @@ export function useAddGroupMembers(workspaceId: string) {
       if (error) throw error;
     },
     onSettled: () => qc.invalidateQueries({ queryKey: membersKey(workspaceId) }),
+  });
+}
+
+export function useRenameGroupChannel(workspaceId: string) {
+  const supabase = createClient();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ channelId, name }: { channelId: string; name: string }) => {
+      const { error } = await supabase.rpc("rename_group_channel", {
+        canal: channelId,
+        nome: name,
+      });
+      if (error) throw error;
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: channelsKey(workspaceId) }),
   });
 }
 
@@ -318,4 +336,36 @@ export function useMarkChannelRead(workspaceId: string) {
     onSettled: () =>
       qc.invalidateQueries({ queryKey: readStateKey(workspaceId) }),
   });
+}
+
+/**
+ * Total de não lidas, para o item "Chat" da barra lateral.
+ *
+ * Mora aqui e não no `ChatView` porque a barra lateral existe em toda tela:
+ * importá-lo de lá arrastaria a interface inteira do chat para dentro do
+ * bundle de todas as páginas.
+ *
+ * Busca a cada minuto, não a cada 6s: aqui o que importa é a pessoa ficar
+ * sabendo que chegou algo, não ver a mensagem no segundo em que chega.
+ */
+export function useChatUnreadTotal(workspaceId: string, myId: string | null) {
+  const supabase = createClient();
+  const { data: recent = [] } = useQuery({
+    queryKey: recentKey(workspaceId),
+    queryFn: async (): Promise<ChatMessage[]> => {
+      const { data, error } = await supabase
+        .from("chat_message")
+        .select("*")
+        .eq("workspace_id", workspaceId)
+        .order("created_at", { ascending: false })
+        .limit(UNREAD_WINDOW);
+      if (error) throw error;
+      return data;
+    },
+    refetchInterval: SIDEBAR_POLL_MS,
+    refetchIntervalInBackground: false,
+    staleTime: POLL_MS,
+  });
+  const { data: readState = [] } = useChatReadState(workspaceId);
+  return totalUnread(unreadByChannel(recent, readState, myId));
 }

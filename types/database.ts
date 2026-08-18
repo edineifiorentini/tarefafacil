@@ -1135,6 +1135,10 @@ export type Database = {
         Args: { canal: string; membros: string[] };
         Returns: undefined;
       };
+      rename_group_channel: {
+        Args: { canal: string; nome: string };
+        Returns: undefined;
+      };
       leave_group_channel: {
         Args: { canal: string };
         Returns: undefined;
