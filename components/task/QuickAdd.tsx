@@ -3,19 +3,25 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, useWatch } from "react-hook-form";
 
+import { useShell } from "@/components/shell/shell-context";
 import { Button } from "@/components/ui/Button";
 import { Select } from "@/components/ui/Select";
 import { TextInput } from "@/components/ui/TextInput";
+import { useToast } from "@/components/ui/Toast";
 import { useSectors } from "@/lib/queries/useSectors";
 import { useCreateTask } from "@/lib/queries/useTasks";
 import { useWorkspace } from "@/lib/queries/useWorkspace";
 import { sectorOptions } from "@/lib/sectors/options";
 import { quickAddSchema, type QuickAddInput } from "@/lib/validation/task";
 
+import { TaskDetailPanel } from "./TaskDetailPanel";
+
 export function QuickAdd({ defaultSectorId }: { defaultSectorId?: string }) {
   const workspace = useWorkspace();
   const { data: sectors = [] } = useSectors(workspace.id);
   const createTask = useCreateTask(workspace.id);
+  const toast = useToast();
+  const { openPanel } = useShell();
 
   const {
     register,
@@ -37,7 +43,33 @@ export function QuickAdd({ defaultSectorId }: { defaultSectorId?: string }) {
   const sectorId = useWatch({ control, name: "sector_id" });
 
   function onSubmit(data: QuickAddInput) {
-    createTask.mutate({ ...data, due_date: data.due_date || null });
+    createTask.mutate(
+      { ...data, due_date: data.due_date || null },
+      {
+        onSuccess: (task) => {
+          // Sem isto o botão não dava sinal nenhum de vida e a pessoa ficava
+          // sem saber se a tarefa foi criada. O nome do setor no texto é o
+          // que confirma que ela foi parar no lugar certo.
+          const setor = sectors.find((x) => x.id === data.sector_id)?.name;
+          toast.show({
+            message: setor
+              ? `Tarefa criada em ${setor}`
+              : "Tarefa criada",
+            actionLabel: "Ver tarefa",
+            // 6s em vez de 5: este aviso tem ação, e ação precisa de tempo
+            // para ser notada e alcançada.
+            duration: 6000,
+            onAction: () =>
+              openPanel({
+                title: "Tarefa",
+                node: <TaskDetailPanel taskId={task.id} />,
+              }),
+          });
+        },
+        onError: () =>
+          toast.show({ message: "Não foi possível criar a tarefa" }),
+      }
+    );
     // Mantém setor e prazo; limpa o título e volta o foco (registro em sequência).
     reset({ title: "", sector_id: data.sector_id, due_date: data.due_date });
     setFocus("title");
