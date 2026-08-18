@@ -47,6 +47,7 @@ import { TagSelector } from "./TagSelector";
 import { TaskMeetToggle } from "./TaskMeetToggle";
 import { TaskSyncToggle } from "./TaskSyncToggle";
 import { TimeTracking } from "./TimeTracking";
+import { ConfirmDeleteDialog } from "./ConfirmDeleteDialog";
 
 const PRIORITIES = [
   { value: "sem_prioridade", label: "Sem prioridade" },
@@ -75,6 +76,7 @@ export function TaskDetailPanel({ taskId }: { taskId: string }) {
   const { data: sectors = [] } = useSectors(workspace.id);
   const update = useUpdateTask(workspace.id);
   const deleteTask = useDeleteTask(workspace.id);
+  const [confirmandoExclusao, setConfirmandoExclusao] = useState(false);
   const toggleCancel = useToggleTaskCancel(workspace.id);
   const syncEvent = useSyncTaskEvent();
   const { closePanel } = useShell();
@@ -471,14 +473,21 @@ export function TaskDetailPanel({ taskId }: { taskId: string }) {
           variant="danger"
           size="sm"
           leadingIcon={IconTrash}
-          onClick={() => {
-            deleteTask(task);
-            closePanel();
-          }}
+          onClick={() => setConfirmandoExclusao(true)}
         >
           Excluir tarefa
         </Button>
       </div>
+
+      <ConfirmDeleteDialog
+        open={confirmandoExclusao}
+        title={task.title}
+        onOpenChange={setConfirmandoExclusao}
+        onConfirm={() => {
+          deleteTask(task);
+          closePanel();
+        }}
+      />
     </div>
   );
 }

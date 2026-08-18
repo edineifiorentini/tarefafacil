@@ -6,11 +6,13 @@ import {
   IconTrash,
 } from "@tabler/icons-react";
 import { DropdownMenu } from "radix-ui";
+import { useState } from "react";
 
 import { Checkbox } from "@/components/ui/Checkbox";
 import type { Sector, Task } from "@/types/database";
 
 import { AssigneeAvatar } from "./AssigneeAvatar";
+import { ConfirmDeleteDialog } from "./ConfirmDeleteDialog";
 import { DueChip } from "./DueChip";
 import { PriorityBadge } from "./PriorityBadge";
 import { SectorDot } from "./SectorDot";
@@ -36,6 +38,9 @@ export function TaskRow({
   selected?: boolean;
   onSelectChange?: (selected: boolean) => void;
 }) {
+  // A confirmação mora aqui e não em cada tela: assim Hoje, Lista e o setor
+  // ganham a mesma proteção de uma vez, e ninguém esquece de uma delas.
+  const [confirmando, setConfirmando] = useState(false);
   const done = task.completed_at !== null;
   const cancelled = task.cancelled_at !== null;
   const closed = done || cancelled;
@@ -118,7 +123,12 @@ export function TaskRow({
                 </DropdownMenu.Item>
               ) : null}
               <DropdownMenu.Item
-                onSelect={onDelete}
+                // O menu devolve o foco ao fechar; sem isto o diálogo abre e
+                // perde o foco no mesmo instante.
+                onSelect={(e) => {
+                  e.preventDefault();
+                  setConfirmando(true);
+                }}
                 className="text-fg data-[highlighted]:bg-hover flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] outline-none"
               >
                 <IconTrash size={16} stroke={1.5} />
@@ -128,6 +138,13 @@ export function TaskRow({
           </DropdownMenu.Portal>
         </DropdownMenu.Root>
       </div>
+
+      <ConfirmDeleteDialog
+        open={confirmando}
+        title={task.title}
+        onOpenChange={setConfirmando}
+        onConfirm={onDelete}
+      />
     </div>
   );
 }

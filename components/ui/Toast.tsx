@@ -78,7 +78,12 @@ export function ToastProvider({ children }: { children: ReactNode }) {
           onMouseLeave={() => agendar(toast.id, toast.duration)}
           onFocusCapture={clearTimer}
           onBlurCapture={() => agendar(toast.id, toast.duration)}
-          className="tf-glass-strong fixed bottom-4 left-1/2 z-[100] flex max-w-[calc(100vw-2rem)] -translate-x-1/2 items-center gap-1 rounded-md py-1 pr-1 pl-1 [animation:tf-toast-in_var(--dur-base)_var(--ease-out)]"
+          // Superfície do botão primário, não vidro. Vidro é translúcido por
+          // definição e some no fundo pérola — o oposto do que um aviso
+          // precisa. Este token inverte entre os temas (grafite no claro,
+          // quase-branco no escuro), então contrasta com a página nos dois.
+          // Verde está fora: é reservado a dado financeiro positivo.
+          className="fixed bottom-4 left-1/2 z-[100] flex max-w-[calc(100vw-2rem)] -translate-x-1/2 items-center gap-1 rounded-md bg-[var(--button-primary-bg)] p-1 shadow-[var(--shadow-card-hover)] [animation:tf-toast-in_var(--dur-base)_var(--ease-out)]"
         >
           {clicavel ? (
             // A superfície inteira é o alvo — quem quer ver a tarefa clica no
@@ -90,19 +95,19 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                 toast.onAction?.();
                 dismiss();
               }}
-              className="hover:bg-hover flex min-w-0 flex-1 items-center gap-4 rounded-sm px-3 py-2 text-left transition-colors [transition-duration:var(--dur-fast)]"
+              className="flex min-w-0 flex-1 items-center gap-4 rounded-sm px-3 py-2 text-left transition-colors [transition-duration:var(--dur-fast)] hover:bg-[color-mix(in_srgb,var(--button-primary-fg)_12%,transparent)]"
             >
-              <span className="text-fg min-w-0 flex-1 text-[length:var(--text-small-size)]">
+              <span className="min-w-0 flex-1 text-[length:var(--text-small-size)] text-[var(--button-primary-fg)]">
                 {toast.message}
               </span>
               {toast.actionLabel ? (
-                <span className="text-fg-link shrink-0 text-[length:var(--text-small-size)] font-medium whitespace-nowrap">
+                <span className="shrink-0 text-[length:var(--text-small-size)] font-semibold whitespace-nowrap text-[var(--button-primary-fg)] underline decoration-[color-mix(in_srgb,var(--button-primary-fg)_45%,transparent)] underline-offset-2">
                   {toast.actionLabel}
                 </span>
               ) : null}
             </button>
           ) : (
-            <span className="text-fg min-w-0 flex-1 px-3 py-2 text-[length:var(--text-small-size)]">
+            <span className="min-w-0 flex-1 px-3 py-2 text-[length:var(--text-small-size)] text-[var(--button-primary-fg)]">
               {toast.message}
             </span>
           )}
@@ -111,7 +116,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             type="button"
             aria-label="Fechar aviso"
             onClick={dismiss}
-            className="text-fg-secondary hover:bg-hover hover:text-fg inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-sm transition-colors [transition-duration:var(--dur-fast)]"
+            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-sm text-[var(--button-primary-fg)] opacity-70 transition-opacity [transition-duration:var(--dur-fast)] hover:opacity-100"
           >
             <IconX size={15} stroke={1.75} />
           </button>
