@@ -103,8 +103,11 @@ A central de notificações saiu (2b7084c). Restam:
 - **Permissões granulares.** Hoje são quatro papéis para o workspace inteiro.
   O spec pede recorte por setor e por cliente, e transferir responsabilidades
   antes de remover alguém.
-- **Auditoria de operações sensíveis.** Existe histórico por demanda; falta o
-  log de workspace: login, convite, troca de papel, exclusão.
+- ~~**Auditoria de operações sensíveis.**~~ Entregue na migration 0044:
+  trilha de workspace para dinheiro, contratos, permissões e exclusões, lida
+  só por dono/admin, escrita só por trigger e **imutável** (sem policy de
+  update nem delete). Login ainda não entra — depende de gancho no Supabase
+  Auth, não de trigger em tabela nossa.
 - **Jobs observáveis.** Só faz sentido quando houver trabalho assíncrono real
   — e-mail, renovação do `watch` do Google, limpeza de anexo. Criar a
   infraestrutura antes disso é inventar problema.
@@ -120,9 +123,9 @@ existe; falta:
   porque nenhum estava na lógica pura: estavam na ligação entre dado e tela.
   Enquanto essa classe só for descoberta por alguém reparando, toda função
   nova entra com o mesmo ponto cego.
-- **Auditoria de operações sensíveis.** Existe histórico por demanda; falta
-  o log do workspace (login, convite, troca de papel, exclusão). Está
-  listado em §22 como parte do essencial, não como evolução.
+- ~~**Auditoria de operações sensíveis.**~~ Entregue (migration 0044). Falta
+  só o registro de LOGIN, que não sai de trigger em tabela — precisa de
+  gancho no Supabase Auth.
 - **Recorrências no Financeiro.** Parcela de contrato gera lançamento;
   recorrência própria ("aluguel todo dia 5") não existe.
 
@@ -152,6 +155,8 @@ Cada item aqui foi uma decisão consciente, não esquecimento.
 | Crons (limpeza de anexo 30d, renovação do watch) | Ver "jobs observáveis" acima. |
 | Marketing e onboarding guiado (E18) | Adiado no fechamento da E18. |
 | Contador de não lidas no banco | Hoje o chat conta sobre uma janela de 300 mensagens no cliente. Só vira problema com volume. |
+| Retenção da trilha de auditoria | `audit_log` só cresce, e é imutável de propósito. Definir janela e arquivamento antes de virar volume. |
+| Registro de login na auditoria | Exige gancho no Supabase Auth; trigger em tabela não alcança. |
 
 ---
 

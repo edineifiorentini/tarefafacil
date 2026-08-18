@@ -36,6 +36,8 @@ export type NotificationKind = "mencao" | "atribuicao" | "comentario";
 export type NotificationEntity = "task" | "chat_channel";
 export type ChatMessageKind = "humano" | "sistema";
 export type ChatChannelKind = "geral" | "grupo" | "direta";
+/** Trilha de auditoria do workspace. */
+export type AuditAction = "criou" | "alterou" | "excluiu";
 
 export type Database = {
   public: {
@@ -826,6 +828,24 @@ export type Database = {
         };
         Relationships: [];
       };
+      audit_log: {
+        Row: {
+          id: string;
+          workspace_id: string;
+          actor_id: string | null;
+          action: AuditAction;
+          entity_type: string;
+          entity_id: string | null;
+          summary: string;
+          details: Json | null;
+          created_at: string;
+        };
+        // Só os triggers escrevem, e a tabela é imutável: sem Insert nem
+        // Update utilizáveis pelo cliente.
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
       chat_channel: {
         Row: {
           id: string;
@@ -1222,3 +1242,4 @@ export type ChatChannel = Tables<"chat_channel">;
 export type ChatMessage = Tables<"chat_message">;
 export type ChatReadState = Tables<"chat_read_state">;
 export type ChatChannelMember = Tables<"chat_channel_member">;
+export type AuditLog = Tables<"audit_log">;

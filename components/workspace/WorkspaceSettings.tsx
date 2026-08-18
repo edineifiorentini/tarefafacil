@@ -44,6 +44,8 @@ const ASSIGNABLE_ROLES = [
   { value: "viewer", label: "Leitor" },
 ];
 
+import { AuditTrail } from "./AuditTrail";
+
 export function WorkspaceSettings() {
   const workspace = useWorkspace();
   const toast = useToast();
@@ -299,6 +301,8 @@ export function WorkspaceSettings() {
           ) : null}
         </div>
       ) : null}
+
+      <AuditTrail workspaceId={workspace.id} canRead={canManage} />
 
       <div className="flex flex-col gap-2">
         <h2 className="text-fg-secondary text-[length:var(--text-small-size)] font-medium">
