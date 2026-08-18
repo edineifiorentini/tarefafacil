@@ -28,16 +28,33 @@ Pedido do dono em 17/ago/2026. Rodada 1 entregue na migration 0038.
 - **Não lidas por `last_read_at`** em (canal, usuário). Uma linha de leitura
   por mensagem seriam 50 mil linhas para 10 pessoas e 5 mil mensagens.
 
-**Rodada 2 — o que ficou de fora**
+**Rodada 2 entregue** (migration 0039): mensagem direta, resposta a uma
+mensagem, paginação para trás e resumo de prazos do setor no topo do canal.
 
-- Mensagem direta entre duas pessoas;
-- Anexo e resposta a uma mensagem específica;
-- Paginação para trás (hoje carrega as 50 últimas do canal);
+- Conversa direta mora na mesma tabela, mas **toda leitura passa por
+  `can_read_channel`** — a regra da rodada 1 (`is_member(workspace_id)`)
+  entregaria conversa privada ao workspace inteiro.
+- O par de participantes é canônico (`dm_key` = menor:maior). Sem isso, A→B
+  e B→A abririam duas conversas para o mesmo assunto.
+- Criar a conversa é RPC `open_direct_channel`, não insert do cliente:
+  exige escrever participante para duas pessoas, e a policy de canal é só de
+  owner/admin. A função confere que ambos são membros ativos.
+- O resumo de prazos é do **setor e agregado**; o sino é **pessoal e por
+  demanda**. É o que permite os dois existirem sem repetir a informação.
+- Paginação por cursor de `created_at`, não offset: com mensagem nova
+  chegando, offset repetiria e pularia linhas entre páginas.
+
+**Rodada 3 — o que ficou de fora**
+
+- Anexo em mensagem (reusar o storage que as demandas já usam);
 - **Retenção.** Chat cresce e ninguém apaga. Definir janela antes de a tabela
   passar de algumas dezenas de milhares de linhas;
 - O contador lateral olha uma janela de 300 mensagens recentes do workspace.
   É teto de segurança, não paginação: se estourar, a contagem precisa descer
-  para o banco.
+  para o banco;
+- **Pendente de teste com duas sessões:** a RLS da conversa direta foi
+  escrita e revisada, mas exercitá-la de verdade exige dois usuários logados
+  ao mesmo tempo. É o primeiro item a validar em homologação.
 
 ---
 

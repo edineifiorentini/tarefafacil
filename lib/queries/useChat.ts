@@ -1,9 +1,19 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 
 import { createClient } from "@/lib/supabase/client";
-import type { ChatChannel, ChatMessage, ChatReadState } from "@/types/database";
+import type {
+  ChatChannel,
+  ChatChannelMember,
+  ChatMessage,
+  ChatReadState,
+} from "@/types/database";
 
 /**
  * Sem Realtime na rodada 1.
@@ -33,11 +43,21 @@ function messagesKey(channelId: string) {
 function recentKey(workspaceId: string) {
   return ["chatRecent", workspaceId] as const;
 }
+function membersKey(workspaceId: string) {
+  return ["chatChannelMembers", workspaceId] as const;
+}
 function readStateKey(workspaceId: string) {
   return ["chatReadState", workspaceId] as const;
 }
 
-/** Canais do workspace. "Geral" primeiro, setores depois em ordem alfabética. */
+/**
+ * Canais visíveis. A RLS já esconde conversa direta de quem não participa —
+ * a consulta não filtra nada além do workspace de propósito, para não dar a
+ * impressão de que a privacidade mora no cliente.
+ *
+ * A ordem e o rótulo saem de `lib/chat/channels.ts`: conversa direta se
+ * chama pela outra pessoa, e isso o hook não tem como saber sozinho.
+ */
 export function useChatChannels(workspaceId: string) {
   const supabase = createClient();
   return useQuery({
@@ -48,32 +68,82 @@ export function useChatChannels(workspaceId: string) {
         .select("*")
         .eq("workspace_id", workspaceId);
       if (error) throw error;
-      return [...data].sort((a, b) => {
-        if (!a.sector_id) return -1;
-        if (!b.sector_id) return 1;
-        return a.name.localeCompare(b.name, "pt-BR");
-      });
+      return data;
     },
     staleTime: 5 * 60_000,
   });
 }
 
-export function useChatMessages(channelId: string | null, active: boolean) {
+/** Participantes das conversas diretas que eu enxergo. */
+export function useChannelMembers(workspaceId: string) {
   const supabase = createClient();
   return useQuery({
+    queryKey: membersKey(workspaceId),
+    queryFn: async (): Promise<ChatChannelMember[]> => {
+      const { data, error } = await supabase
+        .from("chat_channel_member")
+        .select("*");
+      if (error) throw error;
+      return data;
+    },
+    staleTime: 5 * 60_000,
+  });
+}
+
+/**
+ * Abre a conversa direta com alguém — ou devolve a que já existe.
+ *
+ * É RPC porque criar o canal exige inserir participante para DUAS pessoas, e
+ * a policy de escrita de canal é só de owner/admin. A função no banco
+ * confere que ambos são membros ativos antes de criar.
+ */
+export function useOpenDirectChannel(workspaceId: string) {
+  const supabase = createClient();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (otherUserId: string): Promise<string> => {
+      const { data, error } = await supabase.rpc("open_direct_channel", {
+        ws: workspaceId,
+        other: otherUserId,
+      });
+      if (error) throw error;
+      return data as string;
+    },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: channelsKey(workspaceId) });
+      qc.invalidateQueries({ queryKey: membersKey(workspaceId) });
+    },
+  });
+}
+
+/**
+ * Conversa paginada para trás.
+ *
+ * O cursor é o `created_at` da mensagem mais antiga já carregada, não um
+ * offset: com mensagem nova chegando o tempo todo, offset repetiria e
+ * puliria linhas a cada página.
+ */
+export function useChatMessages(channelId: string | null, active: boolean) {
+  const supabase = createClient();
+  return useInfiniteQuery({
     enabled: !!channelId,
     queryKey: messagesKey(channelId ?? "nenhum"),
-    queryFn: async (): Promise<ChatMessage[]> => {
-      const { data, error } = await supabase
+    initialPageParam: null as string | null,
+    queryFn: async ({ pageParam }): Promise<ChatMessage[]> => {
+      let q = supabase
         .from("chat_message")
         .select("*")
         .eq("channel_id", channelId as string)
         .order("created_at", { ascending: false })
         .limit(PAGE);
+      if (pageParam) q = q.lt("created_at", pageParam);
+      const { data, error } = await q;
       if (error) throw error;
       return data;
     },
-    // Só busca sozinho enquanto a tela está aberta e visível.
+    getNextPageParam: (ultima) =>
+      ultima.length < PAGE ? undefined : ultima[ultima.length - 1].created_at,
+    // Só a primeira página é revalidada pelo intervalo; as antigas não mudam.
     refetchInterval: active ? POLL_MS : false,
     refetchIntervalInBackground: false,
   });
@@ -121,9 +191,11 @@ export function useSendMessage(workspaceId: string, channelId: string) {
     mutationFn: async ({
       body,
       mentionedUserIds,
+      replyToId,
     }: {
       body: string;
       mentionedUserIds: string[];
+      replyToId?: string | null;
     }) => {
       const {
         data: { user },
@@ -134,6 +206,7 @@ export function useSendMessage(workspaceId: string, channelId: string) {
         author_id: user?.id ?? null,
         body,
         mentioned_user_ids: mentionedUserIds,
+        reply_to_id: replyToId ?? null,
       });
       if (error) throw error;
     },

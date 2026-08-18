@@ -1,59 +1,118 @@
 "use client";
 
-import { IconHash, IconMessages, IconSpeakerphone } from "@tabler/icons-react";
+import {
+  IconAlertTriangle,
+  IconHash,
+  IconMessagePlus,
+  IconMessages,
+  IconSpeakerphone,
+  IconUser,
+} from "@tabler/icons-react";
+import { DropdownMenu } from "radix-ui";
 import { useEffect, useMemo, useState } from "react";
 
 import { EmptyState } from "@/components/ui/EmptyState";
+import { useToast } from "@/components/ui/Toast";
 import {
-  badgeLabel,
-  totalUnread,
-  unreadByChannel,
-} from "@/lib/chat/unread";
+  deadlinesLabel,
+  sectorDeadlines,
+  sortChannelViews,
+  toChannelViews,
+} from "@/lib/chat/channels";
+import { badgeLabel, totalUnread, unreadByChannel } from "@/lib/chat/unread";
 import {
+  useChannelMembers,
   useChatChannels,
   useChatMessages,
   useChatReadState,
   useMarkChannelRead,
+  useOpenDirectChannel,
   useRecentMessages,
 } from "@/lib/queries/useChat";
-import { useCurrentUserId } from "@/lib/queries/useMembers";
+import { useCurrentUserId, useMembers } from "@/lib/queries/useMembers";
+import { useTasks } from "@/lib/queries/useTasks";
 import { useWorkspace } from "@/lib/queries/useWorkspace";
 
 import { MessageComposer } from "./MessageComposer";
 import { MessageList } from "./MessageList";
 
+const menuContent =
+  "z-50 max-h-64 min-w-48 overflow-auto rounded-md tf-glass-strong p-1 data-[state=closed]:[animation:tf-pop-out_var(--dur-fast)_ease-in] data-[state=open]:[animation:tf-pop-in_var(--dur-fast)_var(--ease-out)]";
+const menuItem =
+  "flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] text-fg outline-none data-[highlighted]:bg-hover";
+
 /**
- * Chat da equipe. Um canal por setor, mais o "Geral" — a mesma taxonomia da
- * barra lateral, para ninguém ter que decidir duas vezes onde um assunto
- * mora.
+ * Chat da equipe. Canal por setor, "Geral" e conversas diretas — a mesma
+ * taxonomia da barra lateral, para ninguém decidir duas vezes onde um
+ * assunto mora.
  */
 export function ChatView({ initialChannelId }: { initialChannelId?: string }) {
   const workspace = useWorkspace();
+  const toast = useToast();
   const { data: myId } = useCurrentUserId();
+  const { data: members = [] } = useMembers(workspace.id);
   const { data: channels = [], isLoading } = useChatChannels(workspace.id);
+  const { data: channelMembers = [] } = useChannelMembers(workspace.id);
   const { data: readState = [] } = useChatReadState(workspace.id);
+  const { data: tasks = [] } = useTasks(workspace.id);
 
   const [channelId, setChannelId] = useState<string | null>(
     initialChannelId ?? null
   );
+  const [replyTo, setReplyTo] = useState<string | null>(null);
 
-  // Sem escolha ainda: abre no Geral, que é o primeiro da lista.
-  const active = channelId ?? channels[0]?.id ?? null;
+  const membersByChannel = useMemo(() => {
+    const m = new Map<string, string[]>();
+    for (const row of channelMembers) {
+      m.set(row.channel_id, [...(m.get(row.channel_id) ?? []), row.user_id]);
+    }
+    return m;
+  }, [channelMembers]);
+
+  const nameOf = useMemo(() => {
+    const nomes = new Map(
+      members.map((m) => [m.user_id, m.display_name ?? m.email])
+    );
+    return (id: string) => nomes.get(id) ?? "Alguém";
+  }, [members]);
+
+  const views = useMemo(
+    () =>
+      sortChannelViews(
+        toChannelViews(channels, membersByChannel, myId ?? null, nameOf)
+      ),
+    [channels, membersByChannel, myId, nameOf]
+  );
+
+  const active = channelId ?? views[0]?.channel.id ?? null;
+  const atual = views.find((v) => v.channel.id === active);
 
   const { data: recent = [] } = useRecentMessages(workspace.id, true);
-  const { data: messages = [], isLoading: loadingMessages } = useChatMessages(
-    active,
-    true
-  );
+  const query = useChatMessages(active, true);
   const markRead = useMarkChannelRead(workspace.id);
+  const openDirect = useOpenDirectChannel(workspace.id);
+
+  const messages = useMemo(() => query.data?.pages.flat() ?? [], [query.data]);
 
   const unread = useMemo(
     () => unreadByChannel(recent, readState, myId ?? null),
     [recent, readState, myId]
   );
 
-  // Estar com o canal aberto é ter lido. Marca ao entrar e sempre que
-  // chegar mensagem nova enquanto a tela está à frente.
+  // Relógio lido uma vez: o resumo não pode mudar no meio de um render.
+  const [now] = useState(() => new Date());
+  const resumo = atual?.channel.sector_id
+    ? deadlinesLabel(sectorDeadlines(tasks, atual.channel.sector_id, now))
+    : null;
+
+  // Trocar de canal cancela a resposta em curso — responder a uma mensagem
+  // de outra conversa não faria sentido. É consequência do clique, não
+  // sincronização com sistema externo, então mora aqui e não num efeito.
+  function selecionarCanal(id: string) {
+    setChannelId(id);
+    setReplyTo(null);
+  }
+
   const ultima = messages[0]?.created_at;
   useEffect(() => {
     if (!active) return;
@@ -61,6 +120,28 @@ export function ChatView({ initialChannelId }: { initialChannelId?: string }) {
     // markRead muda de identidade a cada render; incluí-lo remarcaria em loop.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active, ultima]);
+
+  // Quem já tem conversa direta não aparece de novo no menu.
+  const jaTemConversa = new Set(
+    views
+      .filter((v) => v.channel.kind === "direta")
+      .map((v) => v.otherUserId)
+      .filter(Boolean) as string[]
+  );
+  const disponiveis = members.filter(
+    (m) =>
+      m.user_id !== myId &&
+      m.status === "active" &&
+      !jaTemConversa.has(m.user_id)
+  );
+
+  function conversarCom(userId: string) {
+    openDirect.mutate(userId, {
+      onSuccess: (id) => selecionarCanal(id),
+      onError: () =>
+        toast.show({ message: "Não foi possível abrir a conversa" }),
+    });
+  }
 
   if (isLoading) {
     return (
@@ -70,7 +151,7 @@ export function ChatView({ initialChannelId }: { initialChannelId?: string }) {
     );
   }
 
-  if (channels.length === 0) {
+  if (views.length === 0) {
     return (
       <div className="p-6">
         <EmptyState
@@ -82,46 +163,81 @@ export function ChatView({ initialChannelId }: { initialChannelId?: string }) {
     );
   }
 
-  const canal = channels.find((c) => c.id === active);
-
   return (
     <div className="flex h-full min-h-0">
       <nav
         aria-label="Canais"
         className="border-line hidden w-56 shrink-0 flex-col gap-0.5 overflow-y-auto border-r p-3 md:flex"
       >
-        <p className="text-fg-muted px-2 pb-1 text-[length:var(--text-caption-size)] font-medium tracking-wide whitespace-nowrap uppercase">
-          Canais
-        </p>
-        {channels.map((c) => {
-          const u = unread.get(c.id);
-          const atual = c.id === active;
+        <div className="flex items-center gap-1 px-2 pb-1">
+          <p className="text-fg-muted flex-1 text-[length:var(--text-caption-size)] font-medium tracking-wide whitespace-nowrap uppercase">
+            Canais
+          </p>
+          <DropdownMenu.Root>
+            <DropdownMenu.Trigger asChild>
+              <button
+                type="button"
+                aria-label="Nova conversa direta"
+                className="text-fg-secondary hover:bg-hover hover:text-fg inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-xs transition-colors [transition-duration:var(--dur-fast)]"
+              >
+                <IconMessagePlus size={16} stroke={1.75} />
+              </button>
+            </DropdownMenu.Trigger>
+            <DropdownMenu.Portal>
+              <DropdownMenu.Content
+                align="end"
+                sideOffset={4}
+                className={menuContent}
+              >
+                {disponiveis.length === 0 ? (
+                  <div className="text-fg-muted px-2 py-1.5 text-[length:var(--text-small-size)]">
+                    Ninguém novo para conversar
+                  </div>
+                ) : (
+                  disponiveis.map((m) => (
+                    <DropdownMenu.Item
+                      key={m.user_id}
+                      onSelect={() => conversarCom(m.user_id)}
+                      className={menuItem}
+                    >
+                      <IconUser size={14} stroke={1.75} aria-hidden />
+                      <span className="truncate">
+                        {m.display_name ?? m.email}
+                      </span>
+                    </DropdownMenu.Item>
+                  ))
+                )}
+              </DropdownMenu.Content>
+            </DropdownMenu.Portal>
+          </DropdownMenu.Root>
+        </div>
+
+        {views.map((v) => {
+          const u = unread.get(v.channel.id);
+          const selecionado = v.channel.id === active;
+          const Icon =
+            v.channel.kind === "geral"
+              ? IconSpeakerphone
+              : v.channel.kind === "direta"
+                ? IconUser
+                : IconHash;
           return (
             <button
-              key={c.id}
+              key={v.channel.id}
               type="button"
-              onClick={() => setChannelId(c.id)}
-              aria-current={atual ? "true" : undefined}
+              onClick={() => selecionarCanal(v.channel.id)}
+              aria-current={selecionado ? "true" : undefined}
               className={`flex w-full items-center gap-2 rounded-sm px-2 py-2 text-left transition-colors [transition-duration:var(--dur-fast)] ${
-                atual
+                selecionado
                   ? "tf-liquid text-fg font-medium"
                   : "text-fg-secondary hover:bg-hover hover:text-fg"
               }`}
             >
-              {c.sector_id ? (
-                <IconHash size={16} stroke={1.75} aria-hidden className="shrink-0" />
-              ) : (
-                <IconSpeakerphone
-                  size={16}
-                  stroke={1.75}
-                  aria-hidden
-                  className="shrink-0"
-                />
-              )}
+              <Icon size={16} stroke={1.75} aria-hidden className="shrink-0" />
               <span className="min-w-0 flex-1 truncate text-[length:var(--text-small-size)]">
-                {c.name}
+                {v.label}
               </span>
-              {u && !atual ? (
+              {u && !selecionado ? (
                 <span
                   className={`tnum shrink-0 rounded-full px-1.5 text-[length:var(--text-caption-size)] font-medium ${
                     u.mentionsMe
@@ -138,7 +254,6 @@ export function ChatView({ initialChannelId }: { initialChannelId?: string }) {
       </nav>
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-        {/* Seletor de canal em tela estreita, onde a coluna não cabe. */}
         <div className="border-line flex items-center gap-2 border-b px-4 py-2 md:hidden">
           <label htmlFor="canal" className="sr-only">
             Canal
@@ -146,14 +261,14 @@ export function ChatView({ initialChannelId }: { initialChannelId?: string }) {
           <select
             id="canal"
             value={active ?? ""}
-            onChange={(e) => setChannelId(e.target.value)}
+            onChange={(e) => selecionarCanal(e.target.value)}
             className="bg-card text-fg border-line h-9 w-full rounded-sm border px-2 text-[length:var(--text-small-size)]"
           >
-            {channels.map((c) => {
-              const u = unread.get(c.id);
+            {views.map((v) => {
+              const u = unread.get(v.channel.id);
               return (
-                <option key={c.id} value={c.id}>
-                  {c.name}
+                <option key={v.channel.id} value={v.channel.id}>
+                  {v.label}
                   {u ? ` (${badgeLabel(u.count)})` : ""}
                 </option>
               );
@@ -161,17 +276,37 @@ export function ChatView({ initialChannelId }: { initialChannelId?: string }) {
           </select>
         </div>
 
+        {/* Resumo do SETOR, agregado. O sino cuida do pessoal e por demanda —
+            por isso os dois convivem sem repetir a mesma informação. */}
+        {resumo ? (
+          <div className="border-line text-fg-secondary flex items-center gap-2 border-b px-4 py-2 text-[length:var(--text-caption-size)]">
+            <IconAlertTriangle
+              size={14}
+              stroke={1.75}
+              aria-hidden
+              className="shrink-0 text-[var(--color-overdue)]"
+            />
+            <span className="truncate">Prazos do setor: {resumo}</span>
+          </div>
+        ) : null}
+
         <MessageList
           messages={messages}
-          isLoading={loadingMessages}
-          channelName={canal?.name ?? ""}
+          isLoading={query.isLoading}
+          channelName={atual?.label ?? ""}
+          hasMore={!!query.hasNextPage}
+          isLoadingMore={query.isFetchingNextPage}
+          onLoadMore={() => query.fetchNextPage()}
+          onReply={setReplyTo}
         />
 
         {active ? (
           <MessageComposer
             workspaceId={workspace.id}
             channelId={active}
-            channelName={canal?.name ?? ""}
+            channelName={atual?.label ?? ""}
+            replyTo={messages.find((m) => m.id === replyTo) ?? null}
+            onCancelReply={() => setReplyTo(null)}
           />
         ) : null}
       </div>

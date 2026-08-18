@@ -35,6 +35,7 @@ export type NotificationKind = "mencao" | "atribuicao" | "comentario";
 /** A que o clique da notificação leva. */
 export type NotificationEntity = "task" | "chat_channel";
 export type ChatMessageKind = "humano" | "sistema";
+export type ChatChannelKind = "geral" | "setor" | "direta";
 
 export type Database = {
   public: {
@@ -830,6 +831,9 @@ export type Database = {
           id: string;
           workspace_id: string;
           sector_id: string | null;
+          kind: ChatChannelKind;
+          /** Par canônico dos participantes numa conversa direta. */
+          dm_key: string | null;
           name: string;
           created_at: string;
         };
@@ -854,6 +858,7 @@ export type Database = {
           mentioned_user_ids: string[];
           entity_type: "task" | null;
           entity_id: string | null;
+          reply_to_id: string | null;
           created_at: string;
         };
         Insert: {
@@ -866,8 +871,15 @@ export type Database = {
           mentioned_user_ids?: string[];
           entity_type?: "task" | null;
           entity_id?: string | null;
+          reply_to_id?: string | null;
           created_at?: string;
         };
+        Update: never;
+        Relationships: [];
+      };
+      chat_channel_member: {
+        Row: { channel_id: string; user_id: string };
+        Insert: { channel_id: string; user_id: string };
         Update: never;
         Relationships: [];
       };
@@ -1111,6 +1123,11 @@ export type Database = {
     };
     Views: Record<never, never>;
     Functions: {
+      open_direct_channel: {
+        Args: { ws: string; other: string };
+        /** id do canal direto — reaproveita o existente ou cria. */
+        Returns: string;
+      };
       is_member: {
         Args: { ws: string };
         Returns: boolean;
@@ -1184,3 +1201,4 @@ export type Notification = Tables<"notification">;
 export type ChatChannel = Tables<"chat_channel">;
 export type ChatMessage = Tables<"chat_message">;
 export type ChatReadState = Tables<"chat_read_state">;
+export type ChatChannelMember = Tables<"chat_channel_member">;

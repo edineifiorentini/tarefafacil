@@ -1,13 +1,18 @@
 "use client";
 
-import { IconAt, IconSend } from "@tabler/icons-react";
+import { IconAt, IconSend, IconX } from "@tabler/icons-react";
 import { DropdownMenu } from "radix-ui";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/Button";
 import { Textarea } from "@/components/ui/Textarea";
 import { useSendMessage } from "@/lib/queries/useChat";
-import { useCurrentUserId, useMembers, type Member } from "@/lib/queries/useMembers";
+import {
+  useCurrentUserId,
+  useMembers,
+  type Member,
+} from "@/lib/queries/useMembers";
+import type { ChatMessage } from "@/types/database";
 
 const menuContent =
   "z-50 max-h-64 min-w-44 overflow-auto rounded-md tf-glass-strong p-1 data-[state=closed]:[animation:tf-pop-out_var(--dur-fast)_ease-in] data-[state=open]:[animation:tf-pop-in_var(--dur-fast)_var(--ease-out)]";
@@ -23,10 +28,14 @@ export function MessageComposer({
   workspaceId,
   channelId,
   channelName,
+  replyTo,
+  onCancelReply,
 }: {
   workspaceId: string;
   channelId: string;
   channelName: string;
+  replyTo: ChatMessage | null;
+  onCancelReply: () => void;
 }) {
   const { data: myId } = useCurrentUserId();
   const { data: members = [] } = useMembers(workspaceId);
@@ -42,9 +51,7 @@ export function MessageComposer({
   function mention(m: Member) {
     const nome = m.display_name ?? m.email;
     setBody((b) => `${b}${b && !b.endsWith(" ") ? " " : ""}@${nome} `);
-    setMentioned((ids) =>
-      ids.includes(m.user_id) ? ids : [...ids, m.user_id]
-    );
+    setMentioned((ids) => (ids.includes(m.user_id) ? ids : [...ids, m.user_id]));
   }
 
   function submit() {
@@ -57,15 +64,21 @@ export function MessageComposer({
       return nome && texto.includes(`@${nome}`);
     });
     send.mutate(
-      { body: texto, mentionedUserIds: citados },
+      { body: texto, mentionedUserIds: citados, replyToId: replyTo?.id ?? null },
       {
         onSuccess: () => {
           setBody("");
           setMentioned([]);
+          onCancelReply();
         },
       }
     );
   }
+
+  const autorCitado = replyTo?.author_id
+    ? (members.find((m) => m.user_id === replyTo.author_id)?.display_name ??
+      "Alguém")
+    : "Aviso";
 
   return (
     <form
@@ -75,6 +88,27 @@ export function MessageComposer({
       }}
       className="border-line flex flex-col gap-2 border-t p-3"
     >
+      {replyTo ? (
+        <div className="bg-sunken flex items-start gap-2 rounded-sm px-2 py-1.5">
+          <div className="border-line min-w-0 flex-1 border-l-2 pl-2">
+            <p className="text-fg-secondary text-[length:var(--text-caption-size)] font-medium whitespace-nowrap">
+              Respondendo {autorCitado}
+            </p>
+            <p className="text-fg-muted truncate text-[length:var(--text-caption-size)]">
+              {replyTo.body}
+            </p>
+          </div>
+          <button
+            type="button"
+            aria-label="Cancelar resposta"
+            onClick={onCancelReply}
+            className="text-fg-secondary hover:bg-hover hover:text-fg inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-xs transition-colors [transition-duration:var(--dur-fast)]"
+          >
+            <IconX size={14} stroke={1.75} />
+          </button>
+        </div>
+      ) : null}
+
       <Textarea
         autogrow
         value={body}
@@ -85,6 +119,7 @@ export function MessageComposer({
             e.preventDefault();
             submit();
           }
+          if (e.key === "Escape" && replyTo) onCancelReply();
         }}
         placeholder={`Escreva em ${channelName}…`}
         aria-label={`Nova mensagem em ${channelName}`}
