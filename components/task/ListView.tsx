@@ -107,6 +107,10 @@ export function ListView() {
   const [groupBy, setGroupBy] = useState<GroupBy>("none");
   const [sortBy, setSortBy] = useState<SortBy>("due");
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  // Seleção fica atrás de um botão. Com a caixa sempre visível ao lado da
+  // de concluir, duas ações diferentes disputavam o mesmo canto da linha e
+  // confundiam quem só queria marcar a demanda como feita.
+  const [modoSelecao, setModoSelecao] = useState(false);
   const [confirm, setConfirm] = useState<{ task: Task; count: number } | null>(
     null
   );
@@ -195,6 +199,19 @@ export function ListView() {
           </div>
 
           <div className="ml-auto flex items-center gap-2">
+            <Button
+              variant={modoSelecao ? "secondary" : "ghost"}
+              size="sm"
+              aria-pressed={modoSelecao}
+              onClick={() => {
+                setModoSelecao((v) => !v);
+                // Sair do modo não pode deixar seleção pendurada: a barra de
+                // ações some e as demandas ficariam marcadas sem sinal disso.
+                setSelected(new Set());
+              }}
+            >
+              {modoSelecao ? "Concluir seleção" : "Selecionar"}
+            </Button>
             <div className={FILTER_W}>
               <Select
                 options={GROUP_OPTIONS}
@@ -411,7 +428,11 @@ export function ListView() {
                       task={task}
                       sector={sectorsById.get(task.sector_id)}
                       selected={selected.has(task.id)}
-                      onSelectChange={(on) => toggleSelect(task.id, on)}
+                      onSelectChange={
+                        modoSelecao
+                          ? (on) => toggleSelect(task.id, on)
+                          : undefined
+                      }
                       onToggle={(c) => handleToggle(task, c)}
                       onToggleCancel={(cancel) =>
                         toggleCancel.mutate({ id: task.id, cancel })
