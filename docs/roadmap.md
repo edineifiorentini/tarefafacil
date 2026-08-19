@@ -78,6 +78,23 @@ chegou à barra lateral.
   `lib/queries/useChat`): importá-lo do componente arrastaria a interface
   inteira do chat para o bundle de todas as páginas.
 
+**Defeitos achados em uso (migration 0047)**
+
+- **Grupo e conversa direta não podiam ser criados.** A 0038 criou
+  `unique (workspace_id) where sector_id is null` para garantir um só
+  "Geral". Na época era equivalente, porque só o Geral tinha setor nulo. A
+  0040 removeu os canais de setor e trouxe grupo e conversa direta, que
+  também têm setor nulo — o índice continuou igual em SQL e passou a
+  significar "um canal por workspace". A conversa direta esteve quebrada
+  desde a rodada 2 e eu não peguei: verifiquei que a RPC recusava chamada
+  sem usuário, nunca que uma criação legítima funcionava. O índice agora
+  fala do que a regra é (`where kind = 'geral'`).
+- **Mensagem em conversa direta não avisava.** Só menção gerava
+  notificação. Numa conversa de duas pessoas a mensagem já é endereçada a
+  você — exigir @nome ali é absurdo. Grupo e Geral continuam sem aviso por
+  mensagem: lá o contador da barra lateral é o canal certo, e notificar cada
+  mensagem coletiva faria as menções sumirem no ruído.
+
 **Rodada 4 — o que ficou de fora**
 
 - Anexo em mensagem (reusar o storage que as demandas já usam);

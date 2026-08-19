@@ -116,8 +116,8 @@ export function DashboardView() {
   );
 
   const deliveries = useMemo(
-    () => deliveriesByWeek(tasks, month),
-    [tasks, month]
+    () => deliveriesByWeek(tasks, month, now),
+    [tasks, month, now]
   );
   const previousMonthDelivered = useMemo(
     () => deliveredInMonth(tasks, shiftMonth(month, -1)),
@@ -262,6 +262,14 @@ export function DashboardView() {
                 />
                 Planejadas
               </span>
+              <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
+                <span
+                  aria-hidden
+                  className="h-2 w-2 rounded-full"
+                  style={{ background: "var(--color-overdue)" }}
+                />
+                Atrasadas
+              </span>
             </div>
           </div>
 
@@ -275,6 +283,12 @@ export function DashboardView() {
                 color: "var(--chart-1)",
                 values: deliveries.delivered,
                 area: true,
+              },
+              {
+                key: "atrasadas",
+                label: "Atrasadas",
+                color: "var(--color-overdue)",
+                values: deliveries.overdue,
               },
               {
                 key: "planejadas",

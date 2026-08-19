@@ -118,7 +118,10 @@ export type DeliveriesByWeek = {
   labels: string[];
   delivered: number[];
   planned: number[];
+  /** Prazo naquela semana e não entregue até ele. */
+  overdue: number[];
   totalDelivered: number;
+  totalOverdue: number;
 };
 
 /**
@@ -127,8 +130,11 @@ export type DeliveriesByWeek = {
  */
 export function deliveriesByWeek(
   tasks: Task[],
-  monthISO: string
+  monthISO: string,
+  /** Instante de leitura — decide o que já pode ser considerado atrasado. */
+  now: Date = nowInstant()
 ): DeliveriesByWeek {
+  const hoje = localDayISO(now);
   // Dia 0 do mês seguinte, em UTC, é o último dia deste mês. Usar
   // endOfMonth() aqui daria 23:59 LOCAL e, num fuso atrás de UTC, o
   // getUTCDate() cairia no dia 1º do mês seguinte.
@@ -143,6 +149,7 @@ export function deliveriesByWeek(
   const labels: string[] = [];
   const delivered: number[] = [];
   const planned: number[] = [];
+  const overdue: number[] = [];
 
   for (let index = 0; index < WEEKS; index += 1) {
     const firstDay = index * 7 + 1;
@@ -166,13 +173,28 @@ export function deliveriesByWeek(
         return t.due_date >= fromISO && t.due_date <= toISO;
       }).length
     );
+
+    // Atrasada = tinha prazo nesta semana e NÃO foi entregue até ele.
+    // Inclui a que foi entregue depois do prazo: o atraso aconteceu, e
+    // esconder isso faria a série virar elogio em vez de diagnóstico.
+    // Semana futura dá zero sozinha, porque o prazo ainda não venceu.
+    overdue.push(
+      tasks.filter((t) => {
+        if (t.cancelled_at || !t.due_date) return false;
+        if (t.due_date < fromISO || t.due_date > toISO) return false;
+        if (t.due_date >= hoje && !t.completed_at) return false;
+        return !t.completed_at || localDayOf(t.completed_at) > t.due_date;
+      }).length
+    );
   }
 
   return {
     labels,
     delivered,
     planned,
+    overdue,
     totalDelivered: delivered.reduce((sum, n) => sum + n, 0),
+    totalOverdue: overdue.reduce((sum, n) => sum + n, 0),
   };
 }
 

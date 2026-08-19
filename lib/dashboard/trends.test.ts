@@ -312,3 +312,66 @@ describe("fuso: entrega da noite", () => {
     expect(overdueAt(hoje, noite)).toBe(false);
   });
 });
+
+describe("deliveriesByWeek — atrasadas", () => {
+  const AGORA = new Date(2026, 7, 20, 12, 0); // 20/ago, dentro da Sem 3
+
+  it("prazo vencido e não entregue conta como atrasada", () => {
+    const tasks = [task({ due_date: "2026-08-10" })]; // Sem 2
+    const r = deliveriesByWeek(tasks, "2026-08", AGORA);
+    expect(r.overdue).toEqual([0, 1, 0, 0]);
+    expect(r.totalOverdue).toBe(1);
+  });
+
+  it("entregue DEPOIS do prazo continua sendo atraso", () => {
+    // Esconder isso faria a série virar elogio em vez de diagnóstico.
+    const tasks = [
+      task({ due_date: "2026-08-10", completed_at: "2026-08-13T10:00:00Z" }),
+    ];
+    expect(deliveriesByWeek(tasks, "2026-08", AGORA).overdue).toEqual([
+      0, 1, 0, 0,
+    ]);
+  });
+
+  it("entregue dentro do prazo não é atraso", () => {
+    const tasks = [
+      task({ due_date: "2026-08-10", completed_at: "2026-08-09T10:00:00Z" }),
+    ];
+    expect(deliveriesByWeek(tasks, "2026-08", AGORA).overdue).toEqual([
+      0, 0, 0, 0,
+    ]);
+  });
+
+  it("entregue no próprio dia do prazo não é atraso", () => {
+    const noPrazo = new Date(2026, 7, 10, 18, 0);
+    const tasks = [
+      task({ due_date: "2026-08-10", completed_at: noPrazo.toISOString() }),
+    ];
+    expect(deliveriesByWeek(tasks, "2026-08", AGORA).overdue).toEqual([
+      0, 0, 0, 0,
+    ]);
+  });
+
+  it("semana futura não acusa atraso — o prazo ainda não venceu", () => {
+    const tasks = [task({ due_date: "2026-08-28" })]; // Sem 4, ainda a vencer
+    expect(deliveriesByWeek(tasks, "2026-08", AGORA).overdue).toEqual([
+      0, 0, 0, 0,
+    ]);
+  });
+
+  it("prazo hoje ainda não é atraso", () => {
+    const tasks = [task({ due_date: "2026-08-20" })];
+    expect(deliveriesByWeek(tasks, "2026-08", AGORA).overdue).toEqual([
+      0, 0, 0, 0,
+    ]);
+  });
+
+  it("cancelada não entra em atrasadas", () => {
+    const tasks = [
+      task({ due_date: "2026-08-10", cancelled_at: "2026-08-11T00:00:00Z" }),
+    ];
+    expect(deliveriesByWeek(tasks, "2026-08", AGORA).overdue).toEqual([
+      0, 0, 0, 0,
+    ]);
+  });
+});
