@@ -22,7 +22,11 @@ export function Checkbox({
   className,
   ...props
 }: CheckboxProps) {
-  const radius = variant === "round" ? "rounded-full" : "rounded-sm";
+  // rounded-xs (6px) e não rounded-sm: o raio "sm" virou 10px no redesenho,
+  // e 10px num quadrado de 20px é um círculo perfeito — as duas variantes
+  // ficaram idênticas na tela. Quadrado = selecionar, redondo = concluir é a
+  // convenção que deixa o usuário saber qual é qual sem tentar.
+  const radius = variant === "round" ? "rounded-full" : "rounded-xs";
   return (
     <RxCheckbox.Root
       {...props}
