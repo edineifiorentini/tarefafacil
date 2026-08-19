@@ -16,6 +16,8 @@ export default defineConfig({
     command: "npm run dev",
     url: "http://localhost:3000",
     reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
+    // 5 min: o projeto vive num disco lento (o Next avisa `Slow filesystem`),
+    // e a primeira compilação da rota entra nessa janela.
+    timeout: 300_000,
   },
 });

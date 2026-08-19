@@ -122,7 +122,18 @@ A central de notificações saiu (2b7084c). Restam:
 O spec lista o que considera essencial para o MVP comercial. Quase tudo
 existe; falta:
 
-- **Testes críticos.** Não há nenhum teste ponta a ponta. Os três últimos
+- **Testes críticos.** O primeiro conjunto existe — `e2e/share.spec.ts`
+  cobre o link público sem login (válido, revogado, expirado, token
+  inventado, noindex, contador de visitas e ausência de vazamento). Ele
+  **não roda nesta máquina**: o `npm run dev` estoura até 5 minutos de
+  espera por causa do disco, não do código. Precisa rodar em máquina normal
+  ou CI antes de ser considerado verde.
+
+  O resto dos fluxos ainda depende de login, e login em e2e exige decidir se
+  os testes podem criar usuário no Supabase de produção — não há Supabase
+  local porque o Docker não roda aqui.
+
+  Antes disso não havia nenhum teste ponta a ponta. Os três últimos
   defeitos — relógio preso na montagem, painel em UTC contra sino em local,
   aviso apontando para demanda apagada — passaram por 191 testes de unidade
   porque nenhum estava na lógica pura: estavam na ligação entre dado e tela.
