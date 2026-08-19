@@ -396,14 +396,21 @@ button:not(:disabled),
 }
 
 /* Toast: sobe e some (mantém o -50% X do posicionamento). */
+/* Anima a propriedade `translate`, não `transform`.
+   O Tailwind v4 compila `-translate-x-1/2` para a propriedade `translate`,
+   que é INDEPENDENTE de `transform` — as duas somam. Com o keyframe em
+   `transform: translate(-50%…)`, o total virava -100% e o elemento entrava
+   meia largura à esquerda, saltando para o lugar ao fim da animação.
+   Animando `translate`, o keyframe sobrescreve o utilitário em vez de
+   somar com ele. */
 @keyframes tf-toast-in {
   from {
     opacity: 0;
-    transform: translate(-50%, 8px);
+    translate: -50% 8px;
   }
   to {
     opacity: 1;
-    transform: translate(-50%, 0);
+    translate: -50% 0;
   }
 }
 
@@ -411,22 +418,26 @@ button:not(:disabled),
 @keyframes tf-dialog-in {
   from {
     opacity: 0;
-    transform: translate(-50%, -50%) scale(0.97);
+    translate: -50% -50%;
+    scale: 0.97;
   }
   to {
     opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
+    translate: -50% -50%;
+    scale: 1;
   }
 }
 
 @keyframes tf-dialog-out {
   from {
     opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
+    translate: -50% -50%;
+    scale: 1;
   }
   to {
     opacity: 0;
-    transform: translate(-50%, -50%) scale(0.97);
+    translate: -50% -50%;
+    scale: 0.97;
   }
 }
 
