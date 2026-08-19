@@ -142,8 +142,24 @@ export function useDeleteAttachment(workspaceId: string, taskId: string) {
 
   return useMutation({
     mutationFn: async (id: string) => {
+      // O arquivo tem de sair junto. Apagar só a linha deixava o objeto no
+      // storage para sempre: conta crescendo e, pior, um documento que a
+      // pessoa acredita ter apagado continuando guardado.
+      const { data: alvo } = await supabase
+        .from("attachment")
+        .select("storage_key")
+        .eq("id", id)
+        .maybeSingle();
+
       const { error } = await supabase.from("attachment").delete().eq("id", id);
       if (error) throw error;
+
+      if (alvo?.storage_key) {
+        // Se a remoção do objeto falhar, a linha já saiu — o anexo some da
+        // tela como o usuário pediu, e o órfão fica para a varredura
+        // periódica recolher. Falhar aqui seria pior que o resíduo.
+        await supabase.storage.from(BUCKET).remove([alvo.storage_key]);
+      }
     },
     onMutate: async (id) => {
       await qc.cancelQueries({ queryKey: key });

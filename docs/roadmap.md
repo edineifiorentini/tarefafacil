@@ -130,9 +130,14 @@ A central de notificações saiu (2b7084c). Restam:
   só por dono/admin, escrita só por trigger e **imutável** (sem policy de
   update nem delete). Login ainda não entra — depende de gancho no Supabase
   Auth, não de trigger em tabela nossa.
-- **Jobs observáveis.** Só faz sentido quando houver trabalho assíncrono real
-  — e-mail, renovação do `watch` do Google, limpeza de anexo. Criar a
-  infraestrutura antes disso é inventar problema.
+- ~~**Jobs observáveis.**~~ Infraestrutura criada quando apareceu o primeiro
+  trabalho que a exigia de verdade: a limpeza de anexos órfãos
+  (`vercel.json` + `/api/cron/limpar-anexos`). A rota se autentica por
+  `CRON_SECRET` e devolve o que inspecionou, referenciou e removeu — cron
+  sem registro de execução roda errado por meses sem ninguém notar.
+
+  Falta pendurar nela a renovação do `watch` do Google, que continua
+  dependendo de URL pública estável.
 
 ## 3. Lacunas contra o MVP do spec (§22)
 
@@ -196,7 +201,7 @@ Cada item aqui foi uma decisão consciente, não esquecimento.
 | Verificação do app no Google | Exige domínio próprio publicado. |
 | E-mail de convite de verdade (Resend) | O convite funciona por link; e-mail é conforto, não bloqueio. |
 | `events.watch` do Google em produção | Precisa de URL pública estável. |
-| Crons (limpeza de anexo 30d, renovação do watch) | Ver "jobs observáveis" acima. |
+| Renovação do `watch` do Google por cron | A infraestrutura de cron existe agora; falta a URL pública estável do webhook. |
 | Marketing e onboarding guiado (E18) | Adiado no fechamento da E18. |
 | Contador de não lidas no banco | Hoje o chat conta sobre uma janela de 300 mensagens no cliente. Só vira problema com volume. |
 | Retenção da trilha de auditoria | `audit_log` só cresce, e é imutável de propósito. Definir janela e arquivamento antes de virar volume. |

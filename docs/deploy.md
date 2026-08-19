@@ -73,5 +73,38 @@ só no servidor (não use prefixo `NEXT_PUBLIC` nelas):
 
 - **Renovação do canal `events.watch`** antes do TTL (hoje é criado no connect;
   falta um cron de renovação) — ver `lib/gcal/watch.ts`.
-- **Limpeza de anexos órfãos** após 30 dias (design 10.4) — cron a criar.
+- ~~Limpeza de anexos órfãos~~ — feita. Ver "Jobs periódicos" abaixo.
 - **E-mail real de convite** (hoje o convite é por link).
+
+## Jobs periódicos (Vercel Cron)
+
+`vercel.json` declara os jobs. Hoje há um:
+
+| Rota | Quando | O que faz |
+| --- | --- | --- |
+| `/api/cron/limpar-anexos` | domingo, 04:00 UTC | Remove arquivos órfãos do storage |
+
+**Semanal e de madrugada** de propósito: a varredura percorre o bucket
+inteiro e não tem pressa — o resíduo custa centavos por semana, e rodar de
+hora em hora só gastaria execução.
+
+**`CRON_SECRET` é obrigatório.** A rota exige o cabeçalho
+`Authorization: Bearer $CRON_SECRET` e, quando a variável não existe,
+responde 401 — fecha em vez de abrir. A Vercel envia esse cabeçalho
+automaticamente nos crons do projeto quando a variável está configurada nas
+Environment Variables.
+
+Para conferir à mão:
+
+```bash
+curl -H "Authorization: Bearer $CRON_SECRET" https://SEU-DOMINIO/api/cron/limpar-anexos
+```
+
+A resposta traz `inspecionados`, `referenciados` e `removidos` — é o registro
+da execução. Sem isso, um cron que roda errado por meses passa despercebido.
+
+**Cuidado ao mexer:** a rota apaga arquivo. As duas travas que a tornam
+segura são a carência de 1 dia (upload recente pode estar entre o arquivo
+subir e a linha ser gravada) e a leitura de TODAS as chaves referenciadas
+antes de qualquer remoção. Não afrouxe nenhuma das duas sem pensar duas
+vezes.

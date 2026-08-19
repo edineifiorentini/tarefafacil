@@ -43,7 +43,10 @@ export async function proxy(request: NextRequest) {
     // Link público de demanda: quem abre não tem conta, por definição.
     path.startsWith("/d/") ||
     // Webhook do Google: chamado sem sessão (o Google não tem cookie).
-    path.startsWith("/api/gcal/webhook");
+    path.startsWith("/api/gcal/webhook") ||
+    // Cron da Vercel: chega sem sessão e se autentica pelo CRON_SECRET, que a
+    // própria rota confere. Sem segredo configurado ela responde 401.
+    path.startsWith("/api/cron/");
 
   if (!user && !isPublic) {
     const url = request.nextUrl.clone();
