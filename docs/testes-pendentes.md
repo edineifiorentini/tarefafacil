@@ -1,8 +1,22 @@
 # Testes pendentes
 
-O que foi construído mas **não** foi verificado rodando. O painel do
-navegador do assistente travou em 17/ago/2026 e não voltou, então tudo que
-depende de ver a tela está aqui, na ordem em que vale testar.
+O que foi construído mas **não** foi verificado rodando.
+
+**Atualização de 18/ago/2026:** o painel do navegador voltou e a maior parte
+desta lista foi verificada na tela. O que sobrou está marcado abaixo — e o
+que era só falta de verificação foi riscado.
+
+Verificado com dado real: recorrências (criar, gerar 12 previsões, gerar de
+novo sem duplicar, editar com alcance "toda a série", e o dia 31 caindo em
+28/fev), trilha de auditoria (capturando e com estado vazio correto), link
+público (gerar, abrir como visitante sem sessão, contador subindo para 1,
+`noindex`, nenhum vazamento no HTML), aviso de tarefa criada, confirmação de
+exclusão, criação de grupo com participante, e as três séries do gráfico do
+mês.
+
+Achados nessa varredura: a animação centralizada somava dois translates
+(todo modal entrava torto) e as duas caixas de check da lista tinham virado
+a mesma forma. Ambos corrigidos.
 
 Cada item diz o que já foi verificado por outro caminho — para não gastar
 tempo confirmando o que já está provado.
@@ -52,7 +66,7 @@ usuário.
 - [ ] "Carregar mensagens anteriores" com mais de 50 mensagens no canal.
 - [ ] Criar uma demanda e ver o aviso surgir sozinho no Geral, etiquetado.
 
-### 3.1 Conversa direta — o teste que exige duas sessões
+### 3.1 Conversa direta — o teste que exige duas sessões (AINDA PENDENTE)
 
 **É o item mais importante da lista**, porque é o único com consequência de
 privacidade e o único que não dá para provar sozinho.
