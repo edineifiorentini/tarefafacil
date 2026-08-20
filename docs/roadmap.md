@@ -202,7 +202,7 @@ Cada item aqui foi uma decisão consciente, não esquecimento.
 | --- | --- |
 | Prévia A4 paginada + PDF nativo do contrato | A janela de impressão do navegador entrega o PDF hoje. Paginação fiel exige motor próprio. |
 | Financeiro rodada 3 (parcelas próprias, recorrência, centro de custo, alertas) | Parcelas de contrato já geram lançamento; o resto só tem valor com uso real para dizer o formato. |
-| Gateway de pagamento (EFI Bank) | Depende de conta e homologação. |
+| Gateway de pagamento (EFI Bank) | **Em andamento.** Base pronta (0049 + `lib/billing`); a integração real espera credenciais de homologação. Ver "Assinatura do SaaS" abaixo. |
 | Verificação do app no Google | Exige domínio próprio publicado. |
 | E-mail de convite de verdade (Resend) | O convite funciona por link; e-mail é conforto, não bloqueio. |
 | `events.watch` do Google em produção | Precisa de URL pública estável. |
@@ -215,7 +215,49 @@ Cada item aqui foi uma decisão consciente, não esquecimento.
 
 ---
 
-## 6. Ambiente de desenvolvimento
+## 6. Assinatura do SaaS (EFI Bank)
+
+Decidido pelo dono em 20/ago/2026: a integração é para cobrar **a assinatura
+do próprio TarefaFácil**, não o cliente do workspace.
+
+**O que já existe** (migration 0049 + `lib/billing`)
+
+- `billing_plan`, `subscription`, `subscription_charge` e `payment_event`.
+- Regra de ciclo pura e testada: período, carência, decisão de cobrar e
+  situação derivada.
+- `PaymentGateway` com implementação falsa, para tudo acima dela ser
+  testável sem credencial.
+
+**Decisões estruturais**
+
+- **O corte de acesso não foi reinventado.** `access_expires_at` já bloqueia
+  escrita via `has_role` desde a 0017. Assinatura só empurra essa data. Dois
+  portões decidindo acesso é como um deles esquece de fechar.
+- **Idempotência no banco**, não no job: índice único em
+  `(workspace_id, period_start)` para cobrança e em
+  `(provider, external_id)` para evento recebido. Webhook de pagamento é
+  reenviado; sem isso o segundo aviso daria um mês de graça.
+- **Carência de 5 dias** embutida na data de acesso, num lugar só. Cortar
+  quem pagou no dia é o pior defeito possível — quem é cortado injustamente
+  não volta.
+- **Só o dono lê** assinatura e cobrança. Nem admin do workspace vê valor.
+  Nenhuma das tabelas tem policy de escrita: quem cria cobrança e marca como
+  paga é o servidor.
+- `billing_day` limitado a 28 para o ciclo não andar sozinho em fevereiro.
+
+**O que falta, e depende de credencial**
+
+1. Cliente EFI de verdade (Pix com mTLS — a API exige certificado `.p12`).
+2. Rota de webhook com validação de autenticidade e a gravação em
+   `payment_event`.
+3. Cron mensal que decide e cria as cobranças.
+4. Tela do dono: plano, próxima cobrança, QR code, histórico.
+
+Nada disso vai para produção sem teste contra o ambiente de homologação.
+
+---
+
+## 7. Ambiente de desenvolvimento
 
 O Next avisa `Slow filesystem detected` (468ms num benchmark que costuma dar
 dezenas de milissegundos) — o projeto está num disco lento. Isso já custou
@@ -225,7 +267,7 @@ como se fosse problema de código.
 
 ---
 
-## 7. Testes pendentes
+## 8. Testes pendentes
 
 `docs/testes-pendentes.md` lista o que foi construído e não pôde ser
 verificado rodando. O item mais importante é o isolamento da conversa direta
