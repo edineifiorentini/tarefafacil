@@ -19,6 +19,13 @@ import { createAdminClient } from "@/lib/supabase/admin";
  *    a varredura apagaria anexo legítimo em uso.
  *  - só remove o que NÃO está referenciado em `attachment`. A lista de
  *    chaves vivas é lida inteira antes de qualquer remoção.
+ *  - só olha objetos no formato que o anexo de demanda usa
+ *    (`workspace/tarefa/arquivo`, com os dois primeiros níveis em UUID).
+ *    Sem esse recorte, qualquer função futura que guardasse arquivo neste
+ *    bucket — anexo de chat, logo da organização, contrato assinado —
+ *    teria os arquivos apagados no domingo seguinte, em silêncio, porque
+ *    não estariam em `attachment`. Quem adicionar outro tipo de arquivo
+ *    aqui precisa ensinar esta rota a reconhecê-lo.
  */
 
 export const dynamic = "force-dynamic";
@@ -28,6 +35,9 @@ const BUCKET = "attachments";
 const GRACE_DAYS = 1;
 /** Teto por execução: falha parcial é melhor que timeout no meio. */
 const MAX_POR_EXECUCAO = 500;
+/** Os dois primeiros níveis do caminho de um anexo de demanda são UUIDs. */
+const UUID =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function autorizado(request: Request): boolean {
   const segredo = process.env.CRON_SECRET;
@@ -65,12 +75,25 @@ export async function GET(request: Request) {
     limit: 1000,
   });
 
+  let ignorados = 0;
+
   for (const ws of workspaces ?? []) {
+    // Pasta fora do formato não é anexo de demanda: não é problema desta
+    // rota, e apagá-la seria destruir dado de outra função.
+    if (!UUID.test(ws.name)) {
+      ignorados += 1;
+      continue;
+    }
+
     const { data: tarefas } = await db.storage.from(BUCKET).list(ws.name, {
       limit: 1000,
     });
 
     for (const tarefa of tarefas ?? []) {
+      if (!UUID.test(tarefa.name)) {
+        ignorados += 1;
+        continue;
+      }
       const prefixo = `${ws.name}/${tarefa.name}`;
       const { data: arquivos } = await db.storage
         .from(BUCKET)
@@ -107,6 +130,10 @@ export async function GET(request: Request) {
     inspecionados,
     referenciados: referenciados.size,
     removidos: orfaos.length,
+    // Pastas fora do formato de anexo de demanda. Se este número crescer,
+    // alguém guardou outro tipo de arquivo no bucket e esta rota precisa
+    // aprender a reconhecê-lo.
+    ignorados,
     executadoEm: new Date().toISOString(),
   });
 }

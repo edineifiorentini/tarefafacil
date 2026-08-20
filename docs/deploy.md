@@ -100,11 +100,20 @@ Para conferir à mão:
 curl -H "Authorization: Bearer $CRON_SECRET" https://SEU-DOMINIO/api/cron/limpar-anexos
 ```
 
-A resposta traz `inspecionados`, `referenciados` e `removidos` — é o registro
-da execução. Sem isso, um cron que roda errado por meses passa despercebido.
+A resposta traz `inspecionados`, `referenciados`, `removidos` e `ignorados` —
+é o registro da execução. Sem isso, um cron que roda errado por meses passa
+despercebido.
 
-**Cuidado ao mexer:** a rota apaga arquivo. As duas travas que a tornam
+`ignorados` merece atenção: são pastas do bucket fora do formato de anexo de
+demanda. Se esse número sair do zero, alguém passou a guardar outro tipo de
+arquivo ali e a rota precisa aprender a reconhecê-lo.
+
+**Cuidado ao mexer:** a rota apaga arquivo. As três travas que a tornam
 segura são a carência de 1 dia (upload recente pode estar entre o arquivo
 subir e a linha ser gravada) e a leitura de TODAS as chaves referenciadas
-antes de qualquer remoção. Não afrouxe nenhuma das duas sem pensar duas
-vezes.
+antes de qualquer remoção, e o recorte por formato de caminho. Não afrouxe
+nenhuma das três sem pensar duas vezes.
+
+**Antes de guardar QUALQUER outro arquivo no bucket `attachments`**, ensine
+esta rota a reconhecê-lo — senão ele será apagado no domingo seguinte, em
+silêncio.
