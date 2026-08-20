@@ -97,7 +97,12 @@ chegou à barra lateral.
 
 **Rodada 4 — o que ficou de fora**
 
-- Anexo em mensagem (reusar o storage que as demandas já usam);
+- ~~Anexo em mensagem~~ Entregue na migration 0048. Um arquivo por mensagem,
+  em `<workspace>/chat/<canal>/`. O primeiro nível precisa ser o workspace
+  porque as policies de storage fazem `foldername(name)[1]::uuid`; o segundo
+  ser "chat" é o que separa da varredura de órfãos. A varredura foi ensinada
+  a reconhecer as duas origens — sem isso ela apagaria todo arquivo de chat
+  no domingo seguinte.
 - **Retenção.** Chat cresce e ninguém apaga. Definir janela antes de a tabela
   passar de algumas dezenas de milhares de linhas;
 - O contador lateral olha uma janela de 300 mensagens recentes do workspace.

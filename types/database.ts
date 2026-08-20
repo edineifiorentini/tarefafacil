@@ -956,6 +956,11 @@ export type Database = {
           reply_to_id: string | null;
           /** Etiqueta de assunto — o setor de que a mensagem trata. */
           sector_id: string | null;
+          /** Arquivo da mensagem. Ou os quatro campos, ou nenhum. */
+          storage_key: string | null;
+          file_name: string | null;
+          file_size_bytes: number | null;
+          mime_type: string | null;
           created_at: string;
         };
         Insert: {
@@ -970,6 +975,10 @@ export type Database = {
           entity_id?: string | null;
           reply_to_id?: string | null;
           sector_id?: string | null;
+          storage_key?: string | null;
+          file_name?: string | null;
+          file_size_bytes?: number | null;
+          mime_type?: string | null;
           created_at?: string;
         };
         Update: never;

@@ -9,6 +9,7 @@ import {
 
 import { totalUnread, unreadByChannel } from "@/lib/chat/unread";
 import { createClient } from "@/lib/supabase/client";
+import { sanitizeFilename, validateFile } from "@/lib/utils/file-type";
 import type {
   ChatChannel,
   ChatChannelMember,
@@ -36,6 +37,17 @@ const PAGE = 50;
 const UNREAD_WINDOW = 300;
 /** Ritmo do contador na barra lateral — presente em toda tela do app. */
 const SIDEBAR_POLL_MS = 60_000;
+
+/**
+ * Bucket compartilhado com o anexo de demanda, mas em caminho próprio:
+ * `<workspace>/chat/<canal>/<mensagem>-<arquivo>`.
+ *
+ * O primeiro nível precisa ser o workspace porque as policies de storage
+ * (0006) fazem `foldername(name)[1]::uuid` e chamam `is_member`. O segundo
+ * ser "chat" mantém o arquivo fora da varredura de órfãos, que só mexe em
+ * `<uuid>/<uuid>/...`.
+ */
+const BUCKET = "attachments";
 
 function channelsKey(workspaceId: string) {
   return ["chatChannels", workspaceId] as const;
@@ -281,16 +293,39 @@ export function useSendMessage(workspaceId: string, channelId: string) {
       mentionedUserIds,
       replyToId,
       sectorId,
+      file,
     }: {
       body: string;
       mentionedUserIds: string[];
       replyToId?: string | null;
       /** Etiqueta de assunto. Opcional — a maioria das mensagens não tem. */
       sectorId?: string | null;
+      /** Arquivo opcional. No máximo um por mensagem. */
+      file?: File | null;
     }) => {
       const {
         data: { user },
       } = await supabase.auth.getUser();
+
+      let storageKey: string | null = null;
+      let mime: string | null = null;
+
+      if (file) {
+        // Mesma validação do anexo de demanda: tamanho, assinatura binária
+        // e extensão. Chat não é porta dos fundos para subir executável.
+        const check = await validateFile(file);
+        if (!check.ok) throw new Error(check.reason);
+        mime = check.mime;
+
+        const id = crypto.randomUUID();
+        storageKey = `${workspaceId}/chat/${channelId}/${id}-${sanitizeFilename(file.name)}`;
+
+        const { error: upErr } = await supabase.storage
+          .from(BUCKET)
+          .upload(storageKey, file, { contentType: mime ?? undefined });
+        if (upErr) throw upErr;
+      }
+
       const { error } = await supabase.from("chat_message").insert({
         workspace_id: workspaceId,
         channel_id: channelId,
@@ -299,8 +334,17 @@ export function useSendMessage(workspaceId: string, channelId: string) {
         mentioned_user_ids: mentionedUserIds,
         reply_to_id: replyToId ?? null,
         sector_id: sectorId ?? null,
+        storage_key: storageKey,
+        file_name: file ? file.name : null,
+        file_size_bytes: file ? file.size : null,
+        mime_type: mime,
       });
-      if (error) throw error;
+      if (error) {
+        // A mensagem não entrou: o arquivo não pode ficar sozinho no
+        // storage, sem nenhuma linha que o alcance.
+        if (storageKey) await supabase.storage.from(BUCKET).remove([storageKey]);
+        throw error;
+      }
     },
     onSettled: () => {
       qc.invalidateQueries({ queryKey: messagesKey(channelId) });
@@ -368,4 +412,23 @@ export function useChatUnreadTotal(workspaceId: string, myId: string | null) {
   });
   const { data: readState = [] } = useChatReadState(workspaceId);
   return totalUnread(unreadByChannel(recent, readState, myId));
+}
+
+/**
+ * URL temporária para abrir o arquivo de uma mensagem.
+ *
+ * O bucket é privado: sem assinatura, nem quem participa da conversa
+ * conseguiria abrir. Cinco minutos bastam para o clique virar download.
+ */
+export function useChatFileUrl() {
+  const supabase = createClient();
+  return useMutation({
+    mutationFn: async (storageKey: string): Promise<string> => {
+      const { data, error } = await supabase.storage
+        .from(BUCKET)
+        .createSignedUrl(storageKey, 300);
+      if (error || !data) throw error ?? new Error("Falha ao abrir o arquivo");
+      return data.signedUrl;
+    },
+  });
 }

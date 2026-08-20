@@ -4,6 +4,7 @@ import {
   IconArrowBackUp,
   IconClipboardPlus,
   IconMessage2,
+  IconPaperclip,
 } from "@tabler/icons-react";
 import { parseISO } from "date-fns";
 import { useEffect, useRef } from "react";
@@ -14,9 +15,18 @@ import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { groupByDay, isContinuation } from "@/lib/chat/unread";
+import { useChatFileUrl } from "@/lib/queries/useChat";
 import { useMembers } from "@/lib/queries/useMembers";
+import { useToast } from "@/components/ui/Toast";
 import { useWorkspace } from "@/lib/queries/useWorkspace";
 import type { ChatMessage } from "@/types/database";
+
+/** Tamanho legível. KB e MB bastam: o teto de upload é 25 MB. */
+function formatarTamanho(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
 
 function hora(iso: string): string {
   return parseISO(iso).toLocaleTimeString("pt-BR", {
@@ -51,6 +61,8 @@ export function MessageList({
   const workspace = useWorkspace();
   const { data: members = [] } = useMembers(workspace.id);
   const { openPanel } = useShell();
+  const abrirArquivo = useChatFileUrl();
+  const toast = useToast();
   const fim = useRef<HTMLDivElement>(null);
 
   const nomePorId = new Map(
@@ -119,7 +131,10 @@ export function MessageList({
 
           {grupo.messages.map((msg, i) => {
             const anterior = grupo.messages[i - 1];
-            const seguida = isContinuation(msg, anterior) && !msg.reply_to_id;
+            const seguida =
+              isContinuation(msg, anterior) &&
+              !msg.reply_to_id &&
+              !msg.storage_key;
 
             if (msg.kind === "sistema") {
               return (
@@ -213,9 +228,46 @@ export function MessageList({
                       ) : null}
                     </div>
                   )}
-                  <p className="text-fg text-[length:var(--text-small-size)] wrap-anywhere whitespace-pre-wrap">
-                    {msg.body}
-                  </p>
+                  {msg.body ? (
+                    <p className="text-fg text-[length:var(--text-small-size)] wrap-anywhere whitespace-pre-wrap">
+                      {msg.body}
+                    </p>
+                  ) : null}
+
+                  {msg.storage_key ? (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        abrirArquivo.mutate(msg.storage_key as string, {
+                          // O bucket é privado: a URL é assinada na hora e
+                          // vale poucos minutos. Abrir em aba nova preserva
+                          // a conversa.
+                          onSuccess: (url) =>
+                            window.open(url, "_blank", "noopener,noreferrer"),
+                          onError: () =>
+                            toast.show({
+                              message: "Não foi possível abrir o arquivo",
+                            }),
+                        })
+                      }
+                      className="border-line bg-sunken hover:bg-hover mt-1 inline-flex max-w-full items-center gap-2 rounded-sm border px-2 py-1.5 text-left transition-colors [transition-duration:var(--dur-fast)]"
+                    >
+                      <IconPaperclip
+                        size={14}
+                        stroke={1.75}
+                        aria-hidden
+                        className="text-fg-secondary shrink-0"
+                      />
+                      <span className="text-fg min-w-0 flex-1 truncate text-[length:var(--text-caption-size)]">
+                        {msg.file_name}
+                      </span>
+                      {msg.file_size_bytes ? (
+                        <span className="tnum text-fg-muted shrink-0 text-[length:var(--text-caption-size)]">
+                          {formatarTamanho(msg.file_size_bytes)}
+                        </span>
+                      ) : null}
+                    </button>
+                  ) : null}
                 </div>
 
                 <button

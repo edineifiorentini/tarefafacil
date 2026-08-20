@@ -1,11 +1,18 @@
 "use client";
 
-import { IconAt, IconSend, IconTag, IconX } from "@tabler/icons-react";
+import {
+  IconAt,
+  IconPaperclip,
+  IconSend,
+  IconTag,
+  IconX,
+} from "@tabler/icons-react";
 import { DropdownMenu } from "radix-ui";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import { Button } from "@/components/ui/Button";
 import { Textarea } from "@/components/ui/Textarea";
+import { useToast } from "@/components/ui/Toast";
 import { useSendMessage } from "@/lib/queries/useChat";
 import {
   useCurrentUserId,
@@ -39,6 +46,7 @@ export function MessageComposer({
   replyTo: ChatMessage | null;
   onCancelReply: () => void;
 }) {
+  const toast = useToast();
   const { data: myId } = useCurrentUserId();
   const { data: members = [] } = useMembers(workspaceId);
   const { data: sectors = [] } = useSectors(workspaceId);
@@ -48,6 +56,8 @@ export function MessageComposer({
   // Etiqueta de assunto: opcional, e some depois de enviar — carregar a
   // etiqueta anterior para a próxima mensagem etiquetaria coisa errada.
   const [sectorId, setSectorId] = useState<string | null>(null);
+  const [arquivo, setArquivo] = useState<File | null>(null);
+  const seletor = useRef<HTMLInputElement>(null);
   const setorEscolhido = sectors.find((x) => x.id === sectorId);
 
   // Não faz sentido se mencionar: o trigger ignora e a lista polui.
@@ -63,7 +73,9 @@ export function MessageComposer({
 
   function submit() {
     const texto = body.trim();
-    if (!texto || send.isPending) return;
+    // Mensagem só com arquivo é legítima: "toma o documento" sem texto é uso
+    // normal de chat, e o banco aceita corpo vazio quando há anexo.
+    if ((!texto && !arquivo) || send.isPending) return;
     // Só vai como menção quem continua citado no texto final.
     const citados = mentioned.filter((id) => {
       const m = members.find((x) => x.user_id === id);
@@ -76,12 +88,20 @@ export function MessageComposer({
         mentionedUserIds: citados,
         replyToId: replyTo?.id ?? null,
         sectorId,
+        file: arquivo,
       },
       {
+        onError: (e) =>
+          toast.show({
+            message:
+              e instanceof Error ? e.message : "Não foi possível enviar",
+          }),
         onSuccess: () => {
           setBody("");
           setMentioned([]);
           setSectorId(null);
+          setArquivo(null);
+          if (seletor.current) seletor.current.value = "";
           onCancelReply();
         },
       }
@@ -115,6 +135,31 @@ export function MessageComposer({
             type="button"
             aria-label="Cancelar resposta"
             onClick={onCancelReply}
+            className="text-fg-secondary hover:bg-hover hover:text-fg inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-xs transition-colors [transition-duration:var(--dur-fast)]"
+          >
+            <IconX size={14} stroke={1.75} />
+          </button>
+        </div>
+      ) : null}
+
+      {arquivo ? (
+        <div className="bg-sunken flex items-center gap-2 rounded-sm px-2 py-1.5">
+          <IconPaperclip
+            size={14}
+            stroke={1.75}
+            aria-hidden
+            className="text-fg-secondary shrink-0"
+          />
+          <span className="text-fg min-w-0 flex-1 truncate text-[length:var(--text-caption-size)]">
+            {arquivo.name}
+          </span>
+          <button
+            type="button"
+            aria-label="Remover arquivo"
+            onClick={() => {
+              setArquivo(null);
+              if (seletor.current) seletor.current.value = "";
+            }}
             className="text-fg-secondary hover:bg-hover hover:text-fg inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-xs transition-colors [transition-duration:var(--dur-fast)]"
           >
             <IconX size={14} stroke={1.75} />
@@ -174,6 +219,22 @@ export function MessageComposer({
           </DropdownMenu.Portal>
         </DropdownMenu.Root>
 
+        <input
+          ref={seletor}
+          type="file"
+          className="sr-only"
+          aria-label="Escolher arquivo"
+          onChange={(e) => setArquivo(e.target.files?.[0] ?? null)}
+        />
+        <button
+          type="button"
+          onClick={() => seletor.current?.click()}
+          className="text-fg-secondary hover:bg-hover hover:text-fg inline-flex h-7 shrink-0 items-center gap-1 rounded-sm px-2 text-[length:var(--text-caption-size)] whitespace-nowrap transition-colors [transition-duration:var(--dur-fast)]"
+        >
+          <IconPaperclip size={14} stroke={1.5} />
+          Anexar
+        </button>
+
         <DropdownMenu.Root>
           <DropdownMenu.Trigger asChild>
             <button
@@ -221,7 +282,7 @@ export function MessageComposer({
           variant="primary"
           className="ml-auto"
           leadingIcon={IconSend}
-          disabled={!body.trim()}
+          disabled={!body.trim() && !arquivo}
           isLoading={send.isPending}
         >
           Enviar
