@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 
+import { NAV_COMMERCIAL_COOKIE } from "@/components/shell/Sidebar";
 import { isPlatformAdmin } from "@/lib/admin/admin";
 import { Providers } from "@/components/providers";
 import { AppShell } from "@/components/shell/AppShell";
@@ -84,6 +85,9 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
               sectors={sectors ?? []}
               workspaces={workspaces}
               isAdmin={admin}
+              commercialOpen={
+                cookieStore.get(NAV_COMMERCIAL_COOKIE)?.value === "1"
+              }
             >
               {children}
             </AppShell>

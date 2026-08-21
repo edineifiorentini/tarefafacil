@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  IconBuildingStore,
   IconChevronDown,
   IconLogout,
   IconMenu2,
@@ -51,6 +52,18 @@ const staticPages: Record<string, PageMeta> = {
     title: "Buscar",
     subtitle: "Encontre demandas por texto e filtros.",
   },
+  "/funil": {
+    title: "Funil",
+    subtitle: "Negociações em andamento, por etapa.",
+  },
+  "/planos": {
+    title: "Planos",
+    subtitle: "Escolha o plano da sua empresa.",
+  },
+  "/servicos": {
+    title: "Serviços",
+    subtitle: "O que você vende, e por quanto.",
+  },
   "/financeiro": { title: "Financeiro", subtitle: "Fechamento do mês." },
   "/contratos": {
     title: "Contratos",
@@ -74,7 +87,7 @@ function pageMetaFor(path: string): PageMeta {
   return { title: "TarefaFácil" };
 }
 
-export function TopBar() {
+export function TopBar({ isAdmin }: { isAdmin: boolean }) {
   const pathname = usePathname();
   const router = useRouter();
   const workspace = useWorkspace();
@@ -174,6 +187,17 @@ export function TopBar() {
               <DropdownMenu.Label className="text-fg-muted truncate px-2 py-1.5 text-[length:var(--text-caption-size)]">
                 {myName}
               </DropdownMenu.Label>
+              {isAdmin ? (
+                <DropdownMenu.Item asChild>
+                  <Link
+                    href="/admin"
+                    className="text-fg data-[highlighted]:bg-hover flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] outline-none"
+                  >
+                    <IconBuildingStore size={16} stroke={1.75} />
+                    Plataforma
+                  </Link>
+                </DropdownMenu.Item>
+              ) : null}
               <DropdownMenu.Item asChild>
                 <Link
                   href="/config"

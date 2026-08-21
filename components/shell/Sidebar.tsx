@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  IconBuildingStore,
   IconCalendarMonth,
   IconFileText,
   IconLayoutDashboard,
@@ -10,13 +9,16 @@ import {
   IconMoneybag,
   IconPlus,
   IconMessages,
-  IconSearch,
+  IconBriefcase,
+  IconChartFunnel,
+  IconChevronRight,
   IconSettings,
   IconSun,
   IconUsers,
 } from "@tabler/icons-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 
 import { LogoutButton } from "@/components/auth/LogoutButton";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
@@ -40,7 +42,15 @@ type Destination = {
   hint?: string;
 };
 
-const destinations: Destination[] = [
+/**
+ * O trabalho do dia. Fica sempre aberto e no topo: é para onde se volta
+ * dezenas de vezes por dia.
+ *
+ * "Buscar" saiu da lista de propósito — o campo já está na barra superior,
+ * com o mesmo atalho `/`. Item de menu que duplica um campo visível gasta
+ * uma linha que os setores estavam pedindo.
+ */
+const workDestinations: Destination[] = [
   {
     href: "/dashboard",
     label: "Dashboard",
@@ -56,17 +66,34 @@ const destinations: Destination[] = [
     icon: IconCalendarMonth,
     hint: "5",
   },
-  { href: "/clientes", label: "Clientes", icon: IconUsers, hint: "6" },
-  { href: "/chat", label: "Chat", icon: IconMessages, hint: "7" },
-  { href: "/busca", label: "Buscar", icon: IconSearch, hint: "/" },
+  { href: "/chat", label: "Chat", icon: IconMessages, hint: "8" },
 ];
 
-// Módulos com dado sensível — a RLS já protege; isto só evita oferecer um
-// link que levaria a "acesso restrito".
-const businessDestinations: Destination[] = [
+/**
+ * O lado comercial, num grupo que recolhe.
+ *
+ * São telas de entrar, resolver e sair — não de ficar. Ocupavam cinco
+ * linhas fixas empurrando os setores para fora da tela: num notebook de
+ * 768px de altura sobravam 34 pixels para doze setores.
+ *
+ * Os atalhos continuam valendo com o grupo fechado: `6` leva a Clientes e
+ * `7` ao Funil de qualquer jeito.
+ */
+const commercialDestinations: Destination[] = [
+  { href: "/clientes", label: "Clientes", icon: IconUsers, hint: "6" },
+  { href: "/funil", label: "Funil", icon: IconChartFunnel, hint: "7" },
+  { href: "/servicos", label: "Serviços", icon: IconBriefcase },
+];
+
+// Dado sensível — a RLS já protege; isto só evita oferecer um link que
+// levaria a "acesso restrito".
+const restrictedDestinations: Destination[] = [
   { href: "/financeiro", label: "Financeiro", icon: IconMoneybag },
   { href: "/contratos", label: "Contratos", icon: IconFileText },
 ];
+
+/** Cookie do estado do grupo. Vem do servidor para não piscar na abertura. */
+export const NAV_COMMERCIAL_COOKIE = "nav_comercial";
 
 /** Altura de 44px no toque, 40px no ponteiro (alvo confortável em ambos). */
 const itemBase =
@@ -126,13 +153,15 @@ function NavItem({
 export function Sidebar({
   sectors: initialSectors,
   workspaces,
-  isAdmin,
+  commercialOpen,
 }: {
   sectors: Sector[];
   workspaces: Workspace[];
-  isAdmin: boolean;
+  /** Estado do grupo Comercial, vindo do cookie lido no servidor. */
+  commercialOpen: boolean;
 }) {
   const pathname = usePathname();
+  const [comercialAberto, setComercialAberto] = useState(commercialOpen);
   const workspace = useWorkspace();
   const { data: sectors = [] } = useSectors(workspace.id, initialSectors);
   const { openPanel, closePanel, setMobileNavOpen } = useShell();
@@ -150,6 +179,19 @@ export function Sidebar({
 
   const closeMobile = () => setMobileNavOpen(false);
 
+  // Quem administra vê Financeiro e Contratos dentro do mesmo grupo.
+  const comerciais = canManageBusiness
+    ? [...commercialDestinations, ...restrictedDestinations]
+    : commercialDestinations;
+
+  function toggleComercial() {
+    const novo = !comercialAberto;
+    setComercialAberto(novo);
+    // Cookie, não localStorage: o servidor lê na próxima visita e a barra já
+    // vem no estado certo, sem o grupo abrir e fechar na frente da pessoa.
+    document.cookie = `${NAV_COMMERCIAL_COOKIE}=${novo ? "1" : "0"}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`;
+  }
+
   return (
     <div className="flex h-full flex-col">
       <div className="px-3 py-4">
@@ -158,7 +200,7 @@ export function Sidebar({
 
       <nav aria-label="Navegação principal" className="px-3">
         <ul className="space-y-0.5">
-          {destinations.map((destination) => (
+          {workDestinations.map((destination) => (
             <NavItem
               key={destination.href}
               destination={destination}
@@ -167,20 +209,50 @@ export function Sidebar({
               badge={destination.href === "/chat" ? chatUnread : 0}
             />
           ))}
-          {canManageBusiness
-            ? businessDestinations.map((destination) => (
-                <NavItem
-                  key={destination.href}
-                  destination={destination}
-                  active={isActive(destination.href)}
-                  onNavigate={closeMobile}
-                />
-              ))
-            : null}
         </ul>
+
+        <button
+          type="button"
+          onClick={toggleComercial}
+          aria-expanded={comercialAberto}
+          aria-controls="nav-comercial"
+          className="text-fg-muted hover:text-fg mt-3 flex w-full items-center gap-1 px-3 py-1 text-[length:var(--text-caption-size)] font-semibold tracking-[0.08em] uppercase transition-colors [transition-duration:var(--dur-fast)]"
+        >
+          <IconChevronRight
+            size={14}
+            stroke={2}
+            aria-hidden
+            className={`shrink-0 transition-transform [transition-duration:var(--dur-fast)] ${
+              comercialAberto ? "rotate-90" : ""
+            }`}
+          />
+          Comercial
+          {/* Fechado, o grupo precisa dizer que existe algo aqui dentro. */}
+          {!comercialAberto ? (
+            <span className="tnum text-fg-muted ml-auto font-normal tracking-normal">
+              {comerciais.length}
+            </span>
+          ) : null}
+        </button>
+
+        {comercialAberto ? (
+          <ul id="nav-comercial" className="space-y-0.5">
+            {comerciais.map((destination) => (
+              <NavItem
+                key={destination.href}
+                destination={destination}
+                active={isActive(destination.href)}
+                onNavigate={closeMobile}
+              />
+            ))}
+          </ul>
+        ) : null}
       </nav>
 
-      <div className="mt-6 min-h-0 flex-1 overflow-auto px-3">
+      {/* `min-h`: os setores são a espinha do produto e não podem ser o
+          único bloco que cede espaço. Antes disto, num notebook de 768px,
+          sobravam 34 pixels para doze setores. */}
+      <div className="mt-4 min-h-48 flex-1 overflow-auto px-3">
         <div className="flex items-center justify-between px-3 py-1">
           <span className="text-fg-muted text-[length:var(--text-caption-size)] font-semibold tracking-[0.08em] uppercase">
             Setores
@@ -204,17 +276,6 @@ export function Sidebar({
       </div>
 
       <div className="border-line mt-auto space-y-0.5 border-t p-3">
-        {isAdmin ? (
-          <Link
-            href="/admin"
-            aria-current={isActive("/admin") ? "page" : undefined}
-            onClick={closeMobile}
-            className={navItemClass(isActive("/admin"))}
-          >
-            <IconBuildingStore size={20} stroke={1.75} aria-hidden />
-            <span className="flex-1 truncate">Plataforma</span>
-          </Link>
-        ) : null}
         <Link
           href="/config"
           aria-current={isActive("/config") ? "page" : undefined}

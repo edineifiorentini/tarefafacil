@@ -6,6 +6,7 @@ import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { Dialog } from "radix-ui";
 
+import { TrialBanner } from "@/components/billing/TrialBanner";
 import { GcalReconnectBanner } from "@/components/gcal/GcalReconnectBanner";
 import { QuickAdd } from "@/components/task/QuickAdd";
 import { useGcalPoller } from "@/lib/queries/useGcal";
@@ -21,11 +22,14 @@ export function AppShell({
   sectors,
   workspaces,
   isAdmin,
+  commercialOpen,
   children,
 }: {
   sectors: Sector[];
   workspaces: Workspace[];
   isAdmin: boolean;
+  /** Grupo Comercial aberto? Vem do cookie, lido no servidor. */
+  commercialOpen: boolean;
   children: ReactNode;
 }) {
   const router = useRouter();
@@ -54,7 +58,8 @@ export function AppShell({
         "4": "/quadro",
         "5": "/calendario",
         "6": "/clientes",
-        "7": "/chat",
+        "7": "/funil",
+        "8": "/chat",
       };
 
       if (jumps[e.key]) {
@@ -84,7 +89,11 @@ export function AppShell({
     <div className="flex h-dvh">
       {/* Sidebar — desktop (>=1024px). Vidro perolado, divisão só à direita. */}
       <aside className="tf-glass-edge hidden w-[248px] shrink-0 lg:block">
-        <Sidebar sectors={sectors} workspaces={workspaces} isAdmin={isAdmin} />
+        <Sidebar
+          sectors={sectors}
+          workspaces={workspaces}
+          commercialOpen={commercialOpen}
+        />
       </aside>
 
       {/* Sidebar — mobile (sheet à esquerda com overlay) */}
@@ -99,7 +108,7 @@ export function AppShell({
             <Sidebar
               sectors={sectors}
               workspaces={workspaces}
-              isAdmin={isAdmin}
+              commercialOpen={commercialOpen}
             />
           </Dialog.Content>
         </Dialog.Portal>
@@ -107,8 +116,9 @@ export function AppShell({
 
       {/* Conteúdo */}
       <div className="flex min-w-0 flex-1 flex-col">
-        <TopBar />
+        <TopBar isAdmin={isAdmin} />
         <GcalReconnectBanner />
+        <TrialBanner />
         {/* Transparente: o ambiente do body aparece por baixo do conteúdo. */}
         <main className="min-h-0 flex-1 overflow-auto">{children}</main>
       </div>
