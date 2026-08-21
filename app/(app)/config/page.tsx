@@ -1,5 +1,8 @@
+import { SubscriptionCard } from "@/components/billing/SubscriptionCard";
+import { NotificationPrefs } from "@/components/config/NotificationPrefs";
 import { ContractTemplateManager } from "@/components/contracts/ContractTemplateManager";
 import { GcalConnectCard } from "@/components/gcal/GcalConnectCard";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
 import { OrgProfileForm } from "@/components/workspace/OrgProfileForm";
 import { WorkspaceSettings } from "@/components/workspace/WorkspaceSettings";
 
@@ -11,19 +14,29 @@ const GCAL_MESSAGES: Record<string, string> = {
   indisponivel: "Integração com o Google indisponível neste ambiente",
 };
 
+/**
+ * Configurações em abas.
+ *
+ * Era uma coluna só, e cresceu até virar rolagem sem fim: identidade da
+ * organização, modelos de contrato, equipe, auditoria, Google Agenda — tudo
+ * empilhado. Cada aba agora é um assunto, e quem entra para mexer numa coisa
+ * não passa pelas outras quatro.
+ */
 export default async function ConfigPage({
   searchParams,
 }: {
-  searchParams: Promise<{ gcal?: string }>;
+  searchParams: Promise<{ gcal?: string; aba?: string }>;
 }) {
-  const { gcal } = await searchParams;
+  const { gcal, aba } = await searchParams;
   const message = gcal ? GCAL_MESSAGES[gcal] : null;
+
+  // Voltando do Google, a aba certa é a que tem o cartão de integração.
+  const inicial = gcal ? "geral" : (aba ?? "geral");
 
   return (
     // Mais largo que a coluna de leitura: o editor de modelos precisa de
     // espaço para o texto e o painel de variáveis lado a lado.
-    <div className="mx-auto flex w-full max-w-4xl flex-col gap-8 px-4 pb-8 lg:px-6">
-      {/* O título está na barra superior. */}
+    <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 pb-8 lg:px-6">
       {message ? (
         <p
           role="status"
@@ -33,18 +46,41 @@ export default async function ConfigPage({
         </p>
       ) : null}
 
-      <section className="flex flex-col gap-2">
-        <h2 className="text-fg-secondary text-[length:var(--text-small-size)] font-medium">
-          Integrações
-        </h2>
-        <GcalConnectCard />
-      </section>
+      <Tabs defaultValue={inicial}>
+        <TabsList>
+          <TabsTrigger value="geral">Geral</TabsTrigger>
+          <TabsTrigger value="assinatura">Assinatura</TabsTrigger>
+          <TabsTrigger value="notificacoes">Notificações</TabsTrigger>
+          <TabsTrigger value="equipe">Equipe</TabsTrigger>
+          <TabsTrigger value="contratos">Modelos de contrato</TabsTrigger>
+        </TabsList>
 
-      <OrgProfileForm />
+        <TabsContent value="geral">
+          <OrgProfileForm />
+          <section className="flex flex-col gap-2">
+            <h2 className="text-fg-secondary text-[length:var(--text-small-size)] font-medium">
+              Integrações
+            </h2>
+            <GcalConnectCard />
+          </section>
+        </TabsContent>
 
-      <ContractTemplateManager />
+        <TabsContent value="assinatura">
+          <SubscriptionCard />
+        </TabsContent>
 
-      <WorkspaceSettings />
+        <TabsContent value="notificacoes">
+          <NotificationPrefs />
+        </TabsContent>
+
+        <TabsContent value="equipe">
+          <WorkspaceSettings />
+        </TabsContent>
+
+        <TabsContent value="contratos">
+          <ContractTemplateManager />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

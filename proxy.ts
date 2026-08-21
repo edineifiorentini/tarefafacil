@@ -47,6 +47,9 @@ export async function proxy(request: NextRequest) {
     path.startsWith("/r/") ||
     // Webhook do Google: chamado sem sessão (o Google não tem cookie).
     path.startsWith("/api/gcal/webhook") ||
+    // Consulta pública de "os cadastros estão abertos?": a tela de login
+    // precisa dela sem sessão, e a resposta é um booleano só.
+    path.startsWith("/api/signups") ||
     // Cron da Vercel: chega sem sessão e se autentica pelo CRON_SECRET, que a
     // própria rota confere. Sem segredo configurado ela responde 401.
     path.startsWith("/api/cron/");

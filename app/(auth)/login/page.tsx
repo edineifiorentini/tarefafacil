@@ -12,6 +12,28 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  /**
+   * Traduz a falha do cadastro fechado.
+   *
+   * O trigger da 0061 recusa criar o usuário e o Supabase devolve "Database
+   * error creating new user", que parece defeito do sistema. A troca só
+   * acontece quando a porta está mesmo fechada — assim uma falha de verdade
+   * continua aparecendo como falha.
+   */
+  async function mensagemDeErro(bruta: string): Promise<string> {
+    if (!/database error/i.test(bruta)) return bruta;
+    try {
+      const r = await fetch("/api/signups");
+      const { open } = (await r.json()) as { open: boolean };
+      if (!open) {
+        return "Cadastros temporariamente fechados. Se você já tem conta, confira o e-mail digitado; se foi convidado, use o e-mail do convite.";
+      }
+    } catch {
+      // Sem resposta da rota, fica a mensagem original.
+    }
+    return bruta;
+  }
+
   // Destino pós-login (ex.: link de convite). Só aceita caminho interno.
   function callbackUrl() {
     const base = `${location.origin}/auth/callback`;
@@ -31,7 +53,7 @@ export default function LoginPage() {
       options: { emailRedirectTo: callbackUrl() },
     });
     setLoading(false);
-    if (error) setError(error.message);
+    if (error) setError(await mensagemDeErro(error.message));
     else setSent(true);
   }
 

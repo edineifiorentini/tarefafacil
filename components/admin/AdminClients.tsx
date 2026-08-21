@@ -11,6 +11,8 @@ import { TextInput } from "@/components/ui/TextInput";
 import { useToast } from "@/components/ui/Toast";
 import type { ClientRow, PlanRow } from "@/lib/admin/types";
 
+import { SignupGate } from "./SignupGate";
+
 const DAY_MS = 24 * 60 * 60 * 1000;
 const PERIODS = [
   { label: "Renovar 30 dias", days: 30 },
@@ -574,6 +576,8 @@ export function AdminClients() {
 
   return (
     <div className="flex flex-col gap-4">
+      <SignupGate />
+
       {/* O título "Contas" está na barra superior; aqui fica só o aviso de
           comportamento e a ação de criar. */}
       <div className="flex flex-wrap items-start justify-between gap-3">

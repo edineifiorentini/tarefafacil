@@ -28,7 +28,9 @@ import {
   mergeFeed,
   unreadCount,
 } from "@/lib/notifications/derive";
+import { DEFAULT_PREFS, filterFeed } from "@/lib/notifications/prefs";
 import { toFeedEvent } from "@/lib/notifications/types";
+import { useNotificationPrefs } from "@/lib/queries/useNotificationPrefs";
 import type {
   AlertKind,
   FeedItem,
@@ -125,21 +127,28 @@ export function NotificationBell() {
   // sumia depois de entregar a demanda.
   const now = useAsOf(tasksQuery.dataUpdatedAt);
 
+  // A preferência filtra a EXIBIÇÃO. O evento continua gravado: religar
+  // um tipo traz o histórico de volta em vez de revelar um buraco.
+  const { data: prefs } = useNotificationPrefs();
+
   const feed = useMemo(
     () =>
-      mergeFeed(
-        [
-          ...deriveTaskAlerts(
-            tasks,
-            { myId: myId ?? null, alsoTeamOverdue: canManage },
-            now
-          ),
-          ...deriveContractAlerts(contracts, now),
-          ...deriveFinanceAlerts(financeEntries, now, canManage),
-        ],
-        stored.map(toFeedEvent)
+      filterFeed(
+        mergeFeed(
+          [
+            ...deriveTaskAlerts(
+              tasks,
+              { myId: myId ?? null, alsoTeamOverdue: canManage },
+              now
+            ),
+            ...deriveContractAlerts(contracts, now),
+            ...deriveFinanceAlerts(financeEntries, now, canManage),
+          ],
+          stored.map(toFeedEvent)
+        ),
+        prefs ?? DEFAULT_PREFS
       ),
-    [tasks, contracts, financeEntries, stored, myId, canManage, now]
+    [tasks, contracts, financeEntries, stored, myId, canManage, now, prefs]
   );
 
   const alerts = feed.filter((f) => f.nature === "alerta");
