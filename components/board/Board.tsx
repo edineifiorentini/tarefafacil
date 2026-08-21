@@ -32,6 +32,8 @@ export interface BoardColumnData {
   position?: number;
   tone?: string;
   wipLimit?: number | null;
+  /** Linha secundária do cabeçalho — texto pronto, montado por quem usa. */
+  subtitle?: string;
 }
 
 export interface BoardProps<T> {
@@ -347,6 +349,7 @@ export function Board<T>({
               key={col.id}
               id={col.id}
               name={col.name}
+              subtitle={col.subtitle}
               tone={col.tone}
               count={colItems.length}
               wipLimit={col.wipLimit}

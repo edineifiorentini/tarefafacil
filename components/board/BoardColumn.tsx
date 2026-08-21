@@ -23,6 +23,7 @@ import type { ReactNode } from "react";
 export function BoardColumn({
   id,
   name,
+  subtitle,
   tone,
   count,
   wipLimit,
@@ -37,6 +38,10 @@ export function BoardColumn({
 }: {
   id: string;
   name: string;
+  /** Linha secundária do cabeçalho. Texto puro: a coluna não sabe do que se
+      trata — no funil é a soma em reais, em outro quadro pode ser outra
+      coisa. */
+  subtitle?: string;
   tone?: string;
   count: number;
   wipLimit?: number | null;
@@ -228,6 +233,12 @@ export function BoardColumn({
           </DropdownMenu.Root>
         ) : null}
       </header>
+
+      {subtitle ? (
+        <p className="tnum text-fg-muted -mt-1 truncate px-3 pb-2 text-[length:var(--text-caption-size)]">
+          {subtitle}
+        </p>
+      ) : null}
 
       <div
         ref={setNodeRef}
