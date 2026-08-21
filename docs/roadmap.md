@@ -238,7 +238,153 @@ A central de notificações saiu (2b7084c). Restam:
   Falta pendurar nela a renovação do `watch` do Google, que continua
   dependendo de URL pública estável.
 
-## 3. Lacunas contra o MVP do spec (§22)
+---
+
+## 3. Funil de vendas — entregue (21/ago/2026, migration 0056)
+
+A fase 4 do plano, aberta pelo dono. O `Board` genérico da ADR-004 foi
+escrito em agosto exatamente para isto: o funil não trouxe um segundo
+quadro, reusou o mesmo organismo do Kanban de demandas. O que o `Board`
+ganhou foi um `subtitle` opcional na coluna — texto puro, para o total em
+reais no cabeçalho — e ele continua sem conhecer nem `Task` nem `Deal`.
+
+**O card é a negociação, não o cliente.** Foi a primeira decisão, e é a que
+sustenta o resto: com o cliente como card, a prefeitura que se fecha em
+março e volta a negociar em setembro não tem para onde ir — a etapa viraria
+o status dela, fechar exigiria tirar o card do quadro, e o histórico de
+"ganhamos três, perdemos uma" deixaria de existir.
+
+**Um cadastro de contato só.** Criar um lead no funil cadastra o cliente
+como prospecto na mesma ação. Não existe lista de "leads" paralela à de
+clientes — duas listas de gente é o jeito conhecido de acabar com o mesmo
+telefone em dois lugares e nenhum deles confiável.
+
+**A etapa tem um `kind`** (aberta / ganho / perdido), e é ele que decide o
+comportamento, nunca o nome. O dono pode renomear "Fechado" para "Assinado"
+sem que o sistema pare de marcar a data de ganho. Voltar o card para uma
+etapa aberta desfaz o desfecho: negociação que volta para "Em negociação" e
+continua marcada como ganha mentiria no total.
+
+**Fechar marca o ganho e promove o cliente a ativo — e nada mais.** Foi a
+escolha do dono para a primeira rodada. Note que a promoção não tem volta
+automática: mover depois para "Perdido" não rebaixa o cliente, porque ele
+pode ter contrato ativo vindo de outra negociação.
+
+**O motivo da perda é perguntado depois do arraste**, e responder é
+opcional. Travar o gesto num formulário faria a pessoa desistir de mover o
+card, e funil que não se move não serve para nada; motivo em branco é melhor
+do que motivo inventado para fechar a caixa.
+
+**Ganho fica cinza, não verde.** O `tokens.css` reserva o verde a dado
+financeiro positivo e o tira da paleta de coluna de propósito. No quadro,
+cinza já é a cor de "saiu do fluxo" — quem diz que a negociação foi ganha é
+o troféu no card e o valor no cabeçalho.
+
+O workspace nasce com as seis etapas (mesma lição das migrations 0043 e
+0051), etapa com negociação dentro não pode ser excluída (`on delete
+restrict`, com aviso em vez de erro cru), e o total "em aberto" ignora ganho
+e perdido — somá-los daria um número que só sobe e não ajuda a decidir nada.
+
+**Falta**, e são as continuações naturais: vínculo entre negociação e
+demanda (o spec da fase 4 prevê), histórico de interação, e gerar contrato a
+partir da negociação ganha — o dono preferiu usar o funil por uma ou duas
+semanas antes de eu automatizar essa cadeia.
+
+---
+
+## 4. Rodada do CRM — catálogo, consultas, teste e vencidos (21/ago/2026)
+
+Quatro pedidos vindos de prints de outro SaaS, nas migrations 0057 a 0060.
+
+**Catálogo de serviços** (0057). Nome, preço, unidade e ativo. No funil, os
+serviços viram fichas que somam: clicar em dois preenche o título com os dois
+e o valor com a soma. **Preencher, não vincular** — o preço de tabela é ponto
+de partida da conversa, e quase toda negociação ajusta alguma coisa; o que
+vale é o que ficou escrito na negociação. Serviço não se apaga, se desativa.
+
+**CEP e CNPJ preenchem sozinhos** (0058). O endereço do cliente virou campos
+separados; `client.address` (texto livre) continua lá e só aparece enquanto
+os campos novos estiverem vazios — repartir texto livre por adivinhação erra
+em "s/n" e em complemento, e o erro fica gravado.
+
+As duas consultas rodam **no servidor**, em `/api/lookup/*`: o IP de quem usa
+o sistema não precisa ir para um terceiro porque alguém digitou um CEP, e o
+limite por IP passa a ser do servidor, com cache na frente.
+
+- CEP: BrasilAPI, sem chave. Dispara sozinho ao completar os oito dígitos.
+- CNPJ: **minhareceita.org**. A BrasilAPI foi testada primeiro e responde
+  **403 no endpoint de CNPJ** — está fechada. ReceitaWS (3/min) e CNPJá
+  aberto (5/min) também funcionam e ficam de reserva; trocar é um arquivo.
+  Só mapeamos o que o cadastro usa: a resposta traz o quadro societário com
+  CPF parcial dos sócios e **nada disso entra no sistema**.
+- **Não existe consulta de CPF, e não é esquecimento.** CNPJ é dado público
+  da Receita; CPF exige bureau pago com contrato e finalidade declarada, e
+  puxar dado de pessoa física sem base legal é problema de LGPD antes de ser
+  de custo. Com CPF o sistema valida o dígito, e só.
+
+A situação cadastral vem junto e vira aviso quando não é "ATIVA": fechar
+contrato com CNPJ baixado é o tipo de coisa que só aparece quando a nota é
+recusada.
+
+**Teste de 7 dias** (0060). Todo cadastro novo nasce em teste, com
+`trial_ends_at`. **A data não bloqueia nada**, por decisão do dono: enquanto
+a cobrança do EFI não existe, cortar no oitavo dia seria trancar alguém para
+fora por uma fatura que o sistema não sabe emitir. Ela serve para a faixa de
+contagem e para a aba Empresas. Quando o gateway entrar, ligar o corte é
+copiar a data para `access_expires_at` — o portão que já vale para todo
+mundo. Escolher plano grava **intenção**: muda `plan_id`, não mexe em
+assentos nem em vencimento, senão bastaria clicar no plano mais caro para
+ganhar assentos de graça.
+
+**Vencidos em destaque** no Financeiro, fora do recorte de mês — conta de
+março que ninguém pagou continua vencida em agosto, e é justamente ela que
+some quando a tela só olha o mês corrente. Junto veio a correção de
+`isOverdue`, que comparava `due_date` com `toISOString()` (UTC): em UTC-3,
+toda conta que vence hoje aparecia como vencida a partir das 21h. É a mesma
+correção que o painel e o sino já tinham recebido.
+
+---
+
+## 5. Correção de segurança — o dono podia vender para si mesmo (0059)
+
+Encontrada ao ler a RLS de `workspace` para construir o teste de 7 dias, e
+confirmada contra o banco antes de corrigir.
+
+A policy da 0011 diz `for update using (has_role(id, owner/admin))`, e **RLS
+é por linha, não por coluna**. Qualquer dono conseguia, do próprio navegador
+e com a chave publishable:
+
+```
+update workspace set seat_limit = 999             -- assentos de graça
+update workspace set access_expires_at = '2099'   -- assinatura eterna
+update workspace set suspended = false            -- desbloqueio próprio
+```
+
+As três passaram no teste. Ou seja: o controle de venda por período — que a
+0017 usa dentro de `has_role` para barrar escrita de workspace vencido — era
+autoatendimento. E um período de teste não vale nada se quem testa consegue
+estendê-lo.
+
+A correção é **grant por coluna**, que é o que o Postgres tem para isso: a
+RLS continua decidindo QUEM chega na linha, o grant decide QUAIS colunas essa
+pessoa pode tocar. `revoke update on workspace from authenticated` mais
+`grant update (name)` — renomear o próprio workspace é legítimo, o resto
+(plano, assentos, vencimento, bloqueio, indicação, contato de cobrança) só
+pelo servidor.
+
+Nada quebrou porque **o app nunca escreveu nessa tabela pelo cliente**: o
+único caminho era a RPC `create_workspace`, que é security definer. Depois da
+correção, as cinco tentativas voltam 42501, renomear continua permitido, a
+leitura continua funcionando e o painel da plataforma (chave secreta)
+continua administrando.
+
+Fica a lição para toda tabela com coluna comercial: **policy de update em
+tabela que mistura dado do cliente com dado de cobrança precisa de grant por
+coluna.** RLS sozinha não separa isso.
+
+---
+
+## 6. Lacunas contra o MVP do spec (§22)
 
 O spec lista o que considera essencial para o MVP comercial. Quase tudo
 existe; falta:
@@ -278,7 +424,7 @@ existe; falta:
   "Apenas esta ocorrência" não virou opção do editor de propósito: uma
   ocorrência é um lançamento comum e já se edita na lista do mês.
 
-## 4. Fase 9 — qualidade e lançamento
+## 7. Fase 9 — qualidade e lançamento
 
 - Testes ponta a ponta no Playwright cobrindo os fluxos críticos;
 - Desempenho das queries principais com volume realista;
@@ -289,7 +435,7 @@ existe; falta:
 
 ---
 
-## 5. Dívidas e adiamentos registrados
+## 8. Dívidas e adiamentos registrados
 
 Cada item aqui foi uma decisão consciente, não esquecimento.
 
@@ -311,7 +457,7 @@ Cada item aqui foi uma decisão consciente, não esquecimento.
 
 ---
 
-## 6. Painel da plataforma (admin master)
+## 9. Painel da plataforma (admin master)
 
 Pedido pelo dono em 20/ago/2026, com prints de outro SaaS como referência.
 O `/admin` deixou de ser uma tela só e virou três abas — **Empresas**,
@@ -368,7 +514,7 @@ cadastro.
 
 ---
 
-## 7. Assinatura do SaaS (EFI Bank)
+## 10. Assinatura do SaaS (EFI Bank)
 
 Decidido pelo dono em 20/ago/2026: a integração é para cobrar **a assinatura
 do próprio TarefaFácil**, não o cliente do workspace.
@@ -410,7 +556,7 @@ Nada disso vai para produção sem teste contra o ambiente de homologação.
 
 ---
 
-## 8. WhatsApp — envio automático
+## 11. WhatsApp — envio automático
 
 Pedido pelo dono em 20/ago/2026: usar **Evolution API** ou **wuzapi** para
 disparar mensagem no WhatsApp. Não existe nada disso hoje — nem tabela, nem
@@ -464,9 +610,64 @@ o canal inteiro sumir numa manhã.
   conectado. Trocar Evolution por wuzapi — ou pela Cloud API, se o risco de
   banimento pesar — não deve mexer em nada acima da interface.
 
+**Automações de WhatsApp — o que dispararia (a definir com uso real)**
+
+O canal é a parte cara; decidir o que mandar é a parte que erra. A lista
+abaixo é ponto de partida, não escopo fechado, e cada item só entra depois
+que alguém disser que sente falta:
+
+- **Cobrança**: aviso três dias antes do vencimento, no dia, e recibo quando
+  o pagamento entra. É o que o `finance_entry` já sabe responder.
+- **Prazo de demanda** para o responsável — mas concorrendo com o sino, que
+  já avisa. Só vale para quem não abre o sistema todo dia.
+- **Demanda concluída** para o cliente final, se ele topar receber.
+- **Negociação parada**: card sem movimento no funil há X dias. Este é o que
+  mais parece útil e o que mais depende de dado real para calibrar o X.
+
+Regra que vale para todos: **frequência é o inimigo**. Automação que dispara
+demais treina a pessoa a ignorar, e aí a mensagem que importava chega no
+mesmo balde. Um disparo por evento, sem repetição, e um jeito óbvio de
+desligar por destinatário.
+
 ---
 
-## 9. Ambiente de desenvolvimento
+## 12. E-mail marketing — para desenvolvimento
+
+Pedido pelo dono em 21/ago/2026, a partir do painel de referência. **Não
+existe nada disso**, e o buraco começa antes do marketing: o sistema **não
+envia e-mail nenhum** hoje — o convite de equipe é por link copiado à mão.
+
+A ordem que faz sentido, e ela importa:
+
+1. **E-mail transacional primeiro.** Convite, aviso de cobrança, recibo. É o
+   que já tem gatilho no sistema e o que quebra menos quando falha. Exige um
+   provedor (Resend é o registrado no roadmap desde a E18), um domínio
+   verificado e SPF/DKIM configurados.
+2. **Modelos com a marca do cliente** — o painel de referência chama de
+   "Modelos de e-mail". Só depois do item 1, porque modelo sem envio é
+   editor de texto.
+3. **Disparo em massa por último**, e com cuidado: lista, segmento, descadastro
+   obrigatório, e reputação de domínio. Mandar campanha do mesmo domínio que
+   manda cobrança é como perder as duas coisas de uma vez — o padrão é
+   subdomínio separado para marketing.
+
+**O que decidir antes**: de quem é a lista (cada workspace tem a sua, e o
+cliente do seu cliente não pode aparecer para outro workspace); se o envio
+sai do nosso domínio ou do domínio do cliente (o painel de referência oferece
+SMTP próprio, e isso muda quem responde pela reputação); e o que fazer com
+quem descadastra — a exclusão precisa valer para toda a plataforma, não só
+para a campanha.
+
+**Custo escondido**: e-mail marketing traz consigo métricas (abertura,
+clique, rejeição), e métrica exige rastreio, que exige decidir o que é
+aceitável rastrear. Nada disso é código difícil; é decisão que, tomada
+errado no começo, contamina a base inteira.
+
+---
+
+---
+
+## 13. Ambiente de desenvolvimento
 
 O Next avisa `Slow filesystem detected` (468ms num benchmark que costuma dar
 dezenas de milissegundos) — o projeto está num disco lento. Isso já custou
@@ -476,9 +677,90 @@ como se fosse problema de código.
 
 ---
 
-## 10. Testes pendentes
+## 14. Testes pendentes
 
 `docs/testes-pendentes.md` lista o que foi construído e não pôde ser
 verificado rodando. O item mais importante é o isolamento da conversa direta
 com dois usuários logados — o único com consequência de privacidade e o
 único impossível de provar com uma sessão só.
+
+---
+
+## 15. Barra lateral e porta de entrada (21/ago/2026)
+
+**A barra lateral ficou grande demais.** Medido num notebook de 1366×768,
+antes da mudança: navegação 502px, rodapé 147px, e **34 pixels para doze
+setores** — dava para ver um de cada vez. O setor é a espinha do produto
+(toda demanda pertence a um) e era o único bloco que cedia espaço.
+
+Três mudanças, todas de arrumação, nenhuma de comportamento:
+
+- **Grupo "Comercial" recolhível** (Clientes, Funil, Serviços e, para quem
+  administra, Financeiro e Contratos). São telas de entrar, resolver e sair
+  — não de ficar. O estado vai num **cookie**, não em localStorage: o
+  servidor lê antes de renderizar e o grupo não abre e fecha na frente da
+  pessoa. Os atalhos `6` e `7` continuam valendo com o grupo fechado.
+- **"Buscar" saiu da lista.** O campo já está na barra superior, com o mesmo
+  atalho `/`. Item de menu que duplica um campo visível gasta uma linha.
+- **"Plataforma" foi para o menu da conta**, na barra superior — só o dono da
+  plataforma o vê e o usa raramente.
+- **Setores ganharam `min-h`**, para nunca voltarem a ser o único bloco
+  espremido.
+
+Depois: navegação **289px**, setores **297px** — sete visíveis em vez de um.
+
+**Bloqueio de cadastros** (migration 0061). Interruptor no painel da
+plataforma, com um cuidado que dá forma ao desenho: **quem você convida
+também precisa criar conta.** Um bloqueio ingênuo no trigger fecharia a
+porta na cara do time dos seus clientes, e o sintoma apareceria dias depois,
+do lado de quem não consegue explicar o erro. A regra é: porta fechada
+recusa quem chega do nada e **deixa passar quem tem convite pendente para
+aquele e-mail**.
+
+Consequência que está escrita na própria tela: com os cadastros fechados,
+**convite por link aberto (sem e-mail) para de criar conta nova** — não há
+como o banco saber, na hora de criar o usuário, que ele carrega um token.
+Convide pelo e-mail enquanto a porta estiver fechada.
+
+A mensagem também foi traduzida. O Supabase engole o texto do trigger e
+devolve "Database error creating new user", que parece defeito; a tela de
+login consulta `/api/signups` (rota pública, devolve um booleano só) e, se a
+porta estiver mesmo fechada, troca por uma frase que diz o que houve. Falha
+de verdade continua aparecendo como falha.
+
+---
+
+## 16. Configurações em abas (21/ago/2026)
+
+A tela era uma coluna só e virou rolagem sem fim: identidade da organização,
+modelos de contrato, equipe, auditoria e Google Agenda empilhados. Agora cada
+aba é um assunto — Geral, Assinatura, Notificações, Equipe, Modelos de
+contrato — e quem entra para mexer numa coisa não passa pelas outras quatro.
+Voltando do Google, a aba certa abre sozinha.
+
+**Assinatura** mostra situação, plano, fim do teste e acesso liberado, e traz
+o seletor de planos junto. A tela diz, com todas as letras, que **a cobrança
+automática ainda não está ligada** — prometer boleto numa tela que não emite
+boleto seria pior do que não ter a tela.
+
+**Notificações** (migration 0062) dá a cada pessoa seis interruptores: três
+para evento gravado (menção, atribuição, comentário) e três para alerta
+calculado (prazos, contratos, financeiro). Duas decisões:
+
+- **A preferência é por pessoa, não por workspace.** Quem participa de duas
+  empresas não decide duas vezes que não liga para aviso de contrato.
+- **Filtra a exibição, não a gravação.** O evento continua sendo gravado —
+  quem foi mencionado foi mencionado. Desligar é "não me mostre"; religar
+  traz o histórico de volta em vez de revelar um buraco. Alerta de prazo nem
+  gravado é: é calculado na leitura, então desligar é não calcular.
+
+Não há linha no banco até alguém mexer num interruptor: quem nunca abriu a
+tela recebe tudo, e o banco não guarda uma linha por usuário para dizer "sim"
+seis vezes.
+
+**O que veio do painel de referência e ficou de fora, com motivo**: alterar
+senha (o login é link mágico e Google — não existe senha), idioma e moeda (o
+produto é pt-BR e BRL; seletor com uma opção é mobília), SMTP e modelos de
+e-mail (não enviamos e-mail nenhum ainda — ver seção 12), integrações de
+pagamento além do EFI, e a aba de "Atualizações" (changelog), que só se
+sustenta com disciplina de manutenção a cada release.

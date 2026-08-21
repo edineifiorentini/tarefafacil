@@ -30,6 +30,11 @@ export type BillingPeriod = "unico" | "mensal" | "trimestral" | "anual";
 export type GcalStatus = "active" | "expired" | "revoked";
 export type ClientType = "pf" | "pj";
 export type ClientStatus = "prospecto" | "ativo" | "pausado" | "encerrado";
+/**
+ * O que a etapa do funil significa para o negócio, independente do nome que
+ * ela tenha. Renomear "Fechado" para "Assinado" não muda o comportamento.
+ */
+export type DealStageKind = "aberta" | "ganho" | "perdido";
 /** Notificação de evento. Alerta de prazo é derivado, não tem linha. */
 export type NotificationKind = "mencao" | "atribuicao" | "comentario";
 /** A que o clique da notificação leva. */
@@ -57,6 +62,8 @@ export type Database = {
           plan_id: string | null;
           /** Período de avaliação — sem cobrança. */
           trial: boolean;
+          /** Fim do teste. Informativo: quem barra acesso é access_expires_at. */
+          trial_ends_at: string | null;
           /** Contato de cobrança, que nem sempre é o de quem usa. */
           contact_email: string | null;
           contact_phone: string | null;
@@ -76,6 +83,7 @@ export type Database = {
           plan?: Plan;
           plan_id?: string | null;
           trial?: boolean;
+          trial_ends_at?: string | null;
           contact_email?: string | null;
           contact_phone?: string | null;
           seat_limit?: number;
@@ -92,6 +100,7 @@ export type Database = {
           plan?: Plan;
           plan_id?: string | null;
           trial?: boolean;
+          trial_ends_at?: string | null;
           contact_email?: string | null;
           contact_phone?: string | null;
           seat_limit?: number;
@@ -1261,6 +1270,150 @@ export type Database = {
         };
         Relationships: [];
       };
+      notification_preference: {
+        Row: {
+          user_id: string;
+          mencao: boolean;
+          atribuicao: boolean;
+          comentario: boolean;
+          prazos: boolean;
+          contratos: boolean;
+          financeiro: boolean;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          mencao?: boolean;
+          atribuicao?: boolean;
+          comentario?: boolean;
+          prazos?: boolean;
+          contratos?: boolean;
+          financeiro?: boolean;
+        };
+        Update: {
+          mencao?: boolean;
+          atribuicao?: boolean;
+          comentario?: boolean;
+          prazos?: boolean;
+          contratos?: boolean;
+          financeiro?: boolean;
+        };
+        Relationships: [];
+      };
+      platform_setting: {
+        Row: {
+          id: boolean;
+          signups_enabled: boolean;
+          updated_at: string;
+        };
+        Insert: { id?: boolean; signups_enabled?: boolean };
+        Update: { signups_enabled?: boolean };
+        Relationships: [];
+      };
+      service: {
+        Row: {
+          id: string;
+          workspace_id: string;
+          name: string;
+          /** Preço de tabela, em centavos. Copiado no uso, não referenciado. */
+          price_cents: number;
+          /** "por mês", "por peça" — rótulo curto ao lado do preço. */
+          unit: string | null;
+          active: boolean;
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          workspace_id: string;
+          name: string;
+          price_cents?: number;
+          unit?: string | null;
+          active?: boolean;
+          notes?: string | null;
+        };
+        Update: {
+          name?: string;
+          price_cents?: number;
+          unit?: string | null;
+          active?: boolean;
+          notes?: string | null;
+        };
+        Relationships: [];
+      };
+      pipeline_stage: {
+        Row: {
+          id: string;
+          workspace_id: string;
+          name: string;
+          position: number;
+          kind: DealStageKind;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          workspace_id: string;
+          name: string;
+          position?: number;
+          kind?: DealStageKind;
+        };
+        Update: {
+          name?: string;
+          position?: number;
+          kind?: DealStageKind;
+        };
+        Relationships: [];
+      };
+      deal: {
+        Row: {
+          id: string;
+          workspace_id: string;
+          client_id: string;
+          stage_id: string;
+          title: string;
+          /** Centavos inteiros. Null = negociação ainda sem preço. */
+          amount_cents: number | null;
+          position: number;
+          responsible_id: string | null;
+          expected_close_on: string | null;
+          won_at: string | null;
+          lost_at: string | null;
+          lost_reason: string | null;
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          workspace_id: string;
+          client_id: string;
+          stage_id: string;
+          title: string;
+          amount_cents?: number | null;
+          position?: number;
+          responsible_id?: string | null;
+          expected_close_on?: string | null;
+          won_at?: string | null;
+          lost_at?: string | null;
+          lost_reason?: string | null;
+          notes?: string | null;
+        };
+        Update: {
+          client_id?: string;
+          stage_id?: string;
+          title?: string;
+          amount_cents?: number | null;
+          position?: number;
+          responsible_id?: string | null;
+          expected_close_on?: string | null;
+          won_at?: string | null;
+          lost_at?: string | null;
+          lost_reason?: string | null;
+          notes?: string | null;
+        };
+        Relationships: [];
+      };
       client: {
         Row: {
           id: string;
@@ -1275,6 +1428,14 @@ export type Database = {
           entry_date: string | null;
           notes: string | null;
           address: string | null;
+          /** Endereço em campos, desde a 0058 — o CEP preenche. */
+          zip_code: string | null;
+          street: string | null;
+          number: string | null;
+          complement: string | null;
+          district: string | null;
+          city: string | null;
+          state: string | null;
           representative_name: string | null;
           representative_document: string | null;
           created_at: string;
@@ -1293,6 +1454,13 @@ export type Database = {
           entry_date?: string | null;
           notes?: string | null;
           address?: string | null;
+          zip_code?: string | null;
+          street?: string | null;
+          number?: string | null;
+          complement?: string | null;
+          district?: string | null;
+          city?: string | null;
+          state?: string | null;
           representative_name?: string | null;
           representative_document?: string | null;
           created_at?: string;
@@ -1311,6 +1479,13 @@ export type Database = {
           entry_date?: string | null;
           notes?: string | null;
           address?: string | null;
+          zip_code?: string | null;
+          street?: string | null;
+          number?: string | null;
+          complement?: string | null;
+          district?: string | null;
+          city?: string | null;
+          state?: string | null;
           representative_name?: string | null;
           representative_document?: string | null;
           created_at?: string;
@@ -1341,6 +1516,13 @@ export type Database = {
           address?: string | null;
           email?: string | null;
           phone?: string | null;
+          zip_code?: string | null;
+          street?: string | null;
+          number?: string | null;
+          complement?: string | null;
+          district?: string | null;
+          city?: string | null;
+          state?: string | null;
           representative_name?: string | null;
           representative_document?: string | null;
           representative_role?: string | null;
@@ -1355,6 +1537,13 @@ export type Database = {
           address?: string | null;
           email?: string | null;
           phone?: string | null;
+          zip_code?: string | null;
+          street?: string | null;
+          number?: string | null;
+          complement?: string | null;
+          district?: string | null;
+          city?: string | null;
+          state?: string | null;
           representative_name?: string | null;
           representative_document?: string | null;
           representative_role?: string | null;
@@ -1537,6 +1726,10 @@ export type TaskTag = Tables<"task_tag">;
 export type GoogleConnection = Tables<"google_connection">;
 export type WorkspaceInvite = Tables<"workspace_invite">;
 export type Client = Tables<"client">;
+export type Deal = Tables<"deal">;
+export type Service = Tables<"service">;
+export type NotificationPreference = Tables<"notification_preference">;
+export type PipelineStage = Tables<"pipeline_stage">;
 export type WorkspaceProfile = Tables<"workspace_profile">;
 export type TaskParticipant = Tables<"task_participant">;
 export type TaskActivity = Tables<"task_activity">;

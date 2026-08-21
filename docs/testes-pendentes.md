@@ -174,3 +174,102 @@ Falta o que precisa de duas pessoas ao mesmo tempo:
 - [ ] A reação de A aparece para B no ciclo de seis segundos do chat.
 - [ ] Numa conversa direta de terceiros, a reação não vaza — é o mesmo teste
       de isolamento da seção 3, agora também para `chat_message_reaction`.
+
+---
+
+## 10. Funil de vendas (21/ago)
+
+Já verificado rodando, na tela e com sessão de membro comum: criar
+negociação com cliente novo (que entra como prospecto), card aparecendo em
+"Novo lead", total da coluna e "em aberto" subindo para R$ 450.000,00, mover
+para "Fechado" marcando ganho e promovendo o cliente a ativo com aviso na
+tela, "em aberto" voltando a zero e conversão indo a 100%, mover para
+"Perdido" abrindo a caixa de motivo e gravando o texto. No banco: voltar a
+uma etapa aberta limpa `won_at`/`lost_at`, ganha e perdida ao mesmo tempo é
+recusada pelo check, e excluir etapa com negociação dentro devolve 23503.
+Onze testes de unidade cobrem totais, ordem e desfecho.
+
+Falta o que a automação não alcança bem:
+
+- [ ] **Arrastar de verdade**, com o mouse, entre colunas — o que foi
+      exercitado foi o menu "mover para outra coluna" do card, que passa
+      pelo mesmo caminho, mas não é o gesto que a pessoa usa.
+- [ ] Reordenar e renomear etapa, e criar uma etapa nova (a nova precisa
+      entrar antes de "Fechado", não depois).
+- [ ] Funil com volume — dezenas de negociações por coluna, para ver se a
+      soma no cabeçalho e o arraste continuam suaves.
+
+---
+
+## 11. Catálogo, consultas, teste e vencidos (21/ago)
+
+Já verificado rodando, na tela: cadastrar três serviços e vê-los na lista;
+no funil, clicar em dois somando título e valor (250.000 + 150.000 =
+400.000); consulta de CNPJ preenchendo razão social, fantasia, telefone,
+CEP, rua, número, bairro, cidade e UF a partir de 00000000000191; consulta
+de CEP preenchendo Rua Paraná / Centro / Cascavel / PR, e CEP incompleto não
+disparando busca; faixa "Teste grátis — faltam 5 dias"; escolher o plano Pro
+gravando e a faixa sumindo; blocos de vencidos somando R$ 2.500,00 a receber
+e R$ 800,00 a pagar, com "mais de 1 mês" de atraso. A correção da 0059 foi
+verificada com sessão de dono comum: as cinco escritas comerciais devolvem
+42501 e renomear continua permitido.
+
+Falta o que precisa de gente ou de tempo:
+
+- [ ] **Cadastro real ganhando os 7 dias.** O trigger foi verificado por
+      código, mas a faixa e a contagem só aparecem de verdade num cadastro
+      novo feito por e-mail real.
+- [ ] **Serviço desativado sumindo do funil** e continuando na tela de
+      Serviços.
+- [ ] **Consulta com o serviço fora do ar.** minhareceita.org é instância
+      pública mantida pela comunidade; a rota devolve 502 e a tela manda
+      preencher à mão, mas isso não foi visto acontecendo.
+- [ ] **CNPJ com situação diferente de ATIVA** mostrando o aviso.
+- [ ] Cliente antigo (com `address` de texto livre) sendo reeditado: o campo
+      "Endereço anterior" precisa sumir assim que a rua nova for preenchida.
+
+---
+
+## 12. Barra lateral e bloqueio de cadastros (21/ago)
+
+Já verificado rodando: a navegação caiu de 502px para 289px e os setores
+subiram de 34px para 297px (sete visíveis) num viewport de 1366×768; o grupo
+Comercial abre com os cinco itens, grava o cookie `nav_comercial` e mantém as
+dicas `6` e `7`; "Plataforma" aparece no menu da conta. O interruptor de
+cadastros liga e desliga pelo painel e a rota pública `/api/signups`
+acompanha. Contra o banco: cadastro novo recusado com a porta fechada,
+**convidado com convite pendente entrando mesmo assim**, convite vencido
+recusado, e tudo voltando ao normal ao reabrir.
+
+Falta o que precisa de outra sessão ou de outra pessoa:
+
+- [ ] **A mensagem traduzida na tela de login.** Cada elo foi verificado em
+      separado (o erro bruto é "Database error creating new user"; a rota
+      devolve `open:false`), mas a frase amigável não foi vista na tela —
+      exige um navegador sem sessão.
+- [ ] **Cadastro pelo Google com a porta fechada.** O erro volta pelo
+      `/auth/callback`, que hoje manda para `/login?error=auth` sem a
+      tradução.
+- [ ] **Convite por link aberto com a porta fechada**, para confirmar que o
+      aviso da tela corresponde ao que acontece.
+- [ ] A barra lateral num monitor menor ainda (1280×720) e no celular.
+
+---
+
+## 13. Configurações em abas (21/ago)
+
+Já verificado rodando: as cinco abas trocam de conteúdo; Assinatura mostra
+"Ativa / Plano Pro / R$ 99,00 por mês" com o seletor de planos junto;
+Notificações mostra os seis interruptores; e desligar "Prazos" zerou o
+contador do sino (de "1 pendente" para nenhum), com o aviso voltando ao
+religar. Sete testes de unidade cobrem o filtro, incluindo que a lista de
+origem continua inteira — o filtro é de exibição.
+
+Falta:
+
+- [ ] Preferência com **duas pessoas**: A desliga menções e continua sem ver;
+      B, que não mexeu em nada, continua vendo as dele.
+- [ ] Voltar do Google Agenda (`/config?gcal=ok`) abrindo direto na aba
+      Geral, que é onde está o cartão de integração.
+- [ ] A aba Assinatura vista por quem **está em teste de verdade** (a minha
+      empresa tem plano; o caso do trial só apareceu com dado forçado).
