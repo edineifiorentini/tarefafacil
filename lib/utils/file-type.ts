@@ -1,6 +1,7 @@
 // Validação de arquivo por magic number (não pela extensão) — seção 10.2.
 // Bloqueia executáveis mesmo renomeados; permite imagens, PDF, zip-family
-// (docx/xlsx/pptx/zip) e textos (txt/md/csv/svg) pela extensão.
+// (docx/xlsx/pptx/zip), áudio (recado de voz) e textos (txt/md/csv/svg)
+// pela extensão.
 
 const MAX_BYTES = 25 * 1024 * 1024; // 25 MB
 const TEXT_EXT = ["txt", "md", "csv", "svg"];
@@ -24,12 +25,24 @@ function detectMime(bytes: Uint8Array): string | null {
   if (startsWith(bytes, [0x89, 0x50, 0x4e, 0x47])) return "image/png";
   if (startsWith(bytes, [0xff, 0xd8, 0xff])) return "image/jpeg";
   if (startsWith(bytes, [0x47, 0x49, 0x46, 0x38])) return "image/gif";
-  if (
-    startsWith(bytes, [0x52, 0x49, 0x46, 0x46]) &&
-    startsWith(bytes, [0x57, 0x45, 0x42, 0x50], 8)
-  )
-    return "image/webp";
+  if (startsWith(bytes, [0x52, 0x49, 0x46, 0x46])) {
+    // RIFF é contêiner: quem diz o que é são os quatro bytes do offset 8.
+    if (startsWith(bytes, [0x57, 0x45, 0x42, 0x50], 8)) return "image/webp";
+    if (startsWith(bytes, [0x57, 0x41, 0x56, 0x45], 8)) return "audio/wav";
+    return null;
+  }
   if (startsWith(bytes, [0x25, 0x50, 0x44, 0x46])) return "application/pdf";
+
+  // --- Recado de voz -------------------------------------------------
+  // O MediaRecorder entrega WebM (EBML) no Chrome e no Firefox e MP4
+  // (ftyp, no offset 4) no Safari. Os dois contêineres também carregam
+  // vídeo, então o rótulo devolvido aqui é só o palpite do contêiner: o
+  // mime final vem de `file.type`, quando o navegador informa. Isso não
+  // afrouxa a trava — executável renomeado continua parando na lista de
+  // assinaturas bloqueadas e em não ser reconhecido por nenhuma destas.
+  if (startsWith(bytes, [0x1a, 0x45, 0xdf, 0xa3])) return "audio/webm";
+  if (startsWith(bytes, [0x66, 0x74, 0x79, 0x70], 4)) return "audio/mp4";
+  if (startsWith(bytes, [0x4f, 0x67, 0x67, 0x53])) return "audio/ogg";
   if (
     startsWith(bytes, [0x50, 0x4b, 0x03, 0x04]) ||
     startsWith(bytes, [0x50, 0x4b, 0x05, 0x06]) ||

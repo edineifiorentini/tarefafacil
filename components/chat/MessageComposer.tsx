@@ -2,6 +2,7 @@
 
 import {
   IconAt,
+  IconMicrophone,
   IconPaperclip,
   IconSend,
   IconTag,
@@ -10,9 +11,11 @@ import {
 import { DropdownMenu } from "radix-ui";
 import { useRef, useState } from "react";
 
+import { VoiceRecorder } from "@/components/chat/VoiceRecorder";
 import { Button } from "@/components/ui/Button";
 import { Textarea } from "@/components/ui/Textarea";
 import { useToast } from "@/components/ui/Toast";
+import { formatDuration } from "@/lib/chat/audio";
 import { useSendMessage } from "@/lib/queries/useChat";
 import {
   useCurrentUserId,
@@ -57,6 +60,9 @@ export function MessageComposer({
   // etiqueta anterior para a próxima mensagem etiquetaria coisa errada.
   const [sectorId, setSectorId] = useState<string | null>(null);
   const [arquivo, setArquivo] = useState<File | null>(null);
+  // Só existe quando o arquivo veio do gravador. É o que o tocador usa para
+  // dizer a duração sem baixar o áudio.
+  const [duracaoMs, setDuracaoMs] = useState<number | null>(null);
   const seletor = useRef<HTMLInputElement>(null);
   const setorEscolhido = sectors.find((x) => x.id === sectorId);
 
@@ -68,7 +74,9 @@ export function MessageComposer({
   function mention(m: Member) {
     const nome = m.display_name ?? m.email;
     setBody((b) => `${b}${b && !b.endsWith(" ") ? " " : ""}@${nome} `);
-    setMentioned((ids) => (ids.includes(m.user_id) ? ids : [...ids, m.user_id]));
+    setMentioned((ids) =>
+      ids.includes(m.user_id) ? ids : [...ids, m.user_id]
+    );
   }
 
   function submit() {
@@ -89,18 +97,19 @@ export function MessageComposer({
         replyToId: replyTo?.id ?? null,
         sectorId,
         file: arquivo,
+        audioDurationMs: duracaoMs,
       },
       {
         onError: (e) =>
           toast.show({
-            message:
-              e instanceof Error ? e.message : "Não foi possível enviar",
+            message: e instanceof Error ? e.message : "Não foi possível enviar",
           }),
         onSuccess: () => {
           setBody("");
           setMentioned([]);
           setSectorId(null);
           setArquivo(null);
+          setDuracaoMs(null);
           if (seletor.current) seletor.current.value = "";
           onCancelReply();
         },
@@ -144,20 +153,32 @@ export function MessageComposer({
 
       {arquivo ? (
         <div className="bg-sunken flex items-center gap-2 rounded-sm px-2 py-1.5">
-          <IconPaperclip
-            size={14}
-            stroke={1.75}
-            aria-hidden
-            className="text-fg-secondary shrink-0"
-          />
+          {duracaoMs ? (
+            <IconMicrophone
+              size={14}
+              stroke={1.75}
+              aria-hidden
+              className="text-fg-secondary shrink-0"
+            />
+          ) : (
+            <IconPaperclip
+              size={14}
+              stroke={1.75}
+              aria-hidden
+              className="text-fg-secondary shrink-0"
+            />
+          )}
           <span className="text-fg min-w-0 flex-1 truncate text-[length:var(--text-caption-size)]">
-            {arquivo.name}
+            {duracaoMs
+              ? `Recado de voz · ${formatDuration(duracaoMs)}`
+              : arquivo.name}
           </span>
           <button
             type="button"
-            aria-label="Remover arquivo"
+            aria-label={duracaoMs ? "Descartar recado" : "Remover arquivo"}
             onClick={() => {
               setArquivo(null);
+              setDuracaoMs(null);
               if (seletor.current) seletor.current.value = "";
             }}
             className="text-fg-secondary hover:bg-hover hover:text-fg inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-xs transition-colors [transition-duration:var(--dur-fast)]"
@@ -224,7 +245,12 @@ export function MessageComposer({
           type="file"
           className="sr-only"
           aria-label="Escolher arquivo"
-          onChange={(e) => setArquivo(e.target.files?.[0] ?? null)}
+          onChange={(e) => {
+            // Anexar depois de gravar troca o recado pelo arquivo: a
+            // mensagem carrega um arquivo só (0048).
+            setArquivo(e.target.files?.[0] ?? null);
+            setDuracaoMs(null);
+          }}
         />
         <button
           type="button"
@@ -234,6 +260,15 @@ export function MessageComposer({
           <IconPaperclip size={14} stroke={1.5} />
           Anexar
         </button>
+
+        <VoiceRecorder
+          disabled={send.isPending}
+          onReady={(file, ms) => {
+            setArquivo(file);
+            setDuracaoMs(ms);
+            if (seletor.current) seletor.current.value = "";
+          }}
+        />
 
         <DropdownMenu.Root>
           <DropdownMenu.Trigger asChild>

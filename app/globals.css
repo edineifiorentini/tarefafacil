@@ -484,3 +484,11 @@ button:not(:disabled),
     background-position: -200% 0;
   }
 }
+
+/* Ponto vermelho de "gravando". Pisca sem sumir: opacidade zero pareceria
+   erro de render, e quem grava precisa ver que ainda está gravando. */
+@keyframes tf-pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
