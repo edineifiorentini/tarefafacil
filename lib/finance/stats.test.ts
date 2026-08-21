@@ -2,7 +2,14 @@ import { describe, expect, it } from "vitest";
 
 import type { FinanceEntry } from "@/types/database";
 
-import { computeFinanceStats, isOverdue } from "./stats";
+import { localDayISO } from "@/lib/dates/day";
+
+import {
+  computeFinanceStats,
+  daysOverdue,
+  isOverdue,
+  overdueBreakdown,
+} from "./stats";
 
 const NOW = new Date("2026-08-14T12:00:00Z");
 
@@ -148,5 +155,60 @@ describe("isOverdue", () => {
         NOW
       )
     ).toBe(false);
+  });
+});
+
+describe("vencidos", () => {
+  // 20h no fuso de Brasília (23h em UTC) — a janela em que o cálculo em UTC
+  // já achava que era o dia seguinte.
+  const noite = new Date("2026-08-21T23:00:00Z");
+
+  it("conta que vence hoje não está vencida, nem às 20h", () => {
+    const hoje = localDayISO(noite);
+    expect(isOverdue(entry({ due_date: hoje }), noite)).toBe(false);
+  });
+
+  it("conta de ontem está vencida", () => {
+    expect(isOverdue(entry({ due_date: "2026-08-01" }), noite)).toBe(true);
+  });
+
+  it("confirmada nunca é vencida", () => {
+    const paga = entry({ due_date: "2026-01-01", status: "confirmado" });
+    expect(isOverdue(paga, noite)).toBe(false);
+  });
+
+  it("separa receber de pagar e soma cada lado", () => {
+    const r = overdueBreakdown(
+      [
+        entry({ id: "a", due_date: "2026-08-01", amount_cents: 100000 }),
+        entry({ id: "b", due_date: "2026-07-01", amount_cents: 50000 }),
+        entry({
+          id: "c",
+          due_date: "2026-08-05",
+          kind: "saida",
+          amount_cents: 30000,
+        }),
+        entry({ id: "d", due_date: "2026-12-01", amount_cents: 999 }),
+      ],
+      noite
+    );
+    expect(r.aReceber.cents).toBe(150000);
+    expect(r.aPagar.cents).toBe(30000);
+    // Mais antiga primeiro: é a que dói.
+    expect(r.aReceber.entries.map((e) => e.id)).toEqual(["b", "a"]);
+  });
+
+  it("não recorta por mês — conta velha continua vencida", () => {
+    const r = overdueBreakdown(
+      [entry({ id: "x", due_date: "2026-03-10" })],
+      noite
+    );
+    expect(r.aReceber.entries).toHaveLength(1);
+  });
+
+  it("conta os dias de atraso a partir de um", () => {
+    expect(daysOverdue(entry({ due_date: "2026-08-20" }), noite)).toBe(1);
+    expect(daysOverdue(entry({ due_date: "2026-08-11" }), noite)).toBe(10);
+    expect(daysOverdue(entry({ due_date: "2026-09-01" }), noite)).toBe(0);
   });
 });

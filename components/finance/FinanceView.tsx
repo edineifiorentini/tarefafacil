@@ -30,7 +30,9 @@ import {
   computeFinanceStats,
   entriesForMonth,
   isOverdue,
+  overdueBreakdown,
 } from "@/lib/finance/stats";
+import { useAsOf } from "@/lib/queries/useAsOf";
 import { useClients } from "@/lib/queries/useClients";
 import {
   useConfirmFinanceEntry,
@@ -46,6 +48,7 @@ import type {
 } from "@/types/database";
 
 import { CashFlowChart } from "./CashFlowChart";
+import { OverduePanel } from "./OverduePanel";
 import { FinanceEntryForm } from "./FinanceEntryForm";
 import { GoalGauge } from "./GoalGauge";
 import { InvoiceSummary } from "./InvoiceSummary";
@@ -68,7 +71,11 @@ export function FinanceView() {
   const myRole = members.find((m) => m.user_id === myId)?.role;
   const canManage = myRole === "owner" || myRole === "admin";
 
-  const { data: entries = [], isLoading } = useFinanceEntries(workspace.id);
+  const {
+    data: entries = [],
+    isLoading,
+    dataUpdatedAt,
+  } = useFinanceEntries(workspace.id);
   const { data: clients = [] } = useClients(workspace.id);
   const confirmEntry = useConfirmFinanceEntry(workspace.id);
   const deleteEntry = useDeleteFinanceEntry(workspace.id);
@@ -111,6 +118,13 @@ export function FinanceView() {
   const stats = useMemo(
     () => computeFinanceStats(entries, month),
     [entries, month]
+  );
+  // Relógio que acompanha a atualização da consulta: sem isto, quem deixa a
+  // tela aberta vira o dia sem que nada passe a contar como vencido.
+  const agora = useAsOf(dataUpdatedAt);
+  const vencidos = useMemo(
+    () => overdueBreakdown(entries, agora),
+    [entries, agora]
   );
   const cashFlow = useMemo(
     () => buildCashFlowSeries(entries, month, months, cashFlowMode),
@@ -240,6 +254,13 @@ export function FinanceView() {
           tone="var(--tone-amber)"
         />
       </div>
+
+      <OverduePanel
+        aReceber={vencidos.aReceber}
+        aPagar={vencidos.aPagar}
+        now={agora}
+        onOpen={openForm}
+      />
 
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="border-line bg-card flex flex-col gap-3 rounded-md border p-4 lg:col-span-2">
