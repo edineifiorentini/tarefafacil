@@ -57,8 +57,8 @@ const staticPages: Record<string, PageMeta> = {
     subtitle: "Vigência, honorários e assinatura.",
   },
   "/admin": {
-    title: "Contas",
-    subtitle: "Workspaces, planos e acessos da plataforma.",
+    title: "Plataforma",
+    subtitle: "Empresas, planos e acessos.",
   },
   "/config": {
     title: "Configurações",

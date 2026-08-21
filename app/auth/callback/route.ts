@@ -1,5 +1,7 @@
+import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
+import { atribuirIndicacao, REF_COOKIE } from "@/lib/admin/referral";
 import { createClient } from "@/lib/supabase/server";
 
 // Troca o code (PKCE) por uma sessão. Serve tanto para magic link quanto para
@@ -13,9 +15,22 @@ export async function GET(request: Request) {
 
   if (code) {
     const supabase = await createClient();
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
-      return NextResponse.redirect(`${origin}${next}`);
+      const resposta = NextResponse.redirect(`${origin}${next}`);
+
+      // Veio por link de indicação? É aqui que o cadastro novo encontra o
+      // afiliado — a função só atribui workspace recém-criado e sem dono de
+      // indicação, então login de quem já é cliente passa reto.
+      const ref = (await cookies()).get(REF_COOKIE)?.value;
+      if (ref && data.user) {
+        await atribuirIndicacao(data.user.id, ref);
+        // Consumido: deixar o cookie vivo faria a próxima conta criada no
+        // mesmo navegador contar de novo para o mesmo afiliado.
+        resposta.cookies.delete(REF_COOKIE);
+      }
+
+      return resposta;
     }
   }
 

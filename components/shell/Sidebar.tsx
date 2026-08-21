@@ -212,7 +212,7 @@ export function Sidebar({
             className={navItemClass(isActive("/admin"))}
           >
             <IconBuildingStore size={20} stroke={1.75} aria-hidden />
-            <span className="flex-1 truncate">Contas</span>
+            <span className="flex-1 truncate">Plataforma</span>
           </Link>
         ) : null}
         <Link

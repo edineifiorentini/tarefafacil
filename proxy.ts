@@ -42,6 +42,9 @@ export async function proxy(request: NextRequest) {
     path.startsWith("/convite") ||
     // Link público de demanda: quem abre não tem conta, por definição.
     path.startsWith("/d/") ||
+    // Link de indicação: existe justamente para trazer quem ainda não tem
+    // conta. Ele grava o clique e manda para o login.
+    path.startsWith("/r/") ||
     // Webhook do Google: chamado sem sessão (o Google não tem cookie).
     path.startsWith("/api/gcal/webhook") ||
     // Cron da Vercel: chega sem sessão e se autentica pelo CRON_SECRET, que a

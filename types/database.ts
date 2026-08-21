@@ -40,6 +40,9 @@ export type ChatChannelKind = "geral" | "grupo" | "direta";
 export type AuditAction = "criou" | "alterou" | "excluiu";
 /** Periodicidade de lançamento recorrente. "unico" não é recorrência. */
 export type RecurrenceFrequency = "mensal" | "trimestral" | "anual";
+/** Situação da assinatura do próprio SaaS. */
+export type SubscriptionStatus = "ativa" | "pendente" | "vencida" | "cancelada";
+export type ChargeStatus = "aberta" | "paga" | "expirada" | "cancelada";
 
 export type Database = {
   public: {
@@ -50,9 +53,20 @@ export type Database = {
           name: string;
           owner_user_id: string | null;
           plan: Plan;
+          /** Plano atribuído. Fonte de verdade desde a 0050. */
+          plan_id: string | null;
+          /** Período de avaliação — sem cobrança. */
+          trial: boolean;
+          /** Contato de cobrança, que nem sempre é o de quem usa. */
+          contact_email: string | null;
+          contact_phone: string | null;
           seat_limit: number;
           access_expires_at: string | null;
           suspended: boolean;
+          /** Indicação: null quando a empresa chegou sozinha. */
+          affiliate_id: string | null;
+          /** Cópia do percentual do afiliado no momento da indicação. */
+          affiliate_percent: number | null;
           created_at: string;
         };
         Insert: {
@@ -60,9 +74,15 @@ export type Database = {
           name: string;
           owner_user_id?: string | null;
           plan?: Plan;
+          plan_id?: string | null;
+          trial?: boolean;
+          contact_email?: string | null;
+          contact_phone?: string | null;
           seat_limit?: number;
           access_expires_at?: string | null;
           suspended?: boolean;
+          affiliate_id?: string | null;
+          affiliate_percent?: number | null;
           created_at?: string;
         };
         Update: {
@@ -70,9 +90,16 @@ export type Database = {
           name?: string;
           owner_user_id?: string | null;
           plan?: Plan;
+          plan_id?: string | null;
+          trial?: boolean;
+          contact_email?: string | null;
+          contact_phone?: string | null;
           seat_limit?: number;
           access_expires_at?: string | null;
           suspended?: boolean;
+          /** Indicação: afiliado e o percentual combinado na época. */
+          affiliate_id?: string | null;
+          affiliate_percent?: number | null;
           created_at?: string;
         };
         Relationships: [];
@@ -902,6 +929,174 @@ export type Database = {
         Update: { revoked_at?: string | null; label?: string | null };
         Relationships: [];
       };
+      billing_plan: {
+        Row: {
+          id: string;
+          name: string;
+          price_cents: number;
+          /** Assentos concedidos. Vira `workspace.seat_limit` ao atribuir. */
+          max_users: number;
+          /** Aparece para quem se cadastra sozinho. */
+          is_public: boolean;
+          active: boolean;
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          price_cents: number;
+          max_users: number;
+          is_public?: boolean;
+          active?: boolean;
+          notes?: string | null;
+        };
+        Update: {
+          name?: string;
+          price_cents?: number;
+          max_users?: number;
+          is_public?: boolean;
+          active?: boolean;
+          notes?: string | null;
+        };
+        Relationships: [];
+      };
+      subscription: {
+        Row: {
+          workspace_id: string;
+          plan_id: string | null;
+          status: SubscriptionStatus;
+          billing_day: number;
+          provider: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          workspace_id: string;
+          plan_id?: string | null;
+          status?: SubscriptionStatus;
+          billing_day?: number;
+          provider?: string;
+        };
+        Update: {
+          plan_id?: string | null;
+          status?: SubscriptionStatus;
+          billing_day?: number;
+        };
+        Relationships: [];
+      };
+      subscription_charge: {
+        Row: {
+          id: string;
+          workspace_id: string;
+          plan_id: string | null;
+          /** Cópia do nome do plano na emissão — fatura não muda de valor. */
+          plan_name: string;
+          amount_cents: number;
+          period_start: string;
+          period_end: string;
+          status: ChargeStatus;
+          provider: string;
+          provider_charge_id: string | null;
+          qr_code: string | null;
+          copia_e_cola: string | null;
+          expires_at: string | null;
+          paid_at: string | null;
+          paid_amount_cents: number | null;
+          created_at: string;
+        };
+        Insert: {
+          workspace_id: string;
+          plan_id?: string | null;
+          plan_name: string;
+          amount_cents: number;
+          period_start: string;
+          period_end: string;
+          status?: ChargeStatus;
+          provider?: string;
+          provider_charge_id?: string | null;
+          qr_code?: string | null;
+          copia_e_cola?: string | null;
+          expires_at?: string | null;
+        };
+        Update: {
+          status?: ChargeStatus;
+          provider_charge_id?: string | null;
+          qr_code?: string | null;
+          copia_e_cola?: string | null;
+          paid_at?: string | null;
+          paid_amount_cents?: number | null;
+        };
+        Relationships: [];
+      };
+      payment_event: {
+        Row: {
+          id: string;
+          provider: string;
+          external_id: string;
+          payload: Json | null;
+          received_at: string;
+        };
+        Insert: {
+          provider?: string;
+          external_id: string;
+          payload?: Json | null;
+        };
+        Update: never;
+        Relationships: [];
+      };
+      affiliate: {
+        Row: {
+          id: string;
+          name: string;
+          email: string | null;
+          phone: string | null;
+          /** Trecho do link: /r/<code>. */
+          code: string;
+          commission_percent: number;
+          active: boolean;
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          email?: string | null;
+          phone?: string | null;
+          code: string;
+          commission_percent?: number;
+          active?: boolean;
+          notes?: string | null;
+        };
+        Update: {
+          name?: string;
+          email?: string | null;
+          phone?: string | null;
+          code?: string;
+          commission_percent?: number;
+          active?: boolean;
+          notes?: string | null;
+        };
+        Relationships: [];
+      };
+      affiliate_click: {
+        Row: {
+          id: string;
+          affiliate_id: string;
+          referrer: string | null;
+          user_agent: string | null;
+          created_at: string;
+        };
+        Insert: {
+          affiliate_id: string;
+          referrer?: string | null;
+          user_agent?: string | null;
+        };
+        Update: never;
+        Relationships: [];
+      };
       audit_log: {
         Row: {
           id: string;
@@ -961,6 +1156,12 @@ export type Database = {
           file_name: string | null;
           file_size_bytes: number | null;
           mime_type: string | null;
+          /**
+           * Duração do recado de voz, medida na gravação. WebM do
+           * MediaRecorder não traz duração no cabeçalho, e o tocador
+           * precisa dela antes de baixar o arquivo.
+           */
+          audio_duration_ms: number | null;
           created_at: string;
         };
         Insert: {
@@ -979,8 +1180,30 @@ export type Database = {
           file_name?: string | null;
           file_size_bytes?: number | null;
           mime_type?: string | null;
+          audio_duration_ms?: number | null;
           created_at?: string;
         };
+        Update: never;
+        Relationships: [];
+      };
+      chat_message_reaction: {
+        Row: {
+          message_id: string;
+          user_id: string;
+          /** Um dos sete de `lib/chat/reactions.ts` — o banco recusa outros. */
+          emoji: string;
+          workspace_id: string;
+          channel_id: string;
+          created_at: string;
+        };
+        Insert: {
+          message_id: string;
+          user_id: string;
+          emoji: string;
+          workspace_id: string;
+          channel_id: string;
+        };
+        // Trocar de reação é tirar e pôr; não há o que atualizar.
         Update: never;
         Relationships: [];
       };
@@ -1329,6 +1552,12 @@ export type ChatChannel = Tables<"chat_channel">;
 export type ChatMessage = Tables<"chat_message">;
 export type ChatReadState = Tables<"chat_read_state">;
 export type ChatChannelMember = Tables<"chat_channel_member">;
+export type ChatMessageReaction = Tables<"chat_message_reaction">;
 export type AuditLog = Tables<"audit_log">;
 export type ShareLink = Tables<"share_link">;
+export type BillingPlan = Tables<"billing_plan">;
+export type Subscription = Tables<"subscription">;
+export type SubscriptionCharge = Tables<"subscription_charge">;
 export type FinanceRecurrence = Tables<"finance_recurrence">;
+export type Affiliate = Tables<"affiliate">;
+export type AffiliateClick = Tables<"affiliate_click">;
