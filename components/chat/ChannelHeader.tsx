@@ -104,7 +104,10 @@ export function ChannelHeader({
       />
 
       {renaming ? (
-        <form onSubmit={confirmarNome} className="flex flex-1 items-center gap-2">
+        <form
+          onSubmit={confirmarNome}
+          className="flex flex-1 items-center gap-2"
+        >
           <TextInput
             size="sm"
             value={novoNome}

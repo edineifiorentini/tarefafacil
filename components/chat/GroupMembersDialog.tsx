@@ -129,7 +129,9 @@ export function GroupMembersDialog({
                                 : "border-line"
                             }`}
                           >
-                            {marcado ? <IconCheck size={12} stroke={3} /> : null}
+                            {marcado ? (
+                              <IconCheck size={12} stroke={3} />
+                            ) : null}
                           </span>
                           <span className="text-fg min-w-0 flex-1 truncate text-[length:var(--text-small-size)]">
                             {nome}

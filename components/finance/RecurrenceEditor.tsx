@@ -59,7 +59,8 @@ export function RecurrenceEditor({
         applyToFuture: alcance !== "regra",
         // "Todas as não realizadas" alcança até o que já venceu e continua
         // previsto; "daqui para frente" começa hoje.
-        fromDate: alcance === "todas" ? rule.starts_on : localDayISO(new Date()),
+        fromDate:
+          alcance === "todas" ? rule.starts_on : localDayISO(new Date()),
       },
       {
         onSuccess: () => {

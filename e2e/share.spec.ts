@@ -69,8 +69,19 @@ test.beforeAll(async () => {
     .select()
     .single();
   await db.from("subtask").insert([
-    { workspace_id: ws!.id, task_id: tarefa!.id, title: "Orçamento", position: 0, completed_at: new Date().toISOString() },
-    { workspace_id: ws!.id, task_id: tarefa!.id, title: "Licitação", position: 1 },
+    {
+      workspace_id: ws!.id,
+      task_id: tarefa!.id,
+      title: "Orçamento",
+      position: 0,
+      completed_at: new Date().toISOString(),
+    },
+    {
+      workspace_id: ws!.id,
+      task_id: tarefa!.id,
+      title: "Licitação",
+      position: 1,
+    },
   ]);
 
   const base = {

@@ -47,7 +47,8 @@ export type ShareResult =
 
 export async function readSharedTask(token: string): Promise<ShareResult> {
   // Token com formato errado nem chega ao banco.
-  if (!/^[0-9a-f]{32,80}$/.test(token)) return { ok: false, reason: "inexistente" };
+  if (!/^[0-9a-f]{32,80}$/.test(token))
+    return { ok: false, reason: "inexistente" };
 
   const db = createAdminClient();
 
@@ -80,29 +81,33 @@ export async function readSharedTask(token: string): Promise<ShareResult> {
     return { ok: false, reason: "inexistente" };
   }
 
-  const [{ data: sector }, { data: assignee }, { data: subtasks }, { data: org }] =
-    await Promise.all([
-      task.sector_id
-        ? db.from("sector").select("name").eq("id", task.sector_id).maybeSingle()
-        : Promise.resolve({ data: null }),
-      task.assignee_id
-        ? db
-            .from("app_user")
-            .select("display_name")
-            .eq("id", task.assignee_id)
-            .maybeSingle()
-        : Promise.resolve({ data: null }),
-      db
-        .from("subtask")
-        .select("title, completed_at")
-        .eq("task_id", link.entity_id)
-        .order("position", { ascending: true }),
-      db
-        .from("workspace")
-        .select("name")
-        .eq("id", link.workspace_id)
-        .maybeSingle(),
-    ]);
+  const [
+    { data: sector },
+    { data: assignee },
+    { data: subtasks },
+    { data: org },
+  ] = await Promise.all([
+    task.sector_id
+      ? db.from("sector").select("name").eq("id", task.sector_id).maybeSingle()
+      : Promise.resolve({ data: null }),
+    task.assignee_id
+      ? db
+          .from("app_user")
+          .select("display_name")
+          .eq("id", task.assignee_id)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+    db
+      .from("subtask")
+      .select("title, completed_at")
+      .eq("task_id", link.entity_id)
+      .order("position", { ascending: true }),
+    db
+      .from("workspace")
+      .select("name")
+      .eq("id", link.workspace_id)
+      .maybeSingle(),
+  ]);
 
   return {
     ok: true,
@@ -119,7 +124,10 @@ export async function readSharedTask(token: string): Promise<ShareResult> {
       // display_name e não e-mail: e-mail é dado pessoal e não ajuda o
       // visitante em nada.
       assigneeName: assignee?.display_name ?? null,
-      subtasks: (subtasks ?? []).map((s) => ({ title: s.title, done: s.completed_at !== null })),
+      subtasks: (subtasks ?? []).map((s) => ({
+        title: s.title,
+        done: s.completed_at !== null,
+      })),
       updatedAt: task.updated_at,
       orgName: org?.name ?? null,
     },

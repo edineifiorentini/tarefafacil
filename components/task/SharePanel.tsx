@@ -165,8 +165,8 @@ export function SharePanel({
 
       {ativos.length > 1 ? (
         <p className="text-fg-muted text-[length:var(--text-caption-size)]">
-          Há {ativos.length} links ativos. Cada um funciona sozinho — revogue
-          os que não usa.
+          Há {ativos.length} links ativos. Cada um funciona sozinho — revogue os
+          que não usa.
         </p>
       ) : null}
     </div>

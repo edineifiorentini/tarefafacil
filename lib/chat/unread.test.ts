@@ -67,17 +67,16 @@ describe("unreadByChannel", () => {
   });
 
   it("marca o canal quando alguma mensagem menciona você", () => {
-    const messages = [
-      msg({}),
-      msg({ mentioned_user_ids: [EU] }),
-    ];
+    const messages = [msg({}), msg({ mentioned_user_ids: [EU] })];
     const u = unreadByChannel(messages, [], EU).get(CANAL);
     expect(u).toEqual({ count: 2, mentionsMe: true });
   });
 
   it("menção a outra pessoa não destaca o meu canal", () => {
     const messages = [msg({ mentioned_user_ids: [OUTRO] })];
-    expect(unreadByChannel(messages, [], EU).get(CANAL)?.mentionsMe).toBe(false);
+    expect(unreadByChannel(messages, [], EU).get(CANAL)?.mentionsMe).toBe(
+      false
+    );
   });
 
   it("separa por canal", () => {
@@ -152,7 +151,11 @@ describe("isContinuation", () => {
 
   it("aviso de sistema nunca se agrupa", () => {
     const a = msg({ kind: "sistema", author_id: null });
-    const b = msg({ kind: "sistema", author_id: null, created_at: "2026-08-17T10:01:00Z" });
+    const b = msg({
+      kind: "sistema",
+      author_id: null,
+      created_at: "2026-08-17T10:01:00Z",
+    });
     expect(isContinuation(b, a)).toBe(false);
   });
 

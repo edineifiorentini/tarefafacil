@@ -34,7 +34,7 @@ export function ChartCard({
 
   return (
     <section
-      className={`@container border-line bg-card flex flex-col rounded-md border shadow-[var(--shadow-card)] ${className ?? ""}`}
+      className={`border-line bg-card @container flex flex-col rounded-md border shadow-[var(--shadow-card)] ${className ?? ""}`}
     >
       {/* O título tem piso de 10rem: se as ações (seletor de período, link)
           não couberem ao lado, elas descem para a linha seguinte em vez de

@@ -46,8 +46,7 @@ export type FeedEvent = {
 };
 
 export type FeedItem =
-  | ({ nature: "alerta" } & DerivedAlert)
-  | ({ nature: "evento" } & FeedEvent);
+  ({ nature: "alerta" } & DerivedAlert) | ({ nature: "evento" } & FeedEvent);
 
 export function toFeedEvent(row: Notification): FeedEvent {
   return {

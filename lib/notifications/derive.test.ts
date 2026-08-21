@@ -145,8 +145,16 @@ describe("deriveTaskAlerts", () => {
 
   it("gestor vê o atraso da equipe, mas não o prazo futuro dela", () => {
     const tasks = [
-      task({ title: "Atraso alheio", due_date: "2026-08-10", assignee_id: OUTRO }),
-      task({ title: "Futuro alheio", due_date: "2026-08-18", assignee_id: OUTRO }),
+      task({
+        title: "Atraso alheio",
+        due_date: "2026-08-10",
+        assignee_id: OUTRO,
+      }),
+      task({
+        title: "Futuro alheio",
+        due_date: "2026-08-18",
+        assignee_id: OUTRO,
+      }),
     ];
     const alerts = deriveTaskAlerts(
       tasks,
@@ -258,7 +266,11 @@ describe("mergeFeed", () => {
     const feed = mergeFeed(
       [],
       [
-        event({ title: "Lido antigo", readAt: "2026-08-17T11:00:00Z", createdAt: "2026-08-15T00:00:00Z" }),
+        event({
+          title: "Lido antigo",
+          readAt: "2026-08-17T11:00:00Z",
+          createdAt: "2026-08-15T00:00:00Z",
+        }),
         event({ title: "Novo", createdAt: "2026-08-17T09:00:00Z" }),
         event({ title: "Mais novo", createdAt: "2026-08-17T10:00:00Z" }),
       ]

@@ -42,7 +42,12 @@ export default async function SharedTaskPage({
   if (!resultado.ok) {
     return (
       <main className="mx-auto flex min-h-dvh w-full max-w-lg flex-col items-center justify-center gap-3 px-6 text-center">
-        <IconEyeOff size={28} stroke={1.5} className="text-fg-muted" aria-hidden />
+        <IconEyeOff
+          size={28}
+          stroke={1.5}
+          className="text-fg-muted"
+          aria-hidden
+        />
         <h1 className="text-fg text-[length:var(--text-h2-size)] font-semibold">
           Acompanhamento indisponível
         </h1>
@@ -140,7 +145,9 @@ export default async function SharedTaskPage({
       ) : null}
 
       <footer className="text-fg-muted flex flex-wrap gap-x-4 gap-y-1 text-[length:var(--text-caption-size)]">
-        {view.assigneeName ? <span>Responsável: {view.assigneeName}</span> : null}
+        {view.assigneeName ? (
+          <span>Responsável: {view.assigneeName}</span>
+        ) : null}
         <span>Atualizado em {dataBR(view.updatedAt)}</span>
       </footer>
     </main>

@@ -1,8 +1,4 @@
-import {
-  endOfWeek,
-  parseISO,
-  subWeeks,
-} from "date-fns";
+import { endOfWeek, parseISO, subWeeks } from "date-fns";
 
 import { localDayISO, localDayOf, localMonthOf } from "@/lib/dates/day";
 import type { FinanceEntry, Task } from "@/types/database";
@@ -12,8 +8,6 @@ import type { FinanceEntry, Task } from "@/types/database";
  * reais (`created_at`, `completed_at`, `cancelled_at`, `due_date`) — nenhum
  * número é inventado para preencher gráfico.
  */
-
-
 
 /**
  * Instante atual. Fica aqui, fora de qualquer corpo de render: o React

@@ -32,7 +32,9 @@ describe("planOccurrences", () => {
 
   it("trimestral e anual respeitam o passo", () => {
     expect(
-      planOccurrences(rule({ frequency: "trimestral" }), 3).map((x) => x.dueDate)
+      planOccurrences(rule({ frequency: "trimestral" }), 3).map(
+        (x) => x.dueDate
+      )
     ).toEqual(["2026-09-05", "2026-12-05", "2027-03-05"]);
     expect(
       planOccurrences(rule({ frequency: "anual" }), 2).map((x) => x.dueDate)
@@ -98,9 +100,9 @@ describe("missingOccurrences", () => {
 
   it("buraco no meio é preenchido — apagar a ocorrência 2 a traz de volta", () => {
     const planejadas = planOccurrences(rule({}), 4);
-    expect(missingOccurrences(planejadas, [1, 3, 4]).map((o) => o.number)).toEqual(
-      [2]
-    );
+    expect(
+      missingOccurrences(planejadas, [1, 3, 4]).map((o) => o.number)
+    ).toEqual([2]);
   });
 
   it("sem nada gerado, tudo falta", () => {

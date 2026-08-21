@@ -81,7 +81,11 @@ describe("sortSectorIdsByName", () => {
       ["b", "Agricultura"],
       ["c", "Educação"],
     ]);
-    expect(sortSectorIdsByName(["a", "b", "c"], nomes)).toEqual(["b", "c", "a"]);
+    expect(sortSectorIdsByName(["a", "b", "c"], nomes)).toEqual([
+      "b",
+      "c",
+      "a",
+    ]);
   });
 
   it("id sem nome conhecido vai para o começo, sem quebrar", () => {

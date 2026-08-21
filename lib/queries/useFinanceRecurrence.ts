@@ -137,7 +137,8 @@ export function useGenerateOccurrences(workspaceId: string) {
       if (e2) throw e2;
       return faltando.length;
     },
-    onSettled: () => qc.invalidateQueries({ queryKey: entriesKey(workspaceId) }),
+    onSettled: () =>
+      qc.invalidateQueries({ queryKey: entriesKey(workspaceId) }),
   });
 }
 

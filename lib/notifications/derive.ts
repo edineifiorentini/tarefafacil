@@ -219,7 +219,5 @@ export function mergeFeed(
  * atraso — ele conta até deixar de existir) mais os eventos não lidos.
  */
 export function unreadCount(feed: FeedItem[]): number {
-  return feed.filter(
-    (item) => item.nature === "alerta" || !item.readAt
-  ).length;
+  return feed.filter((item) => item.nature === "alerta" || !item.readAt).length;
 }

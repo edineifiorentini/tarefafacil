@@ -98,7 +98,8 @@ export function decideCharge(input: {
   chargedPeriods: string[];
   now: Date;
 }): ChargeDecision {
-  if (input.status === "cancelada") return { charge: false, reason: "cancelada" };
+  if (input.status === "cancelada")
+    return { charge: false, reason: "cancelada" };
   // Plano gratuito não gera cobrança de R$ 0 — fatura de zero real só
   // confunde quem recebe.
   if (input.priceCents <= 0) {

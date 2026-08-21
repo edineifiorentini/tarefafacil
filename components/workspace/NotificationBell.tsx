@@ -29,7 +29,11 @@ import {
   unreadCount,
 } from "@/lib/notifications/derive";
 import { toFeedEvent } from "@/lib/notifications/types";
-import type { AlertKind, FeedItem, FeedTarget } from "@/lib/notifications/types";
+import type {
+  AlertKind,
+  FeedItem,
+  FeedTarget,
+} from "@/lib/notifications/types";
 import { useContracts } from "@/lib/queries/useContracts";
 import { useFinanceEntries } from "@/lib/queries/useFinance";
 import {
@@ -150,7 +154,10 @@ export function NotificationBell() {
   function go(target: FeedTarget) {
     setOpen(false);
     if (target.type === "task") {
-      openPanel({ title: "Tarefa", node: <TaskDetailPanel taskId={target.id} /> });
+      openPanel({
+        title: "Tarefa",
+        node: <TaskDetailPanel taskId={target.id} />,
+      });
       return;
     }
     if (target.type === "chat") {
@@ -258,7 +265,9 @@ export function NotificationBell() {
                     <Glyph
                       icon={EVENT_ICON[item.kind]}
                       tone={
-                        item.readAt ? "var(--color-fg-muted)" : "var(--brand-600)"
+                        item.readAt
+                          ? "var(--color-fg-muted)"
+                          : "var(--brand-600)"
                       }
                     />
                     <span className="min-w-0 flex-1">
@@ -360,13 +369,7 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
   );
 }
 
-function Glyph({
-  icon: Icon,
-  tone,
-}: {
-  icon: typeof IconBell;
-  tone: string;
-}) {
+function Glyph({ icon: Icon, tone }: { icon: typeof IconBell; tone: string }) {
   return (
     <span
       aria-hidden

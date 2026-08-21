@@ -73,8 +73,8 @@ export function AuditTrail({
         Auditoria
       </h2>
       <p className="text-fg-muted text-[length:var(--text-caption-size)]">
-        Movimentações de acesso, dinheiro, contratos e exclusões. O registro
-        não pode ser editado nem apagado.
+        Movimentações de acesso, dinheiro, contratos e exclusões. O registro não
+        pode ser editado nem apagado.
       </p>
 
       {isLoading ? (

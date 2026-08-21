@@ -55,13 +55,17 @@ describe("Toast", () => {
     act(() => void vi.advanceTimersByTime(2999));
     expect(screen.queryByText("Tarefa criada em Obras")).toBeInTheDocument();
     act(() => void vi.advanceTimersByTime(2));
-    expect(screen.queryByText("Tarefa criada em Obras")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("Tarefa criada em Obras")
+    ).not.toBeInTheDocument();
   });
 
   it("fecha na mão antes do tempo", () => {
     montar({ duration: 9000 });
     fireEvent.click(screen.getByRole("button", { name: "Fechar aviso" }));
-    expect(screen.queryByText("Tarefa criada em Obras")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("Tarefa criada em Obras")
+    ).not.toBeInTheDocument();
   });
 
   it("clicar na superfície dispara a ação e fecha", () => {
@@ -70,7 +74,9 @@ describe("Toast", () => {
     // Não é o rótulo "Ver tarefa" que é clicável, e sim o aviso inteiro.
     fireEvent.click(screen.getByText("Tarefa criada em Obras"));
     expect(acao).toHaveBeenCalledTimes(1);
-    expect(screen.queryByText("Tarefa criada em Obras")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("Tarefa criada em Obras")
+    ).not.toBeInTheDocument();
   });
 
   it("com o ponteiro em cima não some — ler não é corrida contra o relógio", () => {
@@ -88,7 +94,9 @@ describe("Toast", () => {
     act(() => void vi.advanceTimersByTime(10_000));
     fireEvent.mouseLeave(aviso);
     act(() => void vi.advanceTimersByTime(3001));
-    expect(screen.queryByText("Tarefa criada em Obras")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("Tarefa criada em Obras")
+    ).not.toBeInTheDocument();
   });
 
   it("sem ação, o aviso não vira botão", () => {

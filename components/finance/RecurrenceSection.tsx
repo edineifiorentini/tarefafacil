@@ -231,77 +231,79 @@ export function RecurrenceSection({ workspaceId }: { workspaceId: string }) {
           {rules.map((r) => (
             <li key={r.id} className="flex flex-col gap-2 py-2.5">
               <div className="flex flex-wrap items-center gap-2">
-              <div className="min-w-0 flex-1">
-                <p
-                  className={`text-[length:var(--text-small-size)] font-medium ${
-                    r.active ? "text-fg" : "text-fg-muted line-through"
-                  }`}
-                >
-                  {r.description}
-                  <span
-                    className="ml-2 rounded-xs px-1.5 text-[length:var(--text-caption-size)] font-normal"
-                    style={{
-                      color:
-                        r.kind === "entrada"
-                          ? "var(--color-positive)"
-                          : "var(--color-fg-secondary)",
-                      background: "var(--color-sunken)",
-                    }}
+                <div className="min-w-0 flex-1">
+                  <p
+                    className={`text-[length:var(--text-small-size)] font-medium ${
+                      r.active ? "text-fg" : "text-fg-muted line-through"
+                    }`}
                   >
-                    {r.kind === "entrada" ? "entrada" : "saída"}
-                  </span>
-                </p>
-                <p className="text-fg-muted text-[length:var(--text-caption-size)]">
-                  {ruleSummary(r, formatCentsBRL)}
-                </p>
-              </div>
+                    {r.description}
+                    <span
+                      className="ml-2 rounded-xs px-1.5 text-[length:var(--text-caption-size)] font-normal"
+                      style={{
+                        color:
+                          r.kind === "entrada"
+                            ? "var(--color-positive)"
+                            : "var(--color-fg-secondary)",
+                        background: "var(--color-sunken)",
+                      }}
+                    >
+                      {r.kind === "entrada" ? "entrada" : "saída"}
+                    </span>
+                  </p>
+                  <p className="text-fg-muted text-[length:var(--text-caption-size)]">
+                    {ruleSummary(r, formatCentsBRL)}
+                  </p>
+                </div>
 
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => setEditando(editando === r.id ? null : r.id)}
-              >
-                Editar
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => gerar(r)}
-                isLoading={generate.isPending}
-                disabled={!r.active}
-              >
-                Gerar previsões
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                aria-label={r.active ? "Pausar recorrência" : "Retomar recorrência"}
-                onClick={() => toggle.mutate({ id: r.id, active: !r.active })}
-              >
-                {r.active ? (
-                  <IconPlayerPause size={16} stroke={1.75} />
-                ) : (
-                  <IconPlayerPlay size={16} stroke={1.75} />
-                )}
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                aria-label={`Excluir recorrência ${r.description}`}
-                onClick={() => {
-                  // Os lançamentos já gerados ficam — o dinheiro daqueles
-                  // meses aconteceu. Vale dizer isso antes de apagar.
-                  if (
-                    window.confirm(
-                      "Excluir a regra? Os lançamentos já gerados continuam na lista."
-                    )
-                  ) {
-                    remove.mutate(r.id);
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setEditando(editando === r.id ? null : r.id)}
+                >
+                  Editar
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => gerar(r)}
+                  isLoading={generate.isPending}
+                  disabled={!r.active}
+                >
+                  Gerar previsões
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  aria-label={
+                    r.active ? "Pausar recorrência" : "Retomar recorrência"
                   }
-                }}
-              >
-                <IconTrash size={16} stroke={1.75} />
-              </Button>
+                  onClick={() => toggle.mutate({ id: r.id, active: !r.active })}
+                >
+                  {r.active ? (
+                    <IconPlayerPause size={16} stroke={1.75} />
+                  ) : (
+                    <IconPlayerPlay size={16} stroke={1.75} />
+                  )}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  aria-label={`Excluir recorrência ${r.description}`}
+                  onClick={() => {
+                    // Os lançamentos já gerados ficam — o dinheiro daqueles
+                    // meses aconteceu. Vale dizer isso antes de apagar.
+                    if (
+                      window.confirm(
+                        "Excluir a regra? Os lançamentos já gerados continuam na lista."
+                      )
+                    ) {
+                      remove.mutate(r.id);
+                    }
+                  }}
+                >
+                  <IconTrash size={16} stroke={1.75} />
+                </Button>
               </div>
 
               {editando === r.id ? (

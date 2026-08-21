@@ -39,8 +39,7 @@ const MAX_POR_EXECUCAO = 500;
 /** Os dois primeiros níveis do caminho de um anexo de demanda são UUIDs. */
 /** Segundo nível que marca arquivo de mensagem, não de demanda. */
 const PASTA_CHAT = "chat";
-const UUID =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function autorizado(request: Request): boolean {
   const segredo = process.env.CRON_SECRET;

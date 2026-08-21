@@ -34,7 +34,9 @@ describe("useAsOf", () => {
 
   it("antes da primeira resposta cai no instante da montagem, não em 1970", () => {
     const { getByTestId } = render(<Sonda updatedAt={0} />);
-    const ano = new Date(getByTestId("asof").textContent as string).getFullYear();
+    const ano = new Date(
+      getByTestId("asof").textContent as string
+    ).getFullYear();
     expect(ano).toBeGreaterThan(2000);
   });
 });

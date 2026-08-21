@@ -31,7 +31,9 @@ export function unreadByChannel(
   readState: ChatReadState[],
   myId: string | null
 ): Map<string, ChannelUnread> {
-  const lastRead = new Map(readState.map((r) => [r.channel_id, r.last_read_at]));
+  const lastRead = new Map(
+    readState.map((r) => [r.channel_id, r.last_read_at])
+  );
   const out = new Map<string, ChannelUnread>();
 
   for (const msg of messages) {
@@ -117,6 +119,7 @@ export function isContinuation(
   if (msg.kind !== "humano" || anterior.kind !== "humano") return false;
   if (msg.author_id !== anterior.author_id) return false;
   const diff =
-    parseISO(msg.created_at).getTime() - parseISO(anterior.created_at).getTime();
+    parseISO(msg.created_at).getTime() -
+    parseISO(anterior.created_at).getTime();
   return diff <= AGRUPA_MINUTOS * 60_000;
 }

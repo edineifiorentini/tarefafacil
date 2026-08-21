@@ -54,9 +54,7 @@ export function QuickAdd({ defaultSectorId }: { defaultSectorId?: string }) {
           // que confirma que ela foi parar no lugar certo.
           const setor = sectors.find((x) => x.id === data.sector_id)?.name;
           toast.show({
-            message: setor
-              ? `Tarefa criada em ${setor}`
-              : "Tarefa criada",
+            message: setor ? `Tarefa criada em ${setor}` : "Tarefa criada",
             actionLabel: "Ver tarefa",
             // 6s em vez de 5: este aviso tem ação, e ação precisa de tempo
             // para ser notada e alcançada.

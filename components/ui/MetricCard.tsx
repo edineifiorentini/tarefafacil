@@ -32,7 +32,7 @@ export function MetricCard({
   series?: number[];
 }) {
   return (
-    <article className="@container tf-lift border-line bg-card rounded-md border p-[var(--space-card-pad)] shadow-[var(--shadow-card)]">
+    <article className="tf-lift border-line bg-card @container rounded-md border p-[var(--space-card-pad)] shadow-[var(--shadow-card)]">
       {/* gap-3 e não gap-4: em 1280 com a grade de 4 colunas, os 4px extras
           eram o que faltava para "Taxa de conclusão" caber sem reticências. */}
       <div className="flex gap-3">
