@@ -112,6 +112,99 @@ chegou à barra lateral.
   escrita e revisada, mas exercitá-la de verdade exige dois usuários logados
   ao mesmo tempo. É o primeiro item a validar em homologação.
 
+**Recado de voz — entregue (21/ago/2026, migration 0054)**
+
+Gravar áudio na conversa, como no WhatsApp, mas com o recorte decidido pelo
+dono: teto de duração, duração visível antes de tocar, velocidade, e
+transcrição adiada.
+
+Não houve tabela nova. Recado de voz é o anexo da 0048 com um gravador na
+frente e um tocador atrás: `storage_key`, `mime_type`, `file_name` e
+`file_size_bytes` já existiam, o caminho `<workspace>/chat/<canal>/` já era o
+certo e a varredura de órfãos já reconhecia esse ramo. A 0054 acrescentou um
+campo só, `audio_duration_ms`.
+
+**Por que a duração vive no banco.** O tocador precisa dizer "0:42" ANTES de
+tocar — ler do arquivo exigiria assinar a URL e baixar o áudio de toda
+mensagem só para desenhar a lista. E não adiantaria: WebM saído do
+`MediaRecorder` não traz duração no cabeçalho, e o `<audio>` devolve
+`Infinity` até alguém procurar até o fim. Quem sabe quanto durou é quem
+gravou, e é lá que se mede. É por isso também que a barra de progresso usa
+`audio_duration_ms` como denominador, nunca `audio.duration`.
+
+**O validador aprendeu áudio.** `lib/utils/file-type.ts` reconhecia png,
+jpeg, gif, webp, pdf e zip por assinatura binária — um `.webm` caía em "Tipo
+de arquivo não permitido", ou seja, o recurso não teria funcionado nem uma
+vez. Agora há ramo para EBML (`1A 45 DF A3`), `ftyp` no offset 4, `OggS` e
+RIFF/WAVE. O RIFF virou ramo com dois desfechos, porque webp e wav começam
+igual e só se separam no offset 8. Executável renomeado continua parando na
+lista de assinaturas bloqueadas: o mime do navegador é só rótulo, quem
+autoriza é o cabeçalho.
+
+**Formato varia por navegador e o arquivo vai como veio.** Chrome e Firefox
+gravam webm/opus, Safari grava mp4/aac; não existe formato que os dois
+produzam. `pickRecorderMime` escolhe o melhor disponível e o tocador avisa
+quando o navegador não conseguiu tocar — transcodificar exigiria ffmpeg no
+servidor, que não cabe no serverless de hoje. **Reprodução cruzada (gravado
+no Android, ouvido no iPhone) é o primeiro teste de campo.**
+
+O recorte, item por item:
+
+- **Teto de 2 min** (`MAX_RECORDING_MS`), e a gravação encerra sozinha ao
+  chegar lá em vez de recusar no envio — descobrir o limite depois de falar
+  dois minutos é perder o recado. O teto é decisão de produto: recado de
+  quatro minutos que devia ser uma demanda é o modo de falha conhecido desta
+  função em ferramenta de trabalho.
+- **Duração antes de tocar**, e posição/total durante.
+- **Velocidade 1x / 1,5x / 2x**, que devolve ao ouvinte o "pular" que o texto
+  dá de graça.
+- **Descartar antes de enviar**, e recado abaixo de 1s vira aviso em vez de
+  mensagem — quase sempre é clique duplo.
+- **Microfone negado tem frase própria** para cada motivo (bloqueado, sem
+  microfone, falha genérica). Recusa silenciosa é o pior desfecho.
+- **Um recado por vez na página**: começar um pausa o outro.
+- O microfone é solto ao sair da conversa — indicador de gravação aceso
+  depois de fechar a tela faz a pessoa achar, com razão, que continua sendo
+  ouvida.
+
+**Falta**, e continua sendo decisão à parte: **transcrição**. É o que traz o
+áudio de volta para a busca e para quem não ouve — o resto do produto é texto
+que a busca alcança, e recado de voz é o único conteúdo opaco. Custa um
+provedor a mais.
+
+**Reação de emoji — entregue (21/ago/2026, migration 0055)**
+
+Sete opções: 👍 ❤️ 😂 😮 😢 🙏 👀. Os seis primeiros são os do WhatsApp, onde
+a equipe já aprendeu o significado; 👀 entra porque numa ferramenta de
+trabalho "estou vendo isso" é a resposta mais útil que existe. O dono pediu
+"os mais básicos", e conjunto curto é o recurso — não uma limitação a ser
+corrigida depois: sete cabem numa linha, são reconhecíveis de relance e não
+viram uma segunda linguagem dentro da conversa.
+
+Quatro decisões estruturais:
+
+1. **O conjunto vive no `check` do banco**, não só na interface. Com a coluna
+   livre, qualquer cliente gravaria texto arbitrário e a tela teria de
+   desenhar o que viesse. Acrescentar um emoji é uma migration de uma linha;
+   deixar a porta aberta não teria volta. A lista em `lib/chat/reactions.ts`
+   precisa bater exatamente com a do `check` — inclusive o seletor de
+   variação do ❤️ (`U+2764 U+FE0F`), que é um caractere diferente de `❤`.
+2. **A chave é (mensagem, pessoa, emoji).** Clique duplo ou corrida de rede
+   não conta duas vezes — quem garante é o banco, não o cliente.
+3. **`channel_id` e `workspace_id` são copiados na linha**, para a conversa
+   buscar todas as reações do canal numa varredura de índice, sem juntar com
+   `chat_message` a cada seis segundos. A cópia não pode divergir porque a
+   policy de insert confere que os dois batem com os da mensagem.
+4. **Só se escreve a própria reação.** `user_id = auth.uid()` no insert e no
+   delete. Sem policy de update: trocar de reação é tirar e pôr.
+
+A ficha muda antes da resposta do servidor (regra 6) e volta atrás se o
+pedido falhar. Reagir é o gesto mais barato da conversa: se piscar esperando
+a rede, a pessoa clica de novo achando que não pegou.
+
+Reação existe só em mensagem de gente. Aviso de "criou a demanda X" é
+notificação, não conversa.
+
 ---
 
 ## 2. Fase 8 — o que falta
@@ -127,6 +220,7 @@ A central de notificações saiu (2b7084c). Restam:
 
   Falta compartilhar uma VISÃO filtrada (lista), que o §11 também prevê —
   exige decidir que recorte de lista é seguro expor.
+
 - **Permissões granulares.** Hoje são quatro papéis para o workspace inteiro.
   O spec pede recorte por setor e por cliente, e transferir responsabilidades
   antes de remover alguém.
@@ -166,6 +260,7 @@ existe; falta:
   porque nenhum estava na lógica pura: estavam na ligação entre dado e tela.
   Enquanto essa classe só for descoberta por alguém reparando, toda função
   nova entra com o mesmo ponto cego.
+
 - ~~**Auditoria de operações sensíveis.**~~ Entregue (migration 0044). Falta
   só o registro de LOGIN, que não sai de trigger em tabela — precisa de
   gancho no Supabase Auth.
@@ -198,24 +293,82 @@ existe; falta:
 
 Cada item aqui foi uma decisão consciente, não esquecimento.
 
-| Item | Por que ficou para depois |
-| --- | --- |
-| Prévia A4 paginada + PDF nativo do contrato | A janela de impressão do navegador entrega o PDF hoje. Paginação fiel exige motor próprio. |
-| Financeiro rodada 3 (parcelas próprias, recorrência, centro de custo, alertas) | Parcelas de contrato já geram lançamento; o resto só tem valor com uso real para dizer o formato. |
-| Gateway de pagamento (EFI Bank) | **Em andamento.** Base pronta (0049 + `lib/billing`); a integração real espera credenciais de homologação. Ver "Assinatura do SaaS" abaixo. |
-| Verificação do app no Google | Exige domínio próprio publicado. |
-| E-mail de convite de verdade (Resend) | O convite funciona por link; e-mail é conforto, não bloqueio. |
-| `events.watch` do Google em produção | Precisa de URL pública estável. |
-| Renovação do `watch` do Google por cron | A infraestrutura de cron existe agora; falta a URL pública estável do webhook. |
-| Marketing e onboarding guiado (E18) | Adiado no fechamento da E18. |
-| Contador de não lidas no banco | Hoje o chat conta sobre uma janela de 300 mensagens no cliente. Só vira problema com volume. |
-| Retenção da trilha de auditoria | `audit_log` só cresce, e é imutável de propósito. Definir janela e arquivamento antes de virar volume. |
-| Registro de login na auditoria | Exige gancho no Supabase Auth; trigger em tabela não alcança. |
-| Geração automática de recorrência | Hoje "Gerar previsões" é botão. Renovar o horizonte sozinho exige job — ver "jobs observáveis". |
+| Item                                                                           | Por que ficou para depois                                                                                                                   |
+| ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| Prévia A4 paginada + PDF nativo do contrato                                    | A janela de impressão do navegador entrega o PDF hoje. Paginação fiel exige motor próprio.                                                  |
+| Financeiro rodada 3 (parcelas próprias, recorrência, centro de custo, alertas) | Parcelas de contrato já geram lançamento; o resto só tem valor com uso real para dizer o formato.                                           |
+| Gateway de pagamento (EFI Bank)                                                | **Em andamento.** Base pronta (0049 + `lib/billing`); a integração real espera credenciais de homologação. Ver "Assinatura do SaaS" abaixo. |
+| Envio automático no WhatsApp (Evolution API ou wuzapi)                         | Pedido em 20/ago/2026. Exige processo com estado fora da Vercel e uma decisão sobre número oficial x não oficial. Ver a seção "WhatsApp".   |
+| Verificação do app no Google                                                   | Exige domínio próprio publicado.                                                                                                            |
+| E-mail de convite de verdade (Resend)                                          | O convite funciona por link; e-mail é conforto, não bloqueio.                                                                               |
+| `events.watch` do Google em produção                                           | Precisa de URL pública estável.                                                                                                             |
+| Renovação do `watch` do Google por cron                                        | A infraestrutura de cron existe agora; falta a URL pública estável do webhook.                                                              |
+| Marketing e onboarding guiado (E18)                                            | Adiado no fechamento da E18.                                                                                                                |
+| Contador de não lidas no banco                                                 | Hoje o chat conta sobre uma janela de 300 mensagens no cliente. Só vira problema com volume.                                                |
+| Retenção da trilha de auditoria                                                | `audit_log` só cresce, e é imutável de propósito. Definir janela e arquivamento antes de virar volume.                                      |
+| Registro de login na auditoria                                                 | Exige gancho no Supabase Auth; trigger em tabela não alcança.                                                                               |
+| Geração automática de recorrência                                              | Hoje "Gerar previsões" é botão. Renovar o horizonte sozinho exige job — ver "jobs observáveis".                                             |
 
 ---
 
-## 6. Assinatura do SaaS (EFI Bank)
+## 6. Painel da plataforma (admin master)
+
+Pedido pelo dono em 20/ago/2026, com prints de outro SaaS como referência.
+O `/admin` deixou de ser uma tela só e virou três abas — **Empresas**,
+**Planos**, **Afiliados**. As colunas do produto de referência que eram dele
+("API não oficial", "Conexões", "Canais") não vieram junto.
+
+**Planos** (migration 0050). Plano deixou de ser enum de três valores e virou
+cadastro: nome, valor, teto de usuários, público ou não, ativo ou não.
+Atribuir um plano a uma empresa leva os assentos dele junto — a menos que o
+admin digite outro número na mesma ação, que aí vale o dele. Plano com
+empresa dentro não pode ser excluído (409 `plan_in_use`); o caminho é
+desativar. Editar preço vale do próximo ciclo: a fatura emitida guarda cópia
+do nome e do valor (`subscription_charge.plan_name`), então o histórico não
+muda quando a tabela muda.
+
+**Empresas.** Além de plano e assentos, a empresa agora tem "em teste"
+(`trial`) e contato de cobrança próprio — nem sempre quem paga é quem usa o
+sistema, e o e-mail de login não serve para os dois papéis.
+
+**Afiliados** (migration 0052). Cada afiliado tem um link `/r/<code>` que
+registra o clique, guarda o código num cookie de 90 dias e manda para o
+login. A indicação só vira atribuição quando a conta é criada, em
+`/auth/callback`: a função só atribui workspace **sem afiliado** e
+**recém-criado**, senão um clique reatribuiria cliente antigo e um cookie
+esquecido daria comissão a quem não trouxe ninguém.
+
+Três decisões que valem para sempre:
+
+- **A empresa guarda cópia do percentual** (`workspace.affiliate_percent`).
+  Mudar a tabela do afiliado não reescreve o que já foi combinado.
+- **A comissão exibida sai de cobrança PAGA**, não de assinatura ativa —
+  antes de o dinheiro entrar não há o que repassar.
+- **Clique não guarda IP.** Origem e navegador bastam; IP é dado pessoal que
+  não muda nenhuma decisão aqui.
+
+`affiliate` e `affiliate_click` têm RLS ligada e **nenhuma policy**: só a
+chave secreta enxerga. Quando existir portal do afiliado logado, ganha policy
+própria.
+
+**Falta**: portal do próprio afiliado (hoje só o admin vê os números),
+registro de repasse (pago/pendente) e mostrar plano público na tela de
+cadastro.
+
+**Dois defeitos encontrados no caminho**, ambos anteriores a este trabalho:
+
+- Migration 0051 — o cadastro novo nascia **sem setor**. A 0043 tinha
+  corrigido só o caminho `create_workspace`; o trigger `handle_new_user`, que
+  é por onde todo cliente novo passa, nunca chamou `seed_default_sector`.
+- Migration 0053 — **remover cliente estava quebrado** desde a 0044. Apagar o
+  workspace remove a linha primeiro e só então cascateia os filhos; os
+  gatilhos de auditoria dessas tabelas tentavam gravar em `audit_log`
+  apontando para um workspace que já não existia e a exclusão inteira
+  abortava. Agora `write_audit` não escreve quando o workspace já foi embora.
+
+---
+
+## 7. Assinatura do SaaS (EFI Bank)
 
 Decidido pelo dono em 20/ago/2026: a integração é para cobrar **a assinatura
 do próprio TarefaFácil**, não o cliente do workspace.
@@ -257,7 +410,63 @@ Nada disso vai para produção sem teste contra o ambiente de homologação.
 
 ---
 
-## 7. Ambiente de desenvolvimento
+## 8. WhatsApp — envio automático
+
+Pedido pelo dono em 20/ago/2026: usar **Evolution API** ou **wuzapi** para
+disparar mensagem no WhatsApp. Não existe nada disso hoje — nem tabela, nem
+rota, nem dependência.
+
+As duas falam o protocolo do **WhatsApp Web** (Baileys na Evolution,
+whatsmeow no wuzapi), não a API oficial da Meta. A consequência não é
+detalhe: o número pode ser banido, e não há a quem reclamar. O caminho
+oficial é a Cloud API, que cobra por conversa e só deixa iniciar conversa com
+modelo de mensagem aprovado — mais caro e mais burocrático, e sem o risco de
+o canal inteiro sumir numa manhã.
+
+**O que precisa ser decidido antes de escrever qualquer código**
+
+1. **De quem é o número.** Um número da plataforma avisando o dono da
+   empresa sobre a assinatura é uma coisa. Cada cliente conectando o próprio
+   número para falar com o cliente final dele é outra, e muda a arquitetura:
+   exige uma instância por workspace, QR code na tela de configurações,
+   estado de conexão visível e reconexão quando cair.
+2. **Oficial ou não oficial.** Para avisar três clientes sobre vencimento, o
+   não oficial serve. Para a comunicação que o cliente final recebe, um
+   banimento derruba todo mundo ao mesmo tempo.
+3. **Onde roda** — este é o item que muda a infraestrutura. Hoje tudo é
+   serverless (Vercel) mais Supabase. Sessão de WhatsApp é processo com
+   estado que precisa ficar de pé, com volume para a sessão e backup dela:
+   pede VPS ou contêiner (Fly, Railway, servidor próprio). Não hospeda na
+   Vercel.
+4. **Consentimento e saída.** Telefone é dado pessoal e mensagem automática
+   sem opt-in é problema de LGPD antes de ser problema de reputação do
+   número. Precisa de "quero receber" gravado por destinatário e de um
+   "pare" que realmente pare.
+5. **O que enviar.** Aviso interno já existe (sino e chat). O WhatsApp é para
+   quem **não** abre o sistema. Lista mínima que se sustenta: vencimento e
+   confirmação de cobrança da assinatura, prazo de demanda para o
+   responsável, e demanda concluída para o cliente final.
+
+**Como encaixa no que já existe**
+
+- Telefone já está em `workspace.contact_phone` (cobrança), `client.phone`
+  (CRM) e `affiliate.phone`. **`app_user` não tem telefone** — avisar alguém
+  da equipe exige campo novo e consentimento por pessoa, não por workspace.
+- **Fila no banco, não disparo direto.** Uma `message_outbox` com destino,
+  situação, tentativas e `sent_at`, com índice único por (evento, destino,
+  período) — a mesma decisão que a 0049 tomou para cobrança. Webhook
+  reenviado não pode virar segunda mensagem para o cliente.
+- O disparo é o cron que já existe (`vercel.json` mais rota autenticada por
+  `CRON_SECRET`) drenando a fila, e um webhook de volta para registrar
+  entrega e leitura.
+- O provedor entra **atrás de uma interface**, como `PaymentGateway` em
+  `lib/billing/gateway.ts`, com implementação falsa para testar sem número
+  conectado. Trocar Evolution por wuzapi — ou pela Cloud API, se o risco de
+  banimento pesar — não deve mexer em nada acima da interface.
+
+---
+
+## 9. Ambiente de desenvolvimento
 
 O Next avisa `Slow filesystem detected` (468ms num benchmark que costuma dar
 dezenas de milissegundos) — o projeto está num disco lento. Isso já custou
@@ -267,7 +476,7 @@ como se fosse problema de código.
 
 ---
 
-## 8. Testes pendentes
+## 10. Testes pendentes
 
 `docs/testes-pendentes.md` lista o que foi construído e não pôde ser
 verificado rodando. O item mais importante é o isolamento da conversa direta

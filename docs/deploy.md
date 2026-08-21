@@ -80,8 +80,8 @@ só no servidor (não use prefixo `NEXT_PUBLIC` nelas):
 
 `vercel.json` declara os jobs. Hoje há um:
 
-| Rota | Quando | O que faz |
-| --- | --- | --- |
+| Rota                      | Quando             | O que faz                         |
+| ------------------------- | ------------------ | --------------------------------- |
 | `/api/cron/limpar-anexos` | domingo, 04:00 UTC | Remove arquivos órfãos do storage |
 
 **Semanal e de madrugada** de propósito: a varredura percorre o bucket
