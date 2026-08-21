@@ -14,6 +14,7 @@ import type {
   ChatChannel,
   ChatChannelMember,
   ChatMessage,
+  ChatMessageReaction,
   ChatReadState,
 } from "@/types/database";
 
@@ -63,6 +64,9 @@ function membersKey(workspaceId: string) {
 }
 function readStateKey(workspaceId: string) {
   return ["chatReadState", workspaceId] as const;
+}
+function reactionsKey(channelId: string) {
+  return ["chatReactions", channelId] as const;
 }
 
 /**
@@ -179,7 +183,8 @@ export function useAddGroupMembers(workspaceId: string) {
       });
       if (error) throw error;
     },
-    onSettled: () => qc.invalidateQueries({ queryKey: membersKey(workspaceId) }),
+    onSettled: () =>
+      qc.invalidateQueries({ queryKey: membersKey(workspaceId) }),
   });
 }
 
@@ -187,14 +192,21 @@ export function useRenameGroupChannel(workspaceId: string) {
   const supabase = createClient();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ channelId, name }: { channelId: string; name: string }) => {
+    mutationFn: async ({
+      channelId,
+      name,
+    }: {
+      channelId: string;
+      name: string;
+    }) => {
       const { error } = await supabase.rpc("rename_group_channel", {
         canal: channelId,
         nome: name,
       });
       if (error) throw error;
     },
-    onSettled: () => qc.invalidateQueries({ queryKey: channelsKey(workspaceId) }),
+    onSettled: () =>
+      qc.invalidateQueries({ queryKey: channelsKey(workspaceId) }),
   });
 }
 
@@ -270,13 +282,134 @@ export function useRecentMessages(workspaceId: string, active: boolean) {
   });
 }
 
+/**
+ * Reações do canal aberto, todas de uma vez.
+ *
+ * Buscar por mensagem seriam cinquenta consultas por página. A tabela guarda
+ * `channel_id` justamente para isto (0055), e o volume é pequeno: uma linha
+ * por pessoa por emoji.
+ */
+export function useChannelReactions(channelId: string | null, active: boolean) {
+  const supabase = createClient();
+  return useQuery({
+    enabled: !!channelId,
+    queryKey: reactionsKey(channelId ?? "nenhum"),
+    queryFn: async (): Promise<ChatMessageReaction[]> => {
+      const { data, error } = await supabase
+        .from("chat_message_reaction")
+        .select("*")
+        .eq("channel_id", channelId as string);
+      if (error) throw error;
+      return data;
+    },
+    refetchInterval: active ? POLL_MS : false,
+    refetchIntervalInBackground: false,
+    staleTime: POLL_MS,
+  });
+}
+
+/**
+ * Põe ou tira a minha reação.
+ *
+ * A ficha muda antes da resposta do servidor (regra 6). Reagir é o gesto
+ * mais barato da conversa: se ele piscar esperando a rede, a pessoa clica de
+ * novo achando que não pegou — e aí são dois pedidos para o mesmo emoji.
+ * A chave primária (mensagem, pessoa, emoji) protege o banco disso; a
+ * atualização otimista protege a pessoa de precisar tentar.
+ */
+export function useToggleReaction(workspaceId: string, channelId: string) {
+  const supabase = createClient();
+  const qc = useQueryClient();
+  const chave = reactionsKey(channelId);
+
+  return useMutation({
+    mutationFn: async ({
+      messageId,
+      emoji,
+      mine,
+    }: {
+      messageId: string;
+      emoji: string;
+      /** Já é minha? Então o toque tira. */
+      mine: boolean;
+    }) => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) throw new Error("sem sessão");
+
+      if (mine) {
+        const { error } = await supabase
+          .from("chat_message_reaction")
+          .delete()
+          .eq("message_id", messageId)
+          .eq("user_id", user.id)
+          .eq("emoji", emoji);
+        if (error) throw error;
+        return;
+      }
+      const { error } = await supabase.from("chat_message_reaction").insert({
+        message_id: messageId,
+        user_id: user.id,
+        emoji,
+        workspace_id: workspaceId,
+        channel_id: channelId,
+      });
+      if (error) throw error;
+    },
+
+    onMutate: async ({ messageId, emoji, mine }) => {
+      await qc.cancelQueries({ queryKey: chave });
+      const antes = qc.getQueryData<ChatMessageReaction[]>(chave) ?? [];
+      const { data } = await supabase.auth.getUser();
+      const meuId = data.user?.id;
+      if (!meuId) return { antes };
+
+      qc.setQueryData<ChatMessageReaction[]>(chave, (atual = []) =>
+        mine
+          ? atual.filter(
+              (r) =>
+                !(
+                  r.message_id === messageId &&
+                  r.user_id === meuId &&
+                  r.emoji === emoji
+                )
+            )
+          : [
+              ...atual,
+              {
+                message_id: messageId,
+                user_id: meuId,
+                emoji,
+                workspace_id: workspaceId,
+                channel_id: channelId,
+                created_at: new Date().toISOString(),
+              },
+            ]
+      );
+      return { antes };
+    },
+
+    onError: (_e, _v, ctx) => {
+      // Desfaz a ficha: reação que fica na tela sem ter entrado no banco é
+      // pior do que reação que não aparece.
+      if (ctx?.antes) qc.setQueryData(chave, ctx.antes);
+    },
+    onSettled: () => {
+      void qc.invalidateQueries({ queryKey: chave });
+    },
+  });
+}
+
 export function useChatReadState(workspaceId: string) {
   const supabase = createClient();
   return useQuery({
     queryKey: readStateKey(workspaceId),
     queryFn: async (): Promise<ChatReadState[]> => {
       // A RLS já limita às minhas linhas.
-      const { data, error } = await supabase.from("chat_read_state").select("*");
+      const { data, error } = await supabase
+        .from("chat_read_state")
+        .select("*");
       if (error) throw error;
       return data;
     },
@@ -294,6 +427,7 @@ export function useSendMessage(workspaceId: string, channelId: string) {
       replyToId,
       sectorId,
       file,
+      audioDurationMs,
     }: {
       body: string;
       mentionedUserIds: string[];
@@ -302,6 +436,12 @@ export function useSendMessage(workspaceId: string, channelId: string) {
       sectorId?: string | null;
       /** Arquivo opcional. No máximo um por mensagem. */
       file?: File | null;
+      /**
+       * Duração do recado de voz, medida na gravação. Só vem quando o
+       * arquivo saiu do gravador — o áudio anexado como arquivo comum não
+       * tem quem a informe sem baixar o arquivo inteiro.
+       */
+      audioDurationMs?: number | null;
     }) => {
       const {
         data: { user },
@@ -338,11 +478,13 @@ export function useSendMessage(workspaceId: string, channelId: string) {
         file_name: file ? file.name : null,
         file_size_bytes: file ? file.size : null,
         mime_type: mime,
+        audio_duration_ms: file ? (audioDurationMs ?? null) : null,
       });
       if (error) {
         // A mensagem não entrou: o arquivo não pode ficar sozinho no
         // storage, sem nenhuma linha que o alcance.
-        if (storageKey) await supabase.storage.from(BUCKET).remove([storageKey]);
+        if (storageKey)
+          await supabase.storage.from(BUCKET).remove([storageKey]);
         throw error;
       }
     },

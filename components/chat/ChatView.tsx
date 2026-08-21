@@ -22,14 +22,17 @@ import {
   toChannelViews,
 } from "@/lib/chat/channels";
 import { badgeLabel, unreadByChannel } from "@/lib/chat/unread";
+import { reactionsByMessage } from "@/lib/chat/reactions";
 import {
   useChannelMembers,
+  useChannelReactions,
   useChatChannels,
   useChatMessages,
   useChatReadState,
   useMarkChannelRead,
   useOpenDirectChannel,
   useRecentMessages,
+  useToggleReaction,
 } from "@/lib/queries/useChat";
 import { useCurrentUserId, useMembers } from "@/lib/queries/useMembers";
 import { useSectors } from "@/lib/queries/useSectors";
@@ -115,7 +118,15 @@ export function ChatView({ initialChannelId }: { initialChannelId?: string }) {
   const markRead = useMarkChannelRead(workspace.id);
   const openDirect = useOpenDirectChannel(workspace.id);
 
+  const { data: reactionRows = [] } = useChannelReactions(active, true);
+  const toggleReaction = useToggleReaction(workspace.id, active ?? "nenhum");
+
   const messages = useMemo(() => query.data?.pages.flat() ?? [], [query.data]);
+  // Agrupa uma vez por atualização, não uma vez por mensagem renderizada.
+  const reactions = useMemo(
+    () => reactionsByMessage(reactionRows, myId ?? null),
+    [reactionRows, myId]
+  );
   const visiveis = useMemo(
     () => filterBySector(messages, sectorFilter),
     [messages, sectorFilter]
@@ -385,6 +396,10 @@ export function ChatView({ initialChannelId }: { initialChannelId?: string }) {
           isLoadingMore={query.isFetchingNextPage}
           onLoadMore={() => query.fetchNextPage()}
           onReply={setReplyTo}
+          reactions={reactions}
+          onToggleReaction={(messageId, emoji, mine) =>
+            toggleReaction.mutate({ messageId, emoji, mine })
+          }
         />
 
         {active ? (
@@ -432,4 +447,3 @@ function FiltroChip({
     </button>
   );
 }
-

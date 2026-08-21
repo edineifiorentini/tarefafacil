@@ -9,11 +9,14 @@ import {
 import { parseISO } from "date-fns";
 import { useEffect, useRef } from "react";
 
+import { AudioMessage } from "@/components/chat/AudioMessage";
+import { MessageReactions } from "@/components/chat/MessageReactions";
 import { useShell } from "@/components/shell/shell-context";
 import { TaskDetailPanel } from "@/components/task/TaskDetailPanel";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
+import type { ReactionSummary } from "@/lib/chat/reactions";
 import { groupByDay, isContinuation } from "@/lib/chat/unread";
 import { useChatFileUrl } from "@/lib/queries/useChat";
 import { useMembers } from "@/lib/queries/useMembers";
@@ -45,6 +48,8 @@ export function MessageList({
   isLoadingMore,
   onLoadMore,
   onReply,
+  reactions,
+  onToggleReaction,
 }: {
   messages: ChatMessage[];
   isLoading: boolean;
@@ -57,6 +62,9 @@ export function MessageList({
   isLoadingMore: boolean;
   onLoadMore: () => void;
   onReply: (messageId: string) => void;
+  /** Reações já agrupadas por mensagem — ver `lib/chat/reactions.ts`. */
+  reactions: Map<string, ReactionSummary[]>;
+  onToggleReaction: (messageId: string, emoji: string, mine: boolean) => void;
 }) {
   const workspace = useWorkspace();
   const { data: members = [] } = useMembers(workspace.id);
@@ -234,7 +242,13 @@ export function MessageList({
                     </p>
                   ) : null}
 
-                  {msg.storage_key ? (
+                  {msg.storage_key && msg.mime_type?.startsWith("audio/") ? (
+                    <AudioMessage
+                      storageKey={msg.storage_key}
+                      durationMs={msg.audio_duration_ms}
+                      fileName={msg.file_name}
+                    />
+                  ) : msg.storage_key ? (
                     <button
                       type="button"
                       onClick={() =>
@@ -268,6 +282,16 @@ export function MessageList({
                       ) : null}
                     </button>
                   ) : null}
+
+                  {/* Só mensagem de gente. Aviso de demanda criada é
+                      notificação, não conversa — não há a quem responder. */}
+                  <MessageReactions
+                    summaries={reactions.get(msg.id) ?? []}
+                    messageLabel={`mensagem de ${nome}`}
+                    onToggle={(emoji, mine) =>
+                      onToggleReaction(msg.id, emoji, mine)
+                    }
+                  />
                 </div>
 
                 <button
