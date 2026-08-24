@@ -998,10 +998,52 @@ opostas: uma é infraestrutura da plataforma, a outra é dado do inquilino.
 - **Webhook de retorno** com verificação de assinatura e a mesma disciplina
   de idempotência da 0049: reenvio não pode virar segunda baixa.
 
-**O que já existe (24/ago)**
+**Entregue em 24/ago: Mercado Pago e Asaas** (migration 0067)
+
+`payment_gateway`, uma linha por (workspace, provedor). A tela vive na aba
+Integrações, com formulário de chave, ambiente e conferência antes de salvar.
+
+- **A credencial é cifrada pela aplicação** (`lib/crypto/secretBox.ts`,
+  AES-256-GCM, chave em `CREDENTIAL_ENCRYPTION_KEY`). A pergunta aberta era
+  se bastava a cifra em disco do Supabase; a resposta foi não. Cifra em
+  disco protege o disco — quem tiver a chave secreta do projeto, ou um
+  backup, leria o token e passaria a emitir cobrança em nome do cliente.
+  Sem a chave configurada o servidor **recusa salvar**, em vez de guardar em
+  texto claro "por enquanto". Verificado: o banco não guarda o token legível
+  e o cliente não lê a tabela.
+- **A conferência acontece antes de guardar**, e distingue três causas:
+  credencial errada, ambiente trocado e provedor fora do ar. Só 401 e 403
+  acusam a credencial. Dizer "token inválido" num 500 faz a pessoa revogar
+  uma chave que estava boa, gerar outra e falhar de novo.
+- **Ambiente é conferido pelo prefixo, antes da rede.** `TEST-` x `APP_USR-`
+  no Mercado Pago, `hmlg` na chave do Asaas. Chave de produção cadastrada
+  como sandbox emite cobrança de verdade para o cliente final de alguém — e
+  o provedor não reclamaria, porque para ele a chave é válida. É o erro mais
+  caro destes conectores e o único que só nós podemos pegar.
+- **O token nunca volta para o navegador**, nem mascarado. Trocar a chave é
+  colar a nova; não há campo pré-preenchido para editar.
+- **`write_audit_as` nasceu aqui.** `write_audit` lê `auth.uid()`, que é nulo
+  na conexão da chave secreta — o gatilho de auditoria derrubaria toda
+  tentativa de salvar (`summary` é `not null` e a concatenação viraria nulo).
+  A nova função recebe o autor por parâmetro e **não é executável por
+  `authenticated`**: se fosse, daria para forjar linha em nome de outro.
+
+**O que ficou aberto**
+
+- **Qual gateway emite a cobrança** quando a empresa tiver os dois ligados.
+  Não há cobrança ainda; inventar um "padrão" agora seria adivinhar.
+- **Rotação da chave de cifra.** O formato já é versionado (`v1.`), mas não
+  existe rotina de reencriptar. Perder `CREDENTIAL_ENCRYPTION_KEY` hoje
+  significa todos os clientes reconectarem.
+- **Webhook de retorno** com verificação de assinatura e a idempotência da
+  0049 — é o que falta para o dinheiro entrar sozinho no `finance_entry`.
+- **EFI, Banco Inter e Sicredi** seguem em "em breve": exigem mTLS, e o
+  trabalho ali é suporte, não código.
+
+**Onde isso mora na tela**
 
 A aba **Integrações** em Configurações, com a grade agrupada
-(`lib/integrations/catalog.ts` + `components/integrations/`). O Google
-Agenda mora nela; os seis conectores acima aparecem como "em breve". Cada
-cartão desses é promessa visível ao cliente — não entra nada ali que não
-tenha item neste roadmap.
+(`lib/integrations/catalog.ts` + `components/integrations/`). Google Agenda,
+Mercado Pago e Asaas conectam; o resto aparece como "em breve". Cada cartão
+desses é promessa visível ao cliente — não entra nada ali que não tenha item
+neste roadmap.

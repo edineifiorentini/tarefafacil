@@ -10,6 +10,7 @@ import {
 } from "@tabler/icons-react";
 
 import type { IconComponent } from "@/components/ui/types";
+import type { ProviderId } from "@/lib/payments/provider";
 
 /**
  * Catálogo de integrações.
@@ -41,6 +42,14 @@ export type Integration = {
   hint: string;
   icon: IconComponent;
   state: IntegrationState;
+  /**
+   * Conta de recebimento por trás desta integração, quando houver.
+   *
+   * O id do catálogo usa hífen (é rótulo, e um dia vira rota); o do provedor
+   * usa sublinhado, porque é o valor do `check` na 0067. São grafias de
+   * mundos diferentes, e ligá-las aqui evita conversão espalhada pela tela.
+   */
+  paymentProvider?: ProviderId;
 };
 
 export type IntegrationGroup = {
@@ -66,14 +75,16 @@ export const INTEGRATION_GROUPS: readonly IntegrationGroup[] = [
         name: "Mercado Pago",
         hint: "PIX, boleto e cartão com um token só",
         icon: IconWallet,
-        state: "em_breve",
+        state: "disponivel",
+        paymentProvider: "mercado_pago",
       },
       {
         id: "asaas",
         name: "Asaas",
         hint: "PIX, boleto, cartão e divisão de pagamento",
         icon: IconReceipt,
-        state: "em_breve",
+        state: "disponivel",
+        paymentProvider: "asaas",
       },
       {
         id: "efi",

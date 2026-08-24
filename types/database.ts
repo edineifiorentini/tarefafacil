@@ -28,6 +28,11 @@ export type ContractStatus =
   "rascunho" | "enviado" | "assinado" | "ativo" | "encerrado" | "cancelado";
 export type BillingPeriod = "unico" | "mensal" | "trimestral" | "anual";
 export type GcalStatus = "active" | "expired" | "revoked";
+
+// Conta de recebimento da empresa (0067). Espelham o `check` da migration —
+// mudar um lado sem o outro deixa o typecheck passar e o insert estourar.
+export type PaymentProviderId = "mercado_pago" | "asaas";
+export type PaymentEnvironment = "sandbox" | "producao";
 export type ClientType = "pf" | "pj";
 export type ClientStatus = "prospecto" | "ativo" | "pausado" | "encerrado";
 /**
@@ -1645,6 +1650,43 @@ export type Database = {
         };
         Relationships: [];
       };
+      payment_gateway: {
+        Row: {
+          workspace_id: string;
+          provider: PaymentProviderId;
+          environment: PaymentEnvironment;
+          /** Cifrado pela aplicação. Nunca sai do servidor. */
+          credentials: string;
+          account_label: string | null;
+          active: boolean;
+          last_verified_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          workspace_id: string;
+          provider: PaymentProviderId;
+          environment: PaymentEnvironment;
+          credentials: string;
+          account_label?: string | null;
+          active?: boolean;
+          last_verified_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          workspace_id?: string;
+          provider?: PaymentProviderId;
+          environment?: PaymentEnvironment;
+          credentials?: string;
+          account_label?: string | null;
+          active?: boolean;
+          last_verified_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       workspace_invite: {
         Row: {
           id: string;
@@ -1702,6 +1744,25 @@ export type Database = {
       };
       register_share_view: {
         Args: { p_token: string };
+        Returns: undefined;
+      };
+      /**
+       * Trilha escrita pelo servidor, com o autor por parâmetro.
+       *
+       * Existe porque `write_audit` lê `auth.uid()`, que é nulo na conexão da
+       * chave secreta. Só `service_role` executa — se `authenticated`
+       * pudesse, daria para forjar linha em nome de outra pessoa.
+       */
+      write_audit_as: {
+        Args: {
+          ws: string;
+          autor: string;
+          acao: AuditAction;
+          tipo: string;
+          id_entidade: string | null;
+          resumo: string;
+          detalhes?: Json | null;
+        };
         Returns: undefined;
       };
       /** Resposta do cliente pelo link público. Devolve false se o link não vale. */
