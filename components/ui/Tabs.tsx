@@ -21,7 +21,7 @@ export function Tabs({
 
 export function TabsList({ children }: { children: ReactNode }) {
   return (
-    <RadixTabs.List className="border-line flex items-center gap-4 border-b">
+    <RadixTabs.List className="border-line flex flex-wrap items-center gap-x-4 gap-y-1 border-b">
       {children}
     </RadixTabs.List>
   );

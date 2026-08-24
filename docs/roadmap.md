@@ -569,6 +569,27 @@ oficial é a Cloud API, que cobra por conversa e só deixa iniciar conversa com
 modelo de mensagem aprovado — mais caro e mais burocrático, e sem o risco de
 o canal inteiro sumir numa manhã.
 
+**Decidido em 24/ago, olhando o dgflow**
+
+- **Provedor: Evolution API.** Não por ser tecnicamente superior — em Go
+  (whatsmeow) gasta-se menos RAM por sessão, e isso vira dinheiro com 100
+  números conectados. É porque ela fala **também a Cloud API oficial** pela
+  mesma interface REST: começa no Baileys hoje (única opção sem CNPJ, o
+  mesmo bloqueio da seção 20) e vira a chave depois da formalização, sem
+  trocar de servidor. Some-se a isso documentação em português e a maior
+  base instalada brasileira para exatamente este uso.
+- **Alternativa registrada:** [GOWA](https://github.com/aldinokemal/go-whatsapp-web-multidevice)
+  (whatsmeow, MIT, multi-dispositivo desde a v8) se o custo de RAM apertar.
+  `wuzapi` é o mesmo motor com comunidade menor. **whatsmeow puro não entra**:
+  é biblioteca de protocolo, usá-la direto é reescrever o wuzapi.
+- **Decisão 1 (de quem é o número) resolvida:** cada empresa conecta o
+  próprio, com QR na tela de integrações. É o que a referência faz e é o
+  que faz sentido num SaaS.
+- **Decisão 3 (onde roda) continua aberta, e é o bloqueio real.** O dono
+  ainda não vai manter VPS. Então o provedor entra atrás da interface com
+  implementação falsa, e o cartão de integração **diz que o canal está
+  desligado** — sem servidor apontado, sem teatro de conexão.
+
 **O que precisa ser decidido antes de escrever qualquer código**
 
 1. **De quem é o número.** Um número da plataforma avisando o dono da
@@ -939,3 +960,48 @@ em modo estrito. Se o domínio virar um próprio, precisa ser refeita lá.
 API **não agenda** — quem agenda é a nossa fila, que publica na hora certa;
 são 50 publicações por conta a cada 24h; e o token de página dura 60 dias,
 então precisa de renovação automática antes de vencer.
+
+## 21. Recebimento por empresa — o cliente cobra os clientes dele (24/ago/2026)
+
+Pedido pelo dono em 24/ago, a partir das telas de integração do dgflow, e
+descrito por ele como o item mais importante da leva: **cada empresa conecta
+a própria conta e o dinheiro cai lá**, por PIX, boleto e cartão.
+
+**Não confundir com a seção 10.** Lá o EFI é a plataforma cobrando os
+assinantes dela — uma credencial só, do dono, no ambiente. Aqui é cada
+workspace cobrando os clientes dele — uma credencial **por empresa**, que a
+empresa mesma cadastra. São duas integrações com o mesmo nome e naturezas
+opostas: uma é infraestrutura da plataforma, a outra é dado do inquilino.
+
+**A ordem, decidida pela dificuldade de conectar, não pela de programar**
+
+1. **Mercado Pago e Asaas** — só um token. PIX, boleto e cartão; o Asaas
+   ainda faz divisão de pagamento, que é o mais próximo do uso de agência.
+2. **EFI, Banco Inter e Sicredi** — exigem certificado mTLS (`.p12` no EFI,
+   `.crt` + `.key` nos bancos), conta PJ ativa e liberação pelo gerente da
+   agência. O trabalho aqui não é o código: é o suporte a cada cliente que
+   cola o certificado errado. Só depois de alguém pedir.
+
+**O que precisa ser resolvido antes de guardar a primeira credencial**
+
+- **Onde ficam.** O precedente é `google_connection` (0007): RLS ligada, zero
+  policy, só a chave secreta lê. Serve, mas ali é token de agenda. Aqui é a
+  chave que movimenta dinheiro de terceiro, e o cartão de crédito do cliente
+  final do cliente. Vale decidir se entra cifragem em coluna (pgsodium /
+  Vault) em vez de confiar só na cifra em disco do Supabase — e a resposta
+  provavelmente é sim.
+- **Quem pode ver e trocar.** Cadastrar gateway é ação de dono, não de
+  membro. Precisa de `has_role` e de linha na auditoria, como contrato e
+  financeiro já têm.
+- **Sandbox x produção** por integração, como na referência. Um cliente
+  testando com credencial de produção emite cobrança de verdade.
+- **Webhook de retorno** com verificação de assinatura e a mesma disciplina
+  de idempotência da 0049: reenvio não pode virar segunda baixa.
+
+**O que já existe (24/ago)**
+
+A aba **Integrações** em Configurações, com a grade agrupada
+(`lib/integrations/catalog.ts` + `components/integrations/`). O Google
+Agenda mora nela; os seis conectores acima aparecem como "em breve". Cada
+cartão desses é promessa visível ao cliente — não entra nada ali que não
+tenha item neste roadmap.

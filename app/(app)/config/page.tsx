@@ -1,7 +1,7 @@
 import { SubscriptionCard } from "@/components/billing/SubscriptionCard";
 import { NotificationPrefs } from "@/components/config/NotificationPrefs";
 import { ContractTemplateManager } from "@/components/contracts/ContractTemplateManager";
-import { GcalConnectCard } from "@/components/gcal/GcalConnectCard";
+import { IntegrationsPanel } from "@/components/integrations/IntegrationsPanel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
 import { OrgProfileForm } from "@/components/workspace/OrgProfileForm";
 import { WorkspaceSettings } from "@/components/workspace/WorkspaceSettings";
@@ -30,8 +30,8 @@ export default async function ConfigPage({
   const { gcal, aba } = await searchParams;
   const message = gcal ? GCAL_MESSAGES[gcal] : null;
 
-  // Voltando do Google, a aba certa é a que tem o cartão de integração.
-  const inicial = gcal ? "geral" : (aba ?? "geral");
+  // Voltando do Google, a aba certa é a que tem o cartão dele.
+  const inicial = gcal ? "integracoes" : (aba ?? "geral");
 
   return (
     // Mais largo que a coluna de leitura: o editor de modelos precisa de
@@ -49,6 +49,7 @@ export default async function ConfigPage({
       <Tabs defaultValue={inicial}>
         <TabsList>
           <TabsTrigger value="geral">Geral</TabsTrigger>
+          <TabsTrigger value="integracoes">Integrações</TabsTrigger>
           <TabsTrigger value="assinatura">Assinatura</TabsTrigger>
           <TabsTrigger value="notificacoes">Notificações</TabsTrigger>
           <TabsTrigger value="equipe">Equipe</TabsTrigger>
@@ -57,12 +58,10 @@ export default async function ConfigPage({
 
         <TabsContent value="geral">
           <OrgProfileForm />
-          <section className="flex flex-col gap-2">
-            <h2 className="text-fg-secondary text-[length:var(--text-small-size)] font-medium">
-              Integrações
-            </h2>
-            <GcalConnectCard />
-          </section>
+        </TabsContent>
+
+        <TabsContent value="integracoes">
+          <IntegrationsPanel />
         </TabsContent>
 
         <TabsContent value="assinatura">
