@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { requireUserAndWorkspace } from "@/lib/gcal/context";
+import { requireUserAndWorkspace } from "@/lib/auth/context";
 import { gcalConfigured } from "@/lib/gcal/oauth";
 import { getConnection } from "@/lib/gcal/tokens";
 import type { GcalStatusResponse } from "@/lib/gcal/types";

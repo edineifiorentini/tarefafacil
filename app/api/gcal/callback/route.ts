@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
-import { requireUserAndWorkspace } from "@/lib/gcal/context";
+import { requireUserAndWorkspace } from "@/lib/auth/context";
 import { exchangeCode } from "@/lib/gcal/oauth";
 import { saveConnection } from "@/lib/gcal/tokens";
 import { startWatch } from "@/lib/gcal/watch";

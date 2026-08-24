@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { requireUserAndWorkspace } from "@/lib/gcal/context";
+import { requireUserAndWorkspace } from "@/lib/auth/context";
 import { reconcileOutbound } from "@/lib/gcal/outbound";
 
 // Reconcilia o evento do Google com o estado atual da tarefa (design 9.4).

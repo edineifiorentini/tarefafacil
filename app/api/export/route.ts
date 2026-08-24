@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { requireUserAndWorkspace } from "@/lib/gcal/context";
+import { requireUserAndWorkspace } from "@/lib/auth/context";
 
 // Exporta todos os dados do workspace ativo em JSON. Não inclui tokens do
 // Google (google_connection). RLS garante que só vêm dados do próprio tenant.

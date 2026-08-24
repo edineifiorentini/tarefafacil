@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
-import { requireUserAndWorkspace } from "@/lib/gcal/context";
+import { requireUserAndWorkspace } from "@/lib/auth/context";
 import { consentUrl, gcalConfigured } from "@/lib/gcal/oauth";
 
 // Inicia o consentimento OAuth do Google Agenda. Guarda `state:workspaceId`

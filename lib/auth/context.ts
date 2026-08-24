@@ -1,15 +1,20 @@
 // Resolve o usuário autenticado + o workspace ativo no servidor, do mesmo jeito
-// que o layout do app (primeiro workspace via RLS). Usado pelas rotas gcal.
+// que o layout do app (primeiro workspace via RLS).
+//
+// Morava em lib/gcal/ por ter nascido lá, mas nunca foi só do Google: a
+// exportação de dados já importava daqui, e agora as rotas de pagamento
+// também. Rota de dinheiro puxando contexto de "lib/gcal" é o tipo de pista
+// falsa que faz alguém procurar acoplamento que não existe.
 
 import { createClient } from "@/lib/supabase/server";
 
-export type GcalContext = {
+export type SessionContext = {
   userId: string;
   workspaceId: string;
   supabase: Awaited<ReturnType<typeof createClient>>;
 };
 
-export async function requireUserAndWorkspace(): Promise<GcalContext | null> {
+export async function requireUserAndWorkspace(): Promise<SessionContext | null> {
   const supabase = await createClient();
   const {
     data: { user },

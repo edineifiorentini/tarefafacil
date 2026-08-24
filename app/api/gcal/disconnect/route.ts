@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { requireUserAndWorkspace } from "@/lib/gcal/context";
+import { requireUserAndWorkspace } from "@/lib/auth/context";
 import { revokeToken } from "@/lib/gcal/oauth";
 import { deleteConnection, getConnection } from "@/lib/gcal/tokens";
 import { stopWatch } from "@/lib/gcal/watch";

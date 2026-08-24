@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { requireUserAndWorkspace } from "@/lib/gcal/context";
+import { requireUserAndWorkspace } from "@/lib/auth/context";
 import { pullChanges } from "@/lib/gcal/pull";
 
 // Polling de entrada: chamado pelo cliente a cada ~60s enquanto a aba está

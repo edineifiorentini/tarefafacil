@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { requireUserAndWorkspace } from "@/lib/gcal/context";
+import { requireUserAndWorkspace } from "@/lib/auth/context";
 import { reconcileOutbound } from "@/lib/gcal/outbound";
 import { undoIsFresh } from "@/lib/gcal/pull";
 import type { UndoSnapshot } from "@/lib/gcal/reconcile";
