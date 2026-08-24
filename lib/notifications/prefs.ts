@@ -16,6 +16,7 @@ export const DEFAULT_PREFS = {
   mencao: true,
   atribuicao: true,
   comentario: true,
+  aprovacao: true,
   prazos: true,
   contratos: true,
   financeiro: true,
@@ -25,6 +26,7 @@ export type Prefs = {
   mencao: boolean;
   atribuicao: boolean;
   comentario: boolean;
+  aprovacao: boolean;
   prazos: boolean;
   contratos: boolean;
   financeiro: boolean;
@@ -38,6 +40,7 @@ export function prefsFrom(
     mencao: row.mencao,
     atribuicao: row.atribuicao,
     comentario: row.comentario,
+    aprovacao: row.aprovacao,
     prazos: row.prazos,
     contratos: row.contratos,
     financeiro: row.financeiro,

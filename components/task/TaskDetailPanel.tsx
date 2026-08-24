@@ -48,6 +48,7 @@ import { TaskMeetToggle } from "./TaskMeetToggle";
 import { TaskSyncToggle } from "./TaskSyncToggle";
 import { TimeTracking } from "./TimeTracking";
 import { ConfirmDeleteDialog } from "./ConfirmDeleteDialog";
+import { ApprovalHistory } from "./ApprovalHistory";
 import { SharePanel } from "./SharePanel";
 
 const PRIORITIES = [
@@ -444,6 +445,10 @@ export function TaskDetailPanel({ taskId }: { taskId: string }) {
           </Field>
 
           <SharePanel workspaceId={workspace.id} taskId={taskId} />
+
+          <Field label="Resposta do cliente">
+            <ApprovalHistory taskId={taskId} />
+          </Field>
         </TabsContent>
 
         <TabsContent value="atividade">

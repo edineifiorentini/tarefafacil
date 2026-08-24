@@ -39,6 +39,9 @@ export type PublicTaskView = {
   updatedAt: string;
   /** Nome da organização que compartilhou, para o visitante se situar. */
   orgName: string | null;
+  /** A última resposta deste link, para a caixa não fingir que é a primeira. */
+  lastDecision: "aprovado" | "ajuste" | null;
+  lastDecisionAt: string | null;
 };
 
 export type ShareResult =
@@ -54,7 +57,7 @@ export async function readSharedTask(token: string): Promise<ShareResult> {
 
   const { data: link } = await db
     .from("share_link")
-    .select("entity_id, workspace_id, revoked_at, expires_at, entity_type")
+    .select("id, entity_id, workspace_id, revoked_at, expires_at, entity_type")
     .eq("token", token)
     .maybeSingle();
 
@@ -86,6 +89,7 @@ export async function readSharedTask(token: string): Promise<ShareResult> {
     { data: assignee },
     { data: subtasks },
     { data: org },
+    { data: ultima },
   ] = await Promise.all([
     task.sector_id
       ? db.from("sector").select("name").eq("id", task.sector_id).maybeSingle()
@@ -106,6 +110,15 @@ export async function readSharedTask(token: string): Promise<ShareResult> {
       .from("workspace")
       .select("name")
       .eq("id", link.workspace_id)
+      .maybeSingle(),
+    // A última resposta DESTE link. De outro link não interessa: quem abre
+    // só precisa saber o que ele mesmo já respondeu.
+    db
+      .from("task_approval")
+      .select("decision, created_at")
+      .eq("share_link_id", link.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
       .maybeSingle(),
   ]);
 
@@ -130,6 +143,8 @@ export async function readSharedTask(token: string): Promise<ShareResult> {
       })),
       updatedAt: task.updated_at,
       orgName: org?.name ?? null,
+      lastDecision: (ultima?.decision as "aprovado" | "ajuste") ?? null,
+      lastDecisionAt: ultima?.created_at ?? null,
     },
   };
 }

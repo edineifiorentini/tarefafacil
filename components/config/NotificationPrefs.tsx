@@ -22,6 +22,11 @@ const EVENTOS: Linha[] = [
     detalhe: "Quando alguém coloca seu nome como responsável.",
   },
   {
+    chave: "aprovacao",
+    label: "Resposta do cliente",
+    detalhe: "O cliente aprovou ou pediu ajuste pelo link público.",
+  },
+  {
     chave: "comentario",
     label: "Comentários nas minhas demandas",
     detalhe: "Alguém comentou em algo que é seu.",

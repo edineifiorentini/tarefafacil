@@ -1,6 +1,7 @@
 import { IconCheck, IconCircle, IconEyeOff } from "@tabler/icons-react";
 import type { Metadata } from "next";
 
+import { ApprovalBox } from "@/components/share/ApprovalBox";
 import { readSharedTask } from "@/lib/share/publicTask";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -150,6 +151,16 @@ export default async function SharedTaskPage({
         ) : null}
         <span>Atualizado em {dataBR(view.updatedAt)}</span>
       </footer>
+
+      {/* Demanda cancelada não tem o que aprovar. Concluída tem: é comum o
+          cliente aprovar depois de a peça ficar pronta. */}
+      {view.state !== "cancelada" ? (
+        <ApprovalBox
+          token={token}
+          ultimaDecisao={view.lastDecision}
+          ultimaEm={view.lastDecisionAt ? dataBR(view.lastDecisionAt) : null}
+        />
+      ) : null}
     </main>
   );
 }

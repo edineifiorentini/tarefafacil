@@ -10,6 +10,7 @@ import {
   IconCoin,
   IconFileText,
   IconMessage,
+  IconThumbUp,
   IconUserPlus,
   IconX,
 } from "@tabler/icons-react";
@@ -85,6 +86,7 @@ const EVENT_ICON: Record<NotificationKind, typeof IconBell> = {
   mencao: IconAt,
   atribuicao: IconUserPlus,
   comentario: IconMessage,
+  aprovacao: IconThumbUp,
 };
 
 /**
