@@ -25,6 +25,18 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
     redirect("/login");
   }
 
+  // Cadastro pela metade — quem entra pelo Google nunca passa pelo
+  // formulário. A 0063 deu `onboarding_completed_at` a todo mundo que já
+  // existia, então ninguém antigo cai aqui.
+  const { data: perfil } = await supabase
+    .from("app_user")
+    .select("onboarding_completed_at")
+    .eq("id", user.id)
+    .maybeSingle();
+  if (perfil && !perfil.onboarding_completed_at) {
+    redirect("/completar-cadastro");
+  }
+
   const { data: workspaces } = await supabase
     .from("workspace")
     .select("*")

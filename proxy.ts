@@ -36,6 +36,9 @@ export async function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname;
   const isPublic =
     path.startsWith("/login") ||
+    // Cadastro e termos: quem abre não tem conta, por definição.
+    path.startsWith("/cadastro") ||
+    path.startsWith("/termos") ||
     path.startsWith("/auth") ||
     // Aceite de convite: a própria página decide login/redirect (precisa
     // renderizar mesmo sem sessão para preservar o token no /login?next=).
