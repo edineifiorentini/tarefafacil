@@ -273,3 +273,36 @@ Falta:
       Geral, que é onde está o cartão de integração.
 - [ ] A aba Assinatura vista por quem **está em teste de verdade** (a minha
       empresa tem plano; o caso do trial só apareceu com dado forçado).
+
+---
+
+## 14. Cadastro com senha e aprovação do cliente (24/ago)
+
+**Cadastro** — verificado na tela: senha fraca lista o que falta e trava o
+botão; confirmação diferente avisa; CPF inválido avisa; sem aceite não
+envia; tudo certo libera. No banco, com sessão do próprio usuário: conta
+nova nasce com cadastro incompleto e workspace em teste, login com senha
+devolve sessão, os três registros gravam sob RLS, aceitar duas vezes gera
+uma linha só, e ninguém apaga o próprio aceite.
+
+**Aprovação** — verificado na tela pública, sem sessão: "pedir ajuste" abre
+o campo, enviar vazio é recusado, e o envio com texto gravou a resposta e a
+notificação. No banco, com a chave anônima: token inventado, decisão
+inválida e link revogado devolvem false; visitante não lê nem escreve na
+tabela; repetir a mesma decisão em menos de um minuto não duplica.
+
+Falta:
+
+- [ ] **O porteiro do cadastro incompleto.** O caminho de dados está
+      provado, mas o redirecionamento para `/completar-cadastro` não foi
+      visto acontecendo — a janela perdeu a sessão no meio do teste. É o
+      caso a conferir primeiro: entrar normalmente e confirmar que **não**
+      há redirecionamento para quem já tem cadastro completo.
+- [ ] **Cadastro pelo Google** de uma conta nova, caindo na tela de
+      completar e voltando para os planos.
+- [ ] **A resposta do cliente aparecendo no sino** de quem responde pela
+      demanda, com o interruptor novo de "Resposta do cliente" ligado e
+      desligado.
+- [ ] O histórico no painel da demanda depois de duas ou três idas e vindas.
+- [ ] Confirmação de e-mail DESLIGADA no Supabase: o cadastro deve entrar
+      direto, sem a tela de "confirme seu e-mail".

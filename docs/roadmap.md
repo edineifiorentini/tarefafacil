@@ -764,3 +764,116 @@ produto é pt-BR e BRL; seletor com uma opção é mobília), SMTP e modelos de
 e-mail (não enviamos e-mail nenhum ainda — ver seção 12), integrações de
 pagamento além do EFI, e a aba de "Atualizações" (changelog), que só se
 sustenta com disciplina de manutenção a cada release.
+
+---
+
+## 17. Cadastro com senha (24/ago/2026, migration 0063)
+
+O dono pediu login e senha no lugar do link mágico. Concordei, e o motivo é
+mais forte que preferência: **o link mágico depende de e-mail chegar**, e
+esse é o canal mais frágil do sistema — não há provedor configurado, e o
+SMTP embutido do Supabase é limitado a poucos envios por hora. Cada cadastro
+novo dependia de uma entrega que podia não acontecer.
+
+**A contrapartida, registrada porque morde depois:** senha sem e-mail
+confiável é senha sem recuperação. Por isso o link mágico **continua**, como
+caminho de "esqueci minha senha" — tirá-lo deixaria quem esquece sem volta.
+
+**Descoberta que mudou o desenho:** a confirmação de e-mail está LIGADA no
+projeto (`mailer_autoconfirm: false`, lido em `/auth/v1/settings`). Com ela
+ligada, `signUp` não devolve sessão e o cadastro continua dependendo de
+entrega. O formulário foi escrito para funcionar **nos dois modos**: se vem
+sessão, grava o perfil na hora e leva para os planos; se não vem, mostra
+"confirme seu e-mail" e os dados viajam nos metadados do usuário até o
+primeiro login. Desligar o interruptor no painel do Supabase passa a valer
+sem mexer em código.
+
+Os dados vão para `workspace_profile`, que já era a identidade que sai nos
+contratos — não criamos um segundo lugar para o mesmo CNPJ. A 0063 só
+acrescentou `document_type` (a coluna `document` nasceu como CNPJ e agora
+guarda CPF também), a tabela `terms_acceptance` (que grava **qual versão** e
+quando, porque um booleano "aceitou" é inútil quando o texto muda) e
+`app_user.onboarding_completed_at`, com backfill para ninguém que já usa o
+sistema acordar preso numa tela de cadastro.
+
+**Quem entra pelo Google** cai em `/completar-cadastro` e preenche os mesmos
+dados. O porteiro está no layout de `(app)`.
+
+**Os termos são RASCUNHO**, escritos por quem não é advogado, com tarja no
+topo dizendo isso. Existem para o cadastro não apontar para uma página vazia
+— e porque é a única parte disto com consequência jurídica. Precisam ser
+revistos antes de o sistema ser oferecido comercialmente.
+
+**Regra da senha**: mínimo de dez caracteres, letra, número e caractere
+especial. O mínimo existe porque **comprimento protege mais que
+composição** — exigir só a composição empurra todo mundo para a mesma senha
+curta com um `@` no meio, que é o padrão que os ataques testam primeiro.
+
+---
+
+## 18. Aprovação do cliente no link público (24/ago/2026, migration 0064)
+
+O elo que faltava. O link da 0046 mostrava a demanda e contava as aberturas,
+mas quem abria não tinha como responder — a aprovação acontecia no WhatsApp
+e sumia. Agora o cliente aprova ou pede ajuste, com comentário, e quem
+responde pela demanda recebe no sino.
+
+Quatro decisões:
+
+- **É histórico, não estado.** O ciclo real é enviar, pedir ajuste,
+  corrigir, enviar de novo, aprovar. Guardar só "aprovado sim/não" apagaria
+  o pedido de ajuste, que é justamente o que explica por que a peça mudou. O
+  estado atual é derivado da última linha, como "atrasada" e "vencido".
+- **Quem escreve é a função, não o visitante.** A página roda sem usuário;
+  dar policy de insert para `anon` abriria a tabela. `record_task_approval` é
+  security definer, valida o token e faz uma coisa só — mesmo desenho do
+  `register_share_view`.
+- **O nome é o que a pessoa digitar**, e não é identificação. Quem abre o
+  link é anônimo por definição; pedir o nome é cortesia para quem lê depois.
+  Ninguém deve tratar esse campo como prova.
+- **Repetição imediata não vira linha nova**: a mesma decisão, do mesmo
+  link, dentro de um minuto, é ignorada. Clique duplo não enche o histórico.
+
+A notificação tem tipo próprio (`aprovacao`) e interruptor próprio nas
+preferências — resposta de cliente não é comentário de colega.
+
+---
+
+## 19. Instagram: agendar e publicar — o que descobri antes de começar
+
+Pedido pelo dono em 24/ago/2026. **Nada foi construído**; o que segue é o
+levantamento que muda o plano.
+
+**1. A API do Instagram não agenda.** Não existe parâmetro de "publicar às
+15:30" na API de publicação da Meta. O agendamento que existe é o do
+Business Suite, na interface deles, e não é exposto para aplicativos. Então
+**o agendamento é nosso**: guardar data e hora e ter um trabalho periódico
+publicando na hora certa. Não é detalhe — é o que define a arquitetura.
+
+**2. App Review é um portão, e a referência também não passou por ele.** No
+print que o dono mandou, o produto de referência pede _"seu usuário ou ID do
+Facebook… para cadastrar você como testador no app da Meta"_. Só se cadastra
+testador quando o app está em modo de desenvolvimento; depois da revisão,
+qualquer pessoa conecta sozinha. O "beta com fila" é a forma elegante de
+dizer que existe teto de testadores. Nós vamos pelo mesmo caminho: app da
+Meta, verificação de negócio, política de privacidade pública e revisão.
+
+**3. Exigências que geram suporte**: a conta precisa ser Instagram
+profissional vinculada a uma página do Facebook (conta pessoal não publica
+por API), e a mídia precisa estar numa URL que a Meta consiga buscar —
+nosso bucket é privado, então será URL assinada com validade suficiente.
+
+**4. Token de 60 dias** que precisa de renovação, mesma classe de trabalho
+da integração com o Google Agenda.
+
+**5. A frequência do cron decide se o agendamento por hora existe.** No
+plano Hobby da Vercel, tarefa agendada roda uma vez por dia — o que torna
+"publicar às 15:30" impossível. No Pro dá para rodar de minuto em minuto. Se
+for Hobby, o disparador precisa ser externo (GitHub Actions chamando a rota
+autenticada por `CRON_SECRET` resolve, de graça). **A conferir antes de
+construir a fila.**
+
+**Ordem combinada com o dono**: aprovação no link público primeiro (feita,
+seção 18); depois o modelo de publicação com fila e publicador falso, atrás
+de uma interface como o `PaymentGateway`; e o plugue da Meta por último,
+quando houver app, conta profissional e revisão aprovada.

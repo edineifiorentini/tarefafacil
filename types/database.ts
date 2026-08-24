@@ -36,7 +36,8 @@ export type ClientStatus = "prospecto" | "ativo" | "pausado" | "encerrado";
  */
 export type DealStageKind = "aberta" | "ganho" | "perdido";
 /** Notificação de evento. Alerta de prazo é derivado, não tem linha. */
-export type NotificationKind = "mencao" | "atribuicao" | "comentario";
+export type NotificationKind =
+  "mencao" | "atribuicao" | "comentario" | "aprovacao";
 /** A que o clique da notificação leva. */
 export type NotificationEntity = "task" | "chat_channel";
 export type ChatMessageKind = "humano" | "sistema";
@@ -121,6 +122,8 @@ export type Database = {
           avatar_url: string | null;
           locale: string;
           timezone: string;
+          /** Quando a pessoa terminou o cadastro. Null = falta preencher. */
+          onboarding_completed_at: string | null;
           created_at: string;
         };
         Insert: {
@@ -130,6 +133,7 @@ export type Database = {
           avatar_url?: string | null;
           locale?: string;
           timezone?: string;
+          onboarding_completed_at?: string | null;
           created_at?: string;
         };
         Update: {
@@ -139,6 +143,7 @@ export type Database = {
           avatar_url?: string | null;
           locale?: string;
           timezone?: string;
+          onboarding_completed_at?: string | null;
           created_at?: string;
         };
         Relationships: [];
@@ -1270,12 +1275,43 @@ export type Database = {
         };
         Relationships: [];
       };
+      task_approval: {
+        Row: {
+          id: string;
+          workspace_id: string;
+          task_id: string;
+          share_link_id: string | null;
+          decision: "aprovado" | "ajuste";
+          comment: string | null;
+          /** O nome digitado pelo visitante. Não é identificação. */
+          author_name: string | null;
+          created_at: string;
+        };
+        // Quem grava é `record_task_approval`, não o cliente.
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
+      terms_acceptance: {
+        Row: {
+          id: string;
+          user_id: string;
+          version: string;
+          accepted_at: string;
+        };
+        Insert: { user_id: string; version: string };
+        // Aceite que se edita não prova nada.
+        Update: never;
+        Relationships: [];
+      };
       notification_preference: {
         Row: {
           user_id: string;
           mencao: boolean;
           atribuicao: boolean;
           comentario: boolean;
+          /** Resposta do cliente no link público (0064). */
+          aprovacao: boolean;
           prazos: boolean;
           contratos: boolean;
           financeiro: boolean;
@@ -1286,6 +1322,7 @@ export type Database = {
           mencao?: boolean;
           atribuicao?: boolean;
           comentario?: boolean;
+          aprovacao?: boolean;
           prazos?: boolean;
           contratos?: boolean;
           financeiro?: boolean;
@@ -1294,6 +1331,7 @@ export type Database = {
           mencao?: boolean;
           atribuicao?: boolean;
           comentario?: boolean;
+          aprovacao?: boolean;
           prazos?: boolean;
           contratos?: boolean;
           financeiro?: boolean;
@@ -1498,6 +1536,8 @@ export type Database = {
           workspace_id: string;
           legal_name: string | null;
           document: string | null;
+          /** pf ou pj — desde a 0063, `document` guarda CPF ou CNPJ. */
+          document_type: "pf" | "pj" | null;
           state_registration: string | null;
           address: string | null;
           email: string | null;
@@ -1512,6 +1552,7 @@ export type Database = {
           workspace_id: string;
           legal_name?: string | null;
           document?: string | null;
+          document_type?: "pf" | "pj" | null;
           state_registration?: string | null;
           address?: string | null;
           email?: string | null;
@@ -1533,6 +1574,7 @@ export type Database = {
           workspace_id?: string;
           legal_name?: string | null;
           document?: string | null;
+          document_type?: "pf" | "pj" | null;
           state_registration?: string | null;
           address?: string | null;
           email?: string | null;
@@ -1662,6 +1704,16 @@ export type Database = {
         Args: { p_token: string };
         Returns: undefined;
       };
+      /** Resposta do cliente pelo link público. Devolve false se o link não vale. */
+      record_task_approval: {
+        Args: {
+          p_token: string;
+          p_decision: "aprovado" | "ajuste";
+          p_comment?: string | null;
+          p_author?: string | null;
+        };
+        Returns: boolean;
+      };
       open_direct_channel: {
         Args: { ws: string; other: string };
         /** id do canal direto — reaproveita o existente ou cria. */
@@ -1728,6 +1780,7 @@ export type WorkspaceInvite = Tables<"workspace_invite">;
 export type Client = Tables<"client">;
 export type Deal = Tables<"deal">;
 export type Service = Tables<"service">;
+export type TaskApproval = Tables<"task_approval">;
 export type NotificationPreference = Tables<"notification_preference">;
 export type PipelineStage = Tables<"pipeline_stage">;
 export type WorkspaceProfile = Tables<"workspace_profile">;
