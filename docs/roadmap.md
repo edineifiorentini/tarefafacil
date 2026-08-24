@@ -877,3 +877,65 @@ construir a fila.**
 seção 18); depois o modelo de publicação com fila e publicador falso, atrás
 de uma interface como o `PaymentGateway`; e o plugue da Meta por último,
 quando houver app, conta profissional e revisão aprovada.
+
+---
+
+## 20. Instagram — BLOQUEADO na formalização da empresa (24/ago/2026)
+
+Publicar no Instagram a partir da demanda aprovada, com data e hora, e
+devolver relatório do que foi publicado. É um baita diferencial: nenhuma
+das ferramentas que o dono usou como referência fecha o ciclo
+briefing → aprovação do cliente → publicação → métrica no mesmo lugar.
+
+**O bloqueio, decidido pelo dono em 24/ago:** a integração com a Meta não
+sai do modo de desenvolvimento sem **verificação de negócio**, e a
+verificação exige empresa formalizada com CNPJ. O CNPJ só vem quando o
+sistema começar a ser vendido oficialmente. Enquanto isso, qualquer
+trabalho no plugue da Meta é código que ninguém pode usar — só o dono do
+app e os testadores cadastrados na mão.
+
+Isso apareceu na prática: o próprio painel avisou que o "Login do Facebook
+para Empresas" exige acesso avançado ao `public_profile`, e conceder acesso
+avançado é onde a verificação é cobrada.
+
+**O que foi escrito e depois REMOVIDO de propósito** (migrations 0065 e
+0066, no histórico do git de 24/ago):
+
+- `/api/meta/data-deletion` — o retorno de exclusão de dados que a Meta
+  exige e testa durante a revisão. Conferia a assinatura com a chave
+  secreta em tempo constante e recusava sem a chave configurada.
+- `/exclusao-de-dados` — a página de acompanhamento que esse retorno
+  aponta.
+- `meta_deletion_request` — a tabela por trás das duas (criada na 0065,
+  derrubada na 0066).
+- `META_APP_ID`, `META_APP_SECRET` e `META_REDIRECT_URI` no `.env.example`.
+
+Saíram porque endpoint público sem integração atrás é superfície exposta
+sem dono, e porque a política de privacidade não pode descrever coleta de
+dados que não acontece — isso é promessa falsa ao cliente, não preparação.
+Está tudo a um `git show` de distância quando voltar.
+
+**O que FICOU, porque vale por si:** `/privacidade`, sem a seção da Meta.
+Um produto que cobra e guarda CPF/CNPJ precisa de política de privacidade
+com ou sem Instagram. Continua RASCUNHO jurídico, como os termos.
+
+**Também já feito e fora do sistema:** a URI de redirecionamento está
+cadastrada no app da Meta (`https://tarefafacil.vercel.app/api/meta/callback`),
+em modo estrito. Se o domínio virar um próprio, precisa ser refeita lá.
+
+**O caminho, quando o CNPJ existir**, na ordem:
+
+1. Verificação de negócio no Gerenciador de Negócios da Meta.
+2. Acesso avançado ao `public_profile`.
+3. Produto Instagram adicionado — e a decisão que ficou em aberto: se o
+   painel oferecer **"Instagram com Login do Instagram"**, o cliente conecta
+   **sem precisar de página do Facebook**, o que remove a maior fonte de
+   suporte da função.
+4. App Review das permissões de publicação e de métricas.
+5. Restaurar a exclusão de dados e a seção da privacidade (0065 no git).
+6. Só então a fila com publicador falso e, por último, o plugue real.
+
+**Limites da API que já pesam no desenho** e não mudam com CNPJ: a Graph
+API **não agenda** — quem agenda é a nossa fila, que publica na hora certa;
+são 50 publicações por conta a cada 24h; e o token de página dura 60 dias,
+então precisa de renovação automática antes de vencer.

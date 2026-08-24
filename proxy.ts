@@ -39,6 +39,7 @@ export async function proxy(request: NextRequest) {
     // Cadastro e termos: quem abre não tem conta, por definição.
     path.startsWith("/cadastro") ||
     path.startsWith("/termos") ||
+    path.startsWith("/privacidade") ||
     path.startsWith("/auth") ||
     // Aceite de convite: a própria página decide login/redirect (precisa
     // renderizar mesmo sem sessão para preservar o token no /login?next=).
