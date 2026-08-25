@@ -8,8 +8,11 @@ import type { ReactNode } from "react";
 import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { useShell } from "@/components/shell/shell-context";
+import { localDayISO } from "@/lib/dates/day";
 import { useDatedSubtasks, useToggleDatedSubtask } from "@/lib/queries/useHoje";
+import { useMembers } from "@/lib/queries/useMembers";
 import { useSectors } from "@/lib/queries/useSectors";
 import {
   countOpenSubtasks,
@@ -17,7 +20,9 @@ import {
   useDeleteTask,
   useTasks,
   useToggleTaskComplete,
+  useUpdateTask,
 } from "@/lib/queries/useTasks";
+import { summarizeToday } from "@/lib/today/summary";
 import { useWorkspace } from "@/lib/queries/useWorkspace";
 import type { Subtask, Task } from "@/types/database";
 
@@ -26,17 +31,28 @@ import { DueChip } from "./DueChip";
 import { QuickAdd } from "./QuickAdd";
 import { TaskDetailPanel } from "./TaskDetailPanel";
 import { TaskRow } from "./TaskRow";
+import { TodayHeadline } from "./TodayHeadline";
 
-type Group = "atrasadas" | "hoje" | "proximos";
+type Group = "atrasadas" | "hoje" | "proximos" | "sem_data";
 type Item =
-  | { kind: "task"; due: string; task: Task }
+  | { kind: "task"; due: string | null; task: Task }
   | { kind: "subtask"; due: string; subtask: Subtask };
 
 const GROUP_LABELS: Record<Group, string> = {
   atrasadas: "Atrasadas",
   hoje: "Hoje",
   proximos: "Próximos 7 dias",
+  sem_data: "Sem data definida",
 };
+
+/**
+ * Quantas "sem data" aparecem antes de recolher.
+ *
+ * Uma empresa que usa o sistema como caixa de entrada acumula centenas de
+ * tarefas sem prazo. Despejar todas no fim do Hoje enterraria o que tem
+ * prazo hoje — que é o motivo da tela existir.
+ */
+const SEM_DATA_VISIVEIS = 5;
 
 function groupOf(due: string): Group | null {
   const diff = differenceInCalendarDays(parseISO(due), new Date());
@@ -70,33 +86,37 @@ function Section({
 
 export function HojeView() {
   const workspace = useWorkspace();
-  const { data: tasks = [] } = useTasks(workspace.id);
+  const { data: tasks = [], isPending: carregando } = useTasks(workspace.id);
   const { data: sectors = [] } = useSectors(workspace.id);
   const { data: datedSubtasks = [] } = useDatedSubtasks(workspace.id);
+  const { data: members = [] } = useMembers(workspace.id);
   const toggle = useToggleTaskComplete(workspace.id);
   const complete = useCompleteTask(workspace.id);
   const deleteTask = useDeleteTask(workspace.id);
   const toggleSub = useToggleDatedSubtask(workspace.id);
+  const updateTask = useUpdateTask(workspace.id);
   const { openPanel } = useShell();
 
   const [confirm, setConfirm] = useState<{ task: Task; count: number } | null>(
     null
   );
+  const [verTodasSemData, setVerTodasSemData] = useState(false);
+
+  const hojeISO = localDayISO(new Date());
+  const summary = summarizeToday(tasks, sectors, members, hojeISO);
 
   const sectorsById = new Map(sectors.map((s) => [s.id, s]));
   const tasksById = new Map(tasks.map((t) => [t.id, t]));
 
   const items: Item[] = [
+    // Sem data entra agora: antes ela era filtrada aqui e não aparecia em
+    // lugar nenhum do Hoje, o que fazia tarefa registrada sem prazo sumir do
+    // dia de quem a registrou.
     ...tasks
-      .filter(
-        (t) =>
-          t.completed_at === null &&
-          t.cancelled_at === null &&
-          t.due_date !== null
-      )
+      .filter((t) => t.completed_at === null && t.cancelled_at === null)
       .map((t) => ({
         kind: "task" as const,
-        due: t.due_date as string,
+        due: t.due_date,
         task: t,
       })),
     ...datedSubtasks.map((s) => ({
@@ -110,17 +130,35 @@ export function HojeView() {
     atrasadas: [],
     hoje: [],
     proximos: [],
+    sem_data: [],
   };
   for (const item of items) {
+    if (item.due === null) {
+      groups.sem_data.push(item);
+      continue;
+    }
     const g = groupOf(item.due);
     if (g) groups[g].push(item);
   }
-  for (const list of Object.values(groups)) {
-    list.sort((a, b) => a.due.localeCompare(b.due));
+  for (const [nome, list] of Object.entries(groups)) {
+    if (nome === "sem_data") {
+      // Sem prazo para ordenar, a ordem útil é a de chegada — a mais recente
+      // primeiro, que é a que a pessoa acabou de registrar.
+      list.sort((a, b) =>
+        a.kind === "task" && b.kind === "task"
+          ? b.task.created_at.localeCompare(a.task.created_at)
+          : 0
+      );
+    } else {
+      list.sort((a, b) => (a.due ?? "").localeCompare(b.due ?? ""));
+    }
   }
 
   const total =
-    groups.atrasadas.length + groups.hoje.length + groups.proximos.length;
+    groups.atrasadas.length +
+    groups.hoje.length +
+    groups.proximos.length +
+    groups.sem_data.length;
 
   function openTask(id: string) {
     openPanel({ title: "Tarefa", node: <TaskDetailPanel taskId={id} /> });
@@ -150,6 +188,12 @@ export function HojeView() {
           onToggle={(c) => handleToggle(t, c)}
           onDelete={() => deleteTask(t)}
           onOpen={() => openTask(t.id)}
+          onSetToday={
+            t.due_date === null
+              ? () =>
+                  updateTask.mutate({ id: t.id, patch: { due_date: hojeISO } })
+              : undefined
+          }
         />
       );
     }
@@ -185,6 +229,21 @@ export function HojeView() {
     );
   }
 
+  // Enquanto as tarefas não chegam, esqueleto — e não o estado vazio.
+  //
+  // São dois defeitos no mesmo lugar. O visível: quem tinha demandas via
+  // "Seu dia está livre" piscar antes da lista, que é a mentira mais
+  // desanimadora que esta tela poderia contar. O invisível: o servidor
+  // renderizava o estado vazio e o cliente já hidratava com dados, e o React
+  // acusava desencontro de hidratação. Um esqueleto sai igual dos dois lados.
+  if (carregando) {
+    return (
+      <div className="max-w-[var(--max-width-read)] px-6 py-8">
+        <Skeleton variant="block" className="h-32" />
+      </div>
+    );
+  }
+
   if (total === 0) {
     return (
       <EmptyState
@@ -207,6 +266,8 @@ export function HojeView() {
 
   return (
     <div className="max-w-[var(--max-width-read)] px-6 py-8">
+      <TodayHeadline summary={summary} />
+
       {(["atrasadas", "hoje", "proximos"] as const).map((g) =>
         groups[g].length > 0 ? (
           <Section key={g} title={GROUP_LABELS[g]} count={groups[g].length}>
@@ -214,6 +275,29 @@ export function HojeView() {
           </Section>
         ) : null
       )}
+
+      {/* Sem data vem por último e recolhida: ela não tem prazo, então não
+          disputa atenção com o que tem. */}
+      {groups.sem_data.length > 0 ? (
+        <Section title={GROUP_LABELS.sem_data} count={groups.sem_data.length}>
+          {(verTodasSemData
+            ? groups.sem_data
+            : groups.sem_data.slice(0, SEM_DATA_VISIVEIS)
+          ).map(renderItem)}
+
+          {groups.sem_data.length > SEM_DATA_VISIVEIS ? (
+            <button
+              type="button"
+              onClick={() => setVerTodasSemData((v) => !v)}
+              className="text-fg-secondary hover:text-fg mt-1 w-fit rounded-sm px-3 py-1 text-[length:var(--text-small-size)] transition-colors [transition-duration:var(--dur-fast)] outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-ring)]"
+            >
+              {verTodasSemData
+                ? "Mostrar menos"
+                : `Ver as outras ${groups.sem_data.length - SEM_DATA_VISIVEIS}`}
+            </button>
+          ) : null}
+        </Section>
+      ) : null}
 
       {confirm ? (
         <ConfirmCompleteDialog

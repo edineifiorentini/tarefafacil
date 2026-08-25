@@ -1,13 +1,19 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { IconChevronDown } from "@tabler/icons-react";
+import { useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 
 import { useShell } from "@/components/shell/shell-context";
 import { Button } from "@/components/ui/Button";
 import { Select } from "@/components/ui/Select";
+import { Textarea } from "@/components/ui/Textarea";
 import { TextInput } from "@/components/ui/TextInput";
 import { useToast } from "@/components/ui/Toast";
+import { useClients } from "@/lib/queries/useClients";
+import { useMembers } from "@/lib/queries/useMembers";
+import { useProjects } from "@/lib/queries/useProjects";
 import { useSectors } from "@/lib/queries/useSectors";
 import { useCreateTask } from "@/lib/queries/useTasks";
 import { useWorkspace } from "@/lib/queries/useWorkspace";
@@ -18,12 +24,48 @@ import { SectorForm } from "@/components/sector/SectorForm";
 
 import { TaskDetailPanel } from "./TaskDetailPanel";
 
+/** "Nenhum" precisa de um valor: Radix Select não aceita item com value "". */
+const NENHUM = "__none__";
+
+const PRIORIDADES = [
+  { value: "sem_prioridade", label: "Sem prioridade" },
+  { value: "baixa", label: "Baixa" },
+  { value: "media", label: "Normal" },
+  { value: "alta", label: "Alta" },
+  { value: "urgente", label: "Urgente" },
+];
+
+function Campo({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <label className="flex min-w-0 flex-1 flex-col gap-1">
+      <span className="text-fg-secondary text-[length:var(--text-caption-size)]">
+        {label}
+      </span>
+      {children}
+    </label>
+  );
+}
+
 export function QuickAdd({ defaultSectorId }: { defaultSectorId?: string }) {
   const workspace = useWorkspace();
   const { data: sectors = [] } = useSectors(workspace.id);
+  const { data: members = [] } = useMembers(workspace.id);
+  const { data: clients = [] } = useClients(workspace.id);
+  const { data: projects = [] } = useProjects(workspace.id);
   const createTask = useCreateTask(workspace.id);
   const toast = useToast();
   const { openPanel, closePanel } = useShell();
+
+  // Fechado por padrão: o caminho rápido é o que faz este formulário valer.
+  // Quem abriu uma vez costuma abrir de novo, então fica aberto no registro
+  // seguinte — a preferência dura a sessão do painel, não vai para o banco.
+  const [detalhes, setDetalhes] = useState(false);
 
   const {
     register,
@@ -39,10 +81,21 @@ export function QuickAdd({ defaultSectorId }: { defaultSectorId?: string }) {
       title: "",
       sector_id: defaultSectorId ?? sectors[0]?.id ?? "",
       due_date: "",
+      priority: "media",
+      assignee_id: null,
+      client_id: null,
+      project_id: null,
+      service: "",
+      description: "",
+      estimate_hours: "",
     },
   });
 
   const sectorId = useWatch({ control, name: "sector_id" });
+  const priority = useWatch({ control, name: "priority" });
+  const assigneeId = useWatch({ control, name: "assignee_id" });
+  const clientId = useWatch({ control, name: "client_id" });
+  const projectId = useWatch({ control, name: "project_id" });
 
   function onSubmit(data: QuickAddInput) {
     createTask.mutate(
@@ -70,8 +123,17 @@ export function QuickAdd({ defaultSectorId }: { defaultSectorId?: string }) {
           toast.show({ message: "Não foi possível criar a tarefa" }),
       }
     );
-    // Mantém setor e prazo; limpa o título e volta o foco (registro em sequência).
-    reset({ title: "", sector_id: data.sector_id, due_date: data.due_date });
+    // Registro em sequência: limpa só o que é único de cada tarefa (título,
+    // descrição, estimativa) e mantém o enquadramento — setor, prazo,
+    // prioridade, responsável, cliente, projeto e tipo. Quem está lançando as
+    // demandas da semana de um cliente não quer reescolher o cliente sete
+    // vezes.
+    reset({
+      ...data,
+      title: "",
+      description: "",
+      estimate_hours: "",
+    });
     setFocus("title");
   }
 
@@ -138,6 +200,117 @@ export function QuickAdd({ defaultSectorId }: { defaultSectorId?: string }) {
           Criar
         </Button>
       </div>
+
+      <button
+        type="button"
+        onClick={() => setDetalhes((v) => !v)}
+        aria-expanded={detalhes}
+        className="text-fg-secondary hover:text-fg flex w-fit items-center gap-1 rounded-sm text-[length:var(--text-small-size)] transition-colors [transition-duration:var(--dur-fast)] outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-ring)]"
+      >
+        <IconChevronDown
+          size={14}
+          stroke={1.5}
+          className={`transition-transform [transition-duration:var(--dur-fast)] ${
+            detalhes ? "rotate-180" : ""
+          }`}
+          aria-hidden
+        />
+        Mais detalhes
+      </button>
+
+      {detalhes ? (
+        <div className="border-line flex flex-col gap-3 border-t pt-3">
+          <div className="flex gap-2">
+            <Campo label="Prioridade">
+              <Select
+                options={PRIORIDADES}
+                value={priority ?? "media"}
+                onValueChange={(v) =>
+                  setValue("priority", v as QuickAddInput["priority"])
+                }
+                aria-label="Prioridade"
+              />
+            </Campo>
+            <Campo label="Responsável">
+              <Select
+                options={[
+                  { value: NENHUM, label: "Ninguém" },
+                  ...members.map((m) => ({
+                    value: m.user_id,
+                    label: m.display_name ?? m.email,
+                  })),
+                ]}
+                value={assigneeId ?? NENHUM}
+                onValueChange={(v) =>
+                  setValue("assignee_id", v === NENHUM ? null : v)
+                }
+                aria-label="Responsável"
+              />
+            </Campo>
+          </div>
+
+          <div className="flex gap-2">
+            <Campo label="Cliente">
+              <Select
+                options={[
+                  { value: NENHUM, label: "Nenhum" },
+                  ...clients.map((c) => ({ value: c.id, label: c.name })),
+                ]}
+                value={clientId ?? NENHUM}
+                onValueChange={(v) =>
+                  setValue("client_id", v === NENHUM ? null : v)
+                }
+                aria-label="Cliente"
+              />
+            </Campo>
+            <Campo label="Projeto">
+              <Select
+                options={[
+                  { value: NENHUM, label: "Nenhum" },
+                  ...projects.map((p) => ({ value: p.id, label: p.name })),
+                ]}
+                value={projectId ?? NENHUM}
+                onValueChange={(v) =>
+                  setValue("project_id", v === NENHUM ? null : v)
+                }
+                aria-label="Projeto"
+              />
+            </Campo>
+          </div>
+
+          <div className="flex gap-2">
+            <Campo label="Tipo de demanda">
+              <TextInput
+                {...register("service")}
+                placeholder="Ex.: post, banner"
+                aria-label="Tipo de demanda"
+              />
+            </Campo>
+            <div className="w-28 shrink-0">
+              <Campo label="Estimativa (h)">
+                <TextInput
+                  inputMode="decimal"
+                  {...register("estimate_hours")}
+                  placeholder="Ex.: 2.5"
+                  aria-label="Estimativa em horas"
+                />
+              </Campo>
+            </div>
+          </div>
+
+          <Campo label="Descrição">
+            <Textarea
+              {...register("description")}
+              rows={3}
+              placeholder="O que precisa ser feito"
+              aria-label="Descrição"
+            />
+          </Campo>
+
+          {/* Anexo, subtarefa e tag não cabem aqui: precisam da tarefa já
+              salva para se pendurar nela. Ficam no painel de detalhe. */}
+        </div>
+      ) : null}
     </form>
   );
 }

@@ -5,7 +5,7 @@ import { useCallback } from "react";
 
 import { useToast } from "@/components/ui/Toast";
 import { createClient } from "@/lib/supabase/client";
-import type { QuickAddInput } from "@/lib/validation/task";
+import { estimateToMinutes, type QuickAddInput } from "@/lib/validation/task";
 import type { Task, TablesUpdate } from "@/types/database";
 
 import { useSyncTaskEvent } from "./useGcal";
@@ -28,12 +28,36 @@ function findInSnapshots(
   return undefined;
 }
 
-function optimisticTask(input: {
-  workspace_id: string;
-  sector_id: string;
-  title: string;
-  due_date: string | null;
-}): Task {
+/**
+ * Campos opcionais do "Mais detalhes" da criação rápida.
+ *
+ * Só o que veio preenchido: mandar `undefined` deixa o banco aplicar o
+ * default (prioridade "media", por exemplo) em vez de gravar nulo por cima
+ * dele. E a mesma função alimenta o insert e a linha otimista — se as duas
+ * divergirem, a tarefa pisca com um valor e assenta com outro.
+ */
+function extrasFrom(input: QuickAddInput) {
+  const estimate = estimateToMinutes(input.estimate_hours);
+  return {
+    ...(input.priority ? { priority: input.priority } : {}),
+    ...(input.assignee_id ? { assignee_id: input.assignee_id } : {}),
+    ...(input.client_id ? { client_id: input.client_id } : {}),
+    ...(input.project_id ? { project_id: input.project_id } : {}),
+    ...(input.service ? { service: input.service } : {}),
+    ...(input.description ? { description: input.description } : {}),
+    ...(estimate !== null ? { estimate_minutes: estimate } : {}),
+  };
+}
+
+function optimisticTask(
+  input: {
+    workspace_id: string;
+    sector_id: string;
+    title: string;
+    due_date: string | null;
+  },
+  extras: ReturnType<typeof extrasFrom> = {}
+): Task {
   const now = new Date().toISOString();
   return {
     id: `temp-${crypto.randomUUID()}`,
@@ -66,6 +90,9 @@ function optimisticTask(input: {
     estimate_minutes: null,
     created_at: now,
     updated_at: now,
+    // Por último, para os opcionais do "Mais detalhes" cobrirem os padrões
+    // acima. Só as chaves que vieram preenchidas existem em `extras`.
+    ...extras,
   };
 }
 
@@ -118,6 +145,7 @@ export function useCreateTask(workspaceId: string) {
           sector_id: input.sector_id,
           title: input.title,
           due_date: input.due_date || null,
+          ...extrasFrom(input),
         })
         .select()
         .single();
@@ -126,12 +154,15 @@ export function useCreateTask(workspaceId: string) {
     },
     onMutate: async (input) => {
       await qc.cancelQueries({ queryKey: [TASKS, workspaceId] });
-      const task = optimisticTask({
-        workspace_id: workspaceId,
-        sector_id: input.sector_id,
-        title: input.title,
-        due_date: input.due_date || null,
-      });
+      const task = optimisticTask(
+        {
+          workspace_id: workspaceId,
+          sector_id: input.sector_id,
+          title: input.title,
+          due_date: input.due_date || null,
+        },
+        extrasFrom(input)
+      );
       const snapshots = qc.getQueriesData<Task[]>({
         queryKey: [TASKS, workspaceId],
       });

@@ -26,6 +26,7 @@ export function TaskRow({
   onOpen,
   onDelete,
   onToggleCancel,
+  onSetToday,
   selected,
   onSelectChange,
 }: {
@@ -35,6 +36,15 @@ export function TaskRow({
   onOpen: () => void;
   onDelete: () => void;
   onToggleCancel?: (cancel: boolean) => void;
+  /**
+   * Dá prazo de hoje a uma tarefa sem data, de um clique.
+   *
+   * Ocupa o lugar do chip de prazo, que numa tarefa sem data está vazio. O
+   * sistema não põe essa data sozinho de propósito: prazo chutado vira
+   * "atrasada" amanhã sem ninguém ter combinado nada, e aí o contador de
+   * atrasadas deixa de significar atraso.
+   */
+  onSetToday?: () => void;
   selected?: boolean;
   onSelectChange?: (selected: boolean) => void;
 }) {
@@ -91,6 +101,14 @@ export function TaskRow({
         {!closed ? <PriorityBadge priority={task.priority} /> : null}
         {task.due_date ? (
           <DueChip date={task.due_date} time={task.due_time} />
+        ) : onSetToday && !closed ? (
+          <button
+            type="button"
+            onClick={onSetToday}
+            className="text-fg-muted hover:text-fg-link border-line hover:border-line-strong shrink-0 rounded-full border px-2 py-0.5 text-[length:var(--text-caption-size)] opacity-0 transition-[opacity,color,border-color] [transition-duration:var(--dur-fast)] group-hover:opacity-100 focus-visible:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-ring)]"
+          >
+            É para hoje
+          </button>
         ) : null}
         <AssigneeAvatar assigneeId={task.assignee_id} />
         <DropdownMenu.Root>
