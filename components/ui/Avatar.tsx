@@ -1,4 +1,4 @@
-type Size = "sm" | "md";
+type Size = "sm" | "md" | "xl";
 
 export interface AvatarProps {
   name: string;
@@ -9,6 +9,9 @@ export interface AvatarProps {
 const sizes: Record<Size, string> = {
   sm: "h-6 w-6 text-[length:var(--text-caption-size)]",
   md: "h-8 w-8 text-[length:var(--text-small-size)]",
+  // Só a tela de edição da própria foto usa este: é onde a pessoa precisa
+  // ver o que escolheu, não a miniatura que o resto do app mostra.
+  xl: "h-20 w-20 text-[length:var(--text-h2-size)]",
 };
 
 function initials(name: string): string {

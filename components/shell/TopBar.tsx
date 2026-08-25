@@ -2,7 +2,9 @@
 
 import {
   IconBuildingStore,
+  IconCamera,
   IconChevronDown,
+  IconKey,
   IconLogout,
   IconMenu2,
   IconPlus,
@@ -198,6 +200,28 @@ export function TopBar({ isAdmin }: { isAdmin: boolean }) {
                   </Link>
                 </DropdownMenu.Item>
               ) : null}
+              {/* Foto e senha levam à mesma aba, e é de propósito: são as
+                  duas coisas da conta pessoal, e ter uma casa só evita que
+                  amanhã existam dois lugares para mexer no mesmo perfil. */}
+              <DropdownMenu.Item asChild>
+                <Link
+                  href="/config?aba=conta"
+                  className="text-fg data-[highlighted]:bg-hover flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] outline-none"
+                >
+                  <IconCamera size={16} stroke={1.75} />
+                  Foto de perfil
+                </Link>
+              </DropdownMenu.Item>
+              <DropdownMenu.Item asChild>
+                <Link
+                  href="/config?aba=conta"
+                  className="text-fg data-[highlighted]:bg-hover flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] outline-none"
+                >
+                  <IconKey size={16} stroke={1.75} />
+                  Senha de acesso
+                </Link>
+              </DropdownMenu.Item>
+              <DropdownMenu.Separator className="bg-line my-1 h-px" />
               <DropdownMenu.Item asChild>
                 <Link
                   href="/config"

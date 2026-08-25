@@ -1,4 +1,4 @@
-import { PasswordCard } from "@/components/account/PasswordCard";
+import { AccountTab } from "@/components/account/AccountTab";
 import { SubscriptionCard } from "@/components/billing/SubscriptionCard";
 import { NotificationPrefs } from "@/components/config/NotificationPrefs";
 import { ContractTemplateManager } from "@/components/contracts/ContractTemplateManager";
@@ -63,7 +63,7 @@ export default async function ConfigPage({
         </TabsContent>
 
         <TabsContent value="conta">
-          <PasswordCard />
+          <AccountTab />
         </TabsContent>
 
         <TabsContent value="integracoes">
