@@ -54,6 +54,22 @@ const GROUP_LABELS: Record<Group, string> = {
  */
 const SEM_DATA_VISIVEIS = 5;
 
+/**
+ * A tela usa a largura toda, mas a LISTA não.
+ *
+ * O `--max-width-read` existe porque título de tarefa é texto: numa linha de
+ * 1400px o olho vai do título à esquerda até o prazo na direita e se perde.
+ * Só que ele estava segurando os números junto, e sem `mx-auto` a tela ainda
+ * ficava colada na esquerda com metade do monitor vazia.
+ *
+ * A saída é dar a cada parte a largura que ela merece: a lista fica na
+ * largura de leitura, e a faixa de números vai para uma coluna à direita, que
+ * acompanha a rolagem. Abaixo de xl não há espaço para duas colunas e ela
+ * volta para cima, como estava.
+ */
+const CONTAINER =
+  "mx-auto w-full max-w-[var(--max-width-app)] px-4 pb-8 lg:px-6";
+
 function groupOf(due: string): Group | null {
   const diff = differenceInCalendarDays(parseISO(due), new Date());
   if (diff < 0) return "atrasadas";
@@ -238,7 +254,7 @@ export function HojeView() {
   // acusava desencontro de hidratação. Um esqueleto sai igual dos dois lados.
   if (carregando) {
     return (
-      <div className="max-w-[var(--max-width-read)] px-6 py-8">
+      <div className={CONTAINER}>
         <Skeleton variant="block" className="h-32" />
       </div>
     );
@@ -265,39 +281,54 @@ export function HojeView() {
   }
 
   return (
-    <div className="max-w-[var(--max-width-read)] px-6 py-8">
-      <TodayHeadline summary={summary} />
+    <div className={CONTAINER}>
+      <div className="flex flex-col gap-6 xl:flex-row xl:items-start xl:gap-8">
+        {/* Ordem trocada por `order`, e não por `flex-row-reverse`: o reverse
+            também inverte o empacotamento, e a lista descolava da esquerda —
+            ficava boiando no meio, desalinhada do título da página.
+            No HTML o resumo vem primeiro de propósito: quem navega por
+            teclado ou leitor de tela encontra os números do dia antes da
+            lista, que é a mesma ordem de quem lê empilhado no celular. */}
+        <aside className="xl:sticky xl:top-4 xl:order-2 xl:w-[21rem] xl:shrink-0">
+          <TodayHeadline summary={summary} />
+        </aside>
 
-      {(["atrasadas", "hoje", "proximos"] as const).map((g) =>
-        groups[g].length > 0 ? (
-          <Section key={g} title={GROUP_LABELS[g]} count={groups[g].length}>
-            {groups[g].map(renderItem)}
-          </Section>
-        ) : null
-      )}
+        <div className="min-w-0 flex-1 xl:order-1 xl:max-w-[var(--max-width-read)]">
+          {(["atrasadas", "hoje", "proximos"] as const).map((g) =>
+            groups[g].length > 0 ? (
+              <Section key={g} title={GROUP_LABELS[g]} count={groups[g].length}>
+                {groups[g].map(renderItem)}
+              </Section>
+            ) : null
+          )}
 
-      {/* Sem data vem por último e recolhida: ela não tem prazo, então não
+          {/* Sem data vem por último e recolhida: ela não tem prazo, então não
           disputa atenção com o que tem. */}
-      {groups.sem_data.length > 0 ? (
-        <Section title={GROUP_LABELS.sem_data} count={groups.sem_data.length}>
-          {(verTodasSemData
-            ? groups.sem_data
-            : groups.sem_data.slice(0, SEM_DATA_VISIVEIS)
-          ).map(renderItem)}
-
-          {groups.sem_data.length > SEM_DATA_VISIVEIS ? (
-            <button
-              type="button"
-              onClick={() => setVerTodasSemData((v) => !v)}
-              className="text-fg-secondary hover:text-fg mt-1 w-fit rounded-sm px-3 py-1 text-[length:var(--text-small-size)] transition-colors [transition-duration:var(--dur-fast)] outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-ring)]"
+          {groups.sem_data.length > 0 ? (
+            <Section
+              title={GROUP_LABELS.sem_data}
+              count={groups.sem_data.length}
             >
-              {verTodasSemData
-                ? "Mostrar menos"
-                : `Ver as outras ${groups.sem_data.length - SEM_DATA_VISIVEIS}`}
-            </button>
+              {(verTodasSemData
+                ? groups.sem_data
+                : groups.sem_data.slice(0, SEM_DATA_VISIVEIS)
+              ).map(renderItem)}
+
+              {groups.sem_data.length > SEM_DATA_VISIVEIS ? (
+                <button
+                  type="button"
+                  onClick={() => setVerTodasSemData((v) => !v)}
+                  className="text-fg-secondary hover:text-fg mt-1 w-fit rounded-sm px-3 py-1 text-[length:var(--text-small-size)] transition-colors [transition-duration:var(--dur-fast)] outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-ring)]"
+                >
+                  {verTodasSemData
+                    ? "Mostrar menos"
+                    : `Ver as outras ${groups.sem_data.length - SEM_DATA_VISIVEIS}`}
+                </button>
+              ) : null}
+            </Section>
           ) : null}
-        </Section>
-      ) : null}
+        </div>
+      </div>
 
       {confirm ? (
         <ConfirmCompleteDialog

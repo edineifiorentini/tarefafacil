@@ -77,8 +77,11 @@ export function TodayHeadline({ summary }: { summary: TodaySummary }) {
   const semCarga = summary.porSetor.length === 0;
 
   return (
-    <div className="mb-6 flex flex-col gap-4">
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+    // Em xl esta faixa vira a coluna da direita, e o `mb-6` só faria falta
+    // empilhada em cima. Os números voltam a duas colunas ali: na coluna
+    // estreita, quatro lado a lado truncariam os rótulos de novo.
+    <div className="mb-6 flex flex-col gap-4 xl:mb-0">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 xl:grid-cols-2">
         <StatCard
           icon={IconAlertTriangle}
           label="Atrasadas"
@@ -113,7 +116,7 @@ export function TodayHeadline({ summary }: { summary: TodaySummary }) {
       {/* Some quando não há nada pesando: duas listas vazias no topo do dia
           livre é ruído com cara de erro. */}
       {semCarga ? null : (
-        <div className="border-line bg-card flex flex-col gap-5 rounded-md border p-4 sm:flex-row sm:gap-8">
+        <div className="border-line bg-card flex flex-col gap-5 rounded-md border p-4 sm:flex-row sm:gap-8 xl:flex-col xl:gap-5">
           <Breakdown
             title="Setores com pendência"
             itens={summary.porSetor}
