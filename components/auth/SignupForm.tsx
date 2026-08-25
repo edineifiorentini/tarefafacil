@@ -1,11 +1,12 @@
 "use client";
 
-import { IconEye, IconEyeOff } from "@tabler/icons-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { FormEvent } from "react";
 
+import { Campo } from "@/components/auth/Campo";
+import { PasswordFields } from "@/components/auth/PasswordFields";
 import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { DocumentInput } from "@/components/ui/DocumentInput";
@@ -15,38 +16,12 @@ import { completeSignup } from "@/lib/auth/completeSignup";
 import { TERMS_LABEL } from "@/lib/auth/terms";
 import { createClient } from "@/lib/supabase/client";
 import { documentLabel, isValidDocument } from "@/lib/validation/document";
-import { passwordIssues, passwordStrength } from "@/lib/validation/password";
+import { passwordIssues } from "@/lib/validation/password";
 
 const TIPOS = [
   { value: "pf", label: "Pessoa física" },
   { value: "pj", label: "Empresa" },
 ];
-
-const FORCA = ["", "fraca", "média", "forte"] as const;
-
-function Campo({
-  label,
-  children,
-  erro,
-}: {
-  label: string;
-  children: React.ReactNode;
-  erro?: string;
-}) {
-  return (
-    <label className="flex flex-col gap-1">
-      <span className="text-fg-muted text-[length:var(--text-caption-size)] font-medium tracking-wide uppercase">
-        {label}
-      </span>
-      {children}
-      {erro ? (
-        <span className="text-overdue text-[length:var(--text-caption-size)]">
-          {erro}
-        </span>
-      ) : null}
-    </label>
-  );
-}
 
 /**
  * Cadastro com senha.
@@ -71,7 +46,6 @@ export function SignupForm() {
   const [documento, setDocumento] = useState("");
   const [senha, setSenha] = useState("");
   const [confirmacao, setConfirmacao] = useState("");
-  const [verSenha, setVerSenha] = useState(false);
   const [aceite, setAceite] = useState(false);
 
   const [enviando, setEnviando] = useState(false);
@@ -79,9 +53,7 @@ export function SignupForm() {
   const [confirmeEmail, setConfirmeEmail] = useState(false);
 
   const faltas = passwordIssues(senha);
-  const forca = passwordStrength(senha);
   const documentoOk = !documento || isValidDocument(documento, tipo);
-  const confere = !confirmacao || senha === confirmacao;
 
   const pode =
     nome.trim().length > 2 &&
@@ -207,70 +179,12 @@ export function SignupForm() {
         </Campo>
       </div>
 
-      <Campo label="Senha">
-        <div className="relative">
-          <TextInput
-            type={verSenha ? "text" : "password"}
-            value={senha}
-            onChange={(e) => setSenha(e.target.value)}
-            autoComplete="new-password"
-            aria-label="Senha"
-            className="pr-10"
-          />
-          <button
-            type="button"
-            onClick={() => setVerSenha((v) => !v)}
-            aria-label={verSenha ? "Esconder senha" : "Mostrar senha"}
-            className="text-fg-muted hover:text-fg absolute top-1/2 right-2 -translate-y-1/2"
-          >
-            {verSenha ? (
-              <IconEyeOff size={18} stroke={1.75} />
-            ) : (
-              <IconEye size={18} stroke={1.75} />
-            )}
-          </button>
-        </div>
-      </Campo>
-
-      {senha ? (
-        <div className="flex flex-col gap-1">
-          <div className="flex items-center gap-2">
-            <div className="bg-line h-1 flex-1 overflow-hidden rounded-full">
-              <div
-                className={`h-full rounded-full ${
-                  forca === 3
-                    ? "bg-[var(--button-primary-bg)]"
-                    : "bg-[var(--tone-amber)]"
-                }`}
-                style={{ width: `${(forca / 3) * 100}%` }}
-              />
-            </div>
-            <span className="text-fg-muted text-[length:var(--text-caption-size)]">
-              {FORCA[forca]}
-            </span>
-          </div>
-          {faltas.length > 0 ? (
-            <ul className="text-fg-muted text-[length:var(--text-caption-size)]">
-              {faltas.map((f) => (
-                <li key={f}>• {f}</li>
-              ))}
-            </ul>
-          ) : null}
-        </div>
-      ) : null}
-
-      <Campo
-        label="Confirme a senha"
-        erro={confere ? undefined : "As senhas não são iguais"}
-      >
-        <TextInput
-          type={verSenha ? "text" : "password"}
-          value={confirmacao}
-          onChange={(e) => setConfirmacao(e.target.value)}
-          autoComplete="new-password"
-          aria-label="Confirmação da senha"
-        />
-      </Campo>
+      <PasswordFields
+        senha={senha}
+        confirmacao={confirmacao}
+        onSenha={setSenha}
+        onConfirmacao={setConfirmacao}
+      />
 
       <label className="text-fg-secondary flex items-start gap-2 text-[length:var(--text-small-size)]">
         <Checkbox

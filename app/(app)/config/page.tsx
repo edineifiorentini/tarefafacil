@@ -1,3 +1,4 @@
+import { PasswordCard } from "@/components/account/PasswordCard";
 import { SubscriptionCard } from "@/components/billing/SubscriptionCard";
 import { NotificationPrefs } from "@/components/config/NotificationPrefs";
 import { ContractTemplateManager } from "@/components/contracts/ContractTemplateManager";
@@ -49,6 +50,7 @@ export default async function ConfigPage({
       <Tabs defaultValue={inicial}>
         <TabsList>
           <TabsTrigger value="geral">Geral</TabsTrigger>
+          <TabsTrigger value="conta">Conta</TabsTrigger>
           <TabsTrigger value="integracoes">Integrações</TabsTrigger>
           <TabsTrigger value="assinatura">Assinatura</TabsTrigger>
           <TabsTrigger value="notificacoes">Notificações</TabsTrigger>
@@ -58,6 +60,10 @@ export default async function ConfigPage({
 
         <TabsContent value="geral">
           <OrgProfileForm />
+        </TabsContent>
+
+        <TabsContent value="conta">
+          <PasswordCard />
         </TabsContent>
 
         <TabsContent value="integracoes">
