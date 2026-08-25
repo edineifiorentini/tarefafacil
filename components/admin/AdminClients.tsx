@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertDialog, Dialog, DropdownMenu } from "radix-ui";
 import { useState } from "react";
 
+import { SupportAccessDialog } from "@/components/admin/SupportAccessDialog";
 import { Button } from "@/components/ui/Button";
 import { Select } from "@/components/ui/Select";
 import { TextInput } from "@/components/ui/TextInput";
@@ -52,6 +53,7 @@ function ClientRowItem({
   const [seats, setSeats] = useState(String(client.seat_limit));
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [editContact, setEditContact] = useState(false);
+  const [support, setSupport] = useState(false);
 
   function invalidate() {
     void qc.invalidateQueries({ queryKey: ["admin-clients"] });
@@ -260,6 +262,16 @@ function ClientRowItem({
                 </DropdownMenu.Item>
                 <DropdownMenu.Separator className="bg-line my-1 h-px" />
                 <DropdownMenu.Item
+                  // Sem preventDefault: aqui o menu DEVE fechar, senão fica
+                  // aberto por cima do diálogo. O diálogo mora fora do menu
+                  // justamente para sobreviver a esse fechamento.
+                  onSelect={() => setSupport(true)}
+                  className={menuItem}
+                >
+                  Acessar como suporte
+                </DropdownMenu.Item>
+                <DropdownMenu.Separator className="bg-line my-1 h-px" />
+                <DropdownMenu.Item
                   onSelect={(e) => {
                     e.preventDefault();
                     setEditContact(true);
@@ -310,6 +322,13 @@ function ClientRowItem({
           open={editContact}
           onOpenChange={setEditContact}
           onSaved={invalidate}
+        />
+
+        <SupportAccessDialog
+          workspaceId={client.id}
+          workspaceName={client.name}
+          open={support}
+          onOpenChange={setSupport}
         />
 
         <AlertDialog.Root open={confirmDelete} onOpenChange={setConfirmDelete}>

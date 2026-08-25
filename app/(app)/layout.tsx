@@ -10,9 +10,11 @@ import { ShellProvider } from "@/components/shell/shell-context";
 import { AccessExpired } from "@/components/workspace/AccessExpired";
 import { CreateWorkspace } from "@/components/workspace/CreateWorkspace";
 import { PendingApproval } from "@/components/workspace/PendingApproval";
+import { SupportBanner } from "@/components/shell/SupportBanner";
 import { PomodoroProvider } from "@/lib/pomodoro/PomodoroContext";
 import { WorkspaceProvider } from "@/lib/queries/useWorkspace";
 import { createClient } from "@/lib/supabase/server";
+import { SUPPORT_COOKIE, readSupportCookie } from "@/lib/support/session";
 
 // Guarda de autenticação + workspace ativo + casca de navegação (AppShell).
 export default async function AppLayout({ children }: { children: ReactNode }) {
@@ -88,8 +90,31 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
     .is("archived_at", null)
     .order("position", { ascending: true });
 
+  // Acesso de suporte: o cookie é assinado, então a faixa não pode ser
+  // escondida mexendo no navegador. Só aparece na conta que a sessão abriu —
+  // se o admin trocar de workspace, ele saiu do escopo do suporte.
+  const suporteBruto = cookieStore.get(SUPPORT_COOKIE)?.value;
+  const suporte = readSupportCookie(suporteBruto);
+
+  // Cookie presente mas reprovado (vencido, adulterado, ou o segredo do
+  // deploy mudou): a sessão personificada tem que cair. É AQUI e não no
+  // proxy porque a verificação usa node:crypto, que o runtime do proxy não
+  // tem — e uma sessão de suporte sem prazo é o que não pode existir.
+  if (suporteBruto && !suporte) {
+    redirect("/api/admin/support/stop");
+  }
+
+  const emSuporte = suporte?.workspaceId === workspace.id ? suporte : null;
+
   return (
     <Providers>
+      {emSuporte ? (
+        <SupportBanner
+          workspaceName={workspace.name}
+          adminEmail={emSuporte.adminEmail}
+          expiresAt={new Date(emSuporte.exp * 1000).toISOString()}
+        />
+      ) : null}
       <WorkspaceProvider workspace={workspace}>
         <PomodoroProvider>
           <ShellProvider>

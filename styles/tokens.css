@@ -201,6 +201,13 @@
   /* Anel de foco (11.2) */
   --focus-ring: var(--brand-600);
 
+  /* Escurecimento por trás de diálogo, e recorte de foto.
+     Nasceu porque a mesma coisa estava escrita de três jeitos pelo código
+     (`bg-black/40`, `rgb(var(--graphite-rgb)/0.32)` e um `var(--overlay)`
+     que não existia). O terceiro era o pior: `var()` indefinido invalida a
+     declaração inteira, então o fundo simplesmente não aparecia. */
+  --overlay: rgba(var(--graphite-rgb), 0.32);
+
   /* Status semântico (7.2) */
   --status-overdue-fg: #dc2626;
   --status-overdue-bg: #fef2f2;
@@ -274,6 +281,10 @@
   /* Vidro */
   --surface-glass: rgba(23, 26, 33, 0.72);
   --surface-glass-strong: rgba(23, 26, 33, 0.88);
+
+  /* Mais forte que no claro: sobre página escura, o grafite translúcido
+     quase não separa o diálogo do fundo. */
+  --overlay: rgba(0, 0, 0, 0.6);
   --glass-border: rgba(255, 255, 255, 0.09);
   --glass-highlight: inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
 
@@ -367,6 +378,10 @@
     --surface-subtle: rgba(255, 255, 255, 0.03);
     --surface-glass: rgba(23, 26, 33, 0.72);
     --surface-glass-strong: rgba(23, 26, 33, 0.88);
+
+    /* Mais forte que no claro: sobre página escura, o grafite translúcido
+     quase não separa o diálogo do fundo. */
+    --overlay: rgba(0, 0, 0, 0.6);
     --glass-border: rgba(255, 255, 255, 0.09);
     --glass-highlight: inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
     --text-primary: #f0f2f6;

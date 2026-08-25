@@ -1687,6 +1687,37 @@ export type Database = {
         };
         Relationships: [];
       };
+      support_session: {
+        Row: {
+          id: string;
+          workspace_id: string;
+          admin_email: string;
+          admin_user_id: string | null;
+          impersonated_user_id: string;
+          reason: string;
+          started_at: string;
+          /** Nulo enquanto a sessão está aberta. */
+          ended_at: string | null;
+          expires_at: string;
+        };
+        Insert: {
+          id?: string;
+          workspace_id: string;
+          admin_email: string;
+          admin_user_id?: string | null;
+          impersonated_user_id: string;
+          reason: string;
+          started_at?: string;
+          ended_at?: string | null;
+          expires_at: string;
+        };
+        // Só o encerramento muda depois de criada — quem entrou, quando e
+        // por quê não se reescrevem.
+        Update: {
+          ended_at?: string | null;
+        };
+        Relationships: [];
+      };
       workspace_invite: {
         Row: {
           id: string;
