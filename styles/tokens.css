@@ -243,6 +243,18 @@
   --shadow-card-hover:
     0 2px 4px rgba(var(--graphite-rgb), 0.05),
     0 14px 32px -12px rgba(var(--graphite-rgb), 0.14);
+
+  /* Hover dos cartões: em vez de escurecer, acende um halo na cor do próprio
+     cartão. `--card-tone` vem do componente — é a mesma cor do ícone —, e o
+     padrão grafite faz quem não tem cor (card de demanda, de negociação)
+     manter a sombra discreta de sempre, sem precisar de classe separada.
+
+     A composição do box-shadow mora em globals.css, no `.tf-lift:hover`, e
+     NÃO aqui. Motivo: `var()` dentro da definição de outra variável é
+     substituído onde a variável é declarada. Um token pronto no `:root`
+     congelaria o tom do root e o halo sairia cinza em todo cartão. */
+  --card-tone: rgb(var(--graphite-rgb));
+  --card-glow-mix: 60%;
   --shadow-glass: 0 8px 32px -8px rgba(var(--graphite-rgb), 0.12);
   --shadow-panel:
     0 1px 2px rgba(var(--graphite-rgb), 0.05),
@@ -346,6 +358,11 @@
     0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px -12px rgba(0, 0, 0, 0.6);
   --shadow-card-hover:
     0 2px 4px rgba(0, 0, 0, 0.45), 0 14px 32px -12px rgba(0, 0, 0, 0.7);
+
+  /* Sobre fundo escuro a cor translúcida quase não aparece; o halo precisa
+     de mais presença para dar o mesmo destaque do tema claro. */
+  --card-tone: rgb(0, 0, 0);
+  --card-glow-mix: 78%;
   --shadow-glass: 0 8px 32px -8px rgba(0, 0, 0, 0.55);
   --shadow-panel:
     0 1px 2px rgba(0, 0, 0, 0.5), 0 16px 48px -12px rgba(0, 0, 0, 0.7);
@@ -425,6 +442,12 @@
       0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px -12px rgba(0, 0, 0, 0.6);
     --shadow-card-hover:
       0 2px 4px rgba(0, 0, 0, 0.45), 0 14px 32px -12px rgba(0, 0, 0, 0.7);
+
+    /* Sobre fundo escuro a cor translúcida quase não aparece; o halo precisa
+       de mais presença para dar o mesmo destaque do tema claro. */
+    --card-tone: rgb(0, 0, 0);
+    --card-glow-mix: 78%;
+
     --shadow-glass: 0 8px 32px -8px rgba(0, 0, 0, 0.55);
     --shadow-panel:
       0 1px 2px rgba(0, 0, 0, 0.5), 0 16px 48px -12px rgba(0, 0, 0, 0.7);

@@ -238,7 +238,16 @@ button:not(:disabled),
 
 .tf-lift:hover {
   transform: translateY(-2px);
-  box-shadow: var(--shadow-card-hover);
+  /* Halo na cor do próprio cartão, não sombra mais escura.
+     A composição é AQUI e não num token pronto: `var()` dentro da definição
+     de outra variável é substituído onde a variável é declarada, então um
+     `--shadow-card-glow` no `:root` congelaria o tom do root e sairia cinza
+     em todo cartão. Usado direto no `box-shadow`, `--card-tone` resolve no
+     elemento sob o mouse, que é o que se quer. */
+  box-shadow:
+    var(--shadow-card),
+    0 12px 30px -14px
+      color-mix(in srgb, var(--card-tone) var(--card-glow-mix), transparent);
 }
 
 /* Slot do micrográfico no cartão de indicador: só aparece quando o próprio

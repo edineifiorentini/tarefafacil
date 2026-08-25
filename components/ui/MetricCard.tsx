@@ -1,3 +1,5 @@
+import type { CSSProperties } from "react";
+
 import { Sparkline } from "@/components/charts/Sparkline";
 
 import { IconTile } from "./IconTile";
@@ -32,7 +34,11 @@ export function MetricCard({
   series?: number[];
 }) {
   return (
-    <article className="tf-lift border-line bg-card @container rounded-md border p-[var(--space-card-pad)] shadow-[var(--shadow-card)]">
+    <article
+      // Mesma ideia do StatCard: o halo de hover herda a cor da métrica.
+      style={{ "--card-tone": tone } as CSSProperties}
+      className="tf-lift border-line bg-card @container rounded-md border p-[var(--space-card-pad)] shadow-[var(--shadow-card)]"
+    >
       {/* gap-3 e não gap-4: em 1280 com a grade de 4 colunas, os 4px extras
           eram o que faltava para "Taxa de conclusão" caber sem reticências. */}
       <div className="flex gap-3">

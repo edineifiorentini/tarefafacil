@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 
 import { Badge } from "@/components/ui/Badge";
 import { IconTile } from "@/components/ui/IconTile";
@@ -28,18 +28,19 @@ export function IntegrationCard({
   children?: ReactNode;
 }) {
   const emBreve = integration.state === "em_breve";
+  const tone = connected ? "var(--brand-600)" : "var(--text-muted)";
 
   return (
     <div
+      // Conectada acende azul no hover; desconectada fica no cinza discreto.
+      // É o mesmo tom do ícone — o halo confirma a cor que já está no cartão.
+      style={{ "--card-tone": tone } as CSSProperties}
       className={`border-line bg-card flex flex-col gap-3 rounded-md border p-4 ${
         emBreve ? "opacity-60" : "tf-lift"
       }`}
     >
       <div className="flex items-start justify-between gap-2">
-        <IconTile
-          icon={integration.icon}
-          tone={connected ? "var(--brand-600)" : "var(--fg-muted)"}
-        />
+        <IconTile icon={integration.icon} tone={tone} />
         {connected ? <Badge variant="brand">Conectada</Badge> : null}
         {emBreve ? <Badge>Em breve</Badge> : null}
       </div>

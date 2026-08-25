@@ -106,7 +106,7 @@ export function TodayHeadline({ summary }: { summary: TodaySummary }) {
           // O "hoje" está no título da tela e nos outros três números.
           label="Concluídas"
           value={String(summary.concluidasHoje)}
-          tone="var(--fg-muted)"
+          tone="var(--text-muted)"
         />
       </div>
 
