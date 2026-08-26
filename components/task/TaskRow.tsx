@@ -27,6 +27,7 @@ export function TaskRow({
   onDelete,
   onToggleCancel,
   onSetToday,
+  mostrarSemResponsavel = false,
   selected,
   onSelectChange,
 }: {
@@ -45,6 +46,8 @@ export function TaskRow({
    * atrasadas deixa de significar atraso.
    */
   onSetToday?: () => void;
+  /** Mostra "Sem responsável" no lugar do vazio (lista de prioridades). */
+  mostrarSemResponsavel?: boolean;
   selected?: boolean;
   onSelectChange?: (selected: boolean) => void;
 }) {
@@ -110,7 +113,10 @@ export function TaskRow({
             É para hoje
           </button>
         ) : null}
-        <AssigneeAvatar assigneeId={task.assignee_id} />
+        <AssigneeAvatar
+          assigneeId={task.assignee_id}
+          mostrarVazio={mostrarSemResponsavel}
+        />
         <DropdownMenu.Root>
           <DropdownMenu.Trigger asChild>
             <button

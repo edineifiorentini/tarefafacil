@@ -4,7 +4,7 @@ import type { Sector, Task } from "@/types/database";
 import { localDayOf } from "@/lib/dates/day";
 
 /**
- * Números do dia, para o topo do Hoje.
+ * As contas do Hoje.
  *
  * **O recorte é o dia, e é isso que separa esta tela do Dashboard.** Lá os
  * números falam do mês e dos últimos 30 dias; aqui falam do que está na
@@ -12,8 +12,8 @@ import { localDayOf } from "@/lib/dates/day";
  * não deveria estar aqui — duas telas com a mesma conta divergem no primeiro
  * ajuste de regra.
  *
- * Função pura de propósito: a conta de "quem está sobrecarregado hoje" é o
- * tipo de coisa que erra em silêncio, e teste de componente não pega isso.
+ * Funções puras de propósito: "quem está sobrecarregado hoje" é o tipo de
+ * conta que erra em silêncio, e teste de componente não pega isso.
  */
 export type SectorLoad = {
   id: string;
@@ -23,81 +23,107 @@ export type SectorLoad = {
 };
 
 export type PersonLoad = {
-  /** `null` é o balde de "ninguém pegou" — que é a informação mais útil aqui. */
+  /** `null` é o balde de "ninguém pegou" — a informação mais útil aqui. */
   id: string | null;
   name: string;
   count: number;
 };
 
-export type TodaySummary = {
-  atrasadas: number;
-  hoje: number;
-  semData: number;
-  concluidasHoje: number;
-  /** Só hoje + atrasadas, ordenado do mais carregado para o menos. */
+export type Distribution = {
   porSetor: SectorLoad[];
   porPessoa: PersonLoad[];
 };
 
-/** Aberta = não concluída e não cancelada. Cancelada não é pendência. */
-function estaAberta(t: Task): boolean {
-  return t.completed_at === null && t.cancelled_at === null;
-}
+/** Os quatro baldes do dia. Cada tarefa aberta cai em exatamente um. */
+export type Bucket = "atrasadas" | "hoje" | "proximos" | "sem_data";
 
-/**
- * O que "pesa hoje": vence hoje ou já venceu.
- *
- * Sem data não entra: ninguém prometeu nada, e contá-la como carga faria o
- * setor que registra ideias parecer o mais atolado da empresa.
- */
-function pesaHoje(t: Task, hoje: string): boolean {
-  return estaAberta(t) && t.due_date !== null && t.due_date <= hoje;
-}
+export type Buckets = Record<Bucket, Task[]>;
 
-function ordenaEContaOutros<T extends { count: number }>(
-  itens: T[],
-  teto: number
-): T[] {
-  return itens.sort((a, b) => b.count - a.count).slice(0, teto);
-}
+/** Quantos dias à frente contam como "próximos dias". */
+export const PROXIMOS_DIAS = 7;
 
 /** Quantos aparecem nas barras. Além disso vira lista, não resumo. */
 const TETO_BARRAS = 5;
 
-export function summarizeToday(
+/** Aberta = não concluída e não cancelada. Cancelada não é pendência. */
+export function estaAberta(t: Task): boolean {
+  return t.completed_at === null && t.cancelled_at === null;
+}
+
+/**
+ * Separa as tarefas abertas nos baldes do dia.
+ *
+ * Compara `due_date` como texto `YYYY-MM-DD` contra o dia civil de quem está
+ * olhando. É o mesmo critério do resto do app: `due_date` não tem hora nem
+ * fuso, então comparar com um instante em UTC erraria à noite.
+ */
+export function bucketTasks(tasks: Task[], hoje: string): Buckets {
+  const buckets: Buckets = {
+    atrasadas: [],
+    hoje: [],
+    proximos: [],
+    sem_data: [],
+  };
+
+  const limite = somarDias(hoje, PROXIMOS_DIAS);
+
+  for (const t of tasks) {
+    if (!estaAberta(t)) continue;
+    if (t.due_date === null) {
+      buckets.sem_data.push(t);
+    } else if (t.due_date < hoje) {
+      buckets.atrasadas.push(t);
+    } else if (t.due_date === hoje) {
+      buckets.hoje.push(t);
+    } else if (t.due_date <= limite) {
+      buckets.proximos.push(t);
+    }
+    // Depois da janela dos próximos dias, a tarefa não pertence a esta tela.
+  }
+
+  // Dentro do balde, a mais urgente primeiro. Sem prazo para comparar, o
+  // "sem data" usa a chegada: a mais recente é a que a pessoa acabou de
+  // registrar e ainda tem na cabeça.
+  buckets.atrasadas.sort(porPrazo);
+  buckets.hoje.sort(porPrazo);
+  buckets.proximos.sort(porPrazo);
+  buckets.sem_data.sort((a, b) => b.created_at.localeCompare(a.created_at));
+
+  return buckets;
+}
+
+function porPrazo(a: Task, b: Task): number {
+  return (a.due_date ?? "").localeCompare(b.due_date ?? "");
+}
+
+/** Soma dias a uma data civil `YYYY-MM-DD`, sem envolver fuso. */
+function somarDias(dia: string, dias: number): string {
+  const [ano, mes, d] = dia.split("-").map(Number);
+  // Meio-dia evita que horário de verão empurre o resultado um dia.
+  const data = new Date(ano, mes - 1, d + dias, 12);
+  const mm = String(data.getMonth() + 1).padStart(2, "0");
+  const dd = String(data.getDate()).padStart(2, "0");
+  return `${data.getFullYear()}-${mm}-${dd}`;
+}
+
+/**
+ * Quem carrega o quê, dentro do conjunto que a tela está mostrando.
+ *
+ * Recebe a lista já filtrada em vez de calcular sobre tudo: a distribuição
+ * responde ao filtro ativo, senão ela contradiz a lista logo ao lado — a
+ * pessoa vê duas atrasadas e um resumo falando de cinco demandas.
+ */
+export function distribute(
   tasks: Task[],
   sectors: Sector[],
-  members: Member[],
-  hoje: string
-): TodaySummary {
-  let atrasadas = 0;
-  let hojeCount = 0;
-  let semData = 0;
-  let concluidasHoje = 0;
-
+  members: Member[]
+): Distribution {
   const porSetorId = new Map<string, number>();
   const porPessoaId = new Map<string | null, number>();
 
   for (const t of tasks) {
-    // Concluída hoje conta mesmo estando fechada — é o único número da faixa
-    // que fala do que já saiu, e é o que dá a sensação de progresso.
-    if (t.completed_at !== null && localDayOf(t.completed_at) === hoje) {
-      concluidasHoje++;
-    }
-
-    if (!estaAberta(t)) continue;
-
-    if (t.due_date === null) {
-      semData++;
-      continue;
-    }
-    if (t.due_date < hoje) atrasadas++;
-    else if (t.due_date === hoje) hojeCount++;
-
-    if (pesaHoje(t, hoje)) {
-      porSetorId.set(t.sector_id, (porSetorId.get(t.sector_id) ?? 0) + 1);
-      porPessoaId.set(t.assignee_id, (porPessoaId.get(t.assignee_id) ?? 0) + 1);
-    }
+    porSetorId.set(t.sector_id, (porSetorId.get(t.sector_id) ?? 0) + 1);
+    porPessoaId.set(t.assignee_id, (porPessoaId.get(t.assignee_id) ?? 0) + 1);
   }
 
   const setorPorId = new Map(sectors.map((s) => [s.id, s]));
@@ -127,11 +153,27 @@ export function summarizeToday(
   }
 
   return {
-    atrasadas,
-    hoje: hojeCount,
-    semData,
-    concluidasHoje,
-    porSetor: ordenaEContaOutros(porSetor, TETO_BARRAS),
-    porPessoa: ordenaEContaOutros(porPessoa, TETO_BARRAS),
+    porSetor: maisCarregados(porSetor),
+    porPessoa: maisCarregados(porPessoa),
   };
+}
+
+function maisCarregados<T extends { count: number }>(itens: T[]): T[] {
+  return itens.sort((a, b) => b.count - a.count).slice(0, TETO_BARRAS);
+}
+
+/**
+ * Concluídas hoje.
+ *
+ * Único número da faixa que fala do que já saiu — e é o que dá a sensação de
+ * progresso num dia cheio. Conta pelo dia LOCAL: às 23h em UTC-3 já é o dia
+ * seguinte em UTC, e a tarefa entregue à noite sumiria do dia de quem a
+ * entregou.
+ */
+export function countConcluidasHoje(tasks: Task[], hoje: string): number {
+  let n = 0;
+  for (const t of tasks) {
+    if (t.completed_at !== null && localDayOf(t.completed_at) === hoje) n++;
+  }
+  return n;
 }

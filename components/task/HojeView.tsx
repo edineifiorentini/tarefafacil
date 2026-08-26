@@ -1,15 +1,18 @@
 "use client";
 
-import { IconSparkles } from "@tabler/icons-react";
-import { differenceInCalendarDays, parseISO } from "date-fns";
+import { IconChevronRight, IconSparkles } from "@tabler/icons-react";
+import Link from "next/link";
 import { useState } from "react";
-import type { ReactNode } from "react";
 
+import { useShell } from "@/components/shell/shell-context";
+import { PendingDistributionCard } from "@/components/today/PendingDistributionCard";
+import { PriorityTabs, type TabDef } from "@/components/today/PriorityTabs";
+import { TodayIndicators } from "@/components/today/TodayIndicators";
+import { UpcomingCard } from "@/components/today/UpcomingCard";
 import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { useShell } from "@/components/shell/shell-context";
 import { localDayISO } from "@/lib/dates/day";
 import { useDatedSubtasks, useToggleDatedSubtask } from "@/lib/queries/useHoje";
 import { useMembers } from "@/lib/queries/useMembers";
@@ -22,8 +25,13 @@ import {
   useToggleTaskComplete,
   useUpdateTask,
 } from "@/lib/queries/useTasks";
-import { summarizeToday } from "@/lib/today/summary";
 import { useWorkspace } from "@/lib/queries/useWorkspace";
+import {
+  bucketTasks,
+  countConcluidasHoje,
+  distribute,
+  type Bucket,
+} from "@/lib/today/summary";
 import type { Subtask, Task } from "@/types/database";
 
 import { ConfirmCompleteDialog } from "./ConfirmCompleteDialog";
@@ -31,74 +39,35 @@ import { DueChip } from "./DueChip";
 import { QuickAdd } from "./QuickAdd";
 import { TaskDetailPanel } from "./TaskDetailPanel";
 import { TaskRow } from "./TaskRow";
-import { TodayHeadline } from "./TodayHeadline";
 
-type Group = "atrasadas" | "hoje" | "proximos" | "sem_data";
-type Item =
-  | { kind: "task"; due: string | null; task: Task }
-  | { kind: "subtask"; due: string; subtask: Subtask };
-
-const GROUP_LABELS: Record<Group, string> = {
+const TITULOS: Record<Bucket, string> = {
   atrasadas: "Atrasadas",
-  hoje: "Hoje",
-  proximos: "Próximos 7 dias",
+  hoje: "Para hoje",
+  proximos: "Próximos dias",
   sem_data: "Sem data definida",
+};
+
+/**
+ * Frase de balde vazio, escrita uma a uma.
+ *
+ * Minusculando o título dentro de um molde saía "Nada em para hoje" — o tipo
+ * de frase que denuncia que ninguém leu a tela depois de pronta.
+ */
+const VAZIOS: Record<Bucket, string> = {
+  atrasadas: "Nenhuma demanda atrasada",
+  hoje: "Nenhuma demanda vence hoje",
+  proximos: "Nenhuma demanda nos próximos dias",
+  sem_data: "Toda demanda aberta tem prazo",
 };
 
 /**
  * Quantas "sem data" aparecem antes de recolher.
  *
  * Uma empresa que usa o sistema como caixa de entrada acumula centenas de
- * tarefas sem prazo. Despejar todas no fim do Hoje enterraria o que tem
- * prazo hoje — que é o motivo da tela existir.
+ * tarefas sem prazo. Despejar todas de uma vez enterraria o que tem prazo
+ * hoje — que é o motivo da tela existir.
  */
-const SEM_DATA_VISIVEIS = 5;
-
-/**
- * A tela usa a largura toda, mas a LISTA não.
- *
- * O `--max-width-read` existe porque título de tarefa é texto: numa linha de
- * 1400px o olho vai do título à esquerda até o prazo na direita e se perde.
- * Só que ele estava segurando os números junto, e sem `mx-auto` a tela ainda
- * ficava colada na esquerda com metade do monitor vazia.
- *
- * A saída é dar a cada parte a largura que ela merece: a lista fica na
- * largura de leitura, e a faixa de números vai para uma coluna à direita, que
- * acompanha a rolagem. Abaixo de xl não há espaço para duas colunas e ela
- * volta para cima, como estava.
- */
-const CONTAINER =
-  "mx-auto w-full max-w-[var(--max-width-app)] px-4 pb-8 lg:px-6";
-
-function groupOf(due: string): Group | null {
-  const diff = differenceInCalendarDays(parseISO(due), new Date());
-  if (diff < 0) return "atrasadas";
-  if (diff === 0) return "hoje";
-  if (diff >= 1 && diff <= 7) return "proximos";
-  return null;
-}
-
-function Section({
-  title,
-  count,
-  children,
-}: {
-  title: string;
-  count: number;
-  children: ReactNode;
-}) {
-  return (
-    <section className="mb-6">
-      <h3 className="text-fg mb-2 flex items-center gap-2 text-[length:var(--text-h3-size)] font-medium">
-        {title}
-        <span className="tnum text-fg-muted text-[length:var(--text-small-size)] font-normal">
-          {count}
-        </span>
-      </h3>
-      <div className="flex flex-col">{children}</div>
-    </section>
-  );
-}
+const SEM_DATA_VISIVEIS = 8;
 
 export function HojeView() {
   const workspace = useWorkspace();
@@ -116,65 +85,38 @@ export function HojeView() {
   const [confirm, setConfirm] = useState<{ task: Task; count: number } | null>(
     null
   );
-  const [verTodasSemData, setVerTodasSemData] = useState(false);
+  const [aba, setAba] = useState<Bucket>("atrasadas");
+  const [verTudo, setVerTudo] = useState(false);
 
   const hojeISO = localDayISO(new Date());
-  const summary = summarizeToday(tasks, sectors, members, hojeISO);
+  const baldes = bucketTasks(tasks, hojeISO);
+  const concluidas = countConcluidasHoje(tasks, hojeISO);
 
   const sectorsById = new Map(sectors.map((s) => [s.id, s]));
   const tasksById = new Map(tasks.map((t) => [t.id, t]));
 
-  const items: Item[] = [
-    // Sem data entra agora: antes ela era filtrada aqui e não aparecia em
-    // lugar nenhum do Hoje, o que fazia tarefa registrada sem prazo sumir do
-    // dia de quem a registrou.
-    ...tasks
-      .filter((t) => t.completed_at === null && t.cancelled_at === null)
-      .map((t) => ({
-        kind: "task" as const,
-        due: t.due_date,
-        task: t,
-      })),
-    ...datedSubtasks.map((s) => ({
-      kind: "subtask" as const,
-      due: s.due_date as string,
-      subtask: s,
-    })),
+  // Etapas com prazo próprio entram junto na faixa dos próximos dias, que é
+  // onde elas eram visíveis antes. Não entram na distribuição: ela conta
+  // demandas, e misturar etapa inflaria a carga do setor.
+  const subtasksProximos = datedSubtasks.filter(
+    (s) => s.due_date && s.due_date > hojeISO
+  );
+
+  const lista = baldes[aba];
+  const distribuicao = distribute(lista, sectors, members);
+
+  const abas: TabDef[] = [
+    { id: "atrasadas", label: "Atrasadas", count: baldes.atrasadas.length },
+    { id: "hoje", label: "Para hoje", count: baldes.hoje.length },
+    { id: "proximos", label: "Próximos dias", count: baldes.proximos.length },
+    { id: "sem_data", label: "Sem data", count: baldes.sem_data.length },
   ];
 
-  const groups: Record<Group, Item[]> = {
-    atrasadas: [],
-    hoje: [],
-    proximos: [],
-    sem_data: [],
-  };
-  for (const item of items) {
-    if (item.due === null) {
-      groups.sem_data.push(item);
-      continue;
-    }
-    const g = groupOf(item.due);
-    if (g) groups[g].push(item);
-  }
-  for (const [nome, list] of Object.entries(groups)) {
-    if (nome === "sem_data") {
-      // Sem prazo para ordenar, a ordem útil é a de chegada — a mais recente
-      // primeiro, que é a que a pessoa acabou de registrar.
-      list.sort((a, b) =>
-        a.kind === "task" && b.kind === "task"
-          ? b.task.created_at.localeCompare(a.task.created_at)
-          : 0
-      );
-    } else {
-      list.sort((a, b) => (a.due ?? "").localeCompare(b.due ?? ""));
-    }
-  }
-
-  const total =
-    groups.atrasadas.length +
-    groups.hoje.length +
-    groups.proximos.length +
-    groups.sem_data.length;
+  const totalAberto =
+    baldes.atrasadas.length +
+    baldes.hoje.length +
+    baldes.proximos.length +
+    baldes.sem_data.length;
 
   function openTask(id: string) {
     openPanel({ title: "Tarefa", node: <TaskDetailPanel taskId={id} /> });
@@ -193,32 +135,32 @@ export function HojeView() {
     toggle.mutate({ id: task.id, completed: true });
   }
 
-  function renderItem(item: Item) {
-    if (item.kind === "task") {
-      const t = item.task;
-      return (
-        <TaskRow
-          key={`t-${t.id}`}
-          task={t}
-          sector={sectorsById.get(t.sector_id)}
-          onToggle={(c) => handleToggle(t, c)}
-          onDelete={() => deleteTask(t)}
-          onOpen={() => openTask(t.id)}
-          onSetToday={
-            t.due_date === null
-              ? () =>
-                  updateTask.mutate({ id: t.id, patch: { due_date: hojeISO } })
-              : undefined
-          }
-        />
-      );
-    }
-    const s = item.subtask;
+  function renderTask(t: Task) {
+    return (
+      <TaskRow
+        key={t.id}
+        task={t}
+        sector={sectorsById.get(t.sector_id)}
+        mostrarSemResponsavel
+        onToggle={(c) => handleToggle(t, c)}
+        onDelete={() => deleteTask(t)}
+        onOpen={() => openTask(t.id)}
+        onSetToday={
+          t.due_date === null
+            ? () =>
+                updateTask.mutate({ id: t.id, patch: { due_date: hojeISO } })
+            : undefined
+        }
+      />
+    );
+  }
+
+  function renderSubtask(s: Subtask) {
     const parent = tasksById.get(s.task_id);
     return (
       <div
-        key={`s-${s.id}`}
-        className="group hover:bg-hover flex items-center gap-3 rounded-sm py-1 pr-2 pl-8"
+        key={s.id}
+        className="group hover:bg-hover flex items-center gap-3 rounded-md py-2 pr-3 pl-8"
       >
         <Checkbox
           variant="round"
@@ -240,18 +182,16 @@ export function HojeView() {
             </span>
           ) : null}
         </button>
-        <DueChip date={item.due} />
+        {s.due_date ? <DueChip date={s.due_date} /> : null}
       </div>
     );
   }
 
-  // Enquanto as tarefas não chegam, esqueleto — e não o estado vazio.
-  //
-  // São dois defeitos no mesmo lugar. O visível: quem tinha demandas via
-  // "Seu dia está livre" piscar antes da lista, que é a mentira mais
-  // desanimadora que esta tela poderia contar. O invisível: o servidor
-  // renderizava o estado vazio e o cliente já hidratava com dados, e o React
-  // acusava desencontro de hidratação. Um esqueleto sai igual dos dois lados.
+  // Esqueleto enquanto as tarefas não chegam — e não o estado vazio. Quem
+  // tinha demandas via "Seu dia está livre" piscar antes da lista, que é a
+  // mentira mais desanimadora que esta tela poderia contar. O servidor
+  // renderiza o mesmo esqueleto, então também não há desencontro de
+  // hidratação.
   if (carregando) {
     return (
       <div className={CONTAINER}>
@@ -260,7 +200,7 @@ export function HojeView() {
     );
   }
 
-  if (total === 0) {
+  if (totalAberto === 0 && concluidas === 0) {
     return (
       <EmptyState
         icon={IconSparkles}
@@ -280,54 +220,79 @@ export function HojeView() {
     );
   }
 
+  const visiveis =
+    aba === "sem_data" && !verTudo ? lista.slice(0, SEM_DATA_VISIVEIS) : lista;
+  const escondidas = lista.length - visiveis.length;
+
   return (
     <div className={CONTAINER}>
-      <div className="flex flex-col gap-6 xl:flex-row xl:items-start xl:gap-8">
-        {/* Ordem trocada por `order`, e não por `flex-row-reverse`: o reverse
-            também inverte o empacotamento, e a lista descolava da esquerda —
-            ficava boiando no meio, desalinhada do título da página.
-            No HTML o resumo vem primeiro de propósito: quem navega por
-            teclado ou leitor de tela encontra os números do dia antes da
-            lista, que é a mesma ordem de quem lê empilhado no celular. */}
-        <aside className="xl:sticky xl:top-4 xl:order-2 xl:w-[21rem] xl:shrink-0">
-          <TodayHeadline summary={summary} />
-        </aside>
+      <div className="flex flex-col gap-[var(--space-block-gap)]">
+        <TodayIndicators
+          atrasadas={baldes.atrasadas.length}
+          hoje={baldes.hoje.length}
+          semData={baldes.sem_data.length}
+          concluidas={concluidas}
+          active={aba}
+          onSelect={setAba}
+        />
 
-        <div className="min-w-0 flex-1 xl:order-1 xl:max-w-[var(--max-width-read)]">
-          {(["atrasadas", "hoje", "proximos"] as const).map((g) =>
-            groups[g].length > 0 ? (
-              <Section key={g} title={GROUP_LABELS[g]} count={groups[g].length}>
-                {groups[g].map(renderItem)}
-              </Section>
-            ) : null
-          )}
+        {/* 8 e 4 de doze: a lista precisa de largura de leitura e a
+            distribuição é só rótulo mais barra. Abaixo de xl viram uma
+            coluna, com a distribuição depois da lista. */}
+        <div className="grid gap-[var(--space-block-gap)] xl:grid-cols-12">
+          <section className="border-line bg-card flex flex-col gap-4 rounded-md border p-[var(--space-card-pad)] shadow-[var(--shadow-card)] xl:col-span-8">
+            <h2 className="text-fg text-[length:var(--text-h3-size)] font-medium">
+              Prioridades
+            </h2>
 
-          {/* Sem data vem por último e recolhida: ela não tem prazo, então não
-          disputa atenção com o que tem. */}
-          {groups.sem_data.length > 0 ? (
-            <Section
-              title={GROUP_LABELS.sem_data}
-              count={groups.sem_data.length}
+            <PriorityTabs tabs={abas} active={aba} onChange={setAba} />
+
+            <div className="flex items-baseline gap-2">
+              <h3 className="text-fg font-medium">{TITULOS[aba]}</h3>
+              <span className="tnum text-fg-muted text-[length:var(--text-small-size)]">
+                {lista.length}
+              </span>
+            </div>
+
+            {lista.length === 0 ? (
+              <p className="text-fg-secondary py-6 text-center text-[length:var(--text-small-size)]">
+                {VAZIOS[aba]}
+              </p>
+            ) : (
+              <div className="flex flex-col">{visiveis.map(renderTask)}</div>
+            )}
+
+            {escondidas > 0 ? (
+              <button
+                type="button"
+                onClick={() => setVerTudo(true)}
+                className="text-fg-secondary hover:text-fg w-fit rounded-sm px-3 py-1 text-[length:var(--text-small-size)] transition-colors [transition-duration:var(--dur-fast)] outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-ring)]"
+              >
+                Ver as outras {escondidas}
+              </button>
+            ) : null}
+
+            <Link
+              href="/lista"
+              className="border-line text-fg-link -mx-[var(--space-card-pad)] mt-1 -mb-[var(--space-card-pad)] flex items-center justify-between border-t px-[var(--space-card-pad)] py-3 text-[length:var(--text-small-size)] transition-colors [transition-duration:var(--dur-fast)] outline-none hover:bg-[var(--surface-hover)] focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[var(--focus-ring)]"
             >
-              {(verTodasSemData
-                ? groups.sem_data
-                : groups.sem_data.slice(0, SEM_DATA_VISIVEIS)
-              ).map(renderItem)}
+              Ver todas as demandas
+              <IconChevronRight size={16} stroke={1.75} aria-hidden />
+            </Link>
+          </section>
 
-              {groups.sem_data.length > SEM_DATA_VISIVEIS ? (
-                <button
-                  type="button"
-                  onClick={() => setVerTodasSemData((v) => !v)}
-                  className="text-fg-secondary hover:text-fg mt-1 w-fit rounded-sm px-3 py-1 text-[length:var(--text-small-size)] transition-colors [transition-duration:var(--dur-fast)] outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-ring)]"
-                >
-                  {verTodasSemData
-                    ? "Mostrar menos"
-                    : `Ver as outras ${groups.sem_data.length - SEM_DATA_VISIVEIS}`}
-                </button>
-              ) : null}
-            </Section>
-          ) : null}
+          <div className="xl:col-span-4">
+            <PendingDistributionCard
+              distribution={distribuicao}
+              total={lista.length}
+            />
+          </div>
         </div>
+
+        <UpcomingCard count={baldes.proximos.length + subtasksProximos.length}>
+          {baldes.proximos.map(renderTask)}
+          {subtasksProximos.map(renderSubtask)}
+        </UpcomingCard>
       </div>
 
       {confirm ? (
@@ -350,3 +315,13 @@ export function HojeView() {
     </div>
   );
 }
+
+/**
+ * A tela usa a largura toda; o conteúdo respira dentro de um grid.
+ *
+ * Antes a página ficava presa em 720px E colada na esquerda, com metade do
+ * monitor vazio. Agora acompanha Dashboard e Lista, que já usam
+ * `--max-width-app`.
+ */
+const CONTAINER =
+  "mx-auto w-full max-w-[var(--max-width-app)] px-4 pb-8 lg:px-6";
