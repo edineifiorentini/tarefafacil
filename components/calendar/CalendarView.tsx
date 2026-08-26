@@ -381,7 +381,8 @@ export function CalendarView() {
         ))}
       </div>
 
-      <DndContext sensors={sensors} onDragEnd={onDragEnd}>
+      {/* Id fixo: ver o comentário no SectorNav. */}
+      <DndContext id="calendario" sensors={sensors} onDragEnd={onDragEnd}>
         <div
           role="grid"
           aria-label={`Calendário de ${format(month, "MMMM 'de' yyyy", { locale: ptBR })}`}

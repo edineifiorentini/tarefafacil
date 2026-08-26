@@ -334,6 +334,8 @@ export function Board<T>({
 
   return (
     <DndContext
+      // Mesmo motivo do SectorNav: id fixo evita desencontro de hidratação.
+      id="quadro"
       sensors={sensors}
       collisionDetection={closestCorners}
       accessibility={{ announcements }}

@@ -202,6 +202,13 @@ export function SectorNav({ sectors }: { sectors: Sector[] }) {
 
   return (
     <DndContext
+      // Id fixo por causa da hidratação. Sem ele o dnd-kit numera os ids de
+      // acessibilidade (DndDescribedBy-N) com um contador de módulo, e a
+      // contagem do servidor não bate com a do navegador — o React acusava
+      // desencontro e era o "1 Issue" que aparecia em toda tela com a barra
+      // lateral. É defeito real, não ruído: quando o React regenera a árvore,
+      // perde o estado do cliente naquele ramo.
+      id="setores"
       sensors={sensors}
       collisionDetection={closestCenter}
       onDragStart={() => {
