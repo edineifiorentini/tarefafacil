@@ -8,46 +8,51 @@ import { nomeDoProvedor, resolveProvider } from "./provider";
  * acesso seria empurrado de graça — sem erro em lugar nenhum.
  */
 
-const original = { ...process.env };
-
+/**
+ * `vi.stubEnv` e não atribuição direta: o Next declara `NODE_ENV` como
+ * somente leitura no `ProcessEnv`, e `process.env.NODE_ENV = "x"` compila no
+ * `tsc --noEmit` do projeto mas quebra o build de produção — que carrega os
+ * tipos do Next por cima. Descoberto do jeito ruim, com o build vermelho
+ * depois do push.
+ */
 beforeEach(() => {
   vi.spyOn(console, "warn").mockImplementation(() => {});
 });
 
 afterEach(() => {
-  process.env = { ...original };
+  vi.unstubAllEnvs();
   vi.restoreAllMocks();
 });
 
 describe("resolveProvider", () => {
   it("sem variável nenhuma, é manual", () => {
-    delete process.env.BILLING_PROVIDER;
+    vi.stubEnv("BILLING_PROVIDER", "");
     expect(resolveProvider().modo).toBe("manual");
   });
 
   it("valor desconhecido cai em manual, não quebra", () => {
-    process.env.BILLING_PROVIDER = "stripe";
+    vi.stubEnv("BILLING_PROVIDER", "stripe");
     expect(resolveProvider().modo).toBe("manual");
   });
 
   it("fake exige AS DUAS travas", () => {
-    process.env.BILLING_PROVIDER = "fake";
-    process.env.NODE_ENV = "development";
+    vi.stubEnv("BILLING_PROVIDER", "fake");
+    vi.stubEnv("NODE_ENV", "development");
 
     // Só a variável do provedor não basta.
-    delete process.env.BILLING_FAKE_OK;
+    vi.stubEnv("BILLING_FAKE_OK", "");
     expect(resolveProvider().modo).toBe("manual");
 
-    process.env.BILLING_FAKE_OK = "1";
+    vi.stubEnv("BILLING_FAKE_OK", "1");
     expect(resolveProvider().modo).toBe("gateway");
   });
 
   it("EM PRODUÇÃO o fake é recusado mesmo com BILLING_FAKE_OK", () => {
     // Este é o teste que importa. Uma variável esquecida no painel da Vercel
     // não pode ser suficiente para o sistema começar a dizer que recebeu.
-    process.env.BILLING_PROVIDER = "fake";
-    process.env.BILLING_FAKE_OK = "1";
-    process.env.NODE_ENV = "production";
+    vi.stubEnv("BILLING_PROVIDER", "fake");
+    vi.stubEnv("BILLING_FAKE_OK", "1");
+    vi.stubEnv("NODE_ENV", "production");
     expect(resolveProvider().modo).toBe("manual");
   });
 });
