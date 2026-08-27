@@ -1385,3 +1385,64 @@ log é lido por mais gente e guardado por mais tempo do que a alteração dura.
 **Ainda aberto** da varredura: paginação (a lista traz tudo — resolve até
 algumas centenas), configuração de colunas e exportação (especificação 9.1),
 e as pendências já registradas nas rodadas anteriores.
+
+### Rodada 7 — webhook de pagamento (27/ago/2026, sem migration)
+
+**Quem chama isto hoje: ninguém.** A cobrança da plataforma está em modo
+manual e nenhum provedor está conectado; a camada por empresa
+(`lib/payments/`) só CONFERE credencial, não emite cobrança. Nada envia
+webhook. Isto existe para que, no dia em que um provedor entrar, a única
+coisa nova seja a credencial — não a lógica de conciliação.
+
+**As quatro regras que o código implementa, e por quê**
+
+1. **Autenticar antes de ler.** Qualquer um na internet alcança a rota. Sem
+   verificação, uma requisição forjada marca fatura como paga e libera acesso
+   sem dinheiro. Sem `BILLING_WEBHOOK_SECRET` a rota responde 503 e não faz
+   nada — fechada, como os crons.
+2. **Idempotência no banco.** Provedor reenvia até receber 2xx, e uma queda
+   de rede faz o mesmo pagamento chegar duas vezes. O índice único
+   (provider, external_id) da 0049 é quem barra; 23505 vira "repetido", não
+   erro. Não se usa consulta-depois-insert: entre as duas cabe o segundo
+   aviso.
+3. **200 para tudo que foi entendido, mesmo sem fazer nada.** 5xx faz o
+   provedor reenviar, e reenviar um aviso que nunca vai casar com fatura
+   nenhuma cria fila infinita. 5xx fica só para falha real de banco, onde
+   reenviar é o certo.
+4. **O valor não escolhe a fatura.** Quem escolhe é `provider_charge_id`; o
+   valor só registra quanto entrou.
+
+**Detalhes que custam caro se errados**
+
+- O corpo é lido como TEXTO antes de virar JSON: a assinatura do Mercado
+  Pago é sobre os bytes exatos, e `json()` + `stringify` devolve outra coisa
+  (ordem de chaves, espaços). A verificação falharia para tráfego legítimo.
+- Comparação de segredo com `timingSafeEqual`, e tamanhos diferentes
+  respondem falso antes — a função joga exceção com buffers desiguais, e um
+  500 no lugar de 401 entregaria o tamanho do segredo.
+- A resposta de recusa não distingue "assinatura inválida" de "token
+  inválido": dizer qual é entrega o mecanismo para quem está adivinhando.
+- Reais para centavos sem passar por float: `2.675 * 100` dá
+  267.49999999999997 e arredondaria para menos. Valor com formato inesperado
+  vira `null`, não zero — "não veio valor" é diferente de "pagou R$ 0,00".
+- A chave de evento do Asaas inclui o TIPO, não só o pagamento: "recebido" e
+  "confirmado" do mesmo pagamento são dois eventos e colidiriam.
+- O autor na auditoria é `webhook:<provedor>`, não uma pessoa. Investigar um
+  pagamento contestado precisa distinguir "o sistema recebeu" de "alguém
+  marcou à mão".
+
+**Verificado contra o servidor real**: sem cabeçalho 401, token errado 401,
+provedor inexistente 404, token certo 200 "sem_fatura", MESMO aviso de novo
+200 "repetido" — a idempotência funcionando contra o banco de verdade. O
+evento de teste foi apagado depois; nenhuma fatura foi criada.
+
+**Ressalva declarada**: os formatos de corpo dos três provedores vêm da
+documentação, não de tráfego real — nunca chegou um aviso de verdade aqui.
+É por isso que o corpo cru inteiro é guardado em `payment_event`: quando o
+primeiro chegar, dá para conferir o que veio sem depender de ter acertado a
+leitura. `traduzir()` é o arquivo que pode precisar de ajuste.
+
+**Limitação do mTLS**: a EFI valida o certificado do cliente na camada de
+transporte, antes de a requisição chegar à aplicação. A Vercel não expõe
+isso, então a EFI cai no segredo compartilhado — menos forte que o desenho
+original dela, e escrito no código em vez de escondido.

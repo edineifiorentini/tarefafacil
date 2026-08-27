@@ -51,6 +51,10 @@ export async function proxy(request: NextRequest) {
     path.startsWith("/r/") ||
     // Webhook do Google: chamado sem sessão (o Google não tem cookie).
     path.startsWith("/api/gcal/webhook") ||
+    // Webhook de pagamento: o provedor também não tem cookie. Quem autoriza
+    // é BILLING_WEBHOOK_SECRET, conferido dentro da rota antes de ela ler o
+    // corpo — sem a variável, ela responde 503 e não faz nada.
+    path.startsWith("/api/webhooks/") ||
     // Consulta pública de "os cadastros estão abertos?": a tela de login
     // precisa dela sem sessão, e a resposta é um booleano só.
     path.startsWith("/api/signups") ||
