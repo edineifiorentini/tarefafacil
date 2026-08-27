@@ -41,7 +41,13 @@ Radix UI · TanStack Query · dnd-kit · Zod · Storybook 9 · Vitest · Playwri
 7. `outline: none` sem substituto é proibido.
 8. `components/board/Board.tsx` é genérico e NÃO pode conhecer o tipo `Task`.
    Ele será reusado pelo funil de CRM (fase 4).
-9. Subtarefa nunca gera evento no Google Agenda.
+9. **Subtarefa nunca gera evento para fora do sistema** — nem no Google
+   Agenda, nem em webhook, nem no que vier depois. Subtarefa é item de
+   conferência dentro de uma demanda, não um compromisso próprio: cada
+   marcação viraria ruído na agenda de alguém ou na integração de alguém.
+   Quem representa a demanda para fora é a demanda. Generalizado pelo dono
+   em 27/ago/2026, quando a regra passou a valer também para os webhooks de
+   saída.
 10. Sincronização com o Google é opt-in por tarefa, padrão desligado.
 11. **Toda tarefa pertence a um setor.** `task.sector_id` é `not null` com
     `on delete restrict`, e o workspace nasce com o setor "Geral"
