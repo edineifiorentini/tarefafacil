@@ -41,6 +41,8 @@ const VERBO: Record<AcaoDeEmpresa, AuditAction> = {
   alterar_assentos: "alterou",
   conceder_acesso: "alterou",
   encerrar_teste: "alterou",
+  iniciar_teste: "alterou",
+  editar_contato: "alterou",
   suspender: "alterou",
   reativar: "alterou",
   excluir: "excluiu",
@@ -184,15 +186,52 @@ export async function POST(
       break;
     }
 
-    case "encerrar_teste": {
+    case "encerrar_teste":
+    case "iniciar_teste": {
+      const emTeste = acao === "iniciar_teste";
       const { error } = await db
         .from("workspace")
-        .update({ trial: false })
+        .update({ trial: emTeste })
         .eq("id", id);
       if (error) {
         return NextResponse.json({ error: "falhou" }, { status: 500 });
       }
-      resumo = `encerrou o teste de "${empresa.name}"`;
+      resumo = `${emTeste ? "colocou em teste" : "encerrou o teste de"} "${empresa.name}"`;
+      break;
+    }
+
+    case "editar_contato": {
+      // Dois campos num valor só, separados por "|": a carga das outras ações
+      // é escalar, e criar um segundo campo no corpo só para esta faria toda
+      // ação futura carregar o peso dele.
+      const bruto = String(corpo.valor ?? "");
+      const [emailBruto, telefoneBruto] = bruto.split("|");
+      const email = (emailBruto ?? "").trim();
+      const telefone = (telefoneBruto ?? "").trim();
+
+      // Vazio limpa o campo; preenchido precisa parecer e-mail. Um endereço
+      // errado aqui é fatura que nunca chega e ninguém descobre.
+      if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        return NextResponse.json(
+          { error: "email_invalido", message: "E-mail inválido" },
+          { status: 400 }
+        );
+      }
+
+      const { error } = await db
+        .from("workspace")
+        .update({
+          contact_email: email || null,
+          contact_phone: telefone || null,
+        })
+        .eq("id", id);
+      if (error) {
+        return NextResponse.json({ error: "falhou" }, { status: 500 });
+      }
+      resumo = `alterou o contato de cobrança de "${empresa.name}"`;
+      // O contato NÃO vai para os detalhes: é dado pessoal, e a auditoria é
+      // lida por mais gente e guardada por mais tempo do que a alteração dura.
+      detalhes = { empresa: empresa.name } as Json;
       break;
     }
 

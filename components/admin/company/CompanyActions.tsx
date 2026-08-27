@@ -5,6 +5,7 @@ import { useState } from "react";
 import { DropdownMenu } from "radix-ui";
 import { IconChevronDown } from "@tabler/icons-react";
 
+import { SupportAccessDialog } from "@/components/admin/SupportAccessDialog";
 import { ACOES, type AcaoDeEmpresa } from "@/lib/admin/actions";
 
 import { SensitiveActionDialog } from "./SensitiveActionDialog";
@@ -33,6 +34,8 @@ export function CompanyActions({
   planoId,
   assentos,
   planos,
+  contatoEmail,
+  contatoTelefone,
 }: {
   empresaId: string;
   empresaNome: string;
@@ -42,6 +45,8 @@ export function CompanyActions({
   planoId: string | null;
   assentos: number;
   planos: Plano[];
+  contatoEmail: string | null;
+  contatoTelefone: string | null;
 }) {
   const [aberta, setAberta] = useState<AcaoDeEmpresa | null>(null);
 
@@ -50,6 +55,9 @@ export function CompanyActions({
   const [novosAssentos, setNovosAssentos] = useState(String(assentos));
   const [dias, setDias] = useState("30");
   const [nota, setNota] = useState("");
+  const [email, setEmail] = useState(contatoEmail ?? "");
+  const [telefone, setTelefone] = useState(contatoTelefone ?? "");
+  const [suporte, setSuporte] = useState(false);
 
   const disponiveis: AcaoDeEmpresa[] = excluida
     ? ["restaurar", "anotar"]
@@ -57,7 +65,10 @@ export function CompanyActions({
         "alterar_plano",
         "alterar_assentos",
         "conceder_acesso",
-        ...(emTeste ? (["encerrar_teste"] as AcaoDeEmpresa[]) : []),
+        "editar_contato",
+        ...(emTeste
+          ? (["encerrar_teste"] as AcaoDeEmpresa[])
+          : (["iniciar_teste"] as AcaoDeEmpresa[])),
         suspensa ? "reativar" : "suspender",
         "anotar",
         "excluir",
@@ -68,6 +79,8 @@ export function CompanyActions({
     if (acao === "alterar_assentos") return Number(novosAssentos);
     if (acao === "conceder_acesso") return Number(dias);
     if (acao === "anotar") return nota;
+    // Dois campos numa carga escalar. O servidor separa pelo mesmo "|".
+    if (acao === "editar_contato") return [email, telefone].join("|");
     return null;
   }
 
@@ -143,6 +156,47 @@ export function CompanyActions({
       );
     }
 
+    if (acao === "editar_contato") {
+      return (
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-1.5">
+            <label
+              htmlFor="acao-email"
+              className="text-fg text-[length:var(--text-small-size)] font-medium"
+            >
+              E-mail de cobrança
+            </label>
+            <input
+              id="acao-email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="financeiro@empresa.com"
+              className="border-line bg-card text-fg placeholder:text-fg-muted rounded-md border px-3 py-2 text-[length:var(--text-small-size)] outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-ring)]"
+            />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <label
+              htmlFor="acao-telefone"
+              className="text-fg text-[length:var(--text-small-size)] font-medium"
+            >
+              Telefone
+            </label>
+            <input
+              id="acao-telefone"
+              value={telefone}
+              onChange={(e) => setTelefone(e.target.value)}
+              placeholder="(00) 00000-0000"
+              className="border-line bg-card text-fg placeholder:text-fg-muted w-56 rounded-md border px-3 py-2 text-[length:var(--text-small-size)] outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-ring)]"
+            />
+          </div>
+          <p className="text-fg-muted text-[length:var(--text-caption-size)]">
+            Deixe vazio para limpar. Não é o e-mail de login de ninguém.
+          </p>
+        </div>
+      );
+    }
+
     if (acao === "anotar") {
       return (
         <div className="flex flex-col gap-1.5">
@@ -180,6 +234,21 @@ export function CompanyActions({
             sideOffset={6}
             className="tf-glass-strong border-line z-50 min-w-52 rounded-md border p-1 shadow-[var(--shadow-glass)]"
           >
+            {/* Acesso de suporte é a única ação que não passa pelo diálogo
+                comum: ela já tem o próprio, com motivo e prazo, desde a
+                0068. Estava só na listagem antiga e teria sumido com ela. */}
+            {excluida ? null : (
+              <DropdownMenu.Item
+                onSelect={(e) => {
+                  e.preventDefault();
+                  setSuporte(true);
+                }}
+                className="text-fg data-[highlighted]:bg-hover flex cursor-pointer items-center rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] outline-none"
+              >
+                Acessar como suporte
+              </DropdownMenu.Item>
+            )}
+
             {disponiveis.map((a) => (
               <DropdownMenu.Item
                 key={a}
@@ -194,6 +263,13 @@ export function CompanyActions({
           </DropdownMenu.Content>
         </DropdownMenu.Portal>
       </DropdownMenu.Root>
+
+      <SupportAccessDialog
+        workspaceId={empresaId}
+        workspaceName={empresaNome}
+        open={suporte}
+        onOpenChange={setSuporte}
+      />
 
       {aberta ? (
         <SensitiveActionDialog

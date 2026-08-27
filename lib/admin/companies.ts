@@ -25,6 +25,17 @@ export type EmpresaResumo = {
   /** Nome do afiliado que trouxe a empresa, ou null. */
   origem: string | null;
   criadaEm: string;
+  /**
+   * Última alteração de demanda. Alimenta o filtro "conta parada" — sem ela,
+   * o alerta da visão geral linkava para uma lista que não sabia filtrar.
+   */
+  ultimaAtividade: string | null;
+  /** Convites pendentes cuja validade já passou. */
+  convitesExpirados: number;
+  /** A empresa está em teste? Copiado para o filtro não reabrir a consulta. */
+  emTeste: boolean;
+  /** Fim do teste, para o filtro "vencendo". */
+  fimDoTeste: string | null;
 };
 
 /**
@@ -61,22 +72,30 @@ async function ultimoLoginPorUsuario(): Promise<Map<string, string>> {
 export async function listCompanies(): Promise<EmpresaResumo[]> {
   const db = createAdminClient();
 
-  const [ws, assin, planos, membros, afiliados, logins] = await Promise.all([
-    db
-      .from("workspace")
-      .select(
-        "id, name, owner_user_id, plan_id, trial, seat_limit, access_expires_at, suspended, affiliate_id, created_at"
-      )
-      .order("created_at", { ascending: false }),
-    db.from("subscription").select("workspace_id, plan_id, status"),
-    db.from("billing_plan").select("id, name, price_cents"),
-    db
-      .from("workspace_member")
-      .select("workspace_id, user_id, role")
-      .eq("status", "active"),
-    db.from("affiliate").select("id, name"),
-    ultimoLoginPorUsuario(),
-  ]);
+  const [ws, assin, planos, membros, afiliados, logins, atividade, convites] =
+    await Promise.all([
+      db
+        .from("workspace")
+        .select(
+          "id, name, owner_user_id, plan_id, trial, trial_ends_at, seat_limit, access_expires_at, suspended, affiliate_id, created_at"
+        )
+        .order("created_at", { ascending: false }),
+      db.from("subscription").select("workspace_id, plan_id, status"),
+      db.from("billing_plan").select("id, name, price_cents"),
+      db
+        .from("workspace_member")
+        .select("workspace_id, user_id, role")
+        .eq("status", "active"),
+      db.from("affiliate").select("id, name"),
+      ultimoLoginPorUsuario(),
+      // Atividade e convites: duas leituras a mais para a lista poder responder
+      // aos alertas da visão geral, em vez de ignorá-los.
+      db.from("task_activity").select("workspace_id, created_at"),
+      db
+        .from("workspace_invite")
+        .select("workspace_id, expires_at")
+        .eq("status", "pending"),
+    ]);
 
   type W = {
     id: string;
@@ -84,6 +103,7 @@ export async function listCompanies(): Promise<EmpresaResumo[]> {
     owner_user_id: string | null;
     plan_id: string | null;
     trial: boolean;
+    trial_ends_at: string | null;
     seat_limit: number;
     access_expires_at: string | null;
     suspended: boolean;
@@ -151,6 +171,30 @@ export async function listCompanies(): Promise<EmpresaResumo[]> {
 
   const agora = Date.now();
 
+  // Última atividade por empresa, numa passada só.
+  const atividadePorWorkspace = new Map<string, string>();
+  for (const a of (atividade.data ?? []) as {
+    workspace_id: string;
+    created_at: string;
+  }[]) {
+    const atual = atividadePorWorkspace.get(a.workspace_id);
+    if (!atual || a.created_at > atual) {
+      atividadePorWorkspace.set(a.workspace_id, a.created_at);
+    }
+  }
+
+  const convitesVencidos = new Map<string, number>();
+  for (const c of (convites.data ?? []) as {
+    workspace_id: string;
+    expires_at: string;
+  }[]) {
+    if (new Date(c.expires_at).getTime() >= agora) continue;
+    convitesVencidos.set(
+      c.workspace_id,
+      (convitesVencidos.get(c.workspace_id) ?? 0) + 1
+    );
+  }
+
   return workspaces.map((w) => {
     const assinatura = assinaturas.get(w.id);
     const status = statusDaEmpresa(w, assinatura?.status, agora);
@@ -174,6 +218,10 @@ export async function listCompanies(): Promise<EmpresaResumo[]> {
         ? (afiliadosPorId.get(w.affiliate_id) ?? null)
         : null,
       criadaEm: w.created_at,
+      ultimaAtividade: atividadePorWorkspace.get(w.id) ?? null,
+      convitesExpirados: convitesVencidos.get(w.id) ?? 0,
+      emTeste: w.trial,
+      fimDoTeste: w.trial_ends_at,
     };
   });
 }

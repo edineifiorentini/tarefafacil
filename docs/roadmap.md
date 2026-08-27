@@ -1339,3 +1339,49 @@ pronto e a simulação mostra exatamente o que sairá.
 **Continua faltando**: cliente da EFI (precisa de mTLS), webhook de
 pagamento — `payment_event` e o índice de unicidade dela já existem para
 isso —, reembolso, e o e-mail avisando o cliente de que há fatura aberta.
+
+### Rodada 6 — a tela de Empresas reescrita (27/ago/2026, sem migration)
+
+Fecha as pontas soltas que a varredura encontrou, todas de autoria própria.
+
+**O que estava errado**
+
+- Os seis alertas de "Saúde da operação" linkavam para `/admin/empresas` com
+  `?status=`, `?vencendo=1`, `?atividade=parada` — e a página **ignorava
+  todos**. Clicar em "Testes vencendo 2" abria a lista inteira. O comentário
+  do código dizia "alerta que não leva a lugar nenhum é enfeite".
+- A busca da barra superior mandava `?q=` para a mesma página, também
+  ignorado.
+- "Novo cliente" mandava `?novo=1` e só trocava de página.
+- `listCompanies` — status, MRR, último acesso, origem — estava pronto e só
+  alimentava as "empresas recentes". A listagem seguia com a tabela antiga.
+
+**A reescrita**
+
+A lista virou Server Component sobre `listCompanies`, com filtro na URL.
+`lib/admin/company-filters.ts` é função pura, testada (19 casos), e é a mesma
+regra que os alertas acionam — foi assim que se verificou que os números
+batem: o alerta diz 2, a lista filtrada mostra 2.
+
+Saiu a edição direta em linha (seletor de plano, campo de assentos e um botão
+"Salvar" por linha), que a seção 3 da especificação chama de pior problema do
+painel. As mesmas alterações agora acontecem no detalhe, com motivo e
+auditoria.
+
+**Nada foi perdido.** Três capacidades só existiam na tela antiga e foram
+para o detalhe: editar contato de cobrança, marcar como teste e acessar como
+suporte. O contato NÃO entra nos detalhes da auditoria — é dado pessoal, e o
+log é lido por mais gente e guardado por mais tempo do que a alteração dura.
+
+**Detalhes que valem lembrar**
+
+- O `?novo=1` abre o cadastro por `key` que remonta o componente, não por
+  efeito: `setState` dentro de efeito no primeiro render é o que o compilador
+  do React acusa, com razão.
+- `listCompanies` ganhou duas leituras (última atividade e convites
+  vencidos), que são o que permite a lista responder aos alertas em vez de
+  ignorá-los.
+
+**Ainda aberto** da varredura: paginação (a lista traz tudo — resolve até
+algumas centenas), configuração de colunas e exportação (especificação 9.1),
+e as pendências já registradas nas rodadas anteriores.

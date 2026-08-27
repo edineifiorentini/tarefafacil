@@ -79,6 +79,8 @@ export default async function AdminEmpresaPage({
           emTeste={empresa.emTeste}
           planoId={empresa.planoId}
           assentos={empresa.seatLimit}
+          contatoEmail={empresa.contatoEmail}
+          contatoTelefone={empresa.contatoTelefone}
           planos={
             (planos ?? []) as { id: string; name: string; max_users: number }[]
           }

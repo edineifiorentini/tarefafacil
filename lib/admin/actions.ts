@@ -11,6 +11,8 @@ export type AcaoDeEmpresa =
   | "alterar_assentos"
   | "conceder_acesso"
   | "encerrar_teste"
+  | "iniciar_teste"
+  | "editar_contato"
   | "suspender"
   | "reativar"
   | "excluir"
@@ -76,6 +78,24 @@ export const ACOES: Record<AcaoDeEmpresa, DefinicaoDeAcao> = {
     consequencia:
       "A empresa sai do teste e passa a contar como assinante. Não gera cobrança sozinha.",
     exigeMotivo: true,
+    exigeNome: false,
+    destrutiva: false,
+  },
+  iniciar_teste: {
+    label: "Marcar como teste",
+    titulo: "Colocar a empresa em teste",
+    consequencia:
+      "A empresa passa a contar como avaliação e sai do MRR. Não gera cobrança enquanto durar.",
+    exigeMotivo: true,
+    exigeNome: false,
+    destrutiva: false,
+  },
+  editar_contato: {
+    label: "Editar contato",
+    titulo: "Contato de cobrança",
+    consequencia:
+      "Para onde vão fatura e aviso de vencimento. Não é o e-mail de login de ninguém.",
+    exigeMotivo: false,
     exigeNome: false,
     destrutiva: false,
   },
