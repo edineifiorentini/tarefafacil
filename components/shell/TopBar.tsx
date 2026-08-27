@@ -118,11 +118,13 @@ export function TopBar({ isAdmin }: { isAdmin: boolean }) {
     // Em tela estreita o título desce para a própria linha: disputando espaço
     // com menu, busca, sino, conta e "Nova tarefa", sobravam 63px e "Visão
     // geral" virava "Vis…". Título de página não pode sair cortado.
-    // O respiro maior embaixo é a fronteira entre o cabeçalho e o conteúdo:
-    // com py-4 dos dois lados, o primeiro cartão encostava no subtítulo. Fica
-    // aqui e não em cada tela porque a folga é a mesma em todas — Dashboard e
-    // Lista tinham o mesmo aperto.
-    <header className="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 pt-4 pb-8 lg:flex-nowrap lg:px-6">
+    // Respiro assimétrico: mais embaixo que em cima. A fronteira entre o
+    // cabeçalho e o conteúdo é de seção, e o primeiro cartão tem borda e
+    // sombra — encosta visualmente antes de encostar de fato. Medido na tela:
+    // com py-4 o vão era 16px, com pb-8 ficou 32px e ainda lia como apertado.
+    // Fica aqui e não em cada tela porque o aperto era o mesmo em todas —
+    // conferi Dashboard e Lista.
+    <header className="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 pt-6 pb-10 lg:flex-nowrap lg:px-6">
       <button
         type="button"
         aria-label="Abrir navegação"
