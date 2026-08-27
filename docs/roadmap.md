@@ -1523,11 +1523,27 @@ Consequência prática: o disparo lê `task_activity`, e ali cabem mudanças de
 subtarefa. O filtro precisa existir NA ORIGEM do disparo, não na tela — um
 evento que sai errado já saiu.
 
-**Uma pergunta ainda aberta:** ação vinda da própria integração gera evento
-de volta? Se um sistema cria demanda pela API e isso dispara
-`demanda.criada` para ele mesmo, o laço se fecha sozinho. Dá para resolver
-marcando a origem e não reenviando para quem causou, mas é decisão de
-produto — pode haver caso em que o eco é desejado.
+**O eco sai, menos para quem causou — DECIDIDO** pelo dono em 27/ago/2026.
+
+Ação vinda de uma integração GERA o evento normalmente: outras integrações
+podem querer saber que aquilo aconteceu, e suprimir para todo mundo por
+causa de uma tornaria o catálogo inconfiável. O que não acontece é o
+reenvio para a própria integração que causou a mudança.
+
+**Implicação de schema, e ela precisa vir antes do disparo:** para não
+reenviar a quem causou, é preciso SABER quem causou. Hoje
+`task_activity.changed_by` guarda um usuário; uma chave de API agindo em
+nome da empresa não é um usuário. Falta registrar a chave de origem na
+própria linha da atividade — em coluna nova, não numa variável que o
+disparo tenta adivinhar depois. Origem que não foi gravada na hora não se
+recupera.
+
+**O que a supressão NÃO resolve, e vale saber desde já:** ela quebra o eco
+direto (A causa, A não recebe), mas não quebra laço de duas pontas — se A
+cria e B espelha, B cria e A espelha, o par gira sozinho para sempre. As
+saídas usuais são contar saltos num cabeçalho de profundidade ou
+identificar o efeito repetido e parar. Não precisa entrar na primeira
+versão, mas precisa estar decidido antes de a segunda integração existir.
 
 ### Ordem sugerida
 
