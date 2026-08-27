@@ -118,7 +118,11 @@ export function TopBar({ isAdmin }: { isAdmin: boolean }) {
     // Em tela estreita o título desce para a própria linha: disputando espaço
     // com menu, busca, sino, conta e "Nova tarefa", sobravam 63px e "Visão
     // geral" virava "Vis…". Título de página não pode sair cortado.
-    <header className="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-4 lg:flex-nowrap lg:px-6">
+    // O respiro maior embaixo é a fronteira entre o cabeçalho e o conteúdo:
+    // com py-4 dos dois lados, o primeiro cartão encostava no subtítulo. Fica
+    // aqui e não em cada tela porque a folga é a mesma em todas — Dashboard e
+    // Lista tinham o mesmo aperto.
+    <header className="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 pt-4 pb-8 lg:flex-nowrap lg:px-6">
       <button
         type="button"
         aria-label="Abrir navegação"
