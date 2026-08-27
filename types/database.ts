@@ -159,6 +159,39 @@ export type Database = {
         Update: never;
         Relationships: [];
       };
+      /**
+       * Chave de API por empresa (0075).
+       * RLS ligada e sem politica: so a chave secreta enxerga. O valor
+       * completo NUNCA fica guardado — so o SHA-256 e o prefixo.
+       */
+      api_key: {
+        Row: {
+          id: string;
+          workspace_id: string;
+          nome: string;
+          /** SHA-256 em hex do valor completo. */
+          key_hash: string;
+          /** Comeco da chave, em claro, para reconhecer sem revelar. */
+          prefixo: string;
+          criada_por: string | null;
+          ultimo_uso: string | null;
+          revogada_em: string | null;
+          created_at: string;
+        };
+        Insert: {
+          workspace_id: string;
+          nome: string;
+          key_hash: string;
+          prefixo: string;
+          criada_por?: string | null;
+        };
+        Update: {
+          nome?: string;
+          ultimo_uso?: string | null;
+          revogada_em?: string | null;
+        };
+        Relationships: [];
+      };
       app_user: {
         Row: {
           id: string;

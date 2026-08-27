@@ -10,6 +10,7 @@ import { INTEGRATION_GROUPS } from "@/lib/integrations/catalog";
 import { useGcalStatus } from "@/lib/queries/useGcal";
 import { usePaymentsStatus } from "@/lib/queries/usePayments";
 
+import { ApiKeysCard } from "./ApiKeysCard";
 import { IntegrationCard } from "./IntegrationCard";
 import { PaymentConnectPanel } from "./PaymentConnectPanel";
 
@@ -105,6 +106,7 @@ export function IntegrationsPanel() {
           </div>
         </section>
       ))}
+      <ApiKeysCard />
     </div>
   );
 }

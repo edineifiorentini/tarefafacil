@@ -1554,3 +1554,55 @@ versão, mas precisa estar decidido antes de a segunda integração existir.
 4. Tela de registro de entregas.
 
 Nada disso está começado.
+
+### Rodada 8 — chave de API por empresa (27/ago/2026, migration 0075)
+
+Primeiro bloco da seção 23. Autônomo de propósito: a chave vale sozinha,
+antes de existir qualquer evento de saída.
+
+**Só o hash fica guardado.** O projeto guarda `token` em texto claro em
+`share_link` e `workspace_invite`, e ali é defensável — links de uso único,
+vida curta, cujo vazamento expõe UMA demanda. Chave de API é o oposto: vive
+meses e dá acesso a tudo da empresa. Um vazamento do banco não pode virar
+acesso às contas de todo mundo. Guarda-se o SHA-256; o valor aparece uma vez,
+na criação, e a tela diz isso em vermelho.
+
+**SHA-256 e não bcrypt**, de propósito. Bcrypt existe para senha, que é curta
+e escolhida por gente. Aqui a entrada tem 256 bits de aleatoriedade — não há
+dicionário nem força bruta viável, e nada a ganhar com hash lento. Pior: a
+chave é conferida a cada requisição, e hash lento nessa posição vira porta de
+negação de serviço. O determinismo também é necessário: a autenticação acha a
+linha pelo hash num índice, e hash com sal obrigaria a varrer todas as chaves
+de todas as empresas.
+
+**Só o dono cria e revoga.** Mais restrito que o resto das integrações, onde
+`admin` também gerencia. Não é descuido: chave de API age em nome da empresa
+inteira e não expira sozinha, enquanto credencial de gateway serve a um
+provedor só.
+
+**Revogar não apaga.** A linha fica com a data, senão o histórico ficaria
+cheio de usos de uma chave que "nunca existiu".
+
+**Verificado contra o banco real**, com a chave de teste apagada no fim:
+criar ok; autenticar pelo hash ok; hash errado recusado; revogar de OUTRA
+empresa recusado (o workspace entra no WHERE, não só na checagem de
+permissão); revogar da própria ok; autenticar revogada recusado; revogar duas
+vezes dá 404. Com a chave publishable — a do navegador — ler devolve zero
+linhas e escrever dá 42501. Mais 17 testes de unidade no formato, incluindo
+que o hash devolvido é o hash do valor: se divergissem, a chave entregue
+nunca autenticaria e o erro só apareceria no primeiro uso real.
+
+**Descoberta que muda o bloco seguinte**
+
+`task_activity` é escrita por TRIGGER, e o trigger lê `auth.uid()` para saber
+o autor. Uma chave de API agindo em nome da empresa não é um usuário, então a
+origem NÃO chega ao trigger naturalmente. As opções são:
+
+1. Passar a origem num cabeçalho e o trigger ler `request.headers` — o
+   PostgREST expõe isso na transação da requisição.
+2. A camada de aplicação escrever a fila de eventos de saída, em vez de
+   derivá-la de `task_activity`. Ganha contexto (origem, e o filtro de
+   subtarefa fica natural), perde completude: mudança feita fora dessas
+   rotas não emitiria.
+
+Precisa ser decidido antes do disparo. Nada disso está começado.
