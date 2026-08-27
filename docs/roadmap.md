@@ -1273,3 +1273,69 @@ cancelamento.
 do mensal, cupom aplicado à assinatura, método de pagamento mascarado,
 período de tolerância como estado próprio e pausa. Todos dependem de colunas
 ou do fluxo de cobrança.
+
+### Rodada 5 — o motor de cobrança ligado (27/ago/2026, sem migration)
+
+`lib/billing/cycle.ts` existia, testado, sem chamador nenhum. Agora tem.
+
+**O que passou a existir**
+
+- `lib/billing/run.ts` — percorre as assinaturas, decide com `decideCharge` e
+  grava as faturas do ciclo.
+- `lib/billing/settle.ts` — registrar pagamento (que empurra o acesso),
+  expirar faturas vencidas e aplicar cancelamentos agendados.
+- `lib/billing/provider.ts` — escolhe o modo. Sem provedor configurado, o
+  modo é MANUAL.
+- Rotas: `/api/admin/billing` (rodar), `/api/admin/billing/charges/[id]`
+  (registrar pagamento, cancelar), `/api/cron/cobrar` (diário).
+- Tela: simulação linha a linha antes de emitir, e a lista de faturas com
+  "registrar pagamento".
+
+**Cobrança MANUAL fecha o ciclo hoje, sem credencial nenhuma**
+
+A EFI precisa de certificado mTLS, que não existe aqui, e escrever um cliente
+de provedor que não dá para testar seria pior do que não escrever. Então a
+fatura nasce sem QR: o dono envia a cobrança por fora, recebe o Pix, e
+registra o pagamento no painel — o que marca a fatura, empurra
+`access_expires_at` até o fim do período mais a carência e devolve a
+assinatura para ativa. É como a maioria dos SaaS pequenos começa, e não é um
+estado provisório envergonhado.
+
+**Quatro travas, porque isto emite dinheiro**
+
+1. **Simulação é o padrão.** A rota só cobra com `simulacao: false` explícito
+   E a palavra COBRAR digitada. A tela simula primeiro, sempre, e mostra
+   linha por linha quem seria cobrado.
+2. **O cron nasce desligado.** Sem `BILLING_AUTO=1` ele roda todo dia,
+   calcula tudo e só escreve no log o que faria. Dá para acompanhar por
+   semanas antes da primeira fatura sair. O agendamento entra no vercel.json
+   agora de propósito: cron criado no dia da decisão estreia sem nunca ter
+   rodado.
+3. **O gateway falso precisa de DUAS travas** (`BILLING_PROVIDER=fake` e
+   `BILLING_FAKE_OK=1`) e é recusado em produção de qualquer jeito. Um fake
+   ativo diria "pago" para dinheiro que não entrou, e o acesso seria
+   empurrado de graça — sem erro em lugar nenhum.
+4. **A idempotência mora no banco**, no índice único
+   (workspace_id, period_start) da 0049. Rodar duas vezes não cria duas
+   faturas: a segunda esbarra no índice, e o código trata 23505 como "já
+   existia", não como erro.
+
+**Ordem de escrita em `registrarPagamento`**, que não é arbitrária: marca a
+fatura, empurra o acesso, depois normaliza a assinatura. Se o passo 2 falhar
+depois do 1, o cliente pagou e não recebeu acesso — visível, reclamado e
+consertável repetindo. Na ordem inversa, o acesso seria empurrado por um
+pagamento talvez não gravado, e ninguém reclama de ganhar acesso.
+
+**Verificado, e o que NÃO foi**
+
+A simulação rodou contra os dados reais e acertou: ciclo 01/08→01/09 a partir
+do dia de cobrança 1, Pro cobraria R$ 99,00, plano Vitalício de R$ 0 pulado
+como "plano gratuito", empresas em teste puladas.
+
+**A emissão real não foi executada.** Ela cria fatura de verdade, e a
+decisão de emitir é do dono — não de quem está construindo. O caminho está
+pronto e a simulação mostra exatamente o que sairá.
+
+**Continua faltando**: cliente da EFI (precisa de mTLS), webhook de
+pagamento — `payment_event` e o índice de unicidade dela já existem para
+isso —, reembolso, e o e-mail avisando o cliente de que há fatura aberta.

@@ -11,9 +11,12 @@ import {
   ADMIN_CONTAINER,
   AdminPageHeader,
 } from "@/components/admin/shell/AdminPageHeader";
+import { BillingRunner } from "@/components/admin/billing/BillingRunner";
+import { ChargesTable } from "@/components/admin/billing/ChargesTable";
 import { SubscriptionActions } from "@/components/admin/subscriptions/SubscriptionActions";
 import { MetricCard } from "@/components/ui/MetricCard";
 import { StatusChip } from "@/components/ui/StatusChip";
+import { listCharges } from "@/lib/admin/charges";
 import { ESTADO_META, listSubscriptions } from "@/lib/admin/subscriptions";
 import { formatCentsBRL } from "@/lib/finance/money";
 import { tempoRelativo } from "@/lib/utils/relative-time";
@@ -32,13 +35,19 @@ function data(iso: string | null): string {
 }
 
 export default async function AdminAssinaturasPage() {
-  const { assinaturas, indicadores } = await listSubscriptions();
+  const automatica = process.env.BILLING_AUTO === "1";
+
+  const [{ assinaturas, indicadores }, faturas] = await Promise.all([
+    listSubscriptions(),
+    listCharges(),
+  ]);
 
   return (
     <div className={ADMIN_CONTAINER}>
       <AdminPageHeader
         title="Assinaturas"
         subtitle="Ciclo financeiro das contas."
+        actions={<BillingRunner />}
       />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
@@ -79,18 +88,20 @@ export default async function AdminAssinaturasPage() {
         />
       </div>
 
-      {/* O aviso é a informação mais importante desta tela enquanto for
-          verdade — sem ele, "próxima cobrança" pareceria uma promessa. */}
+      {/* Enquanto a cobrança automática estiver desligada, dizer isso é a
+          informação mais importante da tela: sem o aviso, quem olha assume
+          que as faturas estão saindo sozinhas. */}
       <div className="border-line bg-subtle rounded-md border px-4 py-3 text-[length:var(--text-small-size)]">
         <strong className="text-fg font-medium">
-          Nenhuma cobrança é gerada automaticamente ainda.
+          Cobrança {automatica ? "automática, todo dia às 6h" : "manual"}.
         </strong>{" "}
         <span className="text-fg-secondary">
-          O motor de ciclo existe e está testado, mas nada o chama: não há
-          cobranças emitidas nem pagamentos registrados. &quot;Próxima
-          cobrança&quot; é o cálculo do ciclo a partir do dia escolhido, não uma
-          fatura existente. Por isso não há nova tentativa de cobrança, reenvio
-          de link nem reembolso nesta tela.
+          {automatica
+            ? "O cron emite as faturas do ciclo sozinho. Use “Rodar cobrança” para adiantar ou conferir."
+            : "O cron roda todo dia, calcula o que faria e só escreve no log — nenhuma fatura sai sozinha. Use “Rodar cobrança” para simular e, se estiver certo, emitir. Ligue BILLING_AUTO=1 quando quiser que ele emita sem você."}{" "}
+          Sem provedor de pagamento configurado, a fatura nasce sem QR: você
+          envia a cobrança por fora e registra o pagamento aqui, o que estende o
+          acesso da empresa.
         </span>
       </div>
 
@@ -186,6 +197,16 @@ export default async function AdminAssinaturasPage() {
             </tbody>
           </table>
         </div>
+      </section>
+
+      <section aria-labelledby="faturas" className="flex flex-col gap-3">
+        <h2
+          id="faturas"
+          className="text-fg text-[length:var(--text-h3-size)] font-semibold"
+        >
+          Faturas emitidas
+        </h2>
+        <ChargesTable faturas={faturas} />
       </section>
     </div>
   );
