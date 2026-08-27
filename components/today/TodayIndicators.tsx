@@ -90,15 +90,17 @@ export function TodayIndicators({
             type="button"
             onClick={() => onSelect(c.bucket as Bucket)}
             aria-pressed={active === c.bucket}
-            className={`rounded-md text-left outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-ring)] ${
-              active === c.bucket ? "ring-2 ring-[var(--focus-ring)]" : ""
-            }`}
+            // Sem anel aqui: quem marca a seleção é o próprio cartão, por
+            // dentro. Anel no botão de fora caía exatamente sobre a borda do
+            // cartão e lia como borda cortada.
+            className="rounded-md text-left outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-ring)]"
           >
             <StatCard
               icon={c.icon}
               label={c.label}
               value={String(c.value)}
               tone={c.tone}
+              active={active === c.bucket}
             />
           </button>
         )

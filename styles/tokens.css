@@ -316,12 +316,14 @@
   --text-link: var(--brand-300);
 
   /* Superfícies de destaque — tinta de marca translúcida */
-  --surface-selected: rgba(37, 99, 235, 0.18);
-  --surface-today: rgba(37, 99, 235, 0.26);
+  /* Derivam da marca, como o hover. Estavam com o azul cravado e a empresa
+     que escolhesse outra cor via item selecionado azul no tema escuro. */
+  --surface-selected: color-mix(in srgb, var(--brand-400) 18%, transparent);
+  --surface-today: color-mix(in srgb, var(--brand-400) 26%, transparent);
   --surface-hover: color-mix(in srgb, var(--brand-400) 8%, transparent);
 
   /* Preenchimentos */
-  --fill-brand: rgba(37, 99, 235, 0.38);
+  --fill-brand: color-mix(in srgb, var(--brand-400) 38%, transparent);
   --fill-track: rgba(255, 255, 255, 0.08);
 
   /* Anel de foco — brand-400 é visível sobre superfícies escuras */
@@ -336,7 +338,7 @@
   --status-positive-fg: #6ee7b7;
   --status-positive-bg: rgba(16, 185, 129, 0.16);
   --status-info-fg: var(--brand-300);
-  --status-info-bg: rgba(37, 99, 235, 0.16);
+  --status-info-bg: color-mix(in srgb, var(--brand-400) 16%, transparent);
 
   /* Setores — fill vira tinta escura translúcida; text clareado; dot vívido */
   --sector-violeta-fill: rgba(139, 92, 246, 0.18);
@@ -410,10 +412,12 @@
     --border: rgba(255, 255, 255, 0.08);
     --border-strong: rgba(255, 255, 255, 0.14);
     --text-link: var(--brand-300);
-    --surface-selected: rgba(37, 99, 235, 0.18);
-    --surface-today: rgba(37, 99, 235, 0.26);
+    /* Derivam da marca, como o hover. Estavam com o azul cravado e a empresa
+       que escolhesse outra cor via item selecionado azul no tema escuro. */
+    --surface-selected: color-mix(in srgb, var(--brand-400) 18%, transparent);
+    --surface-today: color-mix(in srgb, var(--brand-400) 26%, transparent);
     --surface-hover: color-mix(in srgb, var(--brand-400) 8%, transparent);
-    --fill-brand: rgba(37, 99, 235, 0.38);
+    --fill-brand: color-mix(in srgb, var(--brand-400) 38%, transparent);
     --fill-track: rgba(255, 255, 255, 0.08);
     --focus-ring: var(--brand-400);
     --status-overdue-fg: #fca5a5;
@@ -424,7 +428,7 @@
     --status-positive-fg: #6ee7b7;
     --status-positive-bg: rgba(16, 185, 129, 0.16);
     --status-info-fg: var(--brand-300);
-    --status-info-bg: rgba(37, 99, 235, 0.16);
+    --status-info-bg: color-mix(in srgb, var(--brand-400) 16%, transparent);
     --sector-violeta-fill: rgba(139, 92, 246, 0.18);
     --sector-violeta-text: #c4b5fd;
     --sector-violeta-dot: #a78bfa;
@@ -574,6 +578,8 @@
 [data-theme="dark"][data-brand],
 [data-theme="dark"] [data-brand] {
   --text-link: var(--brand-300);
+  --surface-selected: color-mix(in srgb, var(--brand-400) 18%, transparent);
+  --surface-today: color-mix(in srgb, var(--brand-400) 26%, transparent);
   --surface-hover: color-mix(in srgb, var(--brand-400) 8%, transparent);
   --focus-ring: var(--brand-400);
   --status-info-fg: var(--brand-300);
@@ -584,6 +590,8 @@
   :root:not([data-theme="light"])[data-brand],
   :root:not([data-theme="light"]) [data-brand] {
     --text-link: var(--brand-300);
+    --surface-selected: color-mix(in srgb, var(--brand-400) 18%, transparent);
+    --surface-today: color-mix(in srgb, var(--brand-400) 26%, transparent);
     --surface-hover: color-mix(in srgb, var(--brand-400) 8%, transparent);
     --focus-ring: var(--brand-400);
     --status-info-fg: var(--brand-300);
