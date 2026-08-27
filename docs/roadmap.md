@@ -1070,8 +1070,7 @@ de referência. A seção 9 deste documento descreve o painel antigo; isto aqui
   marca e reserva verde para dado financeiro. A especificação pede verde como
   assinatura. Resolvido separando os papéis: empresa escolhe entre os sete
   temas (0071); a administração é o produto visto por dentro e usa verde
-  fixo, o que satisfaz de quebra o "ambiente visualmente separado" da seção
-  4. O atributo é fixado por efeito no `<html>` (`AdminBrand`) porque portal
+  fixo, o que satisfaz de quebra o "ambiente visualmente separado" da seção 4. O atributo é fixado por efeito no `<html>` (`AdminBrand`) porque portal
   de Radix renderiza preso ao `<body>` — num wrapper interno, menu e diálogo
   voltariam à cor do cliente. O cookie da empresa não é tocado.
 - **Métricas fora do componente**, em `lib/admin/metrics.ts`, com a fórmula
@@ -1116,3 +1115,51 @@ simular implementação concluída.
 - **Histórico de suspensão e vencimento**: o gráfico de empresas ativas lê o
   estado de HOJE para todos os dias do período, porque o banco não versiona
   esses dois campos. Está dito na dica do cartão.
+
+### Rodada 2 — detalhe da empresa e ações com motivo (27/ago/2026, migration 0073)
+
+**O que passou a existir**
+
+- Página `/admin/empresas/[id]` com cinco abas de dado real: visão geral,
+  membros, assinatura, cobranças e observações.
+- Nove ações administrativas com **motivo obrigatório validado no servidor**
+  e evento de auditoria com autor, data e antes/depois.
+- Observação interna (`admin_note`): o que a plataforma anota sobre a empresa
+  e o cliente nunca vê. Tabela própria em vez de coluna `notes` no workspace,
+  porque nota tem autor e data — sobrescrever apaga o histórico.
+- **Excluir virou lógico.** Antes o botão fazia `delete` no workspace, que
+  cascateia para demandas, anexos, conversas e a própria auditoria da
+  empresa: irreversível, sem motivo e sem prazo de arrependimento. Agora
+  marca `deleted_at`, suspende junto (para tirar da tela quem já está com
+  sessão aberta) e fica restaurável. A remoção física continua na rota mas
+  exige 30 dias de quarentena mais motivo, e grava a auditoria ANTES do
+  delete — depois seria tarde, a linha morre no cascade.
+
+**Verificado contra o banco real, sem alterar nada**
+
+Motivo ausente, motivo curto, ação inventada, nome de confirmação errado e
+remoção física sem exclusão prévia: os cinco recusados pelo servidor (400,
+400, 400, 400, 409). Com a chave publishable — a mesma do navegador do
+cliente — ler observação devolve zero linhas, escrever dá 42501, forjar
+evento de auditoria dá 42501 e mexer em `deleted_at` dá 42501.
+
+**Decisões**
+
+- A exclusão lógica é filtrada em UM lugar: a lista de workspaces do layout
+  de `(app)`, que é o que decide onde a pessoa entra. Os outros 24 pontos que
+  consultam `workspace` leem uma empresa específica por id, já autorizada por
+  associação — filtrar em todos seria superfície grande sem ganho.
+- `getCompany` faz uma chamada de autenticação por membro. É o certo aqui
+  (são poucos por empresa e `getUserById` é exato); a varredura paginada só
+  compensa na listagem geral.
+
+**O que ficou faltando nesta rodada**
+
+- **Não existe como apagar uma observação interna.** Uma nota escrita na
+  empresa errada fica lá. Precisa decidir se some de vez ou se ganha um
+  "arquivada", já que o valor dela é justamente ser um registro.
+- Ações de membro (reenviar convite, remover, transferir propriedade) e a
+  aba Segurança (sessões, forçar logout) — ambas dependem de dado que não
+  existe ou de mutação ainda não escrita.
+- A auditoria não filtra por empresa. Hoje o filtro é escopo, ação e texto;
+  filtrar por empresa pede o seletor e o índice.

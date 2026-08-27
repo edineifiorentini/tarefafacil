@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { IconMenu2, IconPlus, IconSearch } from "@tabler/icons-react";
 
@@ -108,13 +109,13 @@ export function AdminTopbar({
           </span>
         </div>
 
-        <a
+        <Link
           href="/admin/empresas?novo=1"
           className="tf-lift flex items-center gap-1.5 rounded-md bg-[var(--button-primary-bg)] px-3 py-2 text-[length:var(--text-small-size)] font-medium text-[var(--button-primary-fg)] outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-ring)]"
         >
           <IconPlus size={18} stroke={2} aria-hidden />
           Novo cliente
-        </a>
+        </Link>
       </div>
     </header>
   );

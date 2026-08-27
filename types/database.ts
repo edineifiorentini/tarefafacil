@@ -88,6 +88,11 @@ export type Database = {
           affiliate_percent: number | null;
           /** Cor da marca da empresa (0071). Lista fechada; rampas em tokens.css. */
           brand_theme: BrandThemeId;
+          /**
+           * Exclusão lógica (0073). Não nulo = fora do ar para o cliente,
+           * ainda restaurável. Remoção física só depois de 30 dias assim.
+           */
+          deleted_at: string | null;
           created_at: string;
         };
         Insert: {
@@ -126,8 +131,32 @@ export type Database = {
           affiliate_percent?: number | null;
           /** A 0071 devolveu ao cliente o UPDATE só desta coluna e de `name`. */
           brand_theme?: BrandThemeId;
+          /** Exclusão lógica (0073). Só a plataforma escreve. */
+          deleted_at?: string | null;
           created_at?: string;
         };
+        Relationships: [];
+      };
+      /**
+       * Observação interna da plataforma sobre uma empresa (0073).
+       * RLS ligada e sem política: só a chave secreta enxerga. O cliente
+       * nunca vê o que a plataforma anotou sobre ele.
+       */
+      admin_note: {
+        Row: {
+          id: string;
+          workspace_id: string;
+          /** E-mail do admin da plataforma. Não é FK: ele não vive em app_user. */
+          autor: string;
+          corpo: string;
+          created_at: string;
+        };
+        Insert: {
+          workspace_id: string;
+          autor: string;
+          corpo: string;
+        };
+        Update: never;
         Relationships: [];
       };
       app_user: {

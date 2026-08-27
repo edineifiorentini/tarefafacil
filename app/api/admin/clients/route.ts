@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 
+import { MOTIVO_MINIMO } from "@/lib/admin/actions";
 import { requirePlatformAdmin } from "@/lib/admin/admin";
+import { registrarEventoDePlataforma } from "@/lib/admin/audit";
+import { DIAS_ATE_REMOCAO_FISICA } from "@/lib/admin/company";
 import type { ClientRow } from "@/lib/admin/types";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -221,20 +224,91 @@ export async function PATCH(request: Request) {
   return NextResponse.json({ ok: true, workspace: data });
 }
 
-// Remove um cliente (workspace) e todos os dados dele (cascata). Irreversível.
-// Não apaga a conta de login do dono — só o workspace/tenant.
+/**
+ * Remoção FÍSICA de um cliente. Cascateia para tudo: demandas, anexos,
+ * conversas e a auditoria da empresa. Não apaga a conta de login do dono.
+ *
+ * Esta rota deixou de ser o botão "excluir" do painel. Excluir passou a ser
+ * lógico (`deleted_at`, migration 0073) e reversível; aqui é só o expurgo
+ * do que já foi excluído e cumpriu a quarentena.
+ *
+ * Duas travas, porque antes não havia nenhuma:
+ *
+ * 1. A empresa precisa estar excluída logicamente há mais de
+ *    DIAS_ATE_REMOCAO_FISICA. É a política de retenção que a restrição 33
+ *    da especificação exige.
+ * 2. Motivo obrigatório, validado aqui, e registrado na auditoria ANTES do
+ *    delete — depois seria tarde: a linha do log da empresa morre no
+ *    cascade junto com ela. O evento de plataforma sobrevive porque grava
+ *    `workspace_id = null`.
+ */
 export async function DELETE(request: Request) {
   const admin = await requirePlatformAdmin();
   if (!admin) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 
-  const id = new URL(request.url).searchParams.get("id");
+  const url = new URL(request.url);
+  const id = url.searchParams.get("id");
+  const motivo = (url.searchParams.get("motivo") ?? "").trim();
   if (!id) {
     return NextResponse.json({ error: "missing_workspace" }, { status: 400 });
   }
+  if (motivo.length < MOTIVO_MINIMO) {
+    return NextResponse.json(
+      {
+        error: "motivo_invalido",
+        message: `O motivo precisa de pelo menos ${MOTIVO_MINIMO} caracteres`,
+      },
+      { status: 400 }
+    );
+  }
 
   const db = createAdminClient();
+  const { data: empresa } = await db
+    .from("workspace")
+    .select("name, deleted_at")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (!empresa) {
+    return NextResponse.json({ error: "not_found" }, { status: 404 });
+  }
+
+  if (!empresa.deleted_at) {
+    return NextResponse.json(
+      {
+        error: "nao_excluida",
+        message:
+          "Exclua a empresa primeiro; a remoção definitiva só vem depois da quarentena",
+      },
+      { status: 409 }
+    );
+  }
+
+  const diasNaQuarentena =
+    (Date.now() - new Date(empresa.deleted_at).getTime()) / 86_400_000;
+  if (diasNaQuarentena < DIAS_ATE_REMOCAO_FISICA) {
+    const faltam = Math.ceil(DIAS_ATE_REMOCAO_FISICA - diasNaQuarentena);
+    return NextResponse.json(
+      {
+        error: "quarentena",
+        message: `Faltam ${faltam} dias de quarentena antes da remoção definitiva`,
+      },
+      { status: 409 }
+    );
+  }
+
+  // Antes do delete: depois desta linha não há mais empresa para nomear.
+  await registrarEventoDePlataforma({
+    autor: admin.email,
+    acao: "excluiu",
+    entidade: "workspace",
+    entidadeId: id,
+    resumo: `removeu definitivamente a empresa "${empresa.name}" e todos os dados dela`,
+    detalhes: { motivo, empresa: empresa.name, excluidaEm: empresa.deleted_at },
+  });
+
   const { error } = await db.from("workspace").delete().eq("id", id);
   if (error) {
     return NextResponse.json({ error: "delete_failed" }, { status: 500 });

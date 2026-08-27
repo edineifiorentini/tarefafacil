@@ -41,9 +41,13 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
     redirect("/completar-cadastro");
   }
 
+  // Empresa excluída logicamente pela plataforma (0073) some daqui. É o que
+  // faz a exclusão valer para quem usa: a linha continua no banco, guardada
+  // e restaurável por 30 dias, mas ninguém entra nela.
   const { data: workspaces } = await supabase
     .from("workspace")
     .select("*")
+    .is("deleted_at", null)
     .order("created_at", { ascending: true });
 
   if (!workspaces || workspaces.length === 0) {
