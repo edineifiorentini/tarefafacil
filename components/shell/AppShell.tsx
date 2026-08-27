@@ -119,8 +119,11 @@ export function AppShell({
         <TopBar isAdmin={isAdmin} />
         <GcalReconnectBanner />
         <TrialBanner />
-        {/* Transparente: o ambiente do body aparece por baixo do conteúdo. */}
-        <main className="min-h-0 flex-1 overflow-auto">{children}</main>
+        {/* Transparente: o ambiente do body aparece por baixo do conteúdo.
+            O `pt` fica AQUI e não no TopBar porque este é o elemento que rola:
+            folga acima da área de rolagem some no primeiro pixel de scroll, e
+            o primeiro cartão passa a encostar na borda, cortado. */}
+        <main className="min-h-0 flex-1 overflow-auto pt-8">{children}</main>
       </div>
 
       {/* Painel de detalhe */}
