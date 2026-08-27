@@ -1606,3 +1606,67 @@ origem NÃO chega ao trigger naturalmente. As opções são:
    rotas não emitiria.
 
 Precisa ser decidido antes do disparo. Nada disso está começado.
+
+### Rodada 9 — catálogo, fila e disparo de webhook (27/ago/2026, migrations 0076 e 0077)
+
+Segundo e terceiro blocos da seção 23, juntos de propósito: fila que ninguém
+drena é exatamente o problema que esta base já teve duas vezes (o motor de
+cobrança e `listCompanies`, ambos prontos e sem chamador).
+
+**Fechada antes a lacuna da rodada 8:** criar e revogar chave de API não
+escrevia na auditoria da empresa, embora o roadmap dissesse que sim. Agora
+escreve, via `write_audit_as` — o mesmo caminho do gateway de pagamento,
+porque a rota roda com a chave secreta e `auth.uid()` é nulo. O resumo nunca
+leva a chave nem o prefixo dela.
+
+**O catálogo é contrato.** Oito eventos, nomeados `recurso.acao`, explícitos
+em `lib/webhooks/events.ts` e não derivados dos nomes de coluna de
+`task_activity` — derivar significaria que renomear uma coluna interna quebra
+um cliente lá fora. `versao` vai no corpo desde o primeiro dia: adicioná-la
+depois obriga todo cliente a lidar com "às vezes tem, às vezes não".
+
+Um teste trava a regra 9: nenhum evento do catálogo pode conter "subtarefa".
+Se alguém adicionar um, o teste falha antes de o evento sair para alguém.
+
+**O eco não volta para a origem** (decisão de 27/ago). A 0077 dá à inscrição
+uma `api_key_id` opcional: quando preenchida, o que aquela chave causar não é
+entregue ali. A ligação não se deduz — a inscrição é cadastrada por uma
+pessoa e a chave é usada por um programa —, então quem declara é o dono.
+
+**SSRF: três camadas, e a terceira é a esquecida.** Só https; resolver o DNS
+e barrar faixa interna antes de conectar; e repetir a checagem em CADA
+redirecionamento, com os saltos seguidos à mão (`redirect: "manual"`) porque
+`follow` seguiria sem perguntar. A terceira é o que fecha o destino público
+que responde 302 para `127.0.0.1`, e também a janela do DNS rebinding.
+Doze testes, cada um um caminho por onde já saiu segredo de alguém —
+incluindo IPv4 disfarçado de IPv6 (`::ffff:169.254.169.254`), que é o desvio
+clássico de lista que só olha IPv4.
+
+**Cifra e não hash para o segredo do webhook.** A chave de API guarda só o
+hash porque só precisa CONFERIR o que chega; aqui é o contrário — para
+ASSINAR, o servidor precisa do segredo em claro no momento do envio. Vale a
+cifra da aplicação (`secretBox`, AES-256-GCM), e o segredo em claro existe só
+nas duas linhas da assinatura.
+
+**O carimbo de tempo entra NA assinatura**, não só no cabeçalho: assinar só o
+corpo deixaria quem capturasse uma entrega reenviá-la para sempre com o
+carimbo trocado, e a conta bateria.
+
+**Entrega confiável**: espera crescente de 1, 5, 15, 60, 180 e 360 minutos;
+seis tentativas e desiste, com o motivo guardado; sucesso zera a contagem de
+falhas do destino; vinte falhas seguidas desligam o destino sem apagá-lo — o
+dono precisa ver que existe e por que parou. O cron roda de hora em hora e
+não finge ser tempo real: o contrato é "chega", não "chega em um segundo".
+
+**Falta para fechar a seção 23**
+
+1. **A tela do dono** para cadastrar destino, escolher eventos e ver o
+   registro de entregas. Sem ela nada disto é alcançável pela interface — é o
+   próximo passo, e é o que torna a rodada utilizável.
+2. **Chamar `enfileirarEvento` nas mutações.** Nenhuma rota o chama ainda: a
+   fila existe e ninguém a alimenta. É a consequência aceita de a aplicação
+   escrever a fila em vez de derivá-la do trigger — ganha-se contexto
+   (origem, filtro de subtarefa), paga-se com instrumentação explícita em
+   cada caminho.
+3. `BILLING_WEBHOOK_SECRET` continua sendo do webhook de ENTRADA; os de saída
+   têm segredo por inscrição, gerado no cadastro.

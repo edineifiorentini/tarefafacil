@@ -32,7 +32,7 @@ export async function DELETE(
   }
 
   const { id } = await params;
-  const revogou = await revogarChave(workspaceId, id);
+  const revogou = await revogarChave(workspaceId, id, user.id);
 
   if (!revogou) {
     // 404 e não 500: ou a chave não é desta empresa, ou já estava revogada.

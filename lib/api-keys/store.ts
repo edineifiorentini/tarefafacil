@@ -129,12 +129,20 @@ export async function criarChave(params: {
     return { ok: false, erro: "falhou", mensagem: "Não foi possível criar" };
   }
 
+  await auditar(
+    params.workspaceId,
+    params.criadaPor,
+    "criou",
+    `Gerou a chave de API "${nome}"`
+  );
+
   return { ok: true, id: data.id, valor: chave.valor, prefixo: chave.prefixo };
 }
 
 export async function revogarChave(
   workspaceId: string,
-  id: string
+  id: string,
+  autorId: string
 ): Promise<boolean> {
   const db = createAdminClient();
   const { data, error } = await db
@@ -147,7 +155,46 @@ export async function revogarChave(
     .is("revogada_em", null)
     .select("id");
 
-  return !error && (data ?? []).length > 0;
+  const revogou = !error && (data ?? []).length > 0;
+  if (revogou) {
+    await auditar(workspaceId, autorId, "excluiu", "Revogou uma chave de API");
+  }
+  return revogou;
+}
+
+/**
+ * Registra na auditoria DA EMPRESA (não na da plataforma).
+ *
+ * Criar uma chave é a ação mais poderosa que um dono faz na própria conta:
+ * quem a tem age em nome da empresa e ela não expira sozinha. Sem esta
+ * linha, um sócio gera uma chave, algo vaza meses depois, e não há como
+ * saber quem gerou nem quando.
+ *
+ * `write_audit_as` e não `write_audit`: a rota roda com a chave secreta, onde
+ * `auth.uid()` é nulo, então o autor entra por parâmetro. Mesmo caminho do
+ * gateway de pagamento (0067).
+ *
+ * O resumo NUNCA leva a chave nem o prefixo dela — auditoria é lida por mais
+ * gente e guardada por mais tempo do que a credencial dura.
+ */
+async function auditar(
+  workspaceId: string,
+  autorId: string,
+  acao: "criou" | "excluiu",
+  resumo: string
+): Promise<void> {
+  const db = createAdminClient();
+  const { error } = await db.rpc("write_audit_as", {
+    ws: workspaceId,
+    autor: autorId,
+    acao,
+    tipo: "api_key",
+    id_entidade: null,
+    resumo,
+  });
+  if (error) {
+    console.error("[api-key] falha ao registrar auditoria", error);
+  }
 }
 
 export type ChaveAutenticada = {

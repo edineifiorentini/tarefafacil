@@ -64,6 +64,82 @@ export type ChargeStatus = "aberta" | "paga" | "expirada" | "cancelada";
 export type Database = {
   public: {
     Tables: {
+      /**
+       * Inscrição de webhook de saída (0076, 0077).
+       * RLS ligada e sem politica: so a chave secreta enxerga — o segredo
+       * cifrado nao passa pelo cliente.
+       */
+      webhook_endpoint: {
+        Row: {
+          id: string;
+          workspace_id: string;
+          url: string;
+          /** Cifrado com secretBox. Precisa ser legivel para ASSINAR. */
+          segredo_cifrado: string;
+          eventos: string[];
+          ativo: boolean;
+          criado_por: string | null;
+          /** Integracao dona: o que esta chave causar nao chega aqui. */
+          api_key_id: string | null;
+          falhas_seguidas: number;
+          desativado_em: string | null;
+          created_at: string;
+        };
+        Insert: {
+          workspace_id: string;
+          url: string;
+          segredo_cifrado: string;
+          eventos?: string[];
+          ativo?: boolean;
+          criado_por?: string | null;
+          api_key_id?: string | null;
+        };
+        Update: {
+          url?: string;
+          segredo_cifrado?: string;
+          eventos?: string[];
+          ativo?: boolean;
+          api_key_id?: string | null;
+          falhas_seguidas?: number;
+          desativado_em?: string | null;
+        };
+        Relationships: [];
+      };
+      /** Fila de entregas de webhook (0076). */
+      webhook_delivery: {
+        Row: {
+          id: string;
+          endpoint_id: string;
+          workspace_id: string;
+          evento: string;
+          corpo: Json;
+          /** Chave que causou o fato. Null = acao de gente. */
+          origem_key_id: string | null;
+          tentativas: number;
+          proxima_tentativa: string;
+          status: "pendente" | "entregue" | "falhou" | "desistiu";
+          ultimo_status_http: number | null;
+          ultimo_erro: string | null;
+          entregue_em: string | null;
+          created_at: string;
+        };
+        Insert: {
+          endpoint_id: string;
+          workspace_id: string;
+          evento: string;
+          corpo: Json;
+          origem_key_id?: string | null;
+        };
+        Update: {
+          tentativas?: number;
+          proxima_tentativa?: string;
+          status?: "pendente" | "entregue" | "falhou" | "desistiu";
+          ultimo_status_http?: number | null;
+          ultimo_erro?: string | null;
+          entregue_em?: string | null;
+        };
+        Relationships: [];
+      };
       workspace: {
         Row: {
           id: string;
