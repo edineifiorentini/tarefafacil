@@ -1028,6 +1028,10 @@ export type Database = {
           status: SubscriptionStatus;
           billing_day: number;
           provider: string;
+          /** Cancelamento agendado (0074). O acesso vale até esta data. */
+          cancel_at: string | null;
+          /** Quando o cancelamento aconteceu (0074). Base do churn. */
+          canceled_at: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -1042,6 +1046,8 @@ export type Database = {
           plan_id?: string | null;
           status?: SubscriptionStatus;
           billing_day?: number;
+          cancel_at?: string | null;
+          canceled_at?: string | null;
         };
         Relationships: [];
       };

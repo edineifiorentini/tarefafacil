@@ -147,7 +147,7 @@ export default async function AdminOverviewPage({
           trend={m.churn.variacao ?? undefined}
           trendLabel={comparacao}
           series={m.churn.serie}
-          hint="Assinaturas canceladas no período sobre as pagas no início dele. A data do cancelamento sai de 'última alteração' da assinatura — é aproximação, não carimbo de cancelamento."
+          hint="Assinaturas canceladas no período sobre as pagas no início dele. A data vem do carimbo de cancelamento da assinatura."
         />
       </div>
 

@@ -1210,3 +1210,66 @@ mexeria no acesso de uma pessoa real que está usando o sistema — remover,
 bloquear ou trocar o papel do Igor não é teste, é consequência. A estrutura é
 idêntica à da ação de empresa, essa sim exercitada de ponta a ponta. Testar
 os caminhos felizes pede uma empresa descartável.
+
+### Rodada 4 — módulo Assinaturas (27/ago/2026, migration 0074)
+
+**A descoberta que definiu o escopo desta rodada**
+
+`lib/billing/cycle.ts` está completo e testado — ciclo, carência, decisão de
+cobrar, situação derivada — e **não tem nenhum chamador**. `subscription_charge`
+e `payment_event` estão vazias; `payment_gateway` também. O motor de cobrança
+foi construído e nunca ligado.
+
+Por isso a tela NÃO tem nova tentativa de cobrança, reenvio de link de
+pagamento nem reembolso: as três falam com um fluxo que não roda. E por isso
+a própria tela avisa, em bloco fixo, que nenhuma cobrança é gerada e que
+"próxima cobrança" é o ciclo calculado a partir do dia escolhido — não uma
+fatura existente.
+
+**Sobre idempotência**, que era o risco levantado antes de começar: as três
+ações desta rodada escrevem um ESTADO, não somam um evento. Cancelar duas
+vezes deixa cancelada; agendar duas vezes deixa a última data; reativar duas
+vezes deixa ativa. Nenhuma cobra ninguém. Chave de idempotência entra junto
+com a primeira ação que fale com provedor de pagamento — cerimônia sem risco
+é só código a mais para manter.
+
+**Migration 0074**
+
+- `subscription.cancel_at` — cancelamento agendado. Sem esta coluna, cancelar
+  só podia ser imediato, e quem cancelasse no meio do ciclo pago perdia o que
+  já tinha pago.
+- `subscription.canceled_at` — **conserta o churn.** Ele usava `updated_at`,
+  que é "última alteração de qualquer coisa": uma assinatura cancelada em
+  março e tocada de novo em agosto contava como churn de agosto. A ressalva
+  saiu da dica do cartão. As linhas já canceladas receberam `updated_at`
+  como aproximação declarada.
+
+**Bug latente corrigido de quebra: duas definições de MRR**
+
+O cartão da visão geral exigia linha em `subscription` com status ativa; a
+listagem de empresas bastava a empresa não estar em teste nem suspensa. Os
+números batiam POR ACASO — as empresas sem assinatura estão em teste ou num
+plano de R$ 0. Bastava uma delas ir para o Pro sem assinatura para o cartão
+dizer um valor e a tabela outro. Agora existe `contaNoMrr`, uma função só,
+usada nos dois lugares.
+
+**Um susto que não era bug**
+
+Na primeira abertura a tela mostrou "Sem assinatura" para todas e MRR zero.
+Não era erro de código: o PostgREST ainda servia o schema em cache SEM as
+colunas da 0074, então o `select` que as pedia voltava vazio. Minutos depois
+o schema recarregou e os mesmos dados apareceram certos. Vale lembrar em toda
+migration que adiciona coluna lida logo em seguida.
+
+**Verificado**
+
+Oito recusas do servidor, nenhuma alterando nada: sem motivo 400, motivo
+curto 400, ação inventada 400, data no passado 400, data mal formatada 400,
+agendar sem data 400, empresa sem assinatura 409, empresa inexistente 404.
+Conferido no banco depois: as duas assinaturas seguem ativas, sem datas de
+cancelamento.
+
+**Continua faltando** (especificação 11): ciclo anual e vitalício separados
+do mensal, cupom aplicado à assinatura, método de pagamento mascarado,
+período de tolerância como estado próprio e pausa. Todos dependem de colunas
+ou do fluxo de cobrança.

@@ -40,12 +40,7 @@ const ITENS: Item[] = [
   { href: "/admin", label: "Visão geral", icon: IconLayoutDashboard },
   { href: "/admin/empresas", label: "Empresas", icon: IconBuilding },
   { href: "/admin/usuarios", label: "Usuários", icon: IconUsers },
-  {
-    href: "/admin/assinaturas",
-    label: "Assinaturas",
-    icon: IconCreditCard,
-    emBreve: true,
-  },
+  { href: "/admin/assinaturas", label: "Assinaturas", icon: IconCreditCard },
   { href: "/admin/planos", label: "Planos", icon: IconStack2 },
   { href: "/admin/afiliados", label: "Afiliados", icon: IconUsersGroup },
   { href: "/admin/cupons", label: "Cupons", icon: IconTicket, emBreve: true },

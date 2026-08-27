@@ -6,6 +6,7 @@
 
 import { createAdminClient } from "@/lib/supabase/admin";
 
+import { contaNoMrr } from "./metrics";
 import { statusDaEmpresa, type StatusEmpresa } from "./status";
 
 export type EmpresaResumo = {
@@ -166,8 +167,9 @@ export async function listCompanies(): Promise<EmpresaResumo[]> {
       membros: contagem.get(w.id) ?? 0,
       seatLimit: w.seat_limit,
       ultimoAcesso: acessoPorWorkspace.get(w.id) ?? null,
-      // Só conta como receita recorrente quem está de fato pagando.
-      mrrCents: status === "ativa" && plano ? plano.price_cents : 0,
+      // A MESMA regra do cartão de MRR da visão geral, não uma parecida.
+      mrrCents:
+        plano && contaNoMrr(w, assinatura?.status) ? plano.price_cents : 0,
       origem: w.affiliate_id
         ? (afiliadosPorId.get(w.affiliate_id) ?? null)
         : null,

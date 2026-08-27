@@ -112,6 +112,8 @@ type AssinaturaCrua = {
   plan_id: string | null;
   status: string;
   updated_at: string;
+  /** Data real do cancelamento (0074). */
+  canceled_at: string | null;
 };
 
 type CobrancaCrua = {
@@ -156,6 +158,28 @@ function empresasAtivasEm(lista: WorkspaceCru[], dia: Date): number {
 }
 
 /**
+ * **Esta empresa entra no MRR?**
+ *
+ * A regra fica numa função só porque ela estava escrita em DOIS lugares com
+ * definições diferentes: aqui exigia-se linha em `subscription` com status
+ * `ativa`, e na listagem de empresas bastava a empresa não estar em teste
+ * nem suspensa. Hoje os dois números batem por acaso — as empresas sem
+ * assinatura estão em teste ou num plano de R$ 0. Bastaria uma delas ir para
+ * o Pro sem linha de assinatura para o cartão dizer um valor e a tabela
+ * outro, sem nada na tela explicando a diferença.
+ *
+ * A regra: paga quem tem assinatura ATIVA de verdade. Empresa sem linha em
+ * `subscription` não é receita recorrente, por mais que use o sistema.
+ */
+export function contaNoMrr(
+  w: { trial: boolean; suspended: boolean },
+  statusDaAssinatura: string | null | undefined
+): boolean {
+  if (w.trial || w.suspended) return false;
+  return statusDaAssinatura === "ativa";
+}
+
+/**
  * **MRR**: soma mensal das assinaturas recorrentes ativas.
  *
  * Fora da conta: teste gratuito, empresa sem plano e assinatura que não está
@@ -170,10 +194,9 @@ function mrrDe(
 ): number {
   let total = 0;
   for (const w of workspaces) {
-    if (w.trial || w.suspended) continue;
     const a = assinaturas.get(w.id);
-    if (!a || a.status !== "ativa") continue;
-    const planId = a.plan_id ?? w.plan_id;
+    if (!contaNoMrr(w, a?.status)) continue;
+    const planId = a?.plan_id ?? w.plan_id;
     if (!planId) continue;
     total += precos.get(planId) ?? 0;
   }
@@ -193,7 +216,9 @@ async function carregarBase() {
       .select(
         "id, created_at, suspended, access_expires_at, trial, trial_ends_at, plan_id"
       ),
-    db.from("subscription").select("workspace_id, plan_id, status, updated_at"),
+    db
+      .from("subscription")
+      .select("workspace_id, plan_id, status, updated_at, canceled_at"),
     db.from("billing_plan").select("id, price_cents"),
   ]);
 
@@ -361,22 +386,29 @@ export async function platformMetrics(
   // **Churn**: assinaturas canceladas no período ÷ assinaturas pagas no
   // início do período.
   //
-  // RESSALVA: a data do cancelamento sai de `subscription.updated_at`, que é
-  // "última alteração", não "cancelou nesta data". Uma assinatura cancelada e
-  // depois tocada por outro motivo carrega a data errada. É a melhor
-  // aproximação com o schema atual; corrigir de verdade pede uma coluna
-  // `canceled_at`, anotada como pendência.
+  // A data vem de `canceled_at` (0074), que é o carimbo do cancelamento.
+  // Antes usava-se `updated_at` — "última alteração de qualquer coisa" — e
+  // uma assinatura cancelada em março, tocada de novo em agosto, contava
+  // como churn de agosto.
+  //
+  // O `?? updated_at` cobre as linhas canceladas ANTES da 0074 existir: a
+  // migração preencheu o que pôde, e este é o mesmo palpite para o que
+  // porventura tenha escapado. Some sozinho conforme a base gira.
   function churnEntre(de: Date, ate: Date): number {
     const deMs = de.getTime();
     const ateMs = ate.getTime();
     const todas = [...assinaturas.values()];
+    const quandoCancelou = (a: AssinaturaCrua) =>
+      new Date(a.canceled_at ?? a.updated_at).getTime();
+
     const pagasNoInicio = todas.filter(
-      (a) => a.status === "ativa" || new Date(a.updated_at).getTime() >= deMs
+      (a) => a.status === "ativa" || quandoCancelou(a) >= deMs
     ).length;
     if (pagasNoInicio === 0) return 0;
+
     const canceladas = todas.filter((a) => {
       if (a.status !== "cancelada") return false;
-      const t = new Date(a.updated_at).getTime();
+      const t = quandoCancelou(a);
       return t >= deMs && t <= ateMs;
     }).length;
     return (canceladas / pagasNoInicio) * 100;
