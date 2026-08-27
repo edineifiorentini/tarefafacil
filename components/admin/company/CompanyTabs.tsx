@@ -1,7 +1,9 @@
 "use client";
 
+import { MemberActions } from "./MemberActions";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
 import { StatusChip } from "@/components/ui/StatusChip";
+import { PAPEL_LABEL } from "@/lib/admin/members";
 import type { EmpresaDetalhe } from "@/lib/admin/company";
 import { formatCentsBRL } from "@/lib/finance/money";
 import { tempoRelativo } from "@/lib/utils/relative-time";
@@ -62,6 +64,10 @@ function Bloco({
 }
 
 export function CompanyTabs({ empresa }: { empresa: EmpresaDetalhe }) {
+  // Contado uma vez e passado para cada linha: é o que decide se remover ou
+  // rebaixar deixaria a empresa sem dono.
+  const donos = empresa.membros.filter((m) => m.papel === "owner").length;
+
   return (
     <Tabs defaultValue="geral">
       <TabsList>
@@ -126,15 +132,16 @@ export function CompanyTabs({ empresa }: { empresa: EmpresaDetalhe }) {
                     "Papel",
                     "Convite",
                     "Autenticação",
-                    "E-mail verificado",
+                    "Acesso",
                     "Último acesso",
-                  ].map((h) => (
+                    "",
+                  ].map((h, i) => (
                     <th
-                      key={h}
+                      key={h || `acoes-${i}`}
                       scope="col"
                       className="text-fg-muted px-4 py-2.5 text-left text-[length:var(--text-caption-size)] font-medium"
                     >
-                      {h}
+                      {h || <span className="sr-only">Ações</span>}
                     </th>
                   ))}
                 </tr>
@@ -150,9 +157,14 @@ export function CompanyTabs({ empresa }: { empresa: EmpresaDetalhe }) {
                     </td>
                     <td className="text-fg-secondary px-4 py-3 text-[length:var(--text-small-size)]">
                       {m.email}
+                      {m.emailVerificado ? null : (
+                        <span className="text-fg-muted block text-[length:var(--text-caption-size)]">
+                          e-mail não verificado
+                        </span>
+                      )}
                     </td>
                     <td className="text-fg-secondary px-4 py-3 text-[length:var(--text-small-size)]">
-                      {m.papel}
+                      {PAPEL_LABEL[m.papel] ?? m.papel}
                     </td>
                     <td className="px-4 py-3">
                       <StatusChip
@@ -169,16 +181,22 @@ export function CompanyTabs({ empresa }: { empresa: EmpresaDetalhe }) {
                     </td>
                     <td className="px-4 py-3">
                       <StatusChip
-                        label={m.emailVerificado ? "Sim" : "Não"}
+                        label={m.bloqueado ? "Bloqueado" : "Liberado"}
                         tone={
-                          m.emailVerificado
-                            ? "var(--positive)"
-                            : "var(--status-due-soon-fg)"
+                          m.bloqueado ? "var(--negative)" : "var(--positive)"
                         }
                       />
                     </td>
                     <td className="text-fg-secondary px-4 py-3 text-[length:var(--text-small-size)]">
                       {tempoRelativo(m.ultimoAcesso)}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <MemberActions
+                        empresaId={empresa.id}
+                        empresaNome={empresa.nome}
+                        membro={m}
+                        totalDeDonos={donos}
+                      />
                     </td>
                   </tr>
                 ))}

@@ -14,6 +14,8 @@ export type MembroDaEmpresa = {
   ultimoAcesso: string | null;
   emailVerificado: boolean;
   autenticacao: string;
+  /** Conta bloqueada no GoTrue (`banned_until` no futuro). */
+  bloqueado: boolean;
 };
 
 export type CobrancaDaEmpresa = {
@@ -208,7 +210,12 @@ export async function getCompany(id: string): Promise<EmpresaDetalhe | null> {
   // quando se precisa da base inteira, como na listagem geral.
   const auth = new Map<
     string,
-    { ultimo: string | null; verificado: boolean; provedores: string[] }
+    {
+      ultimo: string | null;
+      verificado: boolean;
+      provedores: string[];
+      bloqueado: boolean;
+    }
   >();
   for (const uid of ids) {
     const { data } = await db.auth.admin.getUserById(uid);
@@ -217,6 +224,11 @@ export async function getCompany(id: string): Promise<EmpresaDetalhe | null> {
       ultimo: data.user.last_sign_in_at ?? null,
       verificado: !!data.user.email_confirmed_at,
       provedores: (data.user.identities ?? []).map((i) => i.provider),
+      // O GoTrue guarda uma DATA, não um booleano: bloqueio tem prazo. Só
+      // conta como bloqueado se a data ainda não passou.
+      bloqueado:
+        !!data.user.banned_until &&
+        new Date(data.user.banned_until).getTime() > Date.now(),
     });
   }
 
@@ -235,6 +247,7 @@ export async function getCompany(id: string): Promise<EmpresaDetalhe | null> {
       autenticacao: provedores
         .map((p) => (p === "google" ? "Google" : p === "email" ? "Senha" : p))
         .join(" + "),
+      bloqueado: a?.bloqueado ?? false,
     };
   });
 

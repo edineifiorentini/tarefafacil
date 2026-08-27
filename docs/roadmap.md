@@ -1163,3 +1163,50 @@ evento de auditoria dá 42501 e mexer em `deleted_at` dá 42501.
   existe ou de mutação ainda não escrita.
 - A auditoria não filtra por empresa. Hoje o filtro é escopo, ação e texto;
   filtrar por empresa pede o seletor e o índice.
+
+### Rodada 3 — ações de membro (27/ago/2026, sem migration)
+
+Seis ações na aba Membros, todas com motivo obrigatório e auditoria: alterar
+papel, remover da empresa, transferir propriedade, bloquear, desbloquear e
+gerar link de senha. Nenhuma migration — tudo sai de `workspace_member` e da
+API de autenticação do Supabase.
+
+**A trava do dono.** Nenhuma ação pode deixar a empresa sem dono: remover ou
+rebaixar a única pessoa dona é recusado com 409. Empresa sem dono é um beco —
+`owner_user_id` fica órfão, a cobrança perde responsável e ninguém tem
+permissão para convidar alguém de volta. A saída é transferir a propriedade,
+que promove o novo dono ANTES de rebaixar o antigo: se a segunda escrita
+falhar sobram dois donos (chato, consertável pela tela), enquanto a ordem
+inversa deixaria zero.
+
+**"Dono" não está no seletor de papel.** Aceitar `owner` ali criaria empresa
+com dois donos por um select adulterado; o servidor recusa o valor.
+
+**O link de senha não vai para a auditoria.** Registra-se que um link foi
+gerado, para quem e por quê — o link em si, não: quem o tem define a senha, e
+log é lido por mais gente e guardado por mais tempo do que a ação dura. A
+tela avisa em vermelho que o link vale como senha.
+
+**O que a especificação 10.4 pede e NÃO foi feito**
+
+- **Forçar logout sem bloquear.** O SDK só expõe `signOut(jwt)` e o
+  administrador não tem o token da pessoa. Bloquear já derruba a sessão na
+  renovação, então é hoje o caminho honesto. Um logout que não bloqueia
+  precisa do endpoint de sessões do GoTrue, chamado na mão.
+- **Reenviar verificação de e-mail e reenviar convite por e-mail.** O projeto
+  não envia e-mail: convite aqui é LINK (`/convite/<token>`), copiado e
+  entregue pelo dono. Botão que promete enviar e não envia é pior que botão
+  nenhum. Entra junto com SMTP.
+
+**Verificado**
+
+Sete recusas do servidor, nenhuma alterando nada: remover o único dono 409,
+rebaixar o único dono 409, promover a `owner` pelo select 400, bloquear sem
+motivo 400, ação inventada 400, usuário que não é membro 404, sem userId 400.
+Conferido depois no banco: papéis, dono e bloqueios intactos.
+
+**Não exercitado ao vivo:** as mutações de membro que dão certo. Cada uma
+mexeria no acesso de uma pessoa real que está usando o sistema — remover,
+bloquear ou trocar o papel do Igor não é teste, é consequência. A estrutura é
+idêntica à da ação de empresa, essa sim exercitada de ponta a ponta. Testar
+os caminhos felizes pede uma empresa descartável.
