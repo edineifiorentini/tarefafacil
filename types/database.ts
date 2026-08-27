@@ -29,6 +29,12 @@ export type ContractStatus =
 export type BillingPeriod = "unico" | "mensal" | "trimestral" | "anual";
 export type GcalStatus = "active" | "expired" | "revoked";
 
+// Cor da marca por empresa (0071). Espelha o `check` da migration e a lista
+// em lib/branding/themes.ts — mudar um sem o outro passa no typecheck e
+// estoura no insert.
+export type BrandThemeId =
+  "azul" | "indigo" | "lilas" | "teal" | "verde" | "magenta" | "grafite";
+
 // Conta de recebimento da empresa (0067). Espelham o `check` da migration —
 // mudar um lado sem o outro deixa o typecheck passar e o insert estourar.
 export type PaymentProviderId = "mercado_pago" | "asaas";
@@ -80,6 +86,8 @@ export type Database = {
           affiliate_id: string | null;
           /** Cópia do percentual do afiliado no momento da indicação. */
           affiliate_percent: number | null;
+          /** Cor da marca da empresa (0071). Lista fechada; rampas em tokens.css. */
+          brand_theme: BrandThemeId;
           created_at: string;
         };
         Insert: {
@@ -97,6 +105,7 @@ export type Database = {
           suspended?: boolean;
           affiliate_id?: string | null;
           affiliate_percent?: number | null;
+          brand_theme?: BrandThemeId;
           created_at?: string;
         };
         Update: {
@@ -115,6 +124,8 @@ export type Database = {
           /** Indicação: afiliado e o percentual combinado na época. */
           affiliate_id?: string | null;
           affiliate_percent?: number | null;
+          /** A 0071 devolveu ao cliente o UPDATE só desta coluna e de `name`. */
+          brand_theme?: BrandThemeId;
           created_at?: string;
         };
         Relationships: [];

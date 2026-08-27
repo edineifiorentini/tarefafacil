@@ -10,11 +10,13 @@ import { ShellProvider } from "@/components/shell/shell-context";
 import { AccessExpired } from "@/components/workspace/AccessExpired";
 import { CreateWorkspace } from "@/components/workspace/CreateWorkspace";
 import { PendingApproval } from "@/components/workspace/PendingApproval";
+import { BrandSync } from "@/components/branding/BrandSync";
 import { SupportBanner } from "@/components/shell/SupportBanner";
 import { PomodoroProvider } from "@/lib/pomodoro/PomodoroContext";
 import { WorkspaceProvider } from "@/lib/queries/useWorkspace";
 import { createClient } from "@/lib/supabase/server";
 import { SUPPORT_COOKIE, readSupportCookie } from "@/lib/support/session";
+import { parseBrandTheme } from "@/lib/branding/themes";
 
 // Guarda de autenticação + workspace ativo + casca de navegação (AppShell).
 export default async function AppLayout({ children }: { children: ReactNode }) {
@@ -108,6 +110,9 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
 
   return (
     <Providers>
+      {/* O <html> já veio pintado pelo cookie; isto só age quando o cookie
+          está desatualizado — primeiro acesso, ou troca de empresa. */}
+      <BrandSync theme={parseBrandTheme(workspace.brand_theme)} />
       {emSuporte ? (
         <SupportBanner
           workspaceName={workspace.name}

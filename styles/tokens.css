@@ -192,7 +192,9 @@
   /* Superfícies de destaque (selecionado, hoje, coluna ativa, hover de linha) */
   --surface-selected: var(--brand-50);
   --surface-today: var(--brand-100);
-  --surface-hover: rgba(37, 99, 235, 0.05); /* azul extremamente suave */
+  /* Deriva da marca: com o azul literal aqui, toda empresa ficava com hover
+     azul por mais que escolhesse outra cor. */
+  --surface-hover: color-mix(in srgb, var(--brand-600) 5%, transparent);
 
   /* Preenchimentos (barras de progresso, chips) */
   --fill-brand: var(--brand-200);
@@ -316,7 +318,7 @@
   /* Superfícies de destaque — tinta de marca translúcida */
   --surface-selected: rgba(37, 99, 235, 0.18);
   --surface-today: rgba(37, 99, 235, 0.26);
-  --surface-hover: rgba(96, 150, 250, 0.08);
+  --surface-hover: color-mix(in srgb, var(--brand-400) 8%, transparent);
 
   /* Preenchimentos */
   --fill-brand: rgba(37, 99, 235, 0.38);
@@ -410,7 +412,7 @@
     --text-link: var(--brand-300);
     --surface-selected: rgba(37, 99, 235, 0.18);
     --surface-today: rgba(37, 99, 235, 0.26);
-    --surface-hover: rgba(96, 150, 250, 0.08);
+    --surface-hover: color-mix(in srgb, var(--brand-400) 8%, transparent);
     --fill-brand: rgba(37, 99, 235, 0.38);
     --fill-track: rgba(255, 255, 255, 0.08);
     --focus-ring: var(--brand-400);
@@ -463,5 +465,128 @@
     --button-primary-bg-active: #d4d8e2;
     --button-primary-fg: #101828;
     --button-primary-sheen: rgba(255, 255, 255, 0.5);
+  }
+}
+
+/* ---------------------------------------------------------------------
+ * MARCA DA EMPRESA (0071)
+ *
+ * Cada empresa escolhe um tom, e ele troca a rampa `--brand-*`. O atributo
+ * `data-brand` fica no `<html>`, e não num wrapper do app: menu, diálogo e
+ * tooltip do Radix renderizam em portal, fora da árvore da página, e
+ * perderiam a cor se ela morasse mais para dentro.
+ *
+ * Os aliases são re-derivados no MESMO elemento logo abaixo. Sem isso não
+ * funcionaria: `var()` dentro da definição de outra variável é substituído
+ * onde a variável é declarada, então `--text-link: var(--brand-700)` no
+ * `:root` continuaria apontando para o azul do `:root`.
+ *
+ * Amarelo e vermelho não entram na lista: colidem com o aviso e com o
+ * atraso, e o sistema passaria a parecer alarmado o tempo todo.
+ * ------------------------------------------------------------------- */
+
+[data-brand="indigo"] {
+  --brand-50: #eef2ff;
+  --brand-100: #e0e7ff;
+  --brand-200: #c7d2fe;
+  --brand-300: #a5b4fc;
+  --brand-400: #818cf8;
+  --brand-500: #6366f1;
+  --brand-600: #4f46e5;
+  --brand-700: #4338ca; /* 7.6:1 em branco */
+}
+
+[data-brand="lilas"] {
+  --brand-50: #f5f3ff;
+  --brand-100: #ede9fe;
+  --brand-200: #ddd6fe;
+  --brand-300: #c4b5fd;
+  --brand-400: #a78bfa;
+  --brand-500: #8b5cf6;
+  --brand-600: #7c3aed;
+  --brand-700: #6d28d9; /* 7.4:1 */
+}
+
+[data-brand="teal"] {
+  --brand-50: #f0fdfa;
+  --brand-100: #ccfbf1;
+  --brand-200: #99f6e4;
+  --brand-300: #5eead4;
+  --brand-400: #2dd4bf;
+  --brand-500: #14b8a6;
+  --brand-600: #0d9488;
+  --brand-700: #0f766e; /* 5.3:1 */
+}
+
+/* Verde: escolhido pelo dono em 26/ago, com a ressalva registrada em
+   `lib/branding/themes.ts` — verde também marca dinheiro no Financeiro, e
+   aqui os dois passam a dividir a tela. */
+[data-brand="verde"] {
+  --brand-50: #ecfdf5;
+  --brand-100: #d1fae5;
+  --brand-200: #a7f3d0;
+  --brand-300: #6ee7b7;
+  --brand-400: #34d399;
+  --brand-500: #10b981;
+  --brand-600: #059669;
+  --brand-700: #047857; /* 4.8:1 */
+}
+
+[data-brand="magenta"] {
+  --brand-50: #fdf2f8;
+  --brand-100: #fce7f3;
+  --brand-200: #fbcfe8;
+  --brand-300: #f9a8d4;
+  --brand-400: #f472b6;
+  --brand-500: #ec4899;
+  --brand-600: #db2777;
+  --brand-700: #be185d; /* 6.0:1 */
+}
+
+[data-brand="grafite"] {
+  --brand-50: #f8fafc;
+  --brand-100: #f1f5f9;
+  --brand-200: #e2e8f0;
+  --brand-300: #cbd5e1;
+  --brand-400: #94a3b8;
+  --brand-500: #64748b;
+  --brand-600: #475569;
+  --brand-700: #334155; /* 10:1 */
+}
+
+/* Re-derivação no mesmo elemento. `[data-brand]` casa com qualquer tom,
+   inclusive `azul`, que não tem bloco próprio por já ser o padrão do :root. */
+[data-brand] {
+  --text-link: var(--brand-700);
+  --surface-selected: var(--brand-50);
+  --surface-today: var(--brand-100);
+  --surface-hover: color-mix(in srgb, var(--brand-600) 5%, transparent);
+  --fill-brand: var(--brand-200);
+  --focus-ring: var(--brand-600);
+  --status-info-fg: var(--brand-700);
+  --status-info-bg: var(--brand-50);
+  --chart-1: var(--brand-600);
+}
+
+/* No escuro os aliases apontam para degraus mais claros da rampa. A
+   especificidade maior (dois seletores) garante que estes vençam o bloco
+   acima. */
+[data-theme="dark"][data-brand],
+[data-theme="dark"] [data-brand] {
+  --text-link: var(--brand-300);
+  --surface-hover: color-mix(in srgb, var(--brand-400) 8%, transparent);
+  --focus-ring: var(--brand-400);
+  --status-info-fg: var(--brand-300);
+  --chart-1: var(--brand-400);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"])[data-brand],
+  :root:not([data-theme="light"]) [data-brand] {
+    --text-link: var(--brand-300);
+    --surface-hover: color-mix(in srgb, var(--brand-400) 8%, transparent);
+    --focus-ring: var(--brand-400);
+    --status-info-fg: var(--brand-300);
+    --chart-1: var(--brand-400);
   }
 }

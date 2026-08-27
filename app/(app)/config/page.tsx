@@ -4,7 +4,7 @@ import { NotificationPrefs } from "@/components/config/NotificationPrefs";
 import { ContractTemplateManager } from "@/components/contracts/ContractTemplateManager";
 import { IntegrationsPanel } from "@/components/integrations/IntegrationsPanel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
-import { OrgProfileForm } from "@/components/workspace/OrgProfileForm";
+import { GeralTab } from "@/components/workspace/GeralTab";
 import { WorkspaceSettings } from "@/components/workspace/WorkspaceSettings";
 
 const GCAL_MESSAGES: Record<string, string> = {
@@ -59,7 +59,7 @@ export default async function ConfigPage({
         </TabsList>
 
         <TabsContent value="geral">
-          <OrgProfileForm />
+          <GeralTab />
         </TabsContent>
 
         <TabsContent value="conta">
