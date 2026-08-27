@@ -3,6 +3,7 @@ import type { CSSProperties } from "react";
 import { Sparkline } from "@/components/charts/Sparkline";
 
 import { IconTile } from "./IconTile";
+import { InfoHint } from "./InfoHint";
 import { TrendBadge } from "./TrendBadge";
 import type { IconComponent } from "./types";
 
@@ -21,6 +22,7 @@ export function MetricCard({
   trendInvert,
   trendLabel,
   series,
+  hint,
 }: {
   icon: IconComponent;
   label: string;
@@ -32,6 +34,12 @@ export function MetricCard({
   trendInvert?: boolean;
   trendLabel?: string;
   series?: number[];
+  /**
+   * Como este número é calculado. Métrica de painel administrativo sem
+   * definição vira discussão — quem lê precisa poder conferir a fórmula sem
+   * abrir o código.
+   */
+  hint?: string;
 }) {
   return (
     <article
@@ -45,9 +53,16 @@ export function MetricCard({
         <IconTile icon={icon} tone={tone} />
 
         <div className="flex min-w-0 flex-1 flex-col gap-1">
-          <h3 className="text-fg-secondary truncate text-[length:var(--text-small-size)]">
-            {label}
-          </h3>
+          <div className="flex min-w-0 items-center gap-1.5">
+            <h3 className="text-fg-secondary truncate text-[length:var(--text-small-size)]">
+              {label}
+            </h3>
+            {hint ? (
+              <span className="shrink-0">
+                <InfoHint label={`Como ${label} é calculado`} text={hint} />
+              </span>
+            ) : null}
+          </div>
 
           <div className="flex items-end justify-between gap-3">
             <div className="flex min-w-0 flex-col items-start gap-1.5">

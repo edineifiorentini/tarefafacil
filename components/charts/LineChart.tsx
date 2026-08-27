@@ -29,6 +29,9 @@ const PAD_RIGHT = 10;
 const PAD_TOP = 14;
 const PAD_BOTTOM = 28;
 
+/** Teto de rótulos no eixo horizontal. Acima disso eles se sobrepõem. */
+const MAX_ROTULOS = 8;
+
 /**
  * Gráfico de linhas multi-série: curvas fluidas, grade quase imperceptível,
  * crosshair e tooltip de vidro no hover. Pontos só aparecem no índice ativo.
@@ -63,6 +66,10 @@ export function LineChart({
   const top = ticks[ticks.length - 1] || 1;
 
   const x = makeXScale(labels.length, PAD_LEFT, W - PAD_RIGHT);
+
+  // Quantos rótulos cabem sem encostar um no outro, na largura fixa do
+  // viewBox. Oito é o que sobra depois de reservar espaço para "00 mmm.".
+  const passoDeRotulo = Math.max(1, Math.ceil(labels.length / MAX_ROTULOS));
   const y = makeYScale(0, top, PAD_TOP, H - PAD_BOTTOM);
   const baseline = H - PAD_BOTTOM;
 
@@ -196,19 +203,33 @@ export function LineChart({
             ))
           : null}
 
-        {/* Rótulos do eixo horizontal */}
-        {labels.map((label, i) => (
-          <text
-            key={label}
-            x={x(i)}
-            y={H - 8}
-            textAnchor="middle"
-            fill="var(--text-muted)"
-            style={{ fontSize: 11 }}
-          >
-            {label}
-          </text>
-        ))}
+        {/* Rótulos do eixo horizontal.
+            Desenhar um por ponto só funciona até uma dúzia: com 30 ou 90 dias
+            eles se sobrepõem e viram um borrão cinza. Aqui o eixo é afinado
+            para caber, e o último ponto entra sempre — o leitor precisa saber
+            onde a série termina. A chave é o índice, não o texto: dois
+            rótulos iguais são possíveis e derrubariam a lista. */}
+        {labels.map((label, i) =>
+          // O último sempre entra; o rótulo do passo cede quando cairia
+          // colado nele — foi o que produziu "26 de ago." impresso por cima
+          // de "27 de ago." na ponta direita.
+          i === labels.length - 1 ||
+          (i % passoDeRotulo === 0 &&
+            labels.length - 1 - i >= passoDeRotulo) ? (
+            <text
+              key={i}
+              x={x(i)}
+              y={H - 8}
+              textAnchor={
+                i === 0 ? "start" : i === labels.length - 1 ? "end" : "middle"
+              }
+              fill="var(--text-muted)"
+              style={{ fontSize: 11 }}
+            >
+              {label}
+            </text>
+          ) : null
+        )}
       </svg>
 
       {/* Tooltip de vidro — segue o índice ativo, preso às bordas do card */}

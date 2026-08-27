@@ -1047,3 +1047,72 @@ A aba **Integrações** em Configurações, com a grade agrupada
 Mercado Pago e Asaas conectam; o resto aparece como "em breve". Cada cartão
 desses é promessa visível ao cliente — não entra nada ali que não tenha item
 neste roadmap.
+
+---
+
+## 22. Painel administrativo — repaginação (27/ago/2026, migration 0072)
+
+Especificação entregue pelo dono em 27/ago/2026 (34 seções) mais uma imagem
+de referência. A seção 9 deste documento descreve o painel antigo; isto aqui
+é o que mudou e o que ficou faltando.
+
+### Decisões tomadas
+
+- **O painel saiu de dentro do grupo `(app)`.** Ele morava lá e por isso
+  herdava a casca do cliente: barra lateral com os SETORES da empresa do
+  administrador, atalhos do quadro, painel de detalhe de demanda. Além de a
+  especificação (4) proibir misturar os dois ambientes, havia um efeito
+  prático pior — o layout de `(app)` exige que o usuário tenha um workspace e
+  barra quem está com acesso vencido, então um administrador da plataforma
+  sem empresa própria não conseguia abrir o painel. Agora `app/admin/` tem
+  layout próprio e a única exigência é ser admin da plataforma.
+- **O painel é VERDE, o app continua azul.** O `CLAUDE.md` fixa azul como
+  marca e reserva verde para dado financeiro. A especificação pede verde como
+  assinatura. Resolvido separando os papéis: empresa escolhe entre os sete
+  temas (0071); a administração é o produto visto por dentro e usa verde
+  fixo, o que satisfaz de quebra o "ambiente visualmente separado" da seção
+  4. O atributo é fixado por efeito no `<html>` (`AdminBrand`) porque portal
+  de Radix renderiza preso ao `<body>` — num wrapper interno, menu e diálogo
+  voltariam à cor do cliente. O cookie da empresa não é tocado.
+- **Métricas fora do componente**, em `lib/admin/metrics.ts`, com a fórmula
+  escrita ao lado do código e repetida na dica de cada cartão. Número de
+  painel sem definição vira discussão.
+- **Nenhuma dependência nova.** `LineChart` e `Sparkline` já existiam.
+- **`audit_log.workspace_id` passou a aceitar null** (0072) para registrar
+  ação de plataforma. Evento sobre uma empresa grava `workspace_id = null` e
+  guarda a empresa em `entity_id`, que não tem chave estrangeira — senão o
+  registro morreria no cascade junto com a empresa excluída.
+
+### O que NÃO foi feito, e por quê
+
+Nada disto virou número falso na tela; a restrição 33 da especificação proíbe
+simular implementação concluída.
+
+- **Falhas de webhook e eventos suspeitos** (8.6): `payment_event` só guarda
+  o payload recebido, sem estado de erro, e não existe tabela de eventos de
+  segurança. Precisa de coluna de status no webhook antes.
+- **Sino de notificações** (7.2, 22): depende de uma tabela de eventos
+  administrativos que não existe.
+- **Assinaturas e Cupons**: telas declaradas "em breve" no menu, com a
+  página explicando o que falta. Assinaturas precisa de idempotência nas
+  ações financeiras e de estados que o schema não separa (cancelamento
+  agendado, tolerância, pausa). Cupons precisa da tabela e da regra de
+  aplicação na cobrança — cupom que o painel cria e o checkout ignora é pior
+  que cupom nenhum.
+- **Estados "cancelamento agendado" e "excluída logicamente"** (9.2):
+  faltam as colunas `cancel_at` e `deleted_at`.
+- **RBAC administrativo** (17): hoje é uma lista de e-mails em
+  `PLATFORM_ADMIN_EMAILS`, tudo ou nada. Os quatro papéis (superadmin,
+  suporte, financeiro, analista) pedem tabela de administradores e checagem
+  por operação no servidor.
+- **Página detalhada de empresa e de usuário** (9.6, 10.3) e as ações
+  sensíveis com motivo (9.7, 10.4): a rota `/admin/empresas/[id]` já é
+  linkada pela tabela de recentes e ainda não existe.
+- **Data real de cancelamento**: o churn usa `subscription.updated_at` como
+  aproximação. Corrigir pede uma coluna `canceled_at`.
+- **Último acesso** vem de `auth.users.last_sign_in_at`, varrido em páginas
+  de 50 com teto de 1000 usuários. Acima disso, o certo é uma coluna
+  `last_seen_at` em `app_user` gravada no login.
+- **Histórico de suspensão e vencimento**: o gráfico de empresas ativas lê o
+  estado de HOJE para todos os dias do período, porque o banco não versiona
+  esses dois campos. Está dito na dica do cartão.

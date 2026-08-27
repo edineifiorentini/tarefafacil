@@ -1130,7 +1130,8 @@ export type Database = {
       audit_log: {
         Row: {
           id: string;
-          workspace_id: string;
+          /** Null = evento de plataforma, fora de qualquer empresa (0072). */
+          workspace_id: string | null;
           actor_id: string | null;
           action: AuditAction;
           entity_type: string;
@@ -1798,6 +1799,23 @@ export type Database = {
       write_audit_as: {
         Args: {
           ws: string;
+          autor: string;
+          acao: AuditAction;
+          tipo: string;
+          id_entidade: string | null;
+          resumo: string;
+          detalhes?: Json | null;
+        };
+        Returns: undefined;
+      };
+      /**
+       * Auditoria de plataforma (0072): evento fora de qualquer empresa.
+       * `security definer`, só `service_role` executa — a rota administrativa
+       * roda com a chave secreta, onde `auth.uid()` é nulo, então o autor
+       * entra por parâmetro.
+       */
+      write_platform_audit: {
+        Args: {
           autor: string;
           acao: AuditAction;
           tipo: string;

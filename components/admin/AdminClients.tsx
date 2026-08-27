@@ -12,8 +12,6 @@ import { TextInput } from "@/components/ui/TextInput";
 import { useToast } from "@/components/ui/Toast";
 import type { ClientRow, PlanRow } from "@/lib/admin/types";
 
-import { SignupGate } from "./SignupGate";
-
 const DAY_MS = 24 * 60 * 60 * 1000;
 const PERIODS = [
   { label: "Renovar 30 dias", days: 30 },
@@ -595,7 +593,9 @@ export function AdminClients() {
 
   return (
     <div className="flex flex-col gap-4">
-      <SignupGate />
+      {/* O controle de cadastros mora em Configurações desde a casca nova
+          da administração: dois interruptores para a mesma coisa é como uma
+          pessoa desliga o cadastro numa tela e vê "aberto" na outra. */}
 
       {/* O título "Contas" está na barra superior; aqui fica só o aviso de
           comportamento e a ação de criar. */}
