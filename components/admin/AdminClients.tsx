@@ -1,8 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { IconDotsVertical } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertDialog, Dialog, DropdownMenu } from "radix-ui";
+import { Dialog, DropdownMenu } from "radix-ui";
 import { useState } from "react";
 
 import { SupportAccessDialog } from "@/components/admin/SupportAccessDialog";
@@ -49,7 +50,6 @@ function ClientRowItem({
   const toast = useToast();
   const [planId, setPlanId] = useState(client.plan_id ?? SEM_PLANO);
   const [seats, setSeats] = useState(String(client.seat_limit));
-  const [confirmDelete, setConfirmDelete] = useState(false);
   const [editContact, setEditContact] = useState(false);
   const [support, setSupport] = useState(false);
 
@@ -123,20 +123,6 @@ function ClientRowItem({
       invalidate();
     },
     onError: () => toast.show({ message: "Não foi possível atualizar" }),
-  });
-
-  const remove = useMutation({
-    mutationFn: async () => {
-      const res = await fetch(`/api/admin/clients?id=${client.id}`, {
-        method: "DELETE",
-      });
-      if (!res.ok) throw new Error("falha");
-    },
-    onSuccess: () => {
-      toast.show({ message: "Cliente removido" });
-      invalidate();
-    },
-    onError: () => toast.show({ message: "Não foi possível remover" }),
   });
 
   const dirty = planChanged || seatsChanged;
@@ -301,14 +287,18 @@ function ClientRowItem({
                   </DropdownMenu.Item>
                 )}
                 <DropdownMenu.Separator className="bg-line my-1 h-px" />
-                <DropdownMenu.Item
-                  onSelect={(e) => {
-                    e.preventDefault();
-                    setConfirmDelete(true);
-                  }}
-                  className="text-overdue data-[highlighted]:bg-hover cursor-pointer rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] outline-none"
-                >
-                  Remover cliente
+                {/* Excluir saiu daqui. A rota de remoção passou a exigir
+                    motivo e 30 dias de quarentena (0073), e este botão a
+                    chamava sem nada — falhava sempre, mostrando um genérico
+                    "não foi possível remover". A exclusão de verdade, lógica
+                    e reversível, mora na página da empresa. */}
+                <DropdownMenu.Item asChild>
+                  <Link
+                    href={`/admin/empresas/${client.id}`}
+                    className="text-fg data-[highlighted]:bg-hover block cursor-pointer rounded-sm px-2 py-1.5 text-[length:var(--text-small-size)] outline-none"
+                  >
+                    Abrir empresa
+                  </Link>
                 </DropdownMenu.Item>
               </DropdownMenu.Content>
             </DropdownMenu.Portal>
@@ -328,39 +318,6 @@ function ClientRowItem({
           open={support}
           onOpenChange={setSupport}
         />
-
-        <AlertDialog.Root open={confirmDelete} onOpenChange={setConfirmDelete}>
-          <AlertDialog.Portal>
-            <AlertDialog.Overlay className="fixed inset-0 z-50 bg-black/40" />
-            <AlertDialog.Content className="tf-glass-strong fixed top-1/2 left-1/2 z-50 w-[min(28rem,92vw)] -translate-x-1/2 -translate-y-1/2 rounded-md p-5 text-left">
-              <AlertDialog.Title className="text-fg text-[length:var(--text-h3-size)] font-semibold">
-                Remover {client.name}?
-              </AlertDialog.Title>
-              <AlertDialog.Description className="text-fg-secondary mt-2">
-                Apaga o workspace e todos os dados dele (setores, tarefas,
-                projetos, anexos), de forma permanente. A conta de login do dono
-                não é apagada. Não dá para desfazer.
-              </AlertDialog.Description>
-              <div className="mt-4 flex justify-end gap-2">
-                <AlertDialog.Cancel asChild>
-                  <Button variant="ghost" size="sm">
-                    Cancelar
-                  </Button>
-                </AlertDialog.Cancel>
-                <AlertDialog.Action asChild>
-                  <Button
-                    variant="danger"
-                    size="sm"
-                    isLoading={remove.isPending}
-                    onClick={() => remove.mutate()}
-                  >
-                    Remover
-                  </Button>
-                </AlertDialog.Action>
-              </div>
-            </AlertDialog.Content>
-          </AlertDialog.Portal>
-        </AlertDialog.Root>
       </td>
     </tr>
   );
