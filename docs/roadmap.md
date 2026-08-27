@@ -1514,13 +1514,20 @@ Candidatos: `demanda.criada`, `demanda.movida` (mudou de coluna),
 `demanda.concluida`, `demanda.atribuida`, `comentario.criado`,
 `projeto.criado`.
 
-**Duas perguntas de produto**, ambas com precedente no sistema:
+**Subtarefa não gera evento — DECIDIDO** pelo dono em 27/ago/2026. É a mesma
+regra do Google Agenda, agora generalizada na regra 9 do CLAUDE.md:
+subtarefa é item de conferência dentro de uma demanda, não um compromisso
+próprio. Quem representa a demanda para fora é a demanda.
 
-1. **Subtarefa gera evento?** A regra 9 do CLAUDE.md diz que subtarefa nunca
-   gera evento no Google Agenda. O mesmo raciocínio vale aqui?
-2. **Ação do próprio webhook gera evento?** Se uma integração cria demanda
-   pela API e isso dispara `demanda.criada` de volta para ela, o laço se
-   fecha sozinho. Precisa marcar a origem e não reenviar para quem causou.
+Consequência prática: o disparo lê `task_activity`, e ali cabem mudanças de
+subtarefa. O filtro precisa existir NA ORIGEM do disparo, não na tela — um
+evento que sai errado já saiu.
+
+**Uma pergunta ainda aberta:** ação vinda da própria integração gera evento
+de volta? Se um sistema cria demanda pela API e isso dispara
+`demanda.criada` para ele mesmo, o laço se fecha sozinho. Dá para resolver
+marcando a origem e não reenviando para quem causou, mas é decisão de
+produto — pode haver caso em que o eco é desejado.
 
 ### Ordem sugerida
 
