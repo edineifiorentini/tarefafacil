@@ -1446,3 +1446,88 @@ leitura. `traduzir()` é o arquivo que pode precisar de ajuste.
 transporte, antes de a requisição chegar à aplicação. A Vercel não expõe
 isso, então a EFI cai no segredo compartilhado — menos forte que o desenho
 original dela, e escrito no código em vez de escondido.
+
+---
+
+## 23. Webhooks de saída e chave de API por empresa (pedido em 27/ago/2026)
+
+Pedido do dono: webhook para os eventos do Kanban e demais eventos
+fundamentais, com chave aleatória por empresa que o dono da conta possa
+solicitar.
+
+**Não confundir com a rodada 7.** Aquilo é webhook de ENTRADA (provedor de
+pagamento avisa a gente). Isto é de SAÍDA: o TarefaFácil avisa o sistema do
+cliente. Nada em comum além do nome.
+
+### A primeira decisão: uma chave ou duas?
+
+São dois segredos com propósitos opostos, e juntá-los num só dobra o estrago
+de um vazamento:
+
+- **Chave de API (entrada)** — o sistema do cliente chama o TarefaFácil.
+  Quem a tem, AGE em nome da empresa. Precisa de escopo (só leitura? só
+  demandas?) e de rotação.
+- **Segredo de webhook (saída)** — assina o que a gente ENVIA, para o
+  cliente conferir que veio mesmo de nós. Quem o tem só consegue verificar,
+  não agir.
+
+Recomendação: duas. Um vazamento do segredo de webhook não pode virar
+permissão de escrita na conta.
+
+### Segurança que não dá para deixar para depois
+
+- **SSRF é o risco central.** A URL de destino é escolhida pelo cliente, e o
+  nosso servidor faz a requisição. Sem bloqueio, alguém aponta para
+  `169.254.169.254` (metadados da nuvem), `localhost` ou faixa interna e usa
+  o TarefaFácil como sonda dentro da nossa própria infraestrutura. Precisa
+  de: só https, resolver o DNS e barrar IP privado ANTES de conectar, e
+  barrar de novo em cada redirecionamento — resolver uma vez e conectar
+  depois deixa a janela do DNS rebinding aberta.
+- **Chave de API com hash em repouso.** O projeto hoje guarda `token` em
+  texto claro (`share_link`, `workspace_invite`), o que é defensável para
+  link de uso único e não serve para credencial de longa vida. Guardar só o
+  hash; mostrar o valor UMA vez, na criação.
+- **Assinatura com carimbo de tempo.** HMAC do corpo mais um `timestamp`
+  no cabeçalho, e o cliente recusa o que for velho. Sem o carimbo, quem
+  capturar uma entrega a reenvia para sempre.
+
+### Entrega confiável
+
+Webhook que falha em silêncio é pior que webhook nenhum. Precisa de:
+
+- fila com nova tentativa em intervalos crescentes;
+- desistência depois de N tentativas, com o evento guardado;
+- **registro de entregas visível para o dono** — o que saiu, para onde, qual
+  resposta. É a primeira coisa que se pergunta quando "não chegou".
+
+Na Vercel isso não sai de graça: função serverless não segura fila. As
+opções são um cron que drena uma tabela de pendências (mais simples, e o
+projeto já tem cron) ou uma fila gerenciada.
+
+### Catálogo de eventos — o que decidir
+
+A fonte já existe: `task_activity` registra cada mudança de campo. Falta
+decidir o que vira evento público, porque o catálogo é contrato: publicou,
+não muda mais sem quebrar integração alheia.
+
+Candidatos: `demanda.criada`, `demanda.movida` (mudou de coluna),
+`demanda.concluida`, `demanda.atribuida`, `comentario.criado`,
+`projeto.criado`.
+
+**Duas perguntas de produto**, ambas com precedente no sistema:
+
+1. **Subtarefa gera evento?** A regra 9 do CLAUDE.md diz que subtarefa nunca
+   gera evento no Google Agenda. O mesmo raciocínio vale aqui?
+2. **Ação do próprio webhook gera evento?** Se uma integração cria demanda
+   pela API e isso dispara `demanda.criada` de volta para ela, o laço se
+   fecha sozinho. Precisa marcar a origem e não reenviar para quem causou.
+
+### Ordem sugerida
+
+1. Chave de API com hash, tela para o dono gerar e revogar, registro no
+   log de auditoria da empresa.
+2. Catálogo de eventos e a tabela de entregas pendentes.
+3. Disparo com assinatura, proteção de SSRF e o cron de novas tentativas.
+4. Tela de registro de entregas.
+
+Nada disso está começado.
