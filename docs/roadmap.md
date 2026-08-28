@@ -1718,3 +1718,64 @@ Os pontos a instrumentar: criação, mudança de coluna, conclusão, reabertura,
 atribuição e exclusão de demanda; criação de comentário; criação de projeto.
 Nenhum deles passa por subtarefa — a regra 9 se cumpre por construção, porque
 o enfileiramento só é chamado onde há demanda, projeto ou comentário.
+
+### Rodada 11 — o que alimenta a fila (28/ago/2026, migration 0078)
+
+Fecha a seção 23. **E corrige uma recomendação errada minha.**
+
+**A mudança de rumo, e por quê**
+
+O plano dizia que a CAMADA DE APLICAÇÃO enfileiraria os eventos, para ter o
+contexto da origem. Recomendei isso explicitamente. Ao instrumentar,
+descobriu-se que não funciona neste código, e o motivo é estrutural:
+
+**as demandas são alteradas NO NAVEGADOR**, por `lib/queries/useTasks.ts`,
+com supabase-js e RLS. Não existe rota de servidor no meio. Logo, o cliente
+não tem a chave secreta para escrever na fila — e mesmo que tivesse, não dá
+para confiar: um cliente modificado escolheria não enfileirar, ou
+enfileiraria evento que não aconteceu.
+
+Mover as mutações para rotas de servidor quebraria a regra 6 do CLAUDE.md
+(mutações otimistas) e seria reescrever o produto por causa de um recurso
+acessório.
+
+O gatilho resolve os três de uma vez: roda no servidor, dispara em qualquer
+caminho de escrita, e o cliente não alcança. E é o padrão que este projeto já
+usa seis vezes (`task_log_activity`, `task_comment_notify`,
+`task_assignee_notify`, `task_chat_announce`, `task_audit_delete`,
+`project_audit_delete`).
+
+A objeção que me fez recomendar o contrário — "o catálogo não pode ser
+derivado de nome de coluna" — continua respeitada: o mapeamento está escrito
+explicitamente dentro do gatilho, um evento por vez. Renomear uma coluna
+obriga a mexer ali, que é o lembrete de que existe contrato lá fora.
+
+**A regra 9 passou a valer por construção**
+
+`subtask` é outra tabela, e o gatilho é de `task`. Não há como marcação de
+subtarefa chegar ao webhook nem por engano. Verificado: criar e marcar uma
+subtarefa de verdade não enfileirou nada.
+
+**A decisão mais importante do arquivo**
+
+O corpo inteiro do gatilho está dentro de `exception when others`. Ele roda
+DENTRO da transação de quem mexeu na demanda: se falhar, a demanda não é
+salva. Perder um evento é ruim; impedir alguém de concluir uma tarefa porque
+um webhook teve problema é inaceitável. A falha vira `raise warning`.
+
+**Precedência entre eventos**: concluir e mover na mesma escrita é uma
+conclusão, não uma movimentação. Alteração que não está no catálogo (título,
+prazo, prioridade) não vira evento — publicar um "mudou" genérico obrigaria
+todo cliente a adivinhar o quê.
+
+**Origem nula, e corretamente**: hoje toda mudança vem de uma pessoa, porque
+não existe API pública. Quando existir, ela será servidor e poderá informar a
+origem; o lugar da leitura está marcado no gatilho.
+
+**Verificado contra o banco real**, com tudo apagado no fim: criar → 1 evento;
+concluir → 2; reabrir → 3; **só renomear → continua 3**; **criar e marcar
+subtarefa → continua 3**; excluir → 4.
+
+**Falta para o produto ficar completo**: comentário e projeto ainda não têm
+gatilho — os eventos `comentario.criado` e `projeto.criado` estão no catálogo
+e nunca disparam. São dois gatilhos no mesmo molde.
