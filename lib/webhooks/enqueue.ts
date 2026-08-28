@@ -33,6 +33,28 @@ export type PedidoDeEvento = {
   ocorridoEm?: string;
 };
 
+/** O mínimo que a decisão de destino precisa saber de uma inscrição. */
+export type InscricaoAlvo = { id: string; api_key_id: string | null };
+
+/**
+ * Quais inscrições recebem este evento.
+ *
+ * A regra do dono, de 27/ago/2026, isolada aqui para poder ser travada em
+ * teste: **o eco sai para os outros, não para quem causou**. A inscrição que
+ * declara pertencer à chave de origem é pulada; todas as outras recebem.
+ *
+ * Sem origem — o caminho comum, ação de gente pela interface — não se filtra
+ * nada. Uma inscrição sem `api_key_id` recebe sempre: ela não tem eco para
+ * evitar.
+ */
+export function alvosDaEntrega(
+  interessadas: InscricaoAlvo[],
+  origemKeyId: string | null | undefined
+): InscricaoAlvo[] {
+  if (!origemKeyId) return interessadas;
+  return interessadas.filter((e) => e.api_key_id !== origemKeyId);
+}
+
 export type ResultadoDoEnfileiramento = {
   /** Quantas inscrições receberão este evento. */
   enfileiradas: number;
@@ -80,12 +102,8 @@ export async function enfileirarEvento(
 
     if (!empresa) return vazio;
 
-    // O eco não volta para quem causou: a inscrição que declara pertencer à
-    // chave de origem é pulada. Sai da lista já carregada, sem outra consulta
-    // — e o caminho comum (ação de gente, sem origem) não filtra nada.
-    const alvos = pedido.origemKeyId
-      ? interessadas.filter((e) => e.api_key_id !== pedido.origemKeyId)
-      : interessadas;
+    // Sai da lista já carregada, sem outra consulta ao banco.
+    const alvos = alvosDaEntrega(interessadas, pedido.origemKeyId);
     const ocorridoEm = pedido.ocorridoEm ?? new Date().toISOString();
 
     const linhas = alvos.map((e) => {

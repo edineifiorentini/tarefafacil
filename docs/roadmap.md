@@ -1670,3 +1670,51 @@ não finge ser tempo real: o contrato é "chega", não "chega em um segundo".
    cada caminho.
 3. `BILLING_WEBHOOK_SECRET` continua sendo do webhook de ENTRADA; os de saída
    têm segredo por inscrição, gerado no cadastro.
+
+### Rodada 10 — a tela dos webhooks (28/ago/2026, sem migration)
+
+Quarto bloco da seção 23. Fecha o que o dono alcança pela interface.
+
+Em Configurações → Integrações, o dono cadastra o destino, escolhe os eventos
+por chip, e recebe o segredo UMA vez — com o diálogo mostrando a fórmula da
+assinatura pronta para colar no sistema dele. Pode pausar, reativar, trocar
+o segredo e remover.
+
+**O registro de entregas fica no mesmo cartão**, e não em outra tela. É a
+primeira pergunta quando algo "não chegou", e mandar a pessoa procurar em
+outro lugar para descobrir que o próprio sistema dela devolveu 500 é o que
+transforma dúvida em chamado. A tabela mostra evento, situação, tentativas e
+a resposta recebida.
+
+**Decisões**
+
+- **Rotação invalida o antigo na hora.** Aceitar os dois por um tempo é
+  conveniente e transforma "troquei a chave" em "a chave velha ainda abre a
+  porta".
+- **Reativar zera a contagem de falhas.** O dono está dizendo que consertou;
+  manter a conta antiga o desligaria de novo na primeira falha.
+- **Sem `CREDENTIAL_ENCRYPTION_KEY`, o cadastro é RECUSADO**, não feito em
+  claro. Mesma postura do gateway (0067).
+- A verificação de SSRF roda no SERVIDOR, no cadastro. A tela é sugestão.
+- A regra do eco saiu de dentro do enfileiramento para `alvosDaEntrega`, que
+  é pura e tem sete testes — inclusive o caso em que a única inscrição
+  interessada é a própria origem e ninguém recebe, que é correto.
+
+**Verificado**: `http://` é recusado pelo próprio banco (23514, o check da
+coluna), e não só pela aplicação — duas travas para a mesma coisa, porque
+esta é a que impede um endereço interno de entrar. Com a chave publishable,
+ler o segredo devolve zero linhas, cadastrar destino dá 42501 e ler entregas
+devolve zero linhas. Mais 523 testes no total.
+
+**Falta para fechar a seção 23**
+
+Só uma coisa, e é a que faz tudo funcionar: **chamar `enfileirarEvento` nas
+mutações**. A fila existe, o disparo existe, a tela existe — e ninguém
+alimenta a fila. É a consequência aceita de a aplicação escrever a fila em
+vez de derivá-la do trigger: ganha-se contexto, paga-se com instrumentação
+explícita em cada caminho de mudança.
+
+Os pontos a instrumentar: criação, mudança de coluna, conclusão, reabertura,
+atribuição e exclusão de demanda; criação de comentário; criação de projeto.
+Nenhum deles passa por subtarefa — a regra 9 se cumpre por construção, porque
+o enfileiramento só é chamado onde há demanda, projeto ou comentário.

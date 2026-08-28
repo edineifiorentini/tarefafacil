@@ -12,6 +12,7 @@ import { usePaymentsStatus } from "@/lib/queries/usePayments";
 
 import { ApiKeysCard } from "./ApiKeysCard";
 import { IntegrationCard } from "./IntegrationCard";
+import { WebhooksCard } from "./WebhooksCard";
 import { PaymentConnectPanel } from "./PaymentConnectPanel";
 
 /**
@@ -107,6 +108,7 @@ export function IntegrationsPanel() {
         </section>
       ))}
       <ApiKeysCard />
+      <WebhooksCard />
     </div>
   );
 }
