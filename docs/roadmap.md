@@ -1779,3 +1779,46 @@ subtarefa → continua 3**; excluir → 4.
 **Falta para o produto ficar completo**: comentário e projeto ainda não têm
 gatilho — os eventos `comentario.criado` e `projeto.criado` estão no catálogo
 e nunca disparam. São dois gatilhos no mesmo molde.
+
+### Rodada 12 — gatilhos de comentário e projeto (28/ago/2026, migration 0079)
+
+Fecha a seção 23. `comentario.criado` e `projeto.criado` estavam no catálogo
+desde a 0076 e nunca disparavam — quem se inscrevesse não receberia nada e
+não teria como descobrir por quê. Catálogo que promete evento inexistente é
+pior que catálogo curto.
+
+**O texto do comentário NÃO sai.** O corpo leva id, demanda, autor e se houve
+menção; o conteúdo, não. Comentário carrega conversa interna da equipe, e
+webhook sai da nossa infraestrutura para um servidor de terceiro escolhido
+pelo cliente. Quem precisa do conteúdo busca pela API com a chave dele, sob a
+permissão dele. Verificado: a palavra plantada no texto de teste não aparece
+em lugar nenhum do corpo enfileirado.
+
+**Uma função para o envelope, não três cópias.** O que repete entre os
+gatilhos é achar os destinos e montar o envelope; o que muda é o nome do
+evento e o bloco `dados`. `enqueue_webhook(workspace, evento, dados)` guarda
+o comum — no dia em que o envelope ganhar um campo, três cópias deixariam uma
+para trás e um cliente receberia formatos diferentes do mesmo produto.
+
+**Verificado**, com tudo apagado no fim: criar demanda, comentar e criar
+projeto enfileiraram exatamente `demanda.criada`, `comentario.criado` e
+`projeto.criado`.
+
+**A seção 23 está fechada.** O que existe agora: chave de API com hash e
+auditoria; catálogo de oito eventos; fila com espera crescente e desistência;
+disparo assinado com proteção de SSRF em cada salto; cron de hora em hora;
+tela do dono com registro de entregas; e os gatilhos que alimentam tudo.
+
+**O que ficou de fora, declarado**
+
+- **A API pública de entrada não existe.** `autenticarChave` está pronta e
+  sem chamador — ela nasce junto com a primeira rota. Enquanto isso, a chave
+  de API serve para o dono já gerar e guardar, e `origem_key_id` é sempre
+  nulo, corretamente: não há chave agindo.
+- **Laço de duas pontas** (A cria, B espelha, B cria, A espelha) continua
+  possível. A supressão de origem quebra o eco direto, não o par. Contar
+  saltos num cabeçalho resolve; precisa estar decidido antes da segunda
+  integração existir.
+- **`demanda.movida` só dispara quando a coluna muda.** Reordenar dentro da
+  mesma coluna não é evento — publicar posição faria toda arrastada virar
+  entrega.
