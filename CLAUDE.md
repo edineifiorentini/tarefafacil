@@ -10,6 +10,9 @@ com o Google Agenda. SaaS multi-tenant.
 - `docs/build.md` — plano de construção em etapas (E00…E18), todas concluídas.
 - `docs/roadmap.md` — o que ainda não existe, por que foi adiado e o que
   precisa ser decidido antes. Consulte antes de propor "o que vem agora".
+- `docs/changelog.md` — o que mudou para quem USA o produto, escrito à mão.
+  Não é gerado de commit: correção de build não interessa a ninguém de fora, e
+  o painel da plataforma não aparece porque o cliente não o enxerga.
 
 ## Stack
 
