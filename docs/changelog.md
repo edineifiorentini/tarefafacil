@@ -1,6 +1,6 @@
 # Changelog
 
-O que mudou para quem usa o TarefaFácil, do mais recente para o mais antigo.
+O que mudou para quem usa o TAFLOW, do mais recente para o mais antigo.
 
 **Este arquivo é escrito à mão, e é de propósito.** O git registra como o
 código mudou; um changelog registra o que mudou para a pessoa. Gerar um a
@@ -13,6 +13,44 @@ misturá-lo criaria expectativa de telas que o cliente não vai achar. Ele vive
 em `docs/roadmap.md`.
 
 Datas no formato dia/mês/ano.
+
+---
+
+## 31/ago/2026
+
+**O produto agora se chama TAFLOW — Gestão que flui.** Era TarefaFácil. O
+nome mudou nas telas, nos documentos e no endereço do produto; nada do que
+você cadastrou muda de lugar.
+
+Uma consequência prática para quem integra: os cabeçalhos assinados do
+webhook passaram de `x-tarefafacil-*` para **`x-taflow-*`**. Se você já
+conferia a assinatura, ajuste o nome do cabeçalho. A conta da assinatura em
+si não mudou.
+
+**A logo da empresa no lugar do nome.** Em Configurações → Geral, quem
+administra sobe a logo e ela passa a aparecer na barra lateral, onde antes
+ficava o nome escrito. Completa a escolha de cor que saiu em 27/ago.
+
+A imagem é **convertida para WebP e reduzida** no envio — não precisa
+preparar arquivo leve, pode mandar o PNG que veio do designer. PNG, WebP ou
+JPEG; SVG não é aceito.
+
+Ela não é cortada. Logo já vem na proporção que alguém desenhou, e recortá-la
+num quadrado a estragaria: o sistema encaixa a imagem inteira, deitada ou em
+pé, com um teto de altura para nenhuma delas esticar a barra.
+
+No **tema escuro** a logo ganha uma placa clara atrás. É o que faz marca
+escrita em cor escura continuar legível sem pedir uma segunda versão do
+arquivo.
+
+**Empresa sem logo mostra a marca do TAFLOW** na barra lateral.
+
+Duas exceções, e as duas são de propósito. No **contrato impresso** aparece o
+nome da empresa, nunca a nossa marca: aquele cabeçalho identifica a parte
+contratada, e um documento jurídico de terceiro não leva a marca do
+fornecedor de software. No **seletor de empresas**, quem não tem logo aparece
+pelo nome — se todas mostrassem a mesma marca padrão, a lista deixaria de
+distinguir uma da outra.
 
 ---
 
@@ -30,12 +68,12 @@ demanda e de quem. Conversa da equipe não sai do sistema.
 ## 27/ago/2026
 
 **Chave de API por empresa.** Em Configurações → Integrações, quem é dono gera
-uma chave para o próprio sistema conversar com o TarefaFácil. A chave aparece
+uma chave para o próprio sistema conversar com o TAFLOW. A chave aparece
 uma vez só — o sistema guarda apenas um resumo criptográfico dela. Até dez
 ativas, revogáveis a qualquer momento.
 
 **Webhooks de saída.** Em vez de o sistema do cliente perguntar "mudou alguma
-coisa?", o TarefaFácil avisa. Oito eventos: demanda criada, movida de coluna,
+coisa?", o TAFLOW avisa. Oito eventos: demanda criada, movida de coluna,
 concluída, reaberta, atribuída, excluída; comentário criado; projeto criado.
 
 Cada aviso vai assinado, para o destino confirmar a origem. A mesma tela mostra
@@ -248,7 +286,7 @@ quadro Kanban, visão Hoje, autenticação e workspace.
 ## O que não está aqui
 
 O painel da plataforma, o motor de cobrança do SaaS e o webhook de pagamento
-são ferramentas do dono do produto, invisíveis para quem usa o TarefaFácil.
+são ferramentas do dono do produto, invisíveis para quem usa o TAFLOW.
 Estão registrados em `docs/roadmap.md`.
 
 **Correções de segurança aparecem neste arquivo** quando a pessoa precisa saber

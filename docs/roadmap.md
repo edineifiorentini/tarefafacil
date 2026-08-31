@@ -517,7 +517,7 @@ cadastro.
 ## 10. Assinatura do SaaS (EFI Bank)
 
 Decidido pelo dono em 20/ago/2026: a integração é para cobrar **a assinatura
-do próprio TarefaFácil**, não o cliente do workspace.
+do próprio TAFLOW**, não o cliente do workspace.
 
 **O que já existe** (migration 0049 + `lib/billing`)
 
@@ -941,7 +941,7 @@ Um produto que cobra e guarda CPF/CNPJ precisa de política de privacidade
 com ou sem Instagram. Continua RASCUNHO jurídico, como os termos.
 
 **Também já feito e fora do sistema:** a URI de redirecionamento está
-cadastrada no app da Meta (`https://tarefafacil.vercel.app/api/meta/callback`),
+cadastrada no app da Meta (`https://taflow.vercel.app/api/meta/callback`),
 em modo estrito. Se o domínio virar um próprio, precisa ser refeita lá.
 
 **O caminho, quando o CNPJ existir**, na ordem:
@@ -1456,7 +1456,7 @@ fundamentais, com chave aleatória por empresa que o dono da conta possa
 solicitar.
 
 **Não confundir com a rodada 7.** Aquilo é webhook de ENTRADA (provedor de
-pagamento avisa a gente). Isto é de SAÍDA: o TarefaFácil avisa o sistema do
+pagamento avisa a gente). Isto é de SAÍDA: o TAFLOW avisa o sistema do
 cliente. Nada em comum além do nome.
 
 ### A primeira decisão: uma chave ou duas?
@@ -1464,7 +1464,7 @@ cliente. Nada em comum além do nome.
 São dois segredos com propósitos opostos, e juntá-los num só dobra o estrago
 de um vazamento:
 
-- **Chave de API (entrada)** — o sistema do cliente chama o TarefaFácil.
+- **Chave de API (entrada)** — o sistema do cliente chama o TAFLOW.
   Quem a tem, AGE em nome da empresa. Precisa de escopo (só leitura? só
   demandas?) e de rotação.
 - **Segredo de webhook (saída)** — assina o que a gente ENVIA, para o
@@ -1479,7 +1479,7 @@ permissão de escrita na conta.
 - **SSRF é o risco central.** A URL de destino é escolhida pelo cliente, e o
   nosso servidor faz a requisição. Sem bloqueio, alguém aponta para
   `169.254.169.254` (metadados da nuvem), `localhost` ou faixa interna e usa
-  o TarefaFácil como sonda dentro da nossa própria infraestrutura. Precisa
+  o TAFLOW como sonda dentro da nossa própria infraestrutura. Precisa
   de: só https, resolver o DNS e barrar IP privado ANTES de conectar, e
   barrar de novo em cada redirecionamento — resolver uma vez e conectar
   depois deixa a janela do DNS rebinding aberta.
@@ -1822,3 +1822,98 @@ tela do dono com registro de entregas; e os gatilhos que alimentam tudo.
 - **`demanda.movida` só dispara quando a coluna muda.** Reordenar dentro da
   mesma coluna não é evento — publicar posição faria toda arrastada virar
   entrega.
+
+---
+
+## 24. Cascata de aviso de prazo por responsável (pedido em 31/ago/2026)
+
+O dono descreveu o problema com precisão: *"minha equipe sempre me reporta
+sobre as tarefas e dúvidas, mas geralmente não me reporta uma tarefa que
+está para cumprir ou que está em atraso"*. Quem lidera descobre o atraso
+tarde, e precisa reportar para cima.
+
+**O que JÁ existe, e é mais do que parece.** `lib/notifications/derive.ts`
+classifica `atrasada`, `hoje` e `prazo próximo` e entrega no sino. Alerta de
+prazo é **derivado**, não tem linha na tabela — some sozinho quando a data
+muda, sem job de limpeza.
+
+**O que falta, exatamente:** `deriveTaskAlerts` filtra por
+`task.assignee_id === myId`. O alerta existe e é privado. Ninguém enxerga o
+prazo da equipe.
+
+**O que não existe de jeito nenhum:** responsável de setor. A tabela `sector`
+(0001) tem `name`, `color`, `icon`, `position`, `archived_at`. Não tem dono.
+
+### O que precisa ser decidido antes
+
+**Qual eixo carrega a hierarquia.** O pedido citou os dois, e eles não são a
+mesma coisa:
+
+- **`sector.responsavel_id`** — um nível, ancorado na área de trabalho.
+  Casa com a regra 11: toda tarefa pertence a um setor, então um responsável
+  de setor cobre 100% das tarefas, sem exceção e sem balde de sobra.
+- **`workspace_member.reporta_para`** — cadeia de gente, profundidade
+  livre, que é a "cascata de níveis" citada. Cobre o caso de alguém liderar
+  pessoas de setores diferentes, e **exige proteção contra ciclo** — A
+  reporta a B que reporta a A trava qualquer subida recursiva.
+
+Recomendação: começar pelo setor. É o que o pedido nomeou primeiro, é o que
+o modelo de dados já sustenta, e não precisa de detecção de ciclo. A cadeia
+de pessoas generaliza depois, sem desfazer nada.
+
+**Por onde o aviso sai.** Este projeto não envia e-mail. Enquanto não houver
+provedor, a cascata vive no sino e num relatório dentro do app. Chamar isso
+de "notificar o responsável" sem dizer que é dentro do app cria a expectativa
+errada — quem lidera quer ser puxado, não precisar entrar para descobrir.
+
+**O que o relatório mostra.** O pedido é claro sobre o uso: gerir cada
+subordinado e reportar acima. Isso é um resumo por pessoa — quem tem o quê
+atrasado e vencendo —, não uma lista cronológica de tarefas.
+
+---
+
+## 25. Portal do cliente e solicitação de demandas (pedido em 31/ago/2026)
+
+Duas metades, e a primeira está mais perto do que parece.
+
+### Acompanhamento e aprovação — falta menos do que se imagina
+
+**Já existe:** link público revogável por tarefa (0046), aprovação e pedido
+de ajuste com comentário (0064), a página `/d/[token]` mostrando título e
+etapas, e notificação de tipo próprio para quem responde pela demanda.
+
+E o desenho já está certo para o que foi pedido: a §18 registra que
+`task_approval` é **histórico, não estado**. As rodadas de revisão — enviar,
+pedir ajuste, corrigir, enviar de novo — já estão modeladas. Não precisa de
+tabela nova para "revisões".
+
+**O buraco real é um só: o criativo não aparece.** A página pública não
+busca anexos. O cliente aprova uma peça que ele não está vendo ali — viu por
+outro canal, provavelmente WhatsApp, que é exatamente o que a §18 queria
+eliminar. Aprovar sem a peça na frente é assinar em branco.
+
+Falta também devolver o histórico ao cliente: hoje ele não vê o que já pediu
+nem o que foi respondido.
+
+### O que precisa ser decidido antes
+
+**Anexo em link público colide com a 0006.** O bucket `attachments` é
+privado com URL assinada, e a razão está escrita lá: anexo é documento de
+trabalho do cliente e vaza informação de negócio. Publicar anexo por token
+exige decidir **quais** anexos saem — provavelmente uma marcação por arquivo
+("este é entregável"), não a pasta inteira. Sem isso, o link do criativo
+entrega junto o contrato e a planilha de custo.
+
+**Prévia de imagem versus download.** Aprovar criativo pede ver, não baixar.
+São caminhos diferentes de segurança e de peso.
+
+### Solicitação de demandas — adiado por pedido do dono
+
+Pedidos, demandas, responsáveis, prazos, produção e entrega, entrando pelo
+cliente. O dono pediu explicitamente para deixar no roadmap.
+
+Vale registrar uma coisa antes de desenhar: **um pedido não é uma tarefa.**
+Ele é uma solicitação que ainda vai ser triada, recusada ou virar uma ou
+várias demandas. Tratar os dois na mesma tabela faz o quadro da equipe
+encher de coisa que ninguém aceitou ainda — e a regra 11 obrigaria a
+escolher um setor para algo que ainda não foi distribuído.

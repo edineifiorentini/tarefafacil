@@ -1,4 +1,4 @@
-# TarefaFácil
+# TAFLOW
 
 Gerenciador de tarefas e projetos por setores, com sincronização bidirecional
 com o Google Agenda. SaaS multi-tenant.
@@ -59,6 +59,19 @@ Radix UI · TanStack Query · dnd-kit · Zod · Storybook 9 · Vitest · Playwri
     "facilitar" um formulário. Se um dia existir tarefa sem setor, o quadro,
     a barra lateral, a busca, o painel e a etiqueta do chat precisam todos
     de um balde "sem setor".
+12. **A marca do produto nunca entra em documento do cliente.** Sem logo da
+    empresa (0080), a casca mostra a marca do TAFLOW — é o white-label
+    por cima do padrão, decidido pelo dono em 31/ago/2026. Duas exceções,
+    e as duas são regra, não detalhe:
+    - **contrato impresso** cai no NOME da empresa. Aquele cabeçalho
+      identifica a parte contratada, e a marca do fornecedor de software num
+      documento jurídico de terceiro estaria errada;
+    - **seletor de empresas** cai no nome. Se todas as empresas sem logo
+      mostrassem a mesma marca padrão, a lista pararia de distingui-las.
+
+    Quem controla isso é `queda="marca" | "nome"` em `WorkspaceMark`, separado
+    do tamanho de propósito — amarrar as duas coisas foi o erro que produziu
+    o seletor com três linhas idênticas.
 
 ## Cores
 
