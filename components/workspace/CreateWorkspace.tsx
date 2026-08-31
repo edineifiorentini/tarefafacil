@@ -27,7 +27,7 @@ export function CreateWorkspace() {
     <div className="mx-auto flex min-h-dvh max-w-[var(--max-width-read)] flex-col justify-center gap-4 px-6">
       <div className="flex flex-col gap-1">
         <h1 className="text-fg text-[length:var(--text-h2-size)] font-semibold">
-          Bem-vindo ao TarefaFácil
+          Bem-vindo ao TAFLOW
         </h1>
         <p className="text-fg-secondary">
           Crie seu primeiro workspace para começar

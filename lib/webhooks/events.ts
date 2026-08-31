@@ -66,9 +66,9 @@ export type CorpoDoEvento = {
  * e cabeçalho próprio deixa claro que isto é verificação de origem, não
  * credencial de acesso.
  */
-export const CABECALHO_ASSINATURA = "x-tarefafacil-assinatura";
-export const CABECALHO_TIMESTAMP = "x-tarefafacil-timestamp";
-export const CABECALHO_ENTREGA = "x-tarefafacil-entrega";
+export const CABECALHO_ASSINATURA = "x-taflow-assinatura";
+export const CABECALHO_TIMESTAMP = "x-taflow-timestamp";
+export const CABECALHO_ENTREGA = "x-taflow-entrega";
 
 /**
  * Janela em que uma assinatura vale, em segundos.

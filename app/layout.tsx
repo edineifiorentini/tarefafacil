@@ -14,7 +14,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "TarefaFácil",
+  title: "TAFLOW — Gestão que flui",
   description: "Gerenciador de tarefas e projetos por setores.",
 };
 

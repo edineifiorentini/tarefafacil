@@ -1,7 +1,7 @@
-# TarefaFácil — Plano de Construção
+# TAFLOW — Plano de Construção
 
 **Alvo:** execução assistida no Claude Code
-**Base:** `tarefafacil-documentacao-design.md` (documento de design — fonte de verdade para tokens, componentes, regras e acessibilidade)
+**Base:** `taflow-documentacao-design.md` (documento de design — fonte de verdade para tokens, componentes, regras e acessibilidade)
 **Versão:** 1.0 — agosto de 2026
 
 ---
@@ -55,7 +55,7 @@ Testes         Vitest (unidade) + Playwright (e2e) + axe-core (a11y)
 Deploy         Vercel + Supabase
 ```
 
-**Por que não usar shadcn/ui pronto:** o TarefaFácil tem identidade visual própria (verde da marca, densidade calma, regra de um acento por tela). Colar um kit pronto significa lutar contra os padrões dele em toda tela. Radix dá o comportamento acessível; o visual vem dos nossos tokens.
+**Por que não usar shadcn/ui pronto:** o TAFLOW tem identidade visual própria (verde da marca, densidade calma, regra de um acento por tela). Colar um kit pronto significa lutar contra os padrões dele em toda tela. Radix dá o comportamento acessível; o visual vem dos nossos tokens.
 
 **Por que Supabase:** RLS multi-tenant, autenticação e storage resolvidos. É Postgres padrão, então o custo de saída é baixo.
 
@@ -703,7 +703,7 @@ syncToken expirado, e edição simultânea nos dois lados.
 ## 5. CLAUDE.md sugerido para a raiz do repositório
 
 ```markdown
-# TarefaFácil
+# TAFLOW
 
 Gerenciador de tarefas e projetos por setores, com sincronização bidirecional
 com o Google Agenda. SaaS multi-tenant.
@@ -779,7 +779,7 @@ E00 setup
                                                          └─ E18 saas
 ```
 
-**Marco de fim da fase 1:** E00 a E10 concluídas. Neste ponto você abandona sua ferramenta atual e usa o TarefaFácil por duas semanas. **Esse é o teste real** — não o checklist de aceite. Se você voltar para a ferramenta antiga, alguma coisa está errada e nenhuma etapa seguinte conserta.
+**Marco de fim da fase 1:** E00 a E10 concluídas. Neste ponto você abandona sua ferramenta atual e usa o TAFLOW por duas semanas. **Esse é o teste real** — não o checklist de aceite. Se você voltar para a ferramenta antiga, alguma coisa está errada e nenhuma etapa seguinte conserta.
 
 **Marco de fim da fase 2:** E11 a E17. Nenhum contexto de trabalho vive fora do sistema.
 

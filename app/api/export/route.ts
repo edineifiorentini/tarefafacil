@@ -58,7 +58,7 @@ export async function GET() {
   return new NextResponse(JSON.stringify(payload, null, 2), {
     headers: {
       "content-type": "application/json",
-      "content-disposition": `attachment; filename="tarefafacil-export-${new Date()
+      "content-disposition": `attachment; filename="taflow-export-${new Date()
         .toISOString()
         .slice(0, 10)}.json"`,
     },

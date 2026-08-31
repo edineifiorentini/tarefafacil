@@ -76,7 +76,7 @@ export const asaas: PaymentProvider = {
           access_token: token.trim(),
           // O Asaas pede identificação do integrador; sem isso algumas
           // contas caem em limitação de uso.
-          "user-agent": "TarefaFacil/1.0",
+          "user-agent": "TAFLOW/1.0",
         },
         signal: AbortSignal.timeout(VERIFY_TIMEOUT_MS),
       });

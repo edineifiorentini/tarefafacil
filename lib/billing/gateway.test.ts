@@ -10,7 +10,7 @@ import { FakeGateway } from "./gateway";
 describe("FakeGateway", () => {
   const entrada = {
     amountCents: 9900,
-    description: "TarefaFácil Pro",
+    description: "TAFLOW Pro",
     expiresInSeconds: 3600,
     reference: "ws-1/2026-09-05",
   };

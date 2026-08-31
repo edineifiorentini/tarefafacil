@@ -199,7 +199,7 @@ export function WebhooksCard() {
             Webhooks
           </h3>
           <p className="text-fg-secondary text-[length:var(--text-small-size)]">
-            O TarefaFácil avisa o seu sistema quando algo acontece aqui. Só
+            O TAFLOW avisa o seu sistema quando algo acontece aqui. Só
             https, e o corpo vai assinado.
           </p>
         </div>
@@ -217,7 +217,7 @@ export function WebhooksCard() {
           <TextInput
             value={url}
             onChange={(e) => setUrl(e.target.value)}
-            placeholder="https://seusistema.com/webhooks/tarefafacil"
+            placeholder="https://seusistema.com/webhooks/taflow"
             aria-label="Endereço de destino"
           />
         </label>

@@ -13,7 +13,7 @@ function claim(over: Partial<SupportClaim> = {}): SupportClaim {
   return {
     sessionId: "11111111-1111-1111-1111-111111111111",
     workspaceId: "22222222-2222-2222-2222-222222222222",
-    adminEmail: "suporte@tarefafacil.app",
+    adminEmail: "suporte@taflow.app",
     exp: Math.floor(Date.now() / 1000) + 600,
     ...over,
   };

@@ -1,4 +1,4 @@
-# TarefaFácil — Documentação de Design e Produto
+# TAFLOW — Documentação de Design e Produto
 
 **Versão:** 1.0
 **Data:** agosto de 2026
@@ -9,7 +9,7 @@
 
 ## 0. Como usar este documento
 
-Este documento é a fonte de verdade para o design do TarefaFácil. Ele é dividido em três blocos:
+Este documento é a fonte de verdade para o design do TAFLOW. Ele é dividido em três blocos:
 
 | Bloco               | Seções | Para quem                 |
 | ------------------- | ------ | ------------------------- |
@@ -25,7 +25,7 @@ Este documento é a fonte de verdade para o design do TarefaFácil. Ele é divid
 
 ### 1.1 O que é
 
-TarefaFácil é um gerenciador de tarefas e projetos organizado por setores, com sincronização bidirecional com o Google Agenda, anexos, insights datados e visualização em Kanban, calendário e lista.
+TAFLOW é um gerenciador de tarefas e projetos organizado por setores, com sincronização bidirecional com o Google Agenda, anexos, insights datados e visualização em Kanban, calendário e lista.
 
 ### 1.2 Modelo de negócio
 
@@ -689,7 +689,7 @@ Escopo mínimo necessário. Nada de `calendar` completo.
 
 ### 9.3 Mapeamento de campos
 
-| TarefaFácil                        | Google Calendar                                  |
+| TAFLOW                        | Google Calendar                                  |
 | ---------------------------------- | ------------------------------------------------ |
 | `title`                            | `summary`                                        |
 | `description` + link para a tarefa | `description`                                    |
@@ -850,7 +850,7 @@ Esquema do banco com RLS · tokens em código · Storybook com átomos e molécu
 
 Setores · tarefas · subtarefas · tags · Hoje · Quadro · painel de detalhe · sincronização unidirecional com o Google
 
-**Critério de saída:** você abandona sua ferramenta atual e usa o TarefaFácil por 2 semanas seguidas. Este é o teste real, não o checklist.
+**Critério de saída:** você abandona sua ferramenta atual e usa o TAFLOW por 2 semanas seguidas. Este é o teste real, não o checklist.
 
 ### Fase 2 — Contexto completo (2 a 3 semanas)
 
@@ -909,7 +909,7 @@ Cobertura de componentes (percentual da UI vinda da biblioteca) · número de to
 | P03 | Recorrência de tarefas: escopo mínimo (diária, semanal, mensal) ou nenhum na v1? | modelo de dados    |
 | P04 | Notificações na fase 1: e-mail, push do navegador, ou nenhuma?                   | infra              |
 | P05 | Preço e estrutura de planos                                                      | fase 3             |
-| P06 | Nome do domínio e disponibilidade da marca "TarefaFácil"                         | identidade         |
+| P06 | Nome do domínio e disponibilidade da marca "TAFLOW"                         | identidade         |
 
 ---
 

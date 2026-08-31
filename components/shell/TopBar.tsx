@@ -86,7 +86,7 @@ function pageMetaFor(path: string): PageMeta {
   if (exact) return exact;
   if (path.startsWith("/setor")) return { title: "Setor" };
   if (path.startsWith("/projeto")) return { title: "Projeto" };
-  return { title: "TarefaFácil" };
+  return { title: "TAFLOW" };
 }
 
 export function TopBar({ isAdmin }: { isAdmin: boolean }) {

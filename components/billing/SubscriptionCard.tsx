@@ -106,7 +106,7 @@ export function SubscriptionCard() {
           Assinatura
         </h2>
         <p className="text-fg-secondary text-[length:var(--text-small-size)]">
-          Situação da sua empresa no TarefaFácil.
+          Situação da sua empresa no TAFLOW.
         </p>
       </div>
 

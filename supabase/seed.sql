@@ -1,5 +1,5 @@
 -- =====================================================================
--- TarefaFácil — seed de desenvolvimento
+-- TAFLOW — seed de desenvolvimento
 -- Roda como postgres no SQL Editor (ignora RLS). Popula 1 workspace com
 -- casos extremos de conteúdo (docs/build.md, E02).
 --
@@ -7,9 +7,9 @@
 -- logado (E03) tem outro auth.uid(), então NÃO verá estes dados por RLS.
 -- Para enxergá-los com o seu login, após signup rode:
 --   update public.workspace_member set user_id = auth.uid()
---   where user_id = (select id from public.app_user where email = 'dev@tarefafacil.local');
+--   where user_id = (select id from public.app_user where email = 'dev@taflow.local');
 --   update public.workspace set owner_user_id = auth.uid()
---   where owner_user_id = (select id from public.app_user where email = 'dev@tarefafacil.local');
+--   where owner_user_id = (select id from public.app_user where email = 'dev@taflow.local');
 -- =====================================================================
 
 do $$
@@ -34,7 +34,7 @@ begin
   insert into public.workspace (id, name, owner_user_id, plan)
     values (v_ws, 'Meu workspace', v_uid, 'free');
   insert into public.app_user (id, email, display_name)
-    values (v_uid, 'dev@tarefafacil.local', 'Dev');
+    values (v_uid, 'dev@taflow.local', 'Dev');
   insert into public.workspace_member (workspace_id, user_id, role)
     values (v_ws, v_uid, 'owner');
 

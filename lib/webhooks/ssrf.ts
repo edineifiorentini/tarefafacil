@@ -2,7 +2,7 @@
 //
 // O RISCO, em uma frase: a URL de destino é escolhida pelo CLIENTE, e quem
 // faz a requisição é o NOSSO servidor. Sem bloqueio, alguém cadastra
-// `http://169.254.169.254/latest/meta-data/` e usa o TarefaFácil como sonda
+// `http://169.254.169.254/latest/meta-data/` e usa o TAFLOW como sonda
 // dentro da nossa própria infraestrutura — de onde se alcança o que a
 // internet não alcança.
 //

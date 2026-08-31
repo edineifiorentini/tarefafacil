@@ -1,5 +1,5 @@
 -- =====================================================================
--- TarefaFácil — reset de desenvolvimento
+-- TAFLOW — reset de desenvolvimento
 -- Desfaz 0001/0002/0003 e o seed. Use no SQL Editor para recomeçar do zero.
 -- CUIDADO: apaga todos os dados do schema public listado.
 -- =====================================================================

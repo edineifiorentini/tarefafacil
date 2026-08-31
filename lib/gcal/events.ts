@@ -9,6 +9,19 @@ import { GcalAuthError } from "./oauth";
 const CAL_BASE =
   "https://www.googleapis.com/calendar/v3/calendars/primary/events";
 const DEFAULT_DURATION_MIN = 30;
+/**
+ * Chave que liga um evento do Google de volta à tarefa.
+ *
+ * **Mantém o nome antigo de propósito, e não é esquecimento do renome para
+ * TAFLOW (31/ago/2026).** Esta string está gravada dentro de cada evento já
+ * sincronizado, na agenda do Google do usuário — não no nosso banco.
+ * Renomeá-la faria o `reconcile` deixar de reconhecer tudo o que já foi
+ * sincronizado, e cada evento viraria órfão.
+ *
+ * Trocar exigiria ler as duas chaves durante uma transição e reescrever os
+ * eventos existentes um a um. Custo real, em troca de nada que alguém veja:
+ * esta string é invisível para quem usa.
+ */
 export const TASK_ID_PROP = "tarefafacil_task_id";
 
 type GcalEventBody = {
@@ -49,7 +62,7 @@ export function taskToEvent(
   }
 
   const link = `${opts.appUrl}/setor/${sector.id}`;
-  const description = [task.description, `Abrir no TarefaFácil: ${link}`]
+  const description = [task.description, `Abrir no TAFLOW: ${link}`]
     .filter(Boolean)
     .join("\n\n");
 

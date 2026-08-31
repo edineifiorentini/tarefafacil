@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { TERMS_VERSION } from "@/lib/auth/terms";
 
 export const metadata: Metadata = {
-  title: "Termos de uso — TarefaFácil",
+  title: "Termos de uso — TAFLOW",
 };
 
 function Secao({
@@ -55,9 +55,9 @@ export default function TermosPage() {
         </p>
       </div>
 
-      <Secao titulo="1. O que é o TarefaFácil">
+      <Secao titulo="1. O que é o TAFLOW">
         <p>
-          O TarefaFácil é um sistema de gestão de demandas, clientes,
+          O TAFLOW é um sistema de gestão de demandas, clientes,
           negociações, contratos e finanças, oferecido pela internet. Ao criar
           uma conta, você concorda com este documento.
         </p>

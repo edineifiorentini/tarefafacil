@@ -20,7 +20,7 @@ import { createClient } from "@/lib/supabase/client";
  * Senha de acesso da própria pessoa.
  *
  * Quem entrou pelo Google não tem senha, e isso é um ponto único de falha
- * silencioso: perdeu o acesso à conta Google, perdeu o TarefaFácil junto —
+ * silencioso: perdeu o acesso à conta Google, perdeu o TAFLOW junto —
  * sem "esqueci minha senha" para recuperar, porque não há senha. Definir
  * uma aqui abre o segundo caminho, e os dois passam a valer.
  *

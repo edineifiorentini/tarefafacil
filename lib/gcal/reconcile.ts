@@ -52,7 +52,7 @@ export function taskIdOf(event: GcalEvent): string | null {
   return event.extendedProperties?.private?.[TASK_ID_PROP] ?? null;
 }
 
-// Remove a linha "Abrir no TarefaFácil: …" que adicionamos na saída, para não
+// Remove a linha "Abrir no TAFLOW: …" que adicionamos na saída, para não
 // reimportá-la como parte da descrição.
 export function stripAppLink(
   description: string | undefined | null
@@ -60,7 +60,7 @@ export function stripAppLink(
   if (!description) return null;
   const cleaned = description
     .split("\n")
-    .filter((line) => !line.startsWith("Abrir no TarefaFácil:"))
+    .filter((line) => !line.startsWith("Abrir no TAFLOW:"))
     .join("\n")
     .trim();
   return cleaned === "" ? null : cleaned;

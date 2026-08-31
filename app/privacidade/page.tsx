@@ -4,7 +4,7 @@ import Link from "next/link";
 import { TERMS_VERSION } from "@/lib/auth/terms";
 
 export const metadata: Metadata = {
-  title: "Política de privacidade — TarefaFácil",
+  title: "Política de privacidade — TAFLOW",
 };
 
 function Secao({
@@ -60,7 +60,7 @@ export default function PrivacidadePage() {
 
       <Secao titulo="1. Quem trata os dados">
         <p>
-          O TarefaFácil é um sistema de gestão de demandas, clientes,
+          O TAFLOW é um sistema de gestão de demandas, clientes,
           negociações, contratos e finanças. Quem administra a plataforma é o
           responsável pelo tratamento dos dados descritos abaixo.
         </p>

@@ -134,7 +134,7 @@ export function ApiKeysCard() {
             Chaves de API
           </h3>
           <p className="text-fg-secondary text-[length:var(--text-small-size)]">
-            Para o seu sistema conversar com o TarefaFácil. Quem tem a chave age
+            Para o seu sistema conversar com o TAFLOW. Quem tem a chave age
             em nome da empresa — trate como senha.
           </p>
         </div>

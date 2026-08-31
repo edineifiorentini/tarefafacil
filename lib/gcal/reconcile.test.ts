@@ -39,12 +39,12 @@ describe("taskIdOf", () => {
 });
 
 describe("stripAppLink", () => {
-  it("remove a linha do link do TarefaFácil", () => {
-    const desc = "Notas do cliente\n\nAbrir no TarefaFácil: http://x/setor/1";
+  it("remove a linha do link do TAFLOW", () => {
+    const desc = "Notas do cliente\n\nAbrir no TAFLOW: http://x/setor/1";
     expect(stripAppLink(desc)).toBe("Notas do cliente");
   });
   it("vira null quando só havia o link", () => {
-    expect(stripAppLink("Abrir no TarefaFácil: http://x")).toBeNull();
+    expect(stripAppLink("Abrir no TAFLOW: http://x")).toBeNull();
   });
 });
 

@@ -1,6 +1,6 @@
 # Deploy — Vercel + Supabase
 
-Guia para colocar o TarefaFácil em produção. O código já está pronto (build,
+Guia para colocar o TAFLOW em produção. O código já está pronto (build,
 typecheck e lint limpos). Os passos abaixo são de configuração — quem executa
 o login/deploy é você (envolve contas e credenciais).
 
