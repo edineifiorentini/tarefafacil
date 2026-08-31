@@ -1,5 +1,5 @@
 /* =====================================================================
- * TarefaFácil — Design tokens
+ * TAFLOW — Design tokens
  * Fonte de verdade: docs/design.md, seção 7.
  *
  * Camadas (7.9):
@@ -94,6 +94,18 @@
   --max-width-read: 720px;
   --max-width-app: 1440px;
 
+  /* Logo da empresa (0080) — largura padrão, altura livre até o teto.
+   *
+   * Logo é imagem de terceiro: chega deitada, quadrada ou em pé, e sem teto
+   * de altura uma marca vertical esticaria a casca inteira. A largura é o
+   * alvo, a altura se ajusta sozinha, e o teto impede o exagero. */
+  --logo-shell-w: 132px; /* casca lateral */
+  --logo-shell-h-max: 32px;
+  --logo-menu-w: 76px; /* item do seletor de empresa */
+  --logo-menu-h-max: 20px;
+  --logo-print-w: 168px; /* cabeçalho do contrato impresso */
+  --logo-print-h-max: 56px;
+
   /* Tipografia — tamanho / entrelinha / peso (7.5)
    *
    * Título e métrica são FLUIDOS: acompanham a largura da janela em vez de
@@ -181,6 +193,18 @@
   --text-secondary: var(--ink-600);
   --text-muted: var(--ink-400); /* 3.1:1 — só ≥18px ou não essencial */
   --text-on-brand: #ffffff;
+
+  /* Placa da logo (0080).
+   *
+   * Logo é imagem de terceiro, e a maioria é escrita em cor escura sobre
+   * fundo vazado — no tema escuro ela sumiria. A placa clara resolve isso
+   * sem pedir duas versões ao cliente.
+   *
+   * No tema claro ela é TRANSPARENTE: o fundo já é claro, e um retângulo
+   * branco sobre superfície branca só acrescentaria uma borda que ninguém
+   * pediu. */
+  --logo-plate: transparent;
+  --logo-plate-pad: 0px;
 
   /* Bordas (7.4) — grafite frio com alpha baixo */
   --border: rgba(var(--graphite-rgb), 0.08);
@@ -308,6 +332,10 @@
   --text-muted: #7d8799; /* não essencial / ≥18px */
   --text-on-brand: #ffffff;
 
+  /* Placa da logo: aqui ela existe, e é o que salva marca escura. */
+  --logo-plate: rgba(255, 255, 255, 0.92);
+  --logo-plate-pad: 6px;
+
   /* Bordas */
   --border: rgba(255, 255, 255, 0.08);
   --border-strong: rgba(255, 255, 255, 0.14);
@@ -409,6 +437,8 @@
     --text-secondary: #a3aec1;
     --text-muted: #7d8799;
     --text-on-brand: #ffffff;
+    --logo-plate: rgba(255, 255, 255, 0.92);
+    --logo-plate-pad: 6px;
     --border: rgba(255, 255, 255, 0.08);
     --border-strong: rgba(255, 255, 255, 0.14);
     --text-link: var(--brand-300);

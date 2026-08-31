@@ -29,10 +29,19 @@ const BrandPicker = dynamic(
   { ssr: false, loading: () => <Skeleton variant="block" className="h-24" /> }
 );
 
+// Mesma razão dos dois acima: decide pelo papel de quem olha, que só chega
+// no cliente.
+const LogoPicker = dynamic(
+  () => import("@/components/branding/LogoPicker").then((m) => m.LogoPicker),
+  { ssr: false, loading: () => <Skeleton variant="block" className="h-32" /> }
+);
+
 export function GeralTab() {
   return (
     <>
       <OrgProfileForm />
+      {/* Logo antes da cor: a marca vem primeiro, a paleta acompanha. */}
+      <LogoPicker />
       <BrandPicker />
     </>
   );

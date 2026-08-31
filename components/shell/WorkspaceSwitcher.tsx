@@ -4,6 +4,7 @@ import { IconCheck, IconSelector } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import { DropdownMenu } from "radix-ui";
 
+import { WorkspaceMark } from "@/components/branding/WorkspaceMark";
 import { useWorkspace } from "@/lib/queries/useWorkspace";
 import type { Workspace } from "@/types/database";
 
@@ -22,11 +23,7 @@ export function WorkspaceSwitcher({ workspaces }: { workspaces: Workspace[] }) {
   }
 
   if (workspaces.length <= 1) {
-    return (
-      <span className="text-fg truncate text-[length:var(--text-h3-size)] font-medium">
-        {active.name}
-      </span>
-    );
+    return <WorkspaceMark name={active.name} logoUrl={active.logo_url} />;
   }
 
   return (
@@ -36,9 +33,11 @@ export function WorkspaceSwitcher({ workspaces }: { workspaces: Workspace[] }) {
           type="button"
           className="hover:bg-hover flex w-full items-center gap-2 rounded-sm px-2 py-1 text-left transition-colors [transition-duration:var(--dur-fast)]"
         >
-          <span className="text-fg min-w-0 flex-1 truncate text-[length:var(--text-h3-size)] font-medium">
-            {active.name}
-          </span>
+          <WorkspaceMark
+            name={active.name}
+            logoUrl={active.logo_url}
+            className="text-fg min-w-0 flex-1 truncate text-[length:var(--text-h3-size)] font-medium"
+          />
           <IconSelector
             size={16}
             stroke={1.5}
@@ -61,7 +60,15 @@ export function WorkspaceSwitcher({ workspaces }: { workspaces: Workspace[] }) {
               <span className="flex h-4 w-4 items-center justify-center">
                 {w.id === active.id ? <IconCheck size={14} stroke={2} /> : null}
               </span>
-              <span className="truncate">{w.name}</span>
+              {/* `queda="nome"`: aqui a marca serve para diferenciar uma
+                  empresa da outra, e a do produto não diferencia nada. */}
+              <WorkspaceMark
+                name={w.name}
+                logoUrl={w.logo_url}
+                contexto="menu"
+                queda="nome"
+                className="min-w-0 truncate"
+              />
             </DropdownMenu.Item>
           ))}
         </DropdownMenu.Content>

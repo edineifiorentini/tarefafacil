@@ -1,5 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 
+import { WorkspaceMark } from "@/components/branding/WorkspaceMark";
 import { PrintButton } from "@/components/contracts/PrintButton";
 import { buildTemplateContext, renderTemplate } from "@/lib/contracts/template";
 import { formatCentsBRL } from "@/lib/finance/money";
@@ -104,6 +105,22 @@ export default async function ContractPrintPage({
 
       <article className="bg-card text-fg mx-auto max-w-3xl px-10 py-12 font-serif print:bg-white print:px-0 print:py-0 print:text-black">
         <header className="mb-8 text-center">
+          {/* Só a logo DA EMPRESA, e só quando ela existe.
+
+              Sem logo não entra nada: a marca do TAFLOW aqui colocaria o
+              fornecedor de software num documento jurídico que não é dele, e
+              repetir o nome seria redundante — ele já identifica a parte
+              contratada no corpo do contrato. */}
+          {workspace?.logo_url ? (
+            <div className="mb-4 flex justify-center">
+              <WorkspaceMark
+                name={contractedName}
+                logoUrl={workspace.logo_url}
+                contexto="impressao"
+                queda="nome"
+              />
+            </div>
+          ) : null}
           <h1 className="text-2xl font-semibold tracking-wide uppercase">
             Contrato de prestação de serviços
           </h1>
