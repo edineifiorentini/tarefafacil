@@ -128,6 +128,12 @@ export function useGenerateOccurrences(workspaceId: string) {
           status: "previsto" as const,
           due_date: o.dueDate,
           category: recurrence.category,
+          // A classificação da recorrência desce para cada parcela gerada
+          // (0081). Sem isto, lançamento recorrente ficaria fora de todo
+          // recorte de rentabilidade — e recorrente é o que mais pesa.
+          category_id: recurrence.category_id,
+          sector_id: recurrence.sector_id,
+          project_id: recurrence.project_id,
           client_id: recurrence.client_id,
           source_type: SOURCE,
           source_id: recurrence.id,

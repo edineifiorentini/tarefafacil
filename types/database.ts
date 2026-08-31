@@ -1,5 +1,5 @@
 // =====================================================================
-// TarefaFácil — tipos do banco
+// TAFLOW — tipos do banco
 // Escrito à mão a partir de supabase/migrations (schema da seção 4.2).
 // Compatível com createClient<Database>() do supabase-js.
 // Manter em sincronia com as migrations ao alterar o schema.
@@ -165,6 +165,11 @@ export type Database = {
           /** Cor da marca da empresa (0071). Lista fechada; rampas em tokens.css. */
           brand_theme: BrandThemeId;
           /**
+           * Logo da empresa (0080). Nulo cai na marca do produto — menos no
+           * contrato impresso, que escreve o nome.
+           */
+          logo_url: string | null;
+          /**
            * Exclusão lógica (0073). Não nulo = fora do ar para o cliente,
            * ainda restaurável. Remoção física só depois de 30 dias assim.
            */
@@ -187,6 +192,7 @@ export type Database = {
           affiliate_id?: string | null;
           affiliate_percent?: number | null;
           brand_theme?: BrandThemeId;
+          logo_url?: string | null;
           created_at?: string;
         };
         Update: {
@@ -207,6 +213,8 @@ export type Database = {
           affiliate_percent?: number | null;
           /** A 0071 devolveu ao cliente o UPDATE só desta coluna e de `name`. */
           brand_theme?: BrandThemeId;
+          /** A 0080 acrescentou esta à mesma lista curta de colunas do cliente. */
+          logo_url?: string | null;
           /** Exclusão lógica (0073). Só a plataforma escreve. */
           deleted_at?: string | null;
           created_at?: string;
@@ -810,7 +818,13 @@ export type Database = {
           status: FinanceStatus;
           due_date: string;
           confirmed_at: string | null;
+          /** DEPRECADA pela 0081. Use `category_id`. */
           category: string | null;
+          /** Categoria de verdade (0081). Substitui o texto livre acima. */
+          category_id: string | null;
+          /** Classificação (0081): projeto e setor sustentam a rentabilidade. */
+          project_id: string | null;
+          sector_id: string | null;
           client_id: string | null;
           notes: string | null;
           source_type: string | null;
@@ -834,6 +848,9 @@ export type Database = {
           due_date: string;
           confirmed_at?: string | null;
           category?: string | null;
+          category_id?: string | null;
+          project_id?: string | null;
+          sector_id?: string | null;
           client_id?: string | null;
           notes?: string | null;
           source_type?: string | null;
@@ -857,6 +874,9 @@ export type Database = {
           due_date?: string;
           confirmed_at?: string | null;
           category?: string | null;
+          category_id?: string | null;
+          project_id?: string | null;
+          sector_id?: string | null;
           client_id?: string | null;
           notes?: string | null;
           source_type?: string | null;
@@ -869,6 +889,60 @@ export type Database = {
           created_by?: string | null;
           created_at?: string;
           updated_at?: string;
+        };
+        Relationships: [];
+      };
+      /**
+       * Categoria financeira (0081). Substitui o texto livre que deixava
+       * "Marketing", "marketing" e "Mkt" virarem três categorias.
+       */
+      finance_category: {
+        Row: {
+          id: string;
+          workspace_id: string;
+          name: string;
+          archived_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          workspace_id: string;
+          name: string;
+          archived_at?: string | null;
+        };
+        Update: {
+          name?: string;
+          archived_at?: string | null;
+        };
+        Relationships: [];
+      };
+      /**
+       * Preço da hora (0081). `user_id` nulo é o padrão da empresa.
+       *
+       * Tabela separada por privacidade: em `workspace_member` o valor
+       * vazaria para todo mundo que enxerga a lista de membros. Aqui a
+       * policy é a do financeiro — owner e admin.
+       *
+       * Sem nenhuma linha, a rentabilidade conta só dinheiro. É isso que
+       * dispensa um interruptor de "usar custo/hora".
+       */
+      finance_rate: {
+        Row: {
+          id: string;
+          workspace_id: string;
+          user_id: string | null;
+          hora_cents: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          workspace_id: string;
+          user_id?: string | null;
+          hora_cents: number;
+        };
+        Update: {
+          hora_cents?: number;
         };
         Relationships: [];
       };
@@ -1033,6 +1107,9 @@ export type Database = {
           description: string;
           amount_cents: number;
           category: string | null;
+          category_id: string | null;
+          project_id: string | null;
+          sector_id: string | null;
           client_id: string | null;
           frequency: RecurrenceFrequency;
           starts_on: string;
@@ -1049,6 +1126,9 @@ export type Database = {
           description: string;
           amount_cents: number;
           category?: string | null;
+          category_id?: string | null;
+          project_id?: string | null;
+          sector_id?: string | null;
           client_id?: string | null;
           frequency: RecurrenceFrequency;
           starts_on: string;
@@ -1062,6 +1142,9 @@ export type Database = {
           description?: string;
           amount_cents?: number;
           category?: string | null;
+          category_id?: string | null;
+          project_id?: string | null;
+          sector_id?: string | null;
           client_id?: string | null;
           frequency?: RecurrenceFrequency;
           starts_on?: string;
@@ -2055,6 +2138,8 @@ export type TaskComment = Tables<"task_comment">;
 export type TaskTimeEntry = Tables<"task_time_entry">;
 export type TaskDependency = Tables<"task_dependency">;
 export type FinanceEntry = Tables<"finance_entry">;
+export type FinanceCategory = Tables<"finance_category">;
+export type FinanceRate = Tables<"finance_rate">;
 export type Contract = Tables<"contract">;
 export type ContractTemplate = Tables<"contract_template">;
 export type FinanceGoal = Tables<"finance_goal">;

@@ -34,6 +34,7 @@ import {
 } from "@/lib/finance/stats";
 import { useAsOf } from "@/lib/queries/useAsOf";
 import { useClients } from "@/lib/queries/useClients";
+import { useFinanceCategories } from "@/lib/queries/useFinanceCategories";
 import {
   useConfirmFinanceEntry,
   useDeleteFinanceEntry,
@@ -52,6 +53,7 @@ import { OverduePanel } from "./OverduePanel";
 import { FinanceEntryForm } from "./FinanceEntryForm";
 import { GoalGauge } from "./GoalGauge";
 import { InvoiceSummary } from "./InvoiceSummary";
+import { ProfitabilitySection } from "./ProfitabilitySection";
 import { RecurrenceSection } from "./RecurrenceSection";
 
 const HIDE_KEY = "tf-finance-hide-values";
@@ -63,6 +65,20 @@ const STATUS_LABEL: Record<FinanceStatus, string> = {
 
 /** Filtro com a largura do próprio rótulo — ver `ListView`. */
 const FILTER_W = "max-w-60";
+
+/**
+ * Rótulo da categoria: `category_id` primeiro, texto livre como reserva.
+ *
+ * A reserva existe para o lançamento antigo que a 0081 não conseguiu ligar
+ * — categoria em branco ou só com espaços não virou linha. Ele continua
+ * mostrando o que tinha, em vez de perder a etiqueta na migração.
+ */
+function rotuloDaCategoria(
+  e: { category_id: string | null; category: string | null },
+  porId: Map<string, string>
+): string | null {
+  return (e.category_id ? (porId.get(e.category_id) ?? null) : null) ?? e.category;
+}
 
 export function FinanceView() {
   const workspace = useWorkspace();
@@ -77,6 +93,7 @@ export function FinanceView() {
     dataUpdatedAt,
   } = useFinanceEntries(workspace.id);
   const { data: clients = [] } = useClients(workspace.id);
+  const { data: categorias = [] } = useFinanceCategories(workspace.id);
   const confirmEntry = useConfirmFinanceEntry(workspace.id);
   const deleteEntry = useDeleteFinanceEntry(workspace.id);
   const { openPanel, closePanel } = useShell();
@@ -115,6 +132,7 @@ export function FinanceView() {
   }
 
   const clientNameById = new Map(clients.map((c) => [c.id, c.name]));
+  const categoriaPorId = new Map(categorias.map((c) => [c.id, c.name]));
   const stats = useMemo(
     () => computeFinanceStats(entries, month),
     [entries, month]
@@ -340,6 +358,12 @@ export function FinanceView() {
 
       <RecurrenceSection workspaceId={workspace.id} />
 
+      {/* Rentabilidade olha o histórico inteiro, não o mês escolhido acima:
+          um projeto que durou cinco meses não cabe num recorte mensal, e
+          fatiá-lo por mês mostraria prejuízo em todos menos no do
+          pagamento. */}
+      <ProfitabilitySection />
+
       {isLoading ? (
         <p className="text-fg-secondary">Carregando…</p>
       ) : visible.length === 0 ? (
@@ -383,9 +407,9 @@ export function FinanceView() {
                       <span className="text-fg font-medium">
                         {e.description}
                       </span>
-                      {e.category ? (
+                      {rotuloDaCategoria(e, categoriaPorId) ? (
                         <span className="text-fg-muted block text-[length:var(--text-caption-size)]">
-                          {e.category}
+                          {rotuloDaCategoria(e, categoriaPorId)}
                         </span>
                       ) : null}
                     </td>
