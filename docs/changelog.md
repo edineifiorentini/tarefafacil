@@ -18,6 +18,21 @@ Datas no formato dia/mês/ano.
 
 ## 31/ago/2026
 
+**Excluir cliente e arquivar projeto.** As duas ações existiam por dentro e
+não tinham botão.
+
+Excluir cliente **recusa quando há contrato**. Contrato é documento com o
+texto congelado no momento da assinatura, e apagar o cliente apagaria os
+contratos dele junto, para sempre. Para encerrar a relação sem perder nada,
+mude a situação do cliente para **Encerrado**.
+
+Sem contrato, o aviso diz o que vai junto e o que fica: negociação do funil
+é apagada; demanda e lançamento continuam no sistema, sem o vínculo.
+
+Arquivar projeto tira ele das listas e **não apaga demanda nenhuma** — elas
+continuam onde estão. O aviso traz **Desfazer**, porque projeto arquivado não
+aparece em lista e um clique errado não deve custar um caminho de volta.
+
 **O produto agora se chama TAFLOW — Gestão que flui.** Era TarefaFácil. O
 nome mudou nas telas, nos documentos e no endereço do produto; nada do que
 você cadastrou muda de lugar.

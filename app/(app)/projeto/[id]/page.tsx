@@ -1,6 +1,7 @@
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
+import { ProjectActions } from "@/components/project/ProjectActions";
 import { ProjectView } from "@/components/project/ProjectView";
 import { Badge } from "@/components/ui/Badge";
 import { createClient } from "@/lib/supabase/server";
@@ -47,6 +48,9 @@ export default async function ProjectPage({
           <Badge variant={project.status === "ativo" ? "brand" : "neutral"}>
             {projectStatusLabels[project.status]}
           </Badge>
+          <div className="ml-auto">
+            <ProjectActions projectId={id} projectName={project.name} />
+          </div>
         </div>
         {period ? (
           <p className="tnum text-fg-secondary mt-1">{period}</p>

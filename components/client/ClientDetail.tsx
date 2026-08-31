@@ -7,6 +7,7 @@ import {
   IconMail,
   IconPencil,
   IconPhone,
+  IconTrash,
 } from "@tabler/icons-react";
 
 import { useShell } from "@/components/shell/shell-context";
@@ -23,6 +24,7 @@ import type { ClientStatus } from "@/types/database";
 
 import { ClientForm } from "./ClientForm";
 import { ClientStatusPill } from "./ClientStatusPill";
+import { DeleteClientDialog } from "./DeleteClientDialog";
 
 // Progresso e indicadores usam computeDashboard — o MESMO serviço de
 // agregação do painel Dashboard (spec §13.3: "o progresso do cliente usa
@@ -64,21 +66,38 @@ export function ClientDetail({ clientId }: { clientId: string }) {
             </span>
           </div>
         </div>
-        <Button
-          variant="secondary"
-          size="sm"
-          leadingIcon={IconPencil}
-          onClick={() =>
-            openPanel({
-              title: "Editar cliente",
-              node: (
-                <ClientForm mode="edit" client={client} onDone={closePanel} />
-              ),
-            })
-          }
-        >
-          Editar
-        </Button>
+        <div className="flex shrink-0 items-center gap-2">
+          <Button
+            variant="secondary"
+            size="sm"
+            leadingIcon={IconPencil}
+            onClick={() =>
+              openPanel({
+                title: "Editar cliente",
+                node: (
+                  <ClientForm mode="edit" client={client} onDone={closePanel} />
+                ),
+              })
+            }
+          >
+            Editar
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            leadingIcon={IconTrash}
+            onClick={() =>
+              openPanel({
+                title: "Excluir cliente",
+                node: (
+                  <DeleteClientDialog client={client} onDone={closePanel} />
+                ),
+              })
+            }
+          >
+            Excluir
+          </Button>
+        </div>
       </div>
 
       <div className="border-line bg-card flex flex-col gap-2 rounded-md border p-4">

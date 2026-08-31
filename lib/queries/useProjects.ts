@@ -147,3 +147,30 @@ export function useArchiveProject(workspaceId: string) {
       qc.invalidateQueries({ queryKey: [PROJECTS, workspaceId] }),
   });
 }
+
+/**
+ * Desfaz o arquivamento.
+ *
+ * Existe porque arquivar sem volta é porta de mão única: a interface não
+ * lista projeto arquivado, então quem errasse o clique perderia o projeto de
+ * vista sem nenhum caminho de retorno pela tela. É o par do `Desfazer` no
+ * aviso, e é o que torna a ação segura o bastante para existir.
+ */
+export function useUnarchiveProject(workspaceId: string) {
+  const supabase = createClient();
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from("project")
+        .update({ archived_at: null })
+        .eq("id", id)
+        // Empresa no WHERE, não só na permissão.
+        .eq("workspace_id", workspaceId);
+      if (error) throw error;
+    },
+    onSettled: () =>
+      qc.invalidateQueries({ queryKey: [PROJECTS, workspaceId] }),
+  });
+}
