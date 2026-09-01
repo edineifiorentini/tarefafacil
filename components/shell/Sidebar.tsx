@@ -15,7 +15,7 @@ import {
   IconSettings,
   IconSun,
   IconUsers,
-  IconUsersGroup,
+  IconChartBar,
 } from "@tabler/icons-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -71,16 +71,19 @@ const workDestinations: Destination[] = [
 ];
 
 /**
- * Relatório de prazos da equipe (0082).
+ * Central de relatórios (§26).
  *
  * Fora da lista fixa porque a barra tem pressão de espaço documentada — num
  * notebook de 768px sobravam 34 pixels para doze setores. Só aparece para
- * quem gerencia alguma coisa, que é quem tem o que ler nele.
+ * quem gerencia alguma coisa, que é quem tem o que ler nela.
+ *
+ * Substituiu o item "Equipe", que virou aba daqui: trocar dois itens por um
+ * é melhor que somar.
  */
-const teamDestination: Destination = {
-  href: "/equipe",
-  label: "Equipe",
-  icon: IconUsersGroup,
+const reportsDestination: Destination = {
+  href: "/relatorios",
+  label: "Relatórios",
+  icon: IconChartBar,
 };
 
 /**
@@ -228,8 +231,8 @@ export function Sidebar({
           ))}
           {gerenciaEquipe ? (
             <NavItem
-              destination={teamDestination}
-              active={isActive(teamDestination.href)}
+              destination={reportsDestination}
+              active={isActive(reportsDestination.href)}
               onNavigate={closeMobile}
               badge={0}
             />
