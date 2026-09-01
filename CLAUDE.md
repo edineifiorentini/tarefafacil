@@ -75,11 +75,24 @@ Radix UI · TanStack Query · dnd-kit · Zod · Storybook 9 · Vitest · Playwri
 
 ## Cores
 
-Marca = **azul** `--brand-600` (#2563EB); acento = **lilás** `--accent-600`
-(#7C3AED). O gradiente azul→lilás é a assinatura e só aparece em pontos
-estratégicos, nunca como fundo global.
+**A cor da marca é escolha da empresa** (0071), e o padrão desde a 0084 é
+`taflow`: grafite `#171717` + acid lime `#C7FF38`. Empresa criada antes
+mantém o que tinha — a migration só trocou o `default`.
+
+O **acid lime nunca é texto sobre fundo claro**: 1.18:1, medido. Ele vive no
+`--brand-300`, que é o degrau que só o tema ESCURO usa como link (15.99:1
+sobre `#0f1117`). No claro o link é o `--brand-700`, grafite. Quem mexer na
+rampa precisa medir com `lib/utils/contrast.ts`, não no olho.
+
+O azul `#2563EB` continua na lista como opção e é a base do `:root` — por
+isso `azul` não tem bloco `[data-brand]` próprio. Acento = **lilás**
+`--accent-600` (#7C3AED), global e independente da cor escolhida; o
+gradiente é a assinatura e só aparece em pontos estratégicos, nunca como
+fundo global.
+
 O **botão primário é grafite profundo** (`--button-primary-bg`), não a cor da
-marca — é o que dá a sobriedade da referência.
+marca — é o que dá a sobriedade da referência, e vale mesmo no tema `taflow`:
+o lime é destaque pequeno, decidido pelo dono em set/2026.
 Nunca use `--brand-500` como texto sobre branco: não atinge contraste.
 Verde NÃO significa "concluído". Concluído é cinza + check + texto riscado.
 Verde é reservado a **dado financeiro positivo** e à série de faturamento.

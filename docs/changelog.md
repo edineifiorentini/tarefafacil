@@ -91,6 +91,10 @@ webhook passaram de `x-tarefafacil-*` para **`x-taflow-*`**. Se você já
 conferia a assinatura, ajuste o nome do cabeçalho. A conta da assinatura em
 si não mudou.
 
+**A marca do TAFLOW na barra lateral.** Empresa que ainda não subiu a logo
+dela agora mostra a nossa, e ela acompanha o tema: escrita grafite no claro,
+cor nuvem no escuro. O verde da assinatura não muda.
+
 **A logo da empresa no lugar do nome.** Em Configurações → Geral, quem
 administra sobe a logo e ela passa a aparecer na barra lateral, onde antes
 ficava o nome escrito. Completa a escolha de cor que saiu em 27/ago.
