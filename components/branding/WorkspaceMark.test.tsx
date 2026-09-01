@@ -56,51 +56,59 @@ describe("WorkspaceMark — queda", () => {
     expect(screen.queryByRole("img")).toBeNull();
   });
 
-  it("sem logo e queda=marca, tenta a marca do produto", () => {
+  it("sem logo e queda=marca, desenha a marca do TAFLOW", () => {
     fingirCarregamento(200);
     const { container } = render(
       <WorkspaceMark name="Padaria do Zé" logoUrl={null} />
     );
 
-    // Consulta pelo DOM, e não por papel: a marca do produto entra com
-    // `alt=""` de propósito. Ela é decorativa — não diz em qual empresa a
-    // pessoa está, e quem faz isso é o nome escondido para leitor de tela.
-    const img = container.querySelector("img");
-    expect(img?.getAttribute("src")).toContain("/marca/");
-    expect(img?.getAttribute("alt")).toBe("");
+    // SVG em linha, não <img>: é o que permite a escrita trocar de cor com
+    // o tema. Arquivo carregado por <img> é opaco ao CSS da página.
+    const svg = container.querySelector("svg");
+    expect(svg).toBeTruthy();
+    expect(container.querySelector("img")).toBeNull();
 
-    // O nome continua disponível para quem usa leitor de tela.
-    expect(screen.getByText("Padaria do Zé")).toBeTruthy();
+    // A marca substitui o NOME na casca, então ela precisa dizer de quem é.
+    expect(svg?.getAttribute("aria-label")).toBe("Padaria do Zé");
+  });
+
+  it("as cores da marca saem de token, não de hex no componente", () => {
+    // Regra 1 do projeto. Hex solto aqui é o que faz o tema escuro
+    // aparecer com a escrita preta sobre fundo preto.
+    fingirCarregamento(200);
+    const { container } = render(
+      <WorkspaceMark name="Padaria do Zé" logoUrl={null} />
+    );
+    const html = container.innerHTML;
+    expect(html).toContain("var(--marca-tinta)");
+    expect(html).toContain("var(--marca-acento)");
+    expect(html).not.toContain("#171717");
   });
 });
 
 describe("WorkspaceMark — a imagem que falhou antes da hidratação", () => {
-  it("REGRESSÃO: marca do produto com 404 cai no nome, não em 0x0", () => {
+  it("REGRESSÃO: logo da empresa que sumiu do bucket cai para a marca", () => {
     // `complete` verdadeiro com `naturalWidth` zero é a assinatura de uma
-    // imagem que terminou falhando. É o estado em que o componente chega
+    // imagem que terminou falhando — o estado em que o componente chega
     // quando o 404 acontece antes de o React pendurar o onError.
+    //
+    // A queda para no SEGUNDO degrau agora: a marca do produto é SVG e não
+    // tem como falhar. Antes ela seguia até o nome porque o arquivo também
+    // podia dar 404.
     fingirCarregamento(0);
-    render(<WorkspaceMark name="Padaria do Zé" logoUrl={null} />);
+    const { container } = render(
+      <WorkspaceMark name="Padaria do Zé" logoUrl={LOGO} />
+    );
 
-    expect(screen.getByText("Padaria do Zé")).toBeTruthy();
-    expect(screen.queryByRole("img")).toBeNull();
+    expect(container.querySelector("svg")).toBeTruthy();
+    expect(container.querySelector("img")).toBeNull();
   });
 
-  it("REGRESSÃO: logo da empresa que sumiu do bucket também cai no nome", () => {
-    // Mesmo defeito, outra origem: o arquivo foi removido do storage e a
-    // URL guardada em `workspace.logo_url` responde 404.
-    fingirCarregamento(0);
-    render(<WorkspaceMark name="Padaria do Zé" logoUrl={LOGO} />);
-
-    expect(screen.getByText("Padaria do Zé")).toBeTruthy();
-    expect(screen.queryByRole("img")).toBeNull();
-  });
-
-  it("no contrato, a falha cai no nome e nunca na marca do produto", () => {
-    // A regra 12 do CLAUDE.md: documento jurídico de terceiro não leva a
+  it("REGRESSÃO: no contrato, a falha cai no NOME e nunca na nossa marca", () => {
+    // Regra 12 do CLAUDE.md: documento jurídico de terceiro não leva a
     // marca do fornecedor de software, nem por acidente de fallback.
     fingirCarregamento(0);
-    render(
+    const { container } = render(
       <WorkspaceMark
         name="Padaria do Zé"
         logoUrl={LOGO}
@@ -110,6 +118,23 @@ describe("WorkspaceMark — a imagem que falhou antes da hidratação", () => {
     );
 
     expect(screen.getByText("Padaria do Zé")).toBeTruthy();
-    expect(screen.queryByRole("img")).toBeNull();
+    expect(container.querySelector("svg")).toBeNull();
+    expect(container.querySelector("img")).toBeNull();
+  });
+
+  it("REGRESSÃO: no seletor de empresas a falha também cai no nome", () => {
+    // Três empresas sem logo mostrando a mesma marca seriam três linhas
+    // idênticas, e o seletor existe para distingui-las.
+    fingirCarregamento(0);
+    const { container } = render(
+      <WorkspaceMark
+        name="Padaria do Zé"
+        logoUrl={LOGO}
+        contexto="menu"
+        queda="nome"
+      />
+    );
+    expect(screen.getByText("Padaria do Zé")).toBeTruthy();
+    expect(container.querySelector("svg")).toBeNull();
   });
 });

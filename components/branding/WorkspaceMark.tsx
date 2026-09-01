@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 
+import { TaflowMark } from "./TaflowMark";
+
 /**
  * A marca da empresa onde antes ficava o nome escrito (0080).
  *
@@ -23,19 +25,16 @@ import { useState } from "react";
  * empresa da outra. Três empresas sem logo mostrando a mesma marca do
  * produto seriam três linhas iguais.
  *
- * O terceiro degrau também é a rede de segurança: se a imagem não carregar —
- * arquivo removido do bucket, marca do produto ainda não definida —, o nome
- * aparece. Nunca um ícone quebrado.
+ * O terceiro degrau é a rede de segurança para a logo DO CLIENTE: se ela não
+ * carregar — arquivo removido do bucket, URL quebrada —, o nome aparece.
+ * Nunca um ícone quebrado.
+ *
+ * A marca do produto não precisa dessa rede desde set/2026: ela é SVG
+ * desenhado em linha (), não arquivo. Não tem como dar 404, e
+ * troca de cor com o tema — o que também dispensou a placa clara, que
+ * existia só porque logo de terceiro não dá para recolorir.
  */
 
-/**
- * Marca do produto.
- *
- * Enquanto o arquivo não existir, o `onError` derruba para o nome sozinho e
- * nada quebra. No dia em que ele for colocado em `public/marca/`, a casca
- * passa a exibi-lo sem precisar de mudança em código.
- */
-const LOGO_PADRAO = "/marca/taflow.webp";
 
 export type ContextoDaMarca = "casca" | "menu" | "impressao";
 
@@ -76,10 +75,32 @@ export function WorkspaceMark({
   // justamente o que o React Compiler recusa neste projeto.
   const [falhouEm, setFalhouEm] = useState<string | null>(null);
 
-  const src = logoUrl ?? (queda === "marca" ? LOGO_PADRAO : null);
-  const mostrarTexto = !src || falhouEm === src;
+  const { largura, altura } = MEDIDAS[contexto];
 
-  if (mostrarTexto) {
+  // A logo da empresa só vale se existir E tiver carregado.
+  const temLogoPropria = logoUrl !== null && falhouEm !== logoUrl;
+
+  if (!temLogoPropria && queda === "marca") {
+    // Altura do token + `aspect-ratio` DECLARADA, e não `width: auto`.
+    //
+    // SVG com viewBox tem proporção intrínseca mas não tamanho intrínseco:
+    // com `width: auto` o navegador não deduz a largura a partir da altura e
+    // a marca renderiza a 0×0 — visível no DOM, invisível na tela. Foi o que
+    // aconteceu na primeira tentativa.
+    return (
+      <span className={`inline-flex shrink-0 items-center ${className ?? ""}`}>
+        <TaflowMark
+          // Decorativa quando o nome da empresa não está em jogo — aqui ela
+          // ESTÁ, porque substitui o nome na casca.
+          title={name}
+          className="block"
+          style={{ height: altura, width: "auto", maxWidth: largura }}
+        />
+      </span>
+    );
+  }
+
+  if (!temLogoPropria) {
     return (
       <span
         className={
@@ -92,8 +113,7 @@ export function WorkspaceMark({
     );
   }
 
-  const { largura, altura } = MEDIDAS[contexto];
-  const propria = src === logoUrl;
+  const src = logoUrl;
 
   return (
     <span
@@ -113,15 +133,15 @@ export function WorkspaceMark({
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={src}
-        alt={propria ? name : ""}
+        alt={name}
         // As DUAS coisas são necessárias, e a de cima é a que faltava.
         //
         // Este componente é renderizado no servidor. O navegador começa a
         // baixar a imagem do HTML que chegou e pode FALHAR antes de o React
-        // hidratar — é o que acontece hoje com a marca do produto, que ainda
-        // não existe e responde 404. O evento `error` dispara sem ninguém
-        // escutando, o `onError` abaixo nunca roda, e a casca fica com uma
-        // imagem de 0×0 no lugar do nome da empresa.
+        // hidratar. O evento `error` dispara sem ninguém escutando, o
+        // `onError` abaixo nunca roda, e a casca fica com uma imagem de 0×0
+        // no lugar do nome da empresa — foi o que aconteceu em 31/ago/2026,
+        // quando a marca do produto ainda era um arquivo que dava 404.
         //
         // No callback de ref, que roda no commit, dá para PERGUNTAR o
         // resultado em vez de esperar o evento: imagem terminada
@@ -140,9 +160,6 @@ export function WorkspaceMark({
           objectFit: "contain",
         }}
       />
-      {/* Sem a logo própria, a imagem não diz em qual empresa a pessoa está.
-          O nome fica disponível para leitor de tela sem ocupar pixel. */}
-      {propria ? null : <span className="sr-only">{name}</span>}
     </span>
   );
 }
