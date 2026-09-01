@@ -18,6 +18,31 @@ Datas no formato dia/mês/ano.
 
 ## 31/ago/2026
 
+**Relatórios, no menu principal.** Tela nova que reúne o que estava
+espalhado por quatro lugares.
+
+**Por setor** responde como foi o período: quantas demandas entraram,
+quantas saíram, quantas saíram no prazo, quantos dias em média da abertura
+até a entrega, e quantas estão atrasadas hoje. Período à escolha — 30 dias,
+90 dias, este mês ou este ano — e **botão para baixar em CSV**, para levar a
+planilha ou a uma apresentação.
+
+Três coisas que o relatório se recusa a fazer, e cada uma tem motivo:
+
+- **demanda sem prazo não entra na pontualidade.** Ela não é pontual nem
+  atrasada. Por isso a coluna mostra a base: "100% de 2" deixa claro que só
+  duas tinham prazo;
+- **onde nada foi entregue aparece um traço, não zero.** Zero significaria
+  "entregue no mesmo dia";
+- **demanda cancelada não conta** como entrega nem como atraso.
+
+Os dias médios contam **da criação até a conclusão** — é o tempo que o
+cliente esperou, não só o de execução. Medir só a execução esconderia a
+fila, que costuma ser onde o atraso está.
+
+**Prazos da equipe** virou aba desta tela. O endereço antigo continua
+funcionando.
+
 **Prazos da equipe, para quem lidera.** Tela nova em **Equipe**, na barra
 lateral. Ela responde de relance quem está com o quê atrasado — e, o que
 faltava, **o que ainda está para vencer**.

@@ -1825,95 +1825,135 @@ tela do dono com registro de entregas; e os gatilhos que alimentam tudo.
 
 ---
 
-## 24. Cascata de aviso de prazo por responsável (pedido em 31/ago/2026)
+## 24. Relatório de prazos da equipe — FEITO (31/ago/2026, migration 0082)
 
-O dono descreveu o problema com precisão: *"minha equipe sempre me reporta
-sobre as tarefas e dúvidas, mas geralmente não me reporta uma tarefa que
-está para cumprir ou que está em atraso"*. Quem lidera descobre o atraso
-tarde, e precisa reportar para cima.
+Pedido do dono: *"minha equipe sempre me reporta sobre as tarefas e dúvidas,
+mas geralmente não me reporta uma tarefa que está para cumprir ou que está
+em atraso"*.
 
-**O que JÁ existe, e é mais do que parece.** `lib/notifications/derive.ts`
-classifica `atrasada`, `hoje` e `prazo próximo` e entrega no sino. Alerta de
-prazo é **derivado**, não tem linha na tabela — some sozinho quando a data
-muda, sem job de limpeza.
+**Metade não era construir, era corrigir.** `derive.ts` tinha, escrito:
 
-**O que falta, exatamente:** `deriveTaskAlerts` filtra por
-`task.assignee_id === myId`. O alerta existe e é privado. Ninguém enxerga o
-prazo da equipe.
+```ts
+// Prazo que ainda não venceu só interessa a quem vai entregar.
+if (!mine) continue;
+```
 
-**O que não existe de jeito nenhum:** responsável de setor. A tabela `sector`
-(0001) tem `name`, `color`, `icon`, `position`, `archived_at`. Não tem dono.
+O gestor recebia a demanda atrasada do time e nunca a que estava para
+vencer — justamente a que ainda dá para salvar.
 
-### O que precisa ser decidido antes
+**O que ficou de pé:** `sector.responsavel_id`, a tela `/equipe` com as três
+visões (dono vê tudo, gestor vê os setores dele mais as próprias,
+funcionário vê as próprias), e o item de navegação que só aparece para quem
+gerencia algo.
 
-**Qual eixo carrega a hierarquia.** O pedido citou os dois, e eles não são a
-mesma coisa:
+**Ser gestor é independente do papel.** `admin` abriria o módulo financeiro
+inteiro; um líder de equipe precisa do prazo do time, não do caixa. Um
+`member` comum pode ser gestor. Isso exigiu grant por coluna em `sector` e a
+função `definir_gestor_de_setor` com dono — a policy da 0011 deixa qualquer
+member escrever na tabela.
 
-- **`sector.responsavel_id`** — um nível, ancorado na área de trabalho.
-  Casa com a regra 11: toda tarefa pertence a um setor, então um responsável
-  de setor cobre 100% das tarefas, sem exceção e sem balde de sobra.
-- **`workspace_member.reporta_para`** — cadeia de gente, profundidade
-  livre, que é a "cascata de níveis" citada. Cobre o caso de alguém liderar
-  pessoas de setores diferentes, e **exige proteção contra ciclo** — A
-  reporta a B que reporta a A trava qualquer subida recursiva.
+### A lacuna que ficou, e é do modelo
 
-Recomendação: começar pelo setor. É o que o pedido nomeou primeiro, é o que
-o modelo de dados já sustenta, e não precisa de detecção de ciclo. A cadeia
-de pessoas generaliza depois, sem desfazer nada.
+**O sistema não liga pessoa a setor.** Uma pessoa se relaciona com um setor
+apenas através das demandas que recebeu; não existe "quem é do time de
+Obras".
 
-**Por onde o aviso sai.** Este projeto não envia e-mail. Enquanto não houver
-provedor, a cascata vive no sino e num relatório dentro do app. Chamar isso
-de "notificar o responsável" sem dizer que é dentro do app cria a expectativa
-errada — quem lidera quer ser puxado, não precisar entrar para descobrir.
+Consequência: o dono enxerga quem está ocioso, o gestor de setor não —
+para ele, "ocioso no meu setor" é indistinguível de "não é do meu setor".
+Consertar exige uma tabela ligando membro a setor, e isso é decisão de
+produto, não dívida técnica. Só vale se incomodar no uso.
 
-**O que o relatório mostra.** O pedido é claro sobre o uso: gerir cada
-subordinado e reportar acima. Isso é um resumo por pessoa — quem tem o quê
-atrasado e vencendo —, não uma lista cronológica de tarefas.
+### O que continua adiado
+
+**A cascata de níveis** (`workspace_member.reporta_para`) para reportar
+acima do gestor. O eixo do setor foi escolhido primeiro porque
+`task.assignee_id` é anulável: na cadeia de pessoas, demanda atrasada sem
+responsável escala para ninguém. A cadeia generaliza depois sem desfazer
+nada — ela responde "quem está acima do gestor", e precisa de proteção
+contra ciclo.
+
+**Aviso fora do app.** Este projeto não envia e-mail. Enquanto isso, a
+cascata vive no sino e no relatório dentro do app.
 
 ---
 
-## 25. Portal do cliente e solicitação de demandas (pedido em 31/ago/2026)
+## 25. O cliente vê o criativo no link — FEITO (31/ago/2026, migration 0083)
 
-Duas metades, e a primeira está mais perto do que parece.
+O link já deixava aprovar e pedir ajuste (0064), mas o criativo não
+aparecia: o cliente aprovava uma peça vista por outro canal — o WhatsApp que
+a §18 queria eliminar.
 
-### Acompanhamento e aprovação — falta menos do que se imagina
+**`attachment.entregavel`, falso por padrão.** Publicar é ato explícito por
+arquivo. A escolha entre marcar-por-arquivo e publicar-tudo foi feita pelo
+modo como cada uma falha: esquecer de marcar dá "o cliente não vê a peça",
+ele reclama e se marca; publicar tudo vaza contrato e planilha de custo em
+silêncio e para sempre.
 
-**Já existe:** link público revogável por tarefa (0046), aprovação e pedido
-de ajuste com comentário (0064), a página `/d/[token]` mostrando título e
-etapas, e notificação de tipo próprio para quem responde pela demanda.
+A rota `/api/d/[token]/anexo/[id]` confere token, vínculo do anexo com a
+demanda daquele link, a marca, e a empresa — e devolve 302 para URL assinada
+de 5 minutos. O `storage_key` nunca chega ao navegador do visitante.
 
-E o desenho já está certo para o que foi pedido: a §18 registra que
-`task_approval` é **histórico, não estado**. As rodadas de revisão — enviar,
-pedir ajuste, corrigir, enviar de novo — já estão modeladas. Não precisa de
-tabela nova para "revisões".
+### O que ficou de fora, declarado
 
-**O buraco real é um só: o criativo não aparece.** A página pública não
-busca anexos. O cliente aprova uma peça que ele não está vendo ali — viu por
-outro canal, provavelmente WhatsApp, que é exatamente o que a §18 queria
-eliminar. Aprovar sem a peça na frente é assinar em branco.
+**Anexo que não é imagem aparece só pelo nome**, sem como abrir. É
+consequência do "apenas ver, sem baixar" escolhido pelo dono: PDF aberto no
+navegador vem com botão de download. Decidir se PDF passa a ser permitido
+(assumindo o download) ou se só imagem pode ser marcada continua em aberto.
 
-Falta também devolver o histórico ao cliente: hoje ele não vê o que já pediu
-nem o que foi respondido.
+**"Sem baixar" não é aplicável a sério para imagem** — quem vê pode salvar.
+O que a rota impede é entregar o arquivo ORIGINAL: o PSD em camadas, o
+master em alta, o PDF com metadados.
+
+### Solicitação de demandas — continua adiado
+
+Pedidos, demandas, responsáveis, prazos, produção e entrega, entrando pelo
+cliente. Adiado por pedido do dono.
+
+Registrado antes de desenhar: **um pedido não é uma tarefa.** Ele é uma
+solicitação que ainda vai ser triada, recusada ou virar uma ou várias
+demandas. Na mesma tabela, o quadro da equipe encheria de coisa que ninguém
+aceitou — e a regra 11 obrigaria a escolher um setor para algo que ainda não
+foi distribuído.
+
+---
+
+## 26. Relatório por setor e por demanda (levantado em 31/ago/2026)
+
+O dono perguntou se existe relatório por setor ou por demanda. Existe
+espalhado, e nenhuma peça é um relatório:
+
+| Onde | O que dá |
+|---|---|
+| Dashboard | "Demandas por setor" — contagem de abertas, só os 4 maiores |
+| Hoje | distribuição das pendências por setor e por responsável |
+| Financeiro | rentabilidade por setor, projeto e cliente (0081) |
+| Equipe | prazos com escopo de setor, agrupados por pessoa (0082) |
+
+Por demanda, o histórico existe DENTRO da demanda: `TaskActivityLog`,
+`TimeTracking`, `ApprovalHistory`, `InsightLog`.
+
+### O que falta
+
+**Uma tela de relatório por setor**: quantas entraram, quantas foram
+entregues, tempo médio da abertura à conclusão, taxa de conclusão — com
+período escolhível. Hoje os números existem em quatro telas e nenhuma
+responde "como foi o mês do setor de Obras".
+
+**Nada é exportável nem imprimível.** Isso pesa por causa do uso declarado
+pelo dono: ele reporta ao CEO. Hoje seria abrir quatro telas e copiar à mão.
 
 ### O que precisa ser decidido antes
 
-**Anexo em link público colide com a 0006.** O bucket `attachments` é
-privado com URL assinada, e a razão está escrita lá: anexo é documento de
-trabalho do cliente e vaza informação de negócio. Publicar anexo por token
-exige decidir **quais** anexos saem — provavelmente uma marcação por arquivo
-("este é entregável"), não a pasta inteira. Sem isso, o link do criativo
-entrega junto o contrato e a planilha de custo.
+**Qual é a pergunta do relatório.** "Quanto a equipe produziu" e "onde o
+trabalho está travando" pedem números diferentes: o primeiro é volume de
+entregas, o segundo é tempo parado por coluna. Fazer os dois numa tela só
+costuma produzir uma tela que não responde nenhum.
 
-**Prévia de imagem versus download.** Aprovar criativo pede ver, não baixar.
-São caminhos diferentes de segurança e de peso.
+**Tempo médio a partir de quê.** Da criação da demanda, ou de quando ela
+entrou em produção? A primeira mede a fila inteira, a segunda mede a
+execução — e um setor com boa execução e fila longa parece ruim na primeira
+e ótimo na segunda.
 
-### Solicitação de demandas — adiado por pedido do dono
-
-Pedidos, demandas, responsáveis, prazos, produção e entrega, entrando pelo
-cliente. O dono pediu explicitamente para deixar no roadmap.
-
-Vale registrar uma coisa antes de desenhar: **um pedido não é uma tarefa.**
-Ele é uma solicitação que ainda vai ser triada, recusada ou virar uma ou
-várias demandas. Tratar os dois na mesma tabela faz o quadro da equipe
-encher de coisa que ninguém aceitou ainda — e a regra 11 obrigaria a
-escolher um setor para algo que ainda não foi distribuído.
+**Impressão ou arquivo.** Imprimir reusa o caminho do contrato (0032) e sai
+rápido. CSV serve para quem vai continuar a conta em planilha. São públicos
+diferentes.
