@@ -16,6 +16,7 @@ import {
 } from "@/lib/validation/sector";
 import type { Sector } from "@/types/database";
 
+import { GestorPicker } from "./GestorPicker";
 import { IconPicker } from "./IconPicker";
 
 export function SectorForm({
@@ -155,6 +156,12 @@ export function SectorForm({
           </span>
         ) : null}
       </div>
+
+      {/* Só na edição, e fora do fluxo do formulário: o gestor é gravado
+          na hora por uma função do banco com autorização própria (0082),
+          não pelo `submit` daqui. Um setor que ainda não existe também não
+          tem id para receber gestor. */}
+      {mode === "edit" && sector ? <GestorPicker sector={sector} /> : null}
 
       <div className="flex justify-end gap-2 pt-2">
         <Button type="button" variant="ghost" onClick={onDone}>

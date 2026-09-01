@@ -78,6 +78,7 @@ export function useCreateSector(workspaceId: string) {
         color: input.color,
         icon: input.icon,
         position: previous.length,
+        responsavel_id: null,
         archived_at: null,
       };
       qc.setQueryData<Sector[]>(key, [...previous, optimistic]);

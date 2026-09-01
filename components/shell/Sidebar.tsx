@@ -15,6 +15,7 @@ import {
   IconSettings,
   IconSun,
   IconUsers,
+  IconUsersGroup,
 } from "@tabler/icons-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -68,6 +69,19 @@ const workDestinations: Destination[] = [
   },
   { href: "/chat", label: "Chat", icon: IconMessages, hint: "8" },
 ];
+
+/**
+ * Relatório de prazos da equipe (0082).
+ *
+ * Fora da lista fixa porque a barra tem pressão de espaço documentada — num
+ * notebook de 768px sobravam 34 pixels para doze setores. Só aparece para
+ * quem gerencia alguma coisa, que é quem tem o que ler nele.
+ */
+const teamDestination: Destination = {
+  href: "/equipe",
+  label: "Equipe",
+  icon: IconUsersGroup,
+};
 
 /**
  * O lado comercial, num grupo que recolhe.
@@ -169,6 +183,9 @@ export function Sidebar({
   const { data: members = [] } = useMembers(workspace.id);
   const myRole = members.find((m) => m.user_id === myId)?.role;
   const canManageBusiness = myRole === "owner" || myRole === "admin";
+  // Gestor de setor NÃO é admin (0082): admin abriria o financeiro junto.
+  const gerenciaEquipe =
+    canManageBusiness || sectors.some((s) => s.responsavel_id === myId);
   // O contador é o que faz alguém lembrar de abrir o chat: sem ele, só se
   // descobre mensagem nova entrando lá.
   const chatUnread = useChatUnreadTotal(workspace.id, myId ?? null);
@@ -209,6 +226,14 @@ export function Sidebar({
               badge={destination.href === "/chat" ? chatUnread : 0}
             />
           ))}
+          {gerenciaEquipe ? (
+            <NavItem
+              destination={teamDestination}
+              active={isActive(teamDestination.href)}
+              onNavigate={closeMobile}
+              badge={0}
+            />
+          ) : null}
         </ul>
 
         <button

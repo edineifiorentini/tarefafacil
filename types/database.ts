@@ -342,6 +342,8 @@ export type Database = {
           color: string; // hexadecimal livre (#RRGGBB) — ver migration 0005
           icon: string;
           position: number;
+          /** Gestor do setor (0082). Independente do papel. */
+          responsavel_id: string | null;
           archived_at: string | null;
         };
         Insert: {
@@ -351,6 +353,7 @@ export type Database = {
           color: string;
           icon?: string;
           position?: number;
+          responsavel_id?: string | null;
           archived_at?: string | null;
         };
         Update: {
@@ -360,6 +363,8 @@ export type Database = {
           color?: string;
           icon?: string;
           position?: number;
+          /** Só a função definir_gestor_de_setor escreve isto (0082). */
+          responsavel_id?: string | null;
           archived_at?: string | null;
         };
         Relationships: [];
@@ -601,6 +606,8 @@ export type Database = {
           mime_type: string | null;
           size_bytes: number | null;
           uploaded_by: string | null;
+          /** Visível ao cliente pelo link público (0083). */
+          entregavel: boolean;
           created_at: string;
         };
         Insert: {
@@ -615,8 +622,11 @@ export type Database = {
           size_bytes?: number | null;
           uploaded_by?: string | null;
           created_at?: string;
+          entregavel?: boolean;
         };
         Update: {
+          /** Publicar é ato explícito, por arquivo (0083). */
+          entregavel?: boolean;
           id?: string;
           workspace_id?: string;
           task_id?: string;
@@ -2061,6 +2071,15 @@ export type Database = {
           p_author?: string | null;
         };
         Returns: boolean;
+      };
+      /**
+       * Define ou tira o gestor de um setor (0082). security definer: a
+       * coluna nao tem grant de escrita para o cliente, e quem autoriza e o
+       * has_role dentro da funcao.
+       */
+      definir_gestor_de_setor: {
+        Args: { setor: string; pessoa: string | null };
+        Returns: undefined;
       };
       open_direct_channel: {
         Args: { ws: string; other: string };

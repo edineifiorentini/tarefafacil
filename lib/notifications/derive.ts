@@ -19,7 +19,7 @@ import type { DerivedAlert, FeedEvent, FeedItem } from "./types";
  */
 
 /** Janela de "prazo próximo" para demandas. */
-const TASK_SOON_DAYS = 3;
+export const TASK_SOON_DAYS = 3;
 /** Janela de aviso de fim de vigência, quando o contrato não define a dele. */
 const CONTRACT_SOON_DAYS = 30;
 /** Janela de parcela a vencer. */
@@ -42,7 +42,7 @@ function plural(n: number, um: string, muitos: string): string {
 }
 
 /** Uma demanda só entra em alerta se ainda está viva e tem prazo. */
-function isPending(task: Task): boolean {
+export function isPending(task: Task): boolean {
   return !task.completed_at && !task.cancelled_at && !!task.due_date;
 }
 
