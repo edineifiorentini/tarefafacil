@@ -18,6 +18,30 @@ Datas no formato dia/mês/ano.
 
 ## 31/ago/2026
 
+**Prazos da equipe, para quem lidera.** Tela nova em **Equipe**, na barra
+lateral. Ela responde de relance quem está com o quê atrasado — e, o que
+faltava, **o que ainda está para vencer**.
+
+Até agora o sistema avisava o gestor só depois que a demanda atrasava. O
+prazo que ainda dava para cumprir só chegava a quem ia entregar, e é
+justamente esse que ainda dá para salvar.
+
+Cada setor pode ter um **gestor**, escolhido em Editar setor. Ele passa a
+ver os prazos daquele setor e continua sem acesso ao Financeiro — ser gestor
+não é ser administrador. Quem não gerencia nada não vê a tela.
+
+Demanda **sem responsável** aparece no topo do relatório, num grupo próprio.
+É a que ninguém assumiu, e por isso a que ninguém lembra de cobrar.
+
+**O cliente agora vê a peça no link.** Antes ele aprovava ou pedia ajuste
+sem o criativo na tela — tinha visto por WhatsApp, e o link só mostrava o
+andamento.
+
+Cada arquivo é liberado **um a um**: no anexo da demanda há um botão de olho
+que o marca como entregável. Sem marcar, nada sai — o contrato e a planilha
+de custo continuam onde estavam. O cliente vê a imagem; o arquivo original
+não é oferecido para download.
+
 **Excluir cliente e arquivar projeto.** As duas ações existiam por dentro e
 não tinham botão.
 
