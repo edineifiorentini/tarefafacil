@@ -145,6 +145,43 @@ export default async function SharedTaskPage({
         </section>
       ) : null}
 
+      {/* A peça vem ANTES da caixa de aprovação, e é o ponto do 0083:
+          aprovar sem o criativo na frente é assinar em branco. */}
+      {view.entregaveis.length > 0 ? (
+        <section className="border-line bg-card rounded-md border p-4 shadow-[var(--shadow-card)]">
+          <h2 className="text-fg-secondary mb-3 text-[length:var(--text-caption-size)] font-medium tracking-wide uppercase">
+            {view.entregaveis.length === 1
+              ? "Para aprovação"
+              : `Para aprovação · ${view.entregaveis.length} arquivos`}
+          </h2>
+          <ul className="flex flex-col gap-3">
+            {view.entregaveis.map((e) => (
+              <li key={e.id}>
+                {e.isImage ? (
+                  <figure className="flex flex-col gap-1">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={`/api/d/${token}/anexo/${e.id}`}
+                      alt={e.filename}
+                      className="border-line max-h-[70vh] w-full rounded-sm border object-contain"
+                    />
+                    <figcaption className="text-fg-muted text-[length:var(--text-caption-size)]">
+                      {e.filename}
+                    </figcaption>
+                  </figure>
+                ) : (
+                  /* Sem link para o arquivo: quem não é imagem não é
+                     desenhado, e oferecer download entregaria o original. */
+                  <span className="text-fg-secondary text-[length:var(--text-small-size)]">
+                    {e.filename}
+                  </span>
+                )}
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
       <footer className="text-fg-muted flex flex-wrap gap-x-4 gap-y-1 text-[length:var(--text-caption-size)]">
         {view.assigneeName ? (
           <span>Responsável: {view.assigneeName}</span>

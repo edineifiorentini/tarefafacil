@@ -16,14 +16,38 @@ import { createAdminClient } from "@/lib/supabase/admin";
  *    não é controle de acesso (§15). O que não está em `PublicTaskView`
  *    não sai daqui, nem por engano futuro.
  *
- * 3. Comentários, anexos, tempo registrado, histórico, valores e as demais
- *    demandas do setor NÃO entram. O cliente pediu para acompanhar UMA
- *    demanda; conversa de equipe é interna.
+ * 3. Comentários, tempo registrado, histórico, valores e as demais demandas
+ *    do setor NÃO entram. O cliente pediu para acompanhar UMA demanda;
+ *    conversa de equipe é interna.
+ *
+ * **Anexos entram desde a 0083, e só os marcados `entregavel`.** Era uma
+ * exclusão total até 31/ago/2026, quando o dono apontou o buraco: o cliente
+ * aprovava uma peça que não estava na tela, tendo visto por outro canal — o
+ * WhatsApp que a §18 queria eliminar. A regra continua estreita: publicar é
+ * ato explícito por arquivo, e mesmo assim daqui sai só METADADO. O
+ * `storage_key` nunca cruza esta fronteira; quem o resolve é a rota
+ * `/api/d/[token]/anexo/[id]`, que confere o token de novo.
  */
 
 export type PublicSubtask = {
   title: string;
   done: boolean;
+};
+
+/**
+ * Um entregável, do jeito que o visitante pode conhecê-lo.
+ *
+ * **Sem `storage_key`, e é o ponto todo.** O id serve para pedir o arquivo à
+ * rota, que confere o token outra vez antes de assinar uma URL de cinco
+ * minutos. Mandar a chave do storage daqui transformaria "ver a peça" em
+ * "ter o arquivo para sempre".
+ */
+export type PublicDeliverable = {
+  id: string;
+  filename: string;
+  /** Decide se a peça é desenhada na tela ou apenas listada. */
+  mimeType: string | null;
+  isImage: boolean;
 };
 
 export type PublicTaskView = {
@@ -36,6 +60,8 @@ export type PublicTaskView = {
   /** Nome de quem responde. Sem e-mail, sem id. */
   assigneeName: string | null;
   subtasks: PublicSubtask[];
+  /** Só os anexos marcados como entregáveis (0083). Metadado, sem chave. */
+  entregaveis: PublicDeliverable[];
   updatedAt: string;
   /** Nome da organização que compartilhou, para o visitante se situar. */
   orgName: string | null;
@@ -88,6 +114,7 @@ export async function readSharedTask(token: string): Promise<ShareResult> {
     { data: sector },
     { data: assignee },
     { data: subtasks },
+    { data: anexos },
     { data: org },
     { data: ultima },
   ] = await Promise.all([
@@ -106,6 +133,15 @@ export async function readSharedTask(token: string): Promise<ShareResult> {
       .select("title, completed_at")
       .eq("task_id", link.entity_id)
       .order("position", { ascending: true }),
+    // Só `entregavel`. O filtro é aqui, no servidor, e não na tela: máscara
+    // visual não é controle de acesso (§15).
+    db
+      .from("attachment")
+      .select("id, filename, mime_type, kind")
+      .eq("task_id", link.entity_id)
+      .eq("entregavel", true)
+      .eq("kind", "file")
+      .order("created_at", { ascending: true }),
     db
       .from("workspace")
       .select("name")
@@ -140,6 +176,14 @@ export async function readSharedTask(token: string): Promise<ShareResult> {
       subtasks: (subtasks ?? []).map((s) => ({
         title: s.title,
         done: s.completed_at !== null,
+      })),
+      entregaveis: (anexos ?? []).map((a) => ({
+        id: a.id,
+        filename: a.filename,
+        mimeType: a.mime_type,
+        // Decidido pelo mime do banco, não pela extensão do nome: nome de
+        // arquivo é digitado por gente e mente com frequência.
+        isImage: (a.mime_type ?? "").startsWith("image/"),
       })),
       updatedAt: task.updated_at,
       orgName: org?.name ?? null,

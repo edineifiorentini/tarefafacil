@@ -8,6 +8,7 @@ import {
   IconLoader2,
   IconPaperclip,
   IconPhoto,
+  IconEye,
   IconTrash,
 } from "@tabler/icons-react";
 import { useRef, useState } from "react";
@@ -21,6 +22,7 @@ import {
   useAttachmentImageUrl,
   useAttachments,
   useDeleteAttachment,
+  useMarcarEntregavel,
   useSignedUrl,
   useUploadAttachment,
 } from "@/lib/queries/useAttachments";
@@ -44,10 +46,14 @@ function ImageAttachmentRow({
   attachment,
   onOpen,
   onDelete,
+  onToggleEntregavel,
 }: {
   attachment: Attachment;
   onOpen: () => void;
   onDelete: () => void;
+  /** Imagem é o que o criativo costuma ser — sem isto o botão faltaria
+      justamente no arquivo que mais precisa dele. */
+  onToggleEntregavel: () => void;
 }) {
   const { data: url, isError } = useAttachmentImageUrl(
     attachment.storage_key,
@@ -106,6 +112,24 @@ function ImageAttachmentRow({
       </HoverCard.Root>
       <button
         type="button"
+        onClick={onToggleEntregavel}
+        aria-pressed={attachment.entregavel}
+        title={
+          attachment.entregavel
+            ? "O cliente vê esta imagem no link público"
+            : "Mostrar ao cliente no link público"
+        }
+        aria-label={`${attachment.entregavel ? "Ocultar do" : "Mostrar no"} link do cliente: ${attachment.filename}`}
+        className={`shrink-0 transition-opacity ${
+          attachment.entregavel
+            ? "text-fg-link opacity-100"
+            : "text-fg-muted hover:text-fg opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+        }`}
+      >
+        <IconEye size={14} stroke={1.5} />
+      </button>
+      <button
+        type="button"
         onClick={onDelete}
         aria-label={`Remover ${attachment.filename}`}
         className="text-fg-muted hover:text-fg opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
@@ -120,6 +144,7 @@ export function AttachmentList({ taskId }: { taskId: string }) {
   const workspace = useWorkspace();
   const { data: attachments = [] } = useAttachments(workspace.id, taskId);
   const { upload } = useUploadAttachment(workspace.id, taskId);
+  const marcar = useMarcarEntregavel(workspace.id, taskId);
   const addLink = useAddAttachmentLink(workspace.id, taskId);
   const del = useDeleteAttachment(workspace.id, taskId);
   const signedUrl = useSignedUrl();
@@ -203,6 +228,9 @@ export function AttachmentList({ taskId }: { taskId: string }) {
               attachment={a}
               onOpen={() => void openAttachment(a)}
               onDelete={() => del.mutate(a.id)}
+              onToggleEntregavel={() =>
+                marcar.mutate({ id: a.id, entregavel: !a.entregavel })
+              }
             />
           );
         }
@@ -231,6 +259,30 @@ export function AttachmentList({ taskId }: { taskId: string }) {
                 />
               ) : null}
             </button>
+            {/* Só arquivo: link externo já é público por natureza, e o
+                cliente pode abri-lo sem nós no meio. */}
+            {a.kind === "file" ? (
+              <button
+                type="button"
+                onClick={() =>
+                  marcar.mutate({ id: a.id, entregavel: !a.entregavel })
+                }
+                aria-pressed={a.entregavel}
+                title={
+                  a.entregavel
+                    ? "O cliente vê este arquivo no link público"
+                    : "Mostrar ao cliente no link público"
+                }
+                aria-label={`${a.entregavel ? "Ocultar do" : "Mostrar no"} link do cliente: ${a.filename}`}
+                className={`shrink-0 transition-opacity ${
+                  a.entregavel
+                    ? "text-fg-link opacity-100"
+                    : "text-fg-muted hover:text-fg opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+                }`}
+              >
+                <IconEye size={14} stroke={1.5} />
+              </button>
+            ) : null}
             <button
               type="button"
               onClick={() => del.mutate(a.id)}

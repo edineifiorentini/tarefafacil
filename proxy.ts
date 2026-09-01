@@ -46,6 +46,15 @@ export async function proxy(request: NextRequest) {
     path.startsWith("/convite") ||
     // Link público de demanda: quem abre não tem conta, por definição.
     path.startsWith("/d/") ||
+    // Entregável do link público (0083). Precisa entrar SEPARADO: a regra
+    // acima cobre `/d/`, não `/api/d/`, e sem esta linha a imagem do
+    // criativo era redirecionada para o login — o cliente via um retângulo
+    // quebrado e a função nascia morta.
+    //
+    // Quem autoriza é a própria rota, que confere o token, o vínculo do
+    // anexo com a demanda daquele link e a marca `entregavel` antes de
+    // assinar qualquer URL.
+    path.startsWith("/api/d/") ||
     // Link de indicação: existe justamente para trazer quem ainda não tem
     // conta. Ele grava o clique e manda para o login.
     path.startsWith("/r/") ||

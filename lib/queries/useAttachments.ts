@@ -213,3 +213,32 @@ export function useSignedUrl() {
     [supabase]
   );
 }
+
+/**
+ * Marca (ou desmarca) um anexo como entregável ao cliente (0083).
+ *
+ * **É um ato de publicação, não uma etiqueta.** Marcado, o arquivo passa a
+ * sair pelo link público da demanda — por isso a tela precisa deixar isso
+ * explícito, e por isso o padrão no banco é `false`.
+ *
+ * Só arquivo: link externo já é público por natureza e o cliente pode
+ * abri-lo sem nós no meio.
+ */
+export function useMarcarEntregavel(workspaceId: string, taskId: string) {
+  const supabase = createClient();
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (p: { id: string; entregavel: boolean }) => {
+      const { error } = await supabase
+        .from("attachment")
+        .update({ entregavel: p.entregavel })
+        .eq("id", p.id)
+        // Empresa no WHERE, não só na permissão.
+        .eq("workspace_id", workspaceId);
+      if (error) throw error;
+    },
+    onSettled: () =>
+      qc.invalidateQueries({ queryKey: attachmentsKey(workspaceId, taskId) }),
+  });
+}
