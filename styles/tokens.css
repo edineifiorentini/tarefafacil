@@ -203,6 +203,17 @@
    * No tema claro ela é TRANSPARENTE: o fundo já é claro, e um retângulo
    * branco sobre superfície branca só acrescentaria uma borda que ninguém
    * pediu. */
+
+  /* Marca do TAFLOW (set/2026) — paleta aprovada pelo dono.
+   *
+   * A tinta troca com o tema; o acento NÃO. Verde ácido sobre grafite e
+   * sobre nuvem tem contraste de sobra nos dois, e mexer nele mudaria a
+   * assinatura da marca, não a legibilidade.
+   *
+   * Estes tokens são da MARCA DO PRODUTO, não da cor de marca da empresa
+   * (0071) — aquela o cliente escolhe, esta é nossa. */
+  --marca-tinta: #171717; /* graphite */
+  --marca-acento: #c7ff38; /* acid lime */
   --logo-plate: transparent;
   --logo-plate-pad: 0px;
 
@@ -333,6 +344,9 @@
   --text-on-brand: #ffffff;
 
   /* Placa da logo: aqui ela existe, e é o que salva marca escura. */
+  /* Tinta vira nuvem no escuro: grafite sobre fundo escuro some. */
+  --marca-tinta: #f5f7f2; /* cloud white */
+  --marca-acento: #c7ff38;
   --logo-plate: rgba(255, 255, 255, 0.92);
   --logo-plate-pad: 6px;
 
@@ -437,7 +451,10 @@
     --text-secondary: #a3aec1;
     --text-muted: #7d8799;
     --text-on-brand: #ffffff;
-    --logo-plate: rgba(255, 255, 255, 0.92);
+    /* Tinta vira nuvem no escuro: grafite sobre fundo escuro some. */
+  --marca-tinta: #f5f7f2; /* cloud white */
+  --marca-acento: #c7ff38;
+  --logo-plate: rgba(255, 255, 255, 0.92);
     --logo-plate-pad: 6px;
     --border: rgba(255, 255, 255, 0.08);
     --border-strong: rgba(255, 255, 255, 0.14);
@@ -575,6 +592,25 @@
   --brand-500: #ec4899;
   --brand-600: #db2777;
   --brand-700: #be185d; /* 6.0:1 */
+}
+
+/* TAFLOW — a paleta da marca (0084).
+ *
+ * O 300 é acid lime de propósito, e é o único degrau fora da escala de
+ * grafite. O tema escuro usa `--brand-300` como texto de link, e é lá que
+ * o lime tem 15.99:1 sobre a página. No claro o link é o 700, grafite, com
+ * 17.93:1 — o lime jamais vira texto sobre fundo claro, onde daria 1.18:1.
+ *
+ * Medido com `lib/utils/contrast.ts`, não no olho. */
+[data-brand="taflow"] {
+  --brand-50: #f6f7f4;
+  --brand-100: #eaece6;
+  --brand-200: #d3d7cc;
+  --brand-300: #c7ff38; /* acid lime — link no ESCURO, 15.99:1 */
+  --brand-400: #8a8f83; /* foco no escuro, 5.69:1 */
+  --brand-500: #4d514a;
+  --brand-600: #262626;
+  --brand-700: #171717; /* grafite — link no CLARO, 17.93:1 */
 }
 
 [data-brand="grafite"] {

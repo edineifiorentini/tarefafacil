@@ -33,7 +33,7 @@ export type GcalStatus = "active" | "expired" | "revoked";
 // em lib/branding/themes.ts — mudar um sem o outro passa no typecheck e
 // estoura no insert.
 export type BrandThemeId =
-  "azul" | "indigo" | "lilas" | "teal" | "verde" | "magenta" | "grafite";
+  "taflow" | "azul" | "indigo" | "lilas" | "teal" | "verde" | "magenta" | "grafite";
 
 // Conta de recebimento da empresa (0067). Espelham o `check` da migration —
 // mudar um lado sem o outro deixa o typecheck passar e o insert estourar.
@@ -164,6 +164,8 @@ export type Database = {
           affiliate_percent: number | null;
           /** Cor da marca da empresa (0071). Lista fechada; rampas em tokens.css. */
           brand_theme: BrandThemeId;
+          /** Quando escolheu (ou pulou) a cor. Nulo = nunca perguntamos (0084). */
+          brand_escolhida_em: string | null;
           /**
            * Logo da empresa (0080). Nulo cai na marca do produto — menos no
            * contrato impresso, que escreve o nome.
@@ -192,6 +194,7 @@ export type Database = {
           affiliate_id?: string | null;
           affiliate_percent?: number | null;
           brand_theme?: BrandThemeId;
+          brand_escolhida_em?: string | null;
           logo_url?: string | null;
           created_at?: string;
         };
@@ -213,6 +216,8 @@ export type Database = {
           affiliate_percent?: number | null;
           /** A 0071 devolveu ao cliente o UPDATE só desta coluna e de `name`. */
           brand_theme?: BrandThemeId;
+          /** A 0084 acrescentou esta à mesma lista curta. */
+          brand_escolhida_em?: string | null;
           /** A 0080 acrescentou esta à mesma lista curta de colunas do cliente. */
           logo_url?: string | null;
           /** Exclusão lógica (0073). Só a plataforma escreve. */

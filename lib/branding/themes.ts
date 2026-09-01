@@ -17,18 +17,37 @@
  * escolha.
  */
 export const BRAND_THEMES = [
+  {
+    id: "taflow",
+    label: "TAFLOW",
+    // Gradiente e não cor sólida: com um quadrado só de grafite, esta opção
+    // ficaria idêntica à Ardósia na hora de escolher. O corte mostra o par
+    // que a paleta realmente é.
+    swatch: "linear-gradient(135deg, #171717 58%, #c7ff38 58%)",
+  },
   { id: "azul", label: "Azul", swatch: "#2563eb" },
   { id: "indigo", label: "Índigo", swatch: "#4f46e5" },
   { id: "lilas", label: "Lilás", swatch: "#7c3aed" },
   { id: "teal", label: "Teal", swatch: "#0d9488" },
   { id: "verde", label: "Verde", swatch: "#059669" },
   { id: "magenta", label: "Magenta", swatch: "#db2777" },
-  { id: "grafite", label: "Grafite", swatch: "#475569" },
+  // Era "Grafite" até set/2026. O nome mudou quando a paleta TAFLOW entrou:
+  // esta é `#475569`, um cinza AZULADO, e as duas competiam pelo mesmo
+  // nome. O id fica como está — renomear valor gravado no banco só para
+  // acertar um rótulo de tela não paga o risco.
+  { id: "grafite", label: "Ardósia", swatch: "#475569" },
 ] as const;
 
 export type BrandTheme = (typeof BRAND_THEMES)[number]["id"];
 
-export const BRAND_DEFAULT: BrandTheme = "azul";
+/**
+ * O padrão desde a 0084.
+ *
+ * Vale para empresa NOVA. Quem já existe mantém a cor que tinha — a
+ * migration só trocou o `default` da coluna, e carimbou
+ * `brand_escolhida_em` em todo mundo para ninguém rever a tela de escolha.
+ */
+export const BRAND_DEFAULT: BrandTheme = "taflow";
 
 /** Nome do cookie que leva a cor até o `<html>` sem consultar o banco. */
 export const BRAND_COOKIE = "brand_theme";

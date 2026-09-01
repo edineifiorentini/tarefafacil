@@ -8,6 +8,7 @@ import { Providers } from "@/components/providers";
 import { AppShell } from "@/components/shell/AppShell";
 import { ShellProvider } from "@/components/shell/shell-context";
 import { AccessExpired } from "@/components/workspace/AccessExpired";
+import { EscolherMarca } from "@/components/onboarding/EscolherMarca";
 import { CreateWorkspace } from "@/components/workspace/CreateWorkspace";
 import { PendingApproval } from "@/components/workspace/PendingApproval";
 import { BrandSync } from "@/components/branding/BrandSync";
@@ -125,6 +126,15 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
         />
       ) : null}
       <WorkspaceProvider workspace={workspace}>
+        {/* Primeiro acesso: a empresa escolhe a cor antes de entrar (0084).
+            Fica DENTRO do WorkspaceProvider porque a tela precisa da
+            empresa, e ANTES da casca porque ela substitui o app, não se
+            sobrepõe — quem ainda não escolheu não tem o que fazer atrás
+            dela. `brand_escolhida_em` nulo é o único gatilho: a cor sozinha
+            não distingue "não perguntei" de "escolheu o padrão". */}
+        {workspace.brand_escolhida_em === null ? (
+          <EscolherMarca />
+        ) : (
         <PomodoroProvider>
           <ShellProvider>
             <AppShell
@@ -139,6 +149,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
             </AppShell>
           </ShellProvider>
         </PomodoroProvider>
+        )}
       </WorkspaceProvider>
     </Providers>
   );
