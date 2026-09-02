@@ -65,11 +65,7 @@ export function OnboardingSteps() {
             <p className="max-w-[650px] text-[20px] leading-[30px] font-semibold text-[var(--taflow-text-primary)]">
               {COMECO.faixa.titulo}
             </p>
-            <CTAButton
-              href={ROTA_CADASTRO}
-              variante="inverso"
-              seta="diagonal"
-            >
+            <CTAButton href={ROTA_CADASTRO} variante="inverso" seta="diagonal">
               {COMECO.faixa.cta}
             </CTAButton>
           </div>

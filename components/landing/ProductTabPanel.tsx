@@ -29,7 +29,11 @@ function Casca({
   return (
     <div className="overflow-hidden rounded-[24px] border border-[var(--taflow-border-default)] bg-[var(--taflow-bg-surface)] shadow-[var(--taflow-elev-card)]">
       <div className="flex flex-wrap items-center gap-3 border-b border-[var(--taflow-border-default)] px-5 py-4">
-        <TaflowMark title="" className="block shrink-0" style={{ height: 18, width: "auto" }} />
+        <TaflowMark
+          title=""
+          className="block shrink-0"
+          style={{ height: 18, width: "auto" }}
+        />
         <p className="truncate text-[13px] text-[var(--taflow-text-secondary)]">
           {caminho}
         </p>
@@ -40,7 +44,13 @@ function Casca({
   );
 }
 
-function Etiqueta({ children, tom = "neutro" }: { children: React.ReactNode; tom?: "neutro" | "acento" }) {
+function Etiqueta({
+  children,
+  tom = "neutro",
+}: {
+  children: React.ReactNode;
+  tom?: "neutro" | "acento";
+}) {
   return (
     <span
       className={`inline-flex h-9 items-center rounded-[10px] px-3 text-[11px] font-semibold ${
@@ -200,8 +210,14 @@ const MODULOS: Record<string, Modulo> = {
     caminho: "Demandas / Quadro / Todos os setores",
     icone: "kanban",
     colunas: [
-      { titulo: "A fazer", itens: ["Briefing recebido", "Aguardando material"] },
-      { titulo: "Em produção", itens: ["Peça principal", "Vídeo institucional"] },
+      {
+        titulo: "A fazer",
+        itens: ["Briefing recebido", "Aguardando material"],
+      },
+      {
+        titulo: "Em produção",
+        itens: ["Peça principal", "Vídeo institucional"],
+      },
       { titulo: "Em aprovação", itens: ["Campanha de lançamento"] },
       { titulo: "Concluído", itens: ["Kit de redes", "Relatório mensal"] },
     ],
@@ -210,7 +226,10 @@ const MODULOS: Record<string, Modulo> = {
     caminho: "Financeiro / Lançamentos / Este mês",
     icone: "finance",
     colunas: [
-      { titulo: "A receber", itens: ["Mensalidade recorrente", "Projeto avulso"] },
+      {
+        titulo: "A receber",
+        itens: ["Mensalidade recorrente", "Projeto avulso"],
+      },
       { titulo: "Recebido", itens: ["Contrato assinado", "Segunda parcela"] },
       { titulo: "A pagar", itens: ["Fornecedor de mídia", "Licenças"] },
       { titulo: "Em atraso", itens: ["Cobrança reenviada"] },
@@ -232,7 +251,10 @@ const MODULOS: Record<string, Modulo> = {
     colunas: [
       { titulo: "Atrasadas", itens: ["Nenhuma demanda"] },
       { titulo: "Vencem hoje", itens: ["Peça principal"] },
-      { titulo: "Próximos 7 dias", itens: ["Vídeo institucional", "Kit de redes"] },
+      {
+        titulo: "Próximos 7 dias",
+        itens: ["Vídeo institucional", "Kit de redes"],
+      },
       { titulo: "Sem responsável", itens: ["Solicitação nova"] },
     ],
   },

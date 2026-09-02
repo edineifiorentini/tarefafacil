@@ -18,7 +18,11 @@ import { CTA_FINAL, ROTA_CADASTRO, ROTA_LOGIN } from "@/lib/landing/conteudo";
  */
 export function FinalCTA() {
   return (
-    <Secao fundo="inverso" className="overflow-hidden" rotuladoPor="lp-fechamento">
+    <Secao
+      fundo="inverso"
+      className="overflow-hidden"
+      rotuladoPor="lp-fechamento"
+    >
       {/* Dark Veil: duas manchas, opacidade baixa, sem movimento. */}
       <div
         aria-hidden="true"

@@ -101,7 +101,12 @@ export const MOCKUP = {
     { nome: "Demandas abertas", valor: "24", tendencia: "+8%", sinal: "alta" },
     { nome: "Em produção", valor: "11", tendencia: "+3%", sinal: "alta" },
     { nome: "Atrasadas", valor: "2", tendencia: "-1", sinal: "baixa" },
-    { nome: "Taxa de conclusão", valor: "87%", tendencia: "+4 p.p.", sinal: "alta" },
+    {
+      nome: "Taxa de conclusão",
+      valor: "87%",
+      tendencia: "+4 p.p.",
+      sinal: "alta",
+    },
   ],
   comparacao: "vs. semana anterior",
   grafico: {
@@ -176,12 +181,42 @@ export const FLUXO = {
   corpo:
     "Da primeira solicitação ao recebimento, cada etapa permanece conectada e visível.",
   etapas: [
-    { numero: "01", icone: "task", nome: "Demanda", descricao: "Briefing e prazo" },
-    { numero: "02", icone: "kanban", nome: "Produção", descricao: "Time e progresso" },
-    { numero: "03", icone: "approve", nome: "Aprovação", descricao: "Feedback do cliente" },
-    { numero: "04", icone: "report", nome: "Entrega", descricao: "Histórico final" },
-    { numero: "05", icone: "contract", nome: "Contrato", descricao: "Acordos e recorrência" },
-    { numero: "06", icone: "billing", nome: "Cobrança", descricao: "Recebimento e status" },
+    {
+      numero: "01",
+      icone: "task",
+      nome: "Demanda",
+      descricao: "Briefing e prazo",
+    },
+    {
+      numero: "02",
+      icone: "kanban",
+      nome: "Produção",
+      descricao: "Time e progresso",
+    },
+    {
+      numero: "03",
+      icone: "approve",
+      nome: "Aprovação",
+      descricao: "Feedback do cliente",
+    },
+    {
+      numero: "04",
+      icone: "report",
+      nome: "Entrega",
+      descricao: "Histórico final",
+    },
+    {
+      numero: "05",
+      icone: "contract",
+      nome: "Contrato",
+      descricao: "Acordos e recorrência",
+    },
+    {
+      numero: "06",
+      icone: "billing",
+      nome: "Cobrança",
+      descricao: "Recebimento e status",
+    },
   ],
   resultado: {
     primeiro: "Menos troca de contexto.",
@@ -310,10 +345,26 @@ export const COMECO = {
   intro:
     "A estrutura acompanha a sua operação — pequena hoje, pronta para crescer amanhã.",
   passos: [
-    { numero: "01", titulo: "Crie seu espaço", corpo: "Configure empresa, setores e preferências." },
-    { numero: "02", titulo: "Convide sua equipe", corpo: "Defina membros, papéis e responsáveis." },
-    { numero: "03", titulo: "Organize o fluxo", corpo: "Cadastre clientes, demandas e etapas." },
-    { numero: "04", titulo: "Acompanhe resultados", corpo: "Veja prazos, gargalos, contratos e cobranças." },
+    {
+      numero: "01",
+      titulo: "Crie seu espaço",
+      corpo: "Configure empresa, setores e preferências.",
+    },
+    {
+      numero: "02",
+      titulo: "Convide sua equipe",
+      corpo: "Defina membros, papéis e responsáveis.",
+    },
+    {
+      numero: "03",
+      titulo: "Organize o fluxo",
+      corpo: "Cadastre clientes, demandas e etapas.",
+    },
+    {
+      numero: "04",
+      titulo: "Acompanhe resultados",
+      corpo: "Veja prazos, gargalos, contratos e cobranças.",
+    },
   ],
   faixa: {
     titulo: "Pronto para colocar o trabalho em movimento?",
@@ -375,8 +426,7 @@ export const PLANOS = {
       recomendado: false,
     },
   ],
-  nota:
-    "Valores comerciais serão inseridos após definição final. Nenhum preço foi presumido neste layout.",
+  nota: "Valores comerciais serão inseridos após definição final. Nenhum preço foi presumido neste layout.",
   atendimento: `Atendimento sob medida: ${WHATSAPP_LEGIVEL}`,
 } as const;
 

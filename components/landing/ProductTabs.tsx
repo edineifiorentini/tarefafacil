@@ -37,7 +37,8 @@ export function ProductTabs() {
     let proximo: number | null = null;
 
     if (e.key === "ArrowRight") proximo = (atual + 1) % ids.length;
-    else if (e.key === "ArrowLeft") proximo = (atual - 1 + ids.length) % ids.length;
+    else if (e.key === "ArrowLeft")
+      proximo = (atual - 1 + ids.length) % ids.length;
     else if (e.key === "Home") proximo = 0;
     else if (e.key === "End") proximo = ids.length - 1;
     if (proximo === null) return;

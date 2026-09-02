@@ -57,7 +57,7 @@ export function MobileNavigation({
       if (e.key !== "Tab") return;
 
       const alvos = painel.current?.querySelectorAll<HTMLElement>(
-        'a[href], button:not([disabled])'
+        "a[href], button:not([disabled])"
       );
       if (!alvos || alvos.length === 0) return;
       const inicio = alvos[0];
@@ -129,11 +129,7 @@ export function MobileNavigation({
         </nav>
 
         <div className="mt-6 flex flex-col gap-3">
-          <CTAButton
-            href={ROTA_CADASTRO}
-            seta="diagonal"
-            className="w-full"
-          >
+          <CTAButton href={ROTA_CADASTRO} seta="diagonal" className="w-full">
             {HERO.ctaPrimario}
           </CTAButton>
           <Link

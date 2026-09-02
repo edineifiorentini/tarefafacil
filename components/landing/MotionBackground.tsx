@@ -117,8 +117,7 @@ export function MotionBackground() {
             background:
               "radial-gradient(circle, rgba(199,255,56,0.5), rgba(199,255,56,0) 68%)",
             filter: "blur(28px)",
-            translate:
-              "calc(var(--lp-px) * 12px) calc(var(--lp-py) * 12px)",
+            translate: "calc(var(--lp-px) * 12px) calc(var(--lp-py) * 12px)",
           }}
         />
       </div>
@@ -140,8 +139,7 @@ export function MotionBackground() {
             background:
               "radial-gradient(circle, rgba(174,231,196,0.42), rgba(174,231,196,0) 70%)",
             filter: "blur(32px)",
-            translate:
-              "calc(var(--lp-px) * -9px) calc(var(--lp-py) * -9px)",
+            translate: "calc(var(--lp-px) * -9px) calc(var(--lp-py) * -9px)",
           }}
         />
       </div>

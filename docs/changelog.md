@@ -18,6 +18,41 @@ Datas no formato dia/mês/ano.
 
 ## 2/set/2026
 
+**O TAFLOW tem endereço próprio: [taflow.com.br](https://taflow.com.br).**
+É a mudança mais importante desta versão.
+
+Até agora o sistema morava num endereço da Vercel — aquele terminado em
+`.vercel.app`, que servia para desenvolver e nunca para mostrar a
+cliente. Agora ele atende no domínio do produto. Digitar com ou sem
+`www` dá no mesmo: quem chega pela raiz é levado para `www` sozinho.
+
+**O endereço antigo não responde mais.** Se você o tinha salvo nos
+favoritos, no atalho da área de trabalho ou anotado em algum lugar,
+troque por `taflow.com.br` — o antigo devolve página não encontrada, não
+um aviso. Vale conferir também no celular de quem usa o sistema pelo
+navegador.
+
+Uma consequência que talvez você encontre: **quem já tinha conectado o
+Google Agenda pode precisar conectar de novo.** A autorização do Google
+é amarrada ao endereço, e o endereço mudou. Se a agenda parar de
+sincronizar, é só reconectar em Configurações.
+
+**Página inicial nova.** Quem abre `taflow.com.br` sem estar logado
+agora encontra uma apresentação do produto, e não mais a tela de entrar
+direto. Ela conta o que o TAFLOW faz — do briefing à cobrança —, mostra
+a interface funcionando, responde as dúvidas mais comuns e leva ao teste
+de sete dias.
+
+Quem já usa o sistema não perde nada: com a sessão aberta, o endereço
+continua caindo direto no seu dia de trabalho, como sempre.
+
+Três coisas ainda estão em aberto nessa página, e vale saber antes que
+alguém pergunte: **os preços não estão publicados** (aparecem como "Preço
+a definir", porque ainda não foram definidos), **quatro respostas do FAQ
+estão marcadas como pendentes** e **as páginas "Sobre" e "Central de
+ajuda" ainda não existem** — no rodapé elas aparecem sem link, em vez de
+levar a lugar nenhum.
+
 **Quem entrava pelo Google não conseguia terminar o cadastro.** Depois de
 autorizar a conta, a tela "Falta pouco" — a que pede nome e CPF/CNPJ —
 simplesmente não carregava. E não havia saída: enquanto o cadastro não

@@ -79,7 +79,12 @@ function Conector() {
 
 export function ConnectedFlow() {
   return (
-    <Secao id="como-funciona" fundo="inverso" className="overflow-hidden" rotuladoPor="lp-fluxo">
+    <Secao
+      id="como-funciona"
+      fundo="inverso"
+      className="overflow-hidden"
+      rotuladoPor="lp-fluxo"
+    >
       {/* Route Lines oficial, no canto superior direito, e o halo que o
           Figma põe atrás dele. */}
       <div
@@ -148,10 +153,16 @@ export function ConnectedFlow() {
 
         <Reveal ordem={2}>
           <div className="mt-12 grid gap-6 rounded-[20px] border border-[rgba(255,255,255,0.1)] bg-[var(--taflow-bg-inverse-soft)] px-7 py-7 lg:grid-cols-[auto_auto_1fr] lg:items-center lg:gap-10">
-            <Preenche como="p" className="text-[20px] leading-[30px] font-semibold">
+            <Preenche
+              como="p"
+              className="text-[20px] leading-[30px] font-semibold"
+            >
               {FLUXO.resultado.primeiro}
             </Preenche>
-            <Preenche como="p" className="text-[20px] leading-[30px] font-semibold">
+            <Preenche
+              como="p"
+              className="text-[20px] leading-[30px] font-semibold"
+            >
               {FLUXO.resultado.segundo}
             </Preenche>
             <p className="text-[14px] leading-[23px] text-[var(--taflow-text-secondary-inverse)] lg:text-right">

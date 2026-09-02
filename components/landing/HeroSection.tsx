@@ -23,7 +23,11 @@ import { HERO, ROTA_CADASTRO } from "@/lib/landing/conteudo";
  */
 export function HeroSection() {
   return (
-    <Secao fundo="pagina" className="overflow-hidden" rotuladoPor="lp-hero-titulo">
+    <Secao
+      fundo="pagina"
+      className="overflow-hidden"
+      rotuladoPor="lp-hero-titulo"
+    >
       <MotionBackground />
 
       <Coluna className="relative z-10 pt-10 pb-16 lg:pt-14 lg:pb-24">
@@ -80,7 +84,11 @@ export function HeroSection() {
               <CTAButton href={ROTA_CADASTRO} seta="diagonal">
                 {HERO.ctaPrimario}
               </CTAButton>
-              <CTAButton href="#como-funciona" variante="secundario" seta="direita">
+              <CTAButton
+                href="#como-funciona"
+                variante="secundario"
+                seta="direita"
+              >
                 {HERO.ctaSecundario}
               </CTAButton>
             </div>
