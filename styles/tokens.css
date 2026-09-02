@@ -240,6 +240,52 @@
      contra o `--brand-700` no resto do sistema. */
   --auth-focus-soft: rgba(199, 255, 56, 0.16);
 
+  /* -------------------------------------------------------------------
+   * LANDING PAGE (marketing)
+   *
+   * Vem das variables do Figma (arquivo b1f1cvMXMG4w2HTjE0oJCN, página
+   * `03 · Foundations`). Bloco próprio pelo mesmo motivo da porta de
+   * entrada: a LP é superfície de marca e é SEMPRE clara — ela não segue
+   * o tema do app, porque não existe versão escura dela no design.
+   *
+   * Três valores saíram do Figma por reprovarem contraste, e cada
+   * troca está medida:
+   * ----------------------------------------------------------------- */
+  --taflow-text-primary: #171717; /* 16.62:1 sobre a página */
+  /* O Figma traz #6f7b73. Ele carrega o CORPO do texto e dá 4.09:1 sobre
+     a página e 4.41:1 sobre o branco — reprova em texto normal nos dois.
+     Este é o mesmo tom, dois degraus mais escuro: 5.24 e 5.65. */
+  --taflow-text-secondary: #5e6a62;
+  /* O mesmo papel sobre grafite, onde escurecer pioraria: 5.97:1. */
+  --taflow-text-secondary-inverse: #8b9890;
+  --taflow-text-inverse: #f5f7f2;
+
+  --taflow-bg-page: #f5f7f2;
+  --taflow-bg-surface: #ffffff;
+  --taflow-bg-subtle: #edf1ee;
+  --taflow-bg-accent: #c7ff38;
+  --taflow-bg-accent-soft: #f2ffd1;
+  --taflow-bg-inverse: #171717;
+  --taflow-bg-inverse-soft: #20231f;
+  --taflow-border-default: #d9e0db;
+  --taflow-border-inverse: rgba(255, 255, 255, 0.16);
+
+  /* Status: os do Figma (#0e9f76 e #ef4444) dão 3.37:1 e 3.76:1 sobre
+     branco. Aparecem como texto pequeno nos indicadores do mockup. */
+  --taflow-status-success: #097a5a; /* 5.33:1 */
+  --taflow-status-danger: #d92d20; /* 4.83:1 */
+
+  /* Elevação — os três efeitos nomeados do Figma. */
+  --taflow-elev-glass: 0 8px 28px -8px rgba(23, 23, 23, 0.06);
+  --taflow-elev-card: 0 12px 36px -10px rgba(23, 23, 23, 0.08);
+  --taflow-elev-floating: 0 18px 48px -12px rgba(23, 23, 23, 0.12);
+  --taflow-glow-accent: 0 0 10px 2px rgba(199, 255, 56, 0.5);
+
+  /* Medidas do frame de 1440px: margem externa do header e coluna. */
+  --lp-gutter: 96px;
+  --lp-content: 1248px;
+  --lp-header-inset: 64px;
+
   /* Alturas da porta de entrada. Maiores que as do app (40px) de
      propósito: aqui não há densidade a defender, e 50px é alvo de toque
      confortável no celular sem precisar de uma segunda medida. */

@@ -717,3 +717,311 @@ button:not(:disabled),
     #000 88%
   );
 }
+
+/* =====================================================================
+ * LANDING PAGE (marketing)
+ *
+ * Proporção pedida: 80% superfície estável, 15% transparência, 5%
+ * movimento. Por isso aqui só existe o que tem função — revelar na
+ * entrada, responder ao ponteiro, desenhar o fluxo uma vez.
+ * =================================================================== */
+
+/* Entrada por scroll. O estado escondido vive no CSS e o `is-in` chega
+   pelo IntersectionObserver.
+
+   **O `<noscript>` na página devolve tudo visível.** Conteúdo que só
+   aparece se um observer rodar é conteúdo que some quando o script
+   falha — e uma LP que não mostra texto sem JavaScript não é uma LP. */
+.lp-reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition:
+    opacity 480ms var(--ease-out),
+    transform 480ms var(--ease-out);
+  transition-delay: var(--lp-delay, 0ms);
+}
+
+.lp-reveal.is-in {
+  opacity: 1;
+  transform: none;
+}
+
+/* Movimento reduzido: nada de deslocamento nem de espera em fila. O
+   conteúdo já nasce no lugar e o observer só confirma. */
+@media (prefers-reduced-motion: reduce) {
+  .lp-reveal {
+    opacity: 1;
+    transform: none;
+    transition-delay: 0ms !important;
+  }
+}
+
+/* Card. Sobe 2px e ganha sombra — sem escala, que é o que faz card
+   parecer botão. */
+.lp-card {
+  transition:
+    transform 200ms var(--ease-out),
+    box-shadow 200ms var(--ease-out),
+    border-color 200ms var(--ease-out);
+}
+
+@media (hover: hover) {
+  .lp-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--taflow-elev-card);
+    border-color: color-mix(
+      in srgb,
+      var(--taflow-text-primary) 18%,
+      var(--taflow-border-default)
+    );
+  }
+}
+
+/* CTA. Elevação de 1px e um reflexo direcional que segue o cursor pelas
+   custom properties escritas em rAF — pintura, não geometria. */
+.lp-cta {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  transition:
+    transform 200ms var(--ease-out),
+    box-shadow 200ms var(--ease-out),
+    background-color 200ms var(--ease-out);
+}
+
+.lp-cta::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 200ms var(--ease-out);
+  background: radial-gradient(
+    120px circle at var(--lp-mx, 50%) var(--lp-my, 50%),
+    rgba(255, 255, 255, 0.55),
+    transparent 70%
+  );
+}
+
+@media (hover: hover) {
+  .lp-cta:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--taflow-elev-card);
+  }
+  .lp-cta:hover::after {
+    opacity: 1;
+  }
+}
+
+.lp-cta:active {
+  transform: none;
+}
+
+/* Reflexo escuro para o CTA sobre superfície escura, onde o branco
+   sumiria em vez de brilhar. */
+.lp-cta-inverse::after {
+  background: radial-gradient(
+    120px circle at var(--lp-mx, 50%) var(--lp-my, 50%),
+    rgba(199, 255, 56, 0.28),
+    transparent 70%
+  );
+}
+
+/* O conector do fluxo se desenha UMA vez, quando a seção entra. */
+.lp-flow-line {
+  stroke-dasharray: var(--lp-line-length, 1200);
+  stroke-dashoffset: var(--lp-line-length, 1200);
+}
+
+.lp-flow-line.is-in {
+  transition: stroke-dashoffset 900ms var(--ease-out);
+  stroke-dashoffset: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-flow-line {
+    stroke-dashoffset: 0;
+    transition: none;
+  }
+}
+
+/* Scanner do mockup: uma varredura por interação, nunca em laço. */
+@keyframes lp-scan {
+  from {
+    opacity: 0;
+    transform: translateX(-40%);
+  }
+  30% {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+    transform: translateX(140%);
+  }
+}
+
+.lp-scanner {
+  position: absolute;
+  inset-block: 0;
+  width: 2px;
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(
+    180deg,
+    transparent,
+    var(--taflow-bg-accent),
+    transparent
+  );
+}
+
+.lp-scan-host:hover .lp-scanner,
+.lp-scan-host:focus-within .lp-scanner {
+  animation: lp-scan 1600ms var(--ease-out) 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-scan-host:hover .lp-scanner,
+  .lp-scan-host:focus-within .lp-scanner {
+    animation: none;
+  }
+}
+
+/* Header colado no topo: o vidro só entra DEPOIS do scroll, senão a
+   página nasce com uma borda que não tem o que separar. */
+.lp-header {
+  transition:
+    background-color 240ms var(--ease-out),
+    border-color 240ms var(--ease-out),
+    box-shadow 240ms var(--ease-out);
+}
+
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  .lp-header[data-rolado="1"] {
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+  }
+}
+
+/* Foco visível em tudo que é clicável na LP, com a cor do texto — lime
+   sobre superfície clara daria 1.09:1, medido. */
+.lp-foco:focus-visible {
+  outline: 2px solid var(--taflow-text-primary);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+.lp-foco-inverse:focus-visible {
+  outline: 2px solid var(--taflow-bg-accent);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* Rolagem suave das âncoras, respeitando quem pediu menos movimento. */
+@media (prefers-reduced-motion: no-preference) {
+  html:has(.lp-page) {
+    scroll-behavior: smooth;
+  }
+}
+
+/* As âncoras param embaixo do header colado. */
+.lp-page :target,
+.lp-page [id] {
+  scroll-margin-top: 104px;
+}
+
+/* Entrada do hero.
+   É animação de CSS com `both`, e não o IntersectionObserver das outras
+   seções, por dois motivos: o hero está acima da dobra (o observer
+   dispararia no mesmo instante, só que um quadro depois) e, sem depender
+   de script, o texto do topo aparece mesmo se o JavaScript falhar. */
+@keyframes lp-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* A manchete é revelada por linha, com a máscara vindo do overflow do
+   elemento pai. */
+@keyframes lp-line {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* O mockup entra pela direita com uma correção mínima de escala. Sem
+   overshoot: elástico aqui faria a interface parecer um brinquedo. */
+@keyframes lp-mock {
+  from {
+    opacity: 0;
+    transform: translateX(40px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.lp-in {
+  animation: lp-rise 520ms var(--ease-out) both;
+  animation-delay: var(--lp-in, 0ms);
+}
+
+.lp-in-line {
+  animation: lp-line 520ms var(--ease-out) both;
+  animation-delay: var(--lp-in, 0ms);
+}
+
+.lp-in-mock {
+  animation: lp-mock 660ms var(--ease-out) both;
+  animation-delay: var(--lp-in, 0ms);
+}
+
+/* Abas de produto.
+   Os seis painéis ocupam a MESMA célula do grid, então o container tem
+   sempre a altura do mais alto e trocar de aba não empurra a página.
+   O inativo usa `visibility: hidden`: ele continua ocupando espaço (que
+   é o ponto) mas sai da ordem de tabulação e do leitor de tela — coisa
+   que `opacity: 0` sozinho não faz. */
+.lp-tabpanel {
+  grid-area: 1 / 1;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(10px);
+  transition:
+    opacity 240ms var(--ease-out),
+    transform 240ms var(--ease-out),
+    visibility 0s linear 240ms;
+}
+
+.lp-tabpanel[data-ativo="1"] {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition:
+    opacity 240ms var(--ease-out),
+    transform 240ms var(--ease-out),
+    visibility 0s;
+}
+
+/* Uma varredura quando a aba entra. Como o seletor depende do atributo,
+   ela dispara na troca e não fica em laço. */
+.lp-tabpanel[data-ativo="1"] .lp-scanner {
+  animation: lp-scan 1600ms var(--ease-out) 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-tabpanel[data-ativo="1"] .lp-scanner {
+    animation: none;
+  }
+}
