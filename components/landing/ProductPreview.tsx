@@ -106,8 +106,12 @@ export function ProductPreview() {
             </div>
           </div>
 
-          {/* Indicadores */}
-          <div className="mt-4 grid grid-cols-3 gap-2 sm:gap-3">
+          {/* Indicadores — os QUATRO do dashboard real, na ordem de lá.
+              O Figma desenha três; o quarto ("Taxa de conclusão")
+              existe no produto e foi incluído a pedido do dono, para
+              quem vem da LP reconhecer a tela ao entrar. 2×2 no
+              estreito e 4 em linha a partir do `sm`, como o app faz. */}
+          <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-2.5">
             {MOCKUP.indicadores.map((ind) => (
               <div
                 key={ind.nome}
@@ -117,7 +121,7 @@ export function ProductPreview() {
                   {ind.nome}
                 </p>
                 <div className="mt-1.5 flex items-end gap-1.5">
-                  <span className="text-[22px] leading-none font-semibold text-[var(--taflow-text-primary)]">
+                  <span className="text-[20px] leading-none font-semibold text-[var(--taflow-text-primary)]">
                     {ind.valor}
                   </span>
                   <span
@@ -132,6 +136,9 @@ export function ProductPreview() {
                     {ind.tendencia}
                   </span>
                 </div>
+                <p className="mt-1 truncate text-[8px] text-[var(--taflow-text-secondary)]">
+                  {MOCKUP.comparacao}
+                </p>
               </div>
             ))}
           </div>

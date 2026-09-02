@@ -76,20 +76,36 @@ export const HERO = {
   microcopy: "✓ Explore todos os recursos durante 7 dias.",
 } as const;
 
-/** O mockup do hero. Números do Figma — são exemplo de interface, não
- *  métrica de cliente real, e nenhum deles é apresentado como tal. */
+/**
+ * O mockup do hero.
+ *
+ * **Ele mostra o dashboard REAL do TAFLOW**, não uma tela inventada. O
+ * Figma trazia "Visão geral" e "Demandas" na barra lateral, que não
+ * existem no produto — quem chega pela LP e depois entra no sistema
+ * precisa reconhecer a mesma tela. Então os rótulos vêm de
+ * `components/dashboard/DashboardView.tsx` e de `components/shell/
+ * Sidebar.tsx`: os quatro indicadores são os quatro de lá, na ordem de
+ * lá, com a mesma comparação ("vs. semana anterior"), e o gráfico é a
+ * "Entrega do mês" com o mesmo recorte.
+ *
+ * Os NÚMEROS continuam sendo exemplo de interface — a página é estática
+ * e não consulta banco. Nenhum deles é apresentado como resultado de
+ * cliente.
+ */
 export const MOCKUP = {
-  navegacao: ["Visão geral", "Hoje", "Demandas", "Clientes", "Financeiro"],
-  titulo: "Visão geral",
+  navegacao: ["Dashboard", "Hoje", "Quadro", "Clientes", "Financeiro"],
+  titulo: "Dashboard",
   ajuda: "Seu fluxo, em tempo real.",
   busca: "Buscar...",
   indicadores: [
     { nome: "Demandas abertas", valor: "24", tendencia: "+8%", sinal: "alta" },
     { nome: "Em produção", valor: "11", tendencia: "+3%", sinal: "alta" },
     { nome: "Atrasadas", valor: "2", tendencia: "-1", sinal: "baixa" },
+    { nome: "Taxa de conclusão", valor: "87%", tendencia: "+4 p.p.", sinal: "alta" },
   ],
+  comparacao: "vs. semana anterior",
   grafico: {
-    titulo: "Entregas do mês",
+    titulo: "Entrega do mês",
     valor: "86",
     ajuda: "+18% vs. mês anterior",
   },

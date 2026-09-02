@@ -94,38 +94,57 @@ export function MotionBackground() {
     >
       {/* Liquid Ether — lime. Posição do Figma: 520×520 a partir de 58%
           da largura. O desfoque é grande, mas a caixa é pequena: blur em
-          área da tela inteira é o que trava a rolagem. */}
+          área da tela inteira é o que trava a rolagem.
+
+          **Duas camadas de div, e não uma.** A mancha faz duas coisas ao
+          mesmo tempo: ela deriva sozinha (devagar, em laço) e reage ao
+          cursor. Se as duas usassem `transform`, uma sobrescreveria a
+          outra. A deriva fica no `transform` do invólucro e o parallax
+          no `translate` do filho — propriedades independentes, que o
+          navegador compõe. */}
       <div
-        className="absolute rounded-full transition-transform duration-700 ease-out"
+        className="lp-ether-a absolute"
         style={{
           left: "58%",
           top: "-6%",
           width: "min(520px, 42vw)",
           aspectRatio: "1",
-          background:
-            "radial-gradient(circle, rgba(199,255,56,0.5), rgba(199,255,56,0) 68%)",
-          filter: "blur(28px)",
-          transform:
-            "translate3d(calc(var(--lp-px) * 12px), calc(var(--lp-py) * 12px), 0)",
         }}
-      />
+      >
+        <div
+          className="h-full w-full rounded-full transition-[translate] duration-700 ease-out"
+          style={{
+            background:
+              "radial-gradient(circle, rgba(199,255,56,0.5), rgba(199,255,56,0) 68%)",
+            filter: "blur(28px)",
+            translate:
+              "calc(var(--lp-px) * 12px) calc(var(--lp-py) * 12px)",
+          }}
+        />
+      </div>
 
-      {/* Liquid Ether — mint. Contra-desloca, para as duas camadas não
-          andarem como um bloco só. */}
+      {/* Liquid Ether — mint. Deriva no sentido contrário e num período
+          diferente, para as duas não andarem como um bloco só. */}
       <div
-        className="absolute rounded-full transition-transform duration-700 ease-out"
+        className="lp-ether-b absolute"
         style={{
           left: "47%",
           top: "34%",
           width: "min(420px, 34vw)",
           aspectRatio: "1",
-          background:
-            "radial-gradient(circle, rgba(174,231,196,0.42), rgba(174,231,196,0) 70%)",
-          filter: "blur(32px)",
-          transform:
-            "translate3d(calc(var(--lp-px) * -9px), calc(var(--lp-py) * -9px), 0)",
         }}
-      />
+      >
+        <div
+          className="h-full w-full rounded-full transition-[translate] duration-700 ease-out"
+          style={{
+            background:
+              "radial-gradient(circle, rgba(174,231,196,0.42), rgba(174,231,196,0) 70%)",
+            filter: "blur(32px)",
+            translate:
+              "calc(var(--lp-px) * -9px) calc(var(--lp-py) * -9px)",
+          }}
+        />
+      </div>
 
       {/* Flow Grid oficial, no canto superior direito. */}
       {/* eslint-disable-next-line @next/next/no-img-element -- pattern
@@ -135,14 +154,13 @@ export function MotionBackground() {
         alt=""
         width={288}
         height={216}
-        className="absolute hidden opacity-70 transition-transform duration-700 ease-out lg:block"
+        className="absolute hidden opacity-70 transition-[translate] duration-700 ease-out lg:block"
         style={{
           left: "74%",
           top: "4%",
           width: "min(288px, 22vw)",
           height: "auto",
-          transform:
-            "translate3d(calc(var(--lp-px) * 6px), calc(var(--lp-py) * 6px), 0)",
+          translate: "calc(var(--lp-px) * 6px) calc(var(--lp-py) * 6px)",
         }}
       />
 
@@ -154,14 +172,13 @@ export function MotionBackground() {
         alt=""
         width={528}
         height={308}
-        className="absolute hidden opacity-25 transition-transform duration-700 ease-out lg:block"
+        className="absolute hidden opacity-25 transition-[translate] duration-700 ease-out lg:block"
         style={{
           left: "53%",
           top: "37%",
           width: "min(528px, 38vw)",
           height: "auto",
-          transform:
-            "translate3d(calc(var(--lp-px) * -6px), calc(var(--lp-py) * -6px), 0)",
+          translate: "calc(var(--lp-px) * -6px) calc(var(--lp-py) * -6px)",
         }}
       />
 
@@ -169,14 +186,13 @@ export function MotionBackground() {
           contínua e sem cruzar texto. O parallax fica no teto de 6px. */}
       <svg
         viewBox="0 0 680 600"
-        className="absolute hidden transition-transform duration-700 ease-out lg:block"
+        className="absolute hidden transition-[translate] duration-700 ease-out lg:block"
         style={{
           left: "48%",
           top: "5%",
           width: "min(680px, 48vw)",
           height: "auto",
-          transform:
-            "translate3d(calc(var(--lp-px) * 6px), calc(var(--lp-py) * 6px), 0)",
+          translate: "calc(var(--lp-px) * 6px) calc(var(--lp-py) * 6px)",
         }}
         aria-hidden="true"
         focusable="false"

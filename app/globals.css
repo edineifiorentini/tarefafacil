@@ -1025,3 +1025,83 @@ button:not(:disabled),
     animation: none;
   }
 }
+
+/* Atmosfera do hero: deriva própria, além da reação ao cursor.
+   As duas coisas não podem disputar a mesma propriedade, então a deriva
+   fica no `transform` do INVÓLUCRO e o parallax no `translate` (que é
+   propriedade independente) do filho. Elas compõem em vez de brigar. */
+@keyframes lp-ether-a {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.85;
+  }
+  50% {
+    transform: translate3d(-22px, 16px, 0) scale(1.07);
+    opacity: 1;
+  }
+}
+
+@keyframes lp-ether-b {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1.04);
+    opacity: 1;
+  }
+  50% {
+    transform: translate3d(18px, -20px, 0) scale(0.96);
+    opacity: 0.8;
+  }
+}
+
+/* Períodos diferentes e primos entre si: com o mesmo tempo as duas
+   manchas voltariam a se alinhar toda volta e o laço apareceria. */
+.lp-ether-a {
+  animation: lp-ether-a 19s var(--ease-float) infinite;
+}
+
+.lp-ether-b {
+  animation: lp-ether-b 23s var(--ease-float) infinite;
+}
+
+/* Frase-chave que se preenche de verde ao entrar na tela.
+   `background-clip: text` com `color: transparent` é bonito e é
+   perigoso: sem suporte, o texto some. Por isso ele só existe dentro do
+   `@supports` — fora dele a frase fica em nuvem sólida, legível. */
+.lp-fill {
+  background-image: linear-gradient(
+    90deg,
+    var(--taflow-bg-accent) 0%,
+    var(--taflow-bg-accent) 50%,
+    var(--taflow-text-inverse) 50%,
+    var(--taflow-text-inverse) 100%
+  );
+  background-size: 200% 100%;
+  background-position: 100% 0;
+  background-repeat: no-repeat;
+}
+
+@supports (-webkit-background-clip: text) or (background-clip: text) {
+  .lp-fill {
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    transition: background-position 900ms var(--ease-out);
+  }
+
+  .lp-fill.is-in {
+    background-position: 0 0;
+  }
+}
+
+/* Movimento reduzido: a frase já nasce preenchida, sem a varrida. */
+@media (prefers-reduced-motion: reduce) {
+  .lp-fill {
+    background-position: 0 0;
+    transition: none;
+  }
+  .lp-ether-a,
+  .lp-ether-b {
+    animation: none;
+  }
+}

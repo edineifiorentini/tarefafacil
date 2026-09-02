@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 
 import { MarcaIcone } from "@/components/landing/MarcaIcone";
+import { Preenche } from "@/components/landing/Preenche";
 import { Reveal } from "@/components/landing/Reveal";
 import { Coluna, Secao, TituloDeSecao } from "@/components/landing/Secao";
 import { FLUXO } from "@/lib/landing/conteudo";
@@ -107,6 +108,7 @@ export function ConnectedFlow() {
           titulo={FLUXO.titulo}
           intro={FLUXO.corpo}
           inverso
+          preencher
         />
 
         <div className="relative mt-16">
@@ -146,12 +148,12 @@ export function ConnectedFlow() {
 
         <Reveal ordem={2}>
           <div className="mt-12 grid gap-6 rounded-[20px] border border-[rgba(255,255,255,0.1)] bg-[var(--taflow-bg-inverse-soft)] px-7 py-7 lg:grid-cols-[auto_auto_1fr] lg:items-center lg:gap-10">
-            <p className="text-[20px] leading-[30px] font-semibold text-[var(--taflow-text-inverse)]">
+            <Preenche como="p" className="text-[20px] leading-[30px] font-semibold">
               {FLUXO.resultado.primeiro}
-            </p>
-            <p className="text-[20px] leading-[30px] font-semibold text-[var(--taflow-text-inverse)]">
+            </Preenche>
+            <Preenche como="p" className="text-[20px] leading-[30px] font-semibold">
               {FLUXO.resultado.segundo}
-            </p>
+            </Preenche>
             <p className="text-[14px] leading-[23px] text-[var(--taflow-text-secondary-inverse)] lg:text-right">
               {FLUXO.resultado.copy}
             </p>

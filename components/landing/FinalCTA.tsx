@@ -1,4 +1,5 @@
 import { CTAButton } from "@/components/landing/CTAButton";
+import { Preenche } from "@/components/landing/Preenche";
 import { Reveal } from "@/components/landing/Reveal";
 import { Coluna, Secao } from "@/components/landing/Secao";
 import { CTA_FINAL, ROTA_CADASTRO, ROTA_LOGIN } from "@/lib/landing/conteudo";
@@ -58,11 +59,20 @@ export function FinalCTA() {
             id="lp-fechamento"
             className="mt-8 max-w-[920px] text-[clamp(30px,4.8vw,48px)] leading-[1.19] font-semibold tracking-[-0.025em] text-[var(--taflow-text-inverse)]"
           >
-            {CTA_FINAL.titulo.map((linha) => (
-              <span key={linha} className="block max-lg:inline">
-                {linha}{" "}
-              </span>
-            ))}
+            {/* Só a SEGUNDA linha preenche. Ela é a virada da frase
+                ("Precisa de fluxo."); pintar as duas tiraria dela o
+                destaque que o verde deveria dar. */}
+            {CTA_FINAL.titulo.map((linha, i) =>
+              i === CTA_FINAL.titulo.length - 1 ? (
+                <Preenche key={linha} className="block max-lg:inline">
+                  {linha}{" "}
+                </Preenche>
+              ) : (
+                <span key={linha} className="block max-lg:inline">
+                  {linha}{" "}
+                </span>
+              )
+            )}
           </h2>
         </Reveal>
 

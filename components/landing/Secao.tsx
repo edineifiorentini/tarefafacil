@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import { Preenche } from "./Preenche";
 import { Reveal } from "./Reveal";
 
 /**
@@ -83,6 +84,7 @@ export function TituloDeSecao({
   className,
   larguraTitulo,
   classeTitulo,
+  preencher = false,
 }: {
   id?: string;
   eyebrow?: string;
@@ -94,6 +96,10 @@ export function TituloDeSecao({
   larguraTitulo?: string;
   /** O Figma varia o corpo do título por seção (40, 44 e 48px). */
   classeTitulo?: string;
+  /** Preenche o título de verde ao entrar na tela. Só faz sentido nas
+   *  seções escuras: sobre grafite o lime dá 15.19:1, sobre claro dá
+   *  1.09:1 e o texto sumiria. */
+  preencher?: boolean;
 }) {
   const Tag = nivel;
   const linhas = typeof titulo === "string" ? [titulo] : titulo;
@@ -126,12 +132,19 @@ export function TituloDeSecao({
               para a tela: sem ele o texto acessível vira "decidirFluxo".
               Visualmente ele não custa nada — o `block` já quebrou a
               linha, e espaço no fim de linha é colapsado. */}
-          {linhas.map((linha, i) => (
-            <span key={linha} className="block max-lg:inline">
-              {linha}
-              {i < linhas.length - 1 ? " " : null}
-            </span>
-          ))}
+          {linhas.map((linha, i) =>
+            preencher ? (
+              <Preenche key={linha} className="block max-lg:inline">
+                {linha}
+                {i < linhas.length - 1 ? " " : null}
+              </Preenche>
+            ) : (
+              <span key={linha} className="block max-lg:inline">
+                {linha}
+                {i < linhas.length - 1 ? " " : null}
+              </span>
+            )
+          )}
         </Tag>
       </Reveal>
 

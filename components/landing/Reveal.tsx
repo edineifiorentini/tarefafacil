@@ -22,6 +22,26 @@ const LIMIAR = 0.15;
 
 let observador: IntersectionObserver | null = null;
 
+/**
+ * Liga um elemento ao observer compartilhado: ele ganha `is-in` quando
+ * entra na tela, uma vez só.
+ *
+ * Exportado porque o `Reveal` não é o único interessado — a frase que se
+ * preenche de verde usa o MESMO gatilho, e criar um segundo observer
+ * para ela seria repetir a pergunta que este já responde.
+ */
+export function observar(el: Element): () => void {
+  const obs = pegarObservador();
+  if (!obs) {
+    // Navegador sem IntersectionObserver: mostra e pronto. Nunca deixar
+    // conteúdo preso num efeito que não existe ali.
+    el.classList.add("is-in");
+    return () => {};
+  }
+  obs.observe(el);
+  return () => obs.unobserve(el);
+}
+
 function pegarObservador(): IntersectionObserver | null {
   if (typeof IntersectionObserver === "undefined") return null;
   if (!observador) {
@@ -61,19 +81,7 @@ export function Reveal({
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-
-    const obs = pegarObservador();
-    if (!obs) {
-      // Navegador sem IntersectionObserver: mostra e pronto. Nunca deixar
-      // conteúdo preso num efeito que não existe ali.
-      el.classList.add("is-in");
-      return;
-    }
-
-    // Já visível na primeira pintura (acima da dobra)? Entra sem esperar
-    // o callback, que só rodaria no próximo quadro.
-    obs.observe(el);
-    return () => obs.unobserve(el);
+    return observar(el);
   }, []);
 
   const atraso = Math.min(ordem * passo, tetoMs);
