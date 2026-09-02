@@ -35,6 +35,10 @@ export async function proxy(request: NextRequest) {
 
   const path = request.nextUrl.pathname;
   const isPublic =
+    // A raiz é a landing page do produto: ela existe justamente para
+    // quem ainda não tem conta. Comparação EXATA, nunca `startsWith`,
+    // que aqui casaria com a aplicação inteira.
+    path === "/" ||
     path.startsWith("/login") ||
     // Cadastro e termos: quem abre não tem conta, por definição.
     path.startsWith("/cadastro") ||
@@ -74,6 +78,15 @@ export async function proxy(request: NextRequest) {
   if (!user && !isPublic) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
+    return NextResponse.redirect(url);
+  }
+
+  // Quem já está logado não precisa da página de vendas: vai direto
+  // para o trabalho. Fica AQUI e não na página para `app/page.tsx`
+  // continuar estático — o proxy já tem o usuário em mãos e roda antes.
+  if (user && path === "/") {
+    const url = request.nextUrl.clone();
+    url.pathname = "/hoje";
     return NextResponse.redirect(url);
   }
 
