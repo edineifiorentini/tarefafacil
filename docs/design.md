@@ -553,6 +553,26 @@ Toda animação envolvida em `@media (prefers-reduced-motion: reduce)` cai para 
 
 **Aviso registrado:** a camada de componente é onde sistemas de design apodrecem. Um cliente chegou a 5.000 tokens de componente e o sistema virou intransitável. **Só crie um token de componente quando existir uma exceção que o alias não cobre.** Na dúvida, use o alias.
 
+### 7.10 Porta de entrada (`--auth-*`)
+
+A tela de login não usa `--surface-*` nem `--button-primary-bg`, e a exceção
+é de produto: **o painel institucional é grafite nos dois temas.** Ele é a
+marca, não uma superfície do app; se trocasse com o tema, a assinatura sumiria
+justamente na tela em que ela mais importa. Daí a família própria em
+`styles/tokens.css` — `--auth-brand-*` (fixos), `--auth-panel-*`,
+`--auth-field-*` e `--auth-cta-*` (variam com o tema).
+
+Duas regras dessa família valem além dela:
+
+- **acid lime não é anel de foco em fundo claro.** Medido: 1.09:1 sobre cloud
+  white. No tema claro o anel é `--auth-focus-ring: #171717` (16.62:1) com um
+  halo lime decorativo por cima; no escuro o lime vira o anel (13.70:1). É a
+  mesma lição do `--brand-300`/`--brand-700`;
+- **o verde-sálvia do brand book (#718078) reprova em texto normal** (3.85:1).
+  O secundário do painel claro é dois degraus mais escuro, `#5f6d65` (5.04:1).
+
+Quem mexer nessa rampa mede com `lib/utils/contrast.ts`, não no olho.
+
 ---
 
 ## 8. Biblioteca de componentes

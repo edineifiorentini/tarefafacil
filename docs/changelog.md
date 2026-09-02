@@ -16,6 +16,49 @@ Datas no formato dia/mês/ano.
 
 ---
 
+## 2/set/2026
+
+**Quem entrava pelo Google não conseguia terminar o cadastro.** Depois de
+autorizar a conta, a tela "Falta pouco" — a que pede nome e CPF/CNPJ —
+simplesmente não carregava. E não havia saída: enquanto o cadastro não
+fechava, o sistema mandava de volta para a mesma tela quebrada. Corrigido.
+
+Quem ficou parado nisso: entre de novo e a tela vai aparecer normalmente.
+Nenhum dado foi perdido — a conta já estava criada, faltava só o último
+passo.
+
+**Tela de entrar nova.** A porta de entrada agora tem dois lados: à
+esquerda o painel da marca, em grafite, com a frase do produto; à direita o
+formulário, sobre fundo claro. Entre os dois passa uma curva verde — é o
+traço do "fl" da nossa marca, esticado de cima a baixo.
+
+O que mudou para quem entra:
+
+- os campos ficaram maiores e o rótulo fica sempre visível;
+- **"Lembrar de mim"** guarda o seu e-mail para a próxima vez. Não muda
+  quanto tempo você fica logado — isso continua como era;
+- **"Esqueci minha senha"** saiu do rodapé e foi para o lado do campo de
+  senha. Ele continua fazendo a mesma coisa: manda um link de acesso para o
+  seu e-mail;
+- o botão avisa o que está acontecendo ("Entrando…") e não deixa clicar
+  duas vezes;
+- quando falta preencher algo, a mensagem aparece embaixo do campo que
+  falta, e não no fim do formulário.
+
+O painel escuro é vivo: correntes de luz passeiam devagar ao fundo,
+placas de vidro sobem e descem, e o cursor deixa um rastro verde por onde
+passa. Nada disso atrapalha a leitura — o efeito se apaga sozinho na
+coluna onde está o texto.
+
+No celular os dois lados viram um só: faixa da marca em cima, formulário
+embaixo, e o formulário cabe na tela sem rolar. Ali o fundo é fixo: reação
+ao toque não faria sentido, e a bateria agradece.
+
+Quem configurou o computador ou o telefone para **reduzir animações** vê a
+tela parada, sem perder nada do que ela faz.
+
+---
+
 ## 31/ago/2026
 
 **Relatórios, no menu principal.** Tela nova que reúne o que estava

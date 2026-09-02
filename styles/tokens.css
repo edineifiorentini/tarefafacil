@@ -106,6 +106,11 @@
   --logo-print-w: 168px; /* cabeçalho do contrato impresso */
   --logo-print-h-max: 56px;
 
+  /* Marca do TAFLOW na porta de entrada (login, cadastro). Maior que a da
+   * casca: aqui ela é a primeira coisa da tela, não um item de navegação.
+   * Não é logo de empresa — quem entra ainda não escolheu empresa nenhuma. */
+  --logo-login-h: 40px;
+
   /* Tipografia — tamanho / entrelinha / peso (7.5)
    *
    * Título e métrica são FLUIDOS: acompanham a largura da janela em vez de
@@ -126,6 +131,12 @@
   --text-h2-line: 1.3;
   --text-h1-size: clamp(22px, 0.96vw + 13px, 27px);
   --text-h1-line: 1.2;
+  /* Display — existe para a porta de entrada e nada mais. A escala do app
+     para em 27px porque uma tela de trabalho não tem manchete; a tela de
+     login tem, e é o que dá presença ao painel institucional. Fora dela,
+     use h1. */
+  --text-display-size: clamp(34px, 3.4vw + 8px, 58px);
+  --text-display-line: 1.06;
   --text-metric-size: clamp(
     26px,
     1.2vw + 14.7px,
@@ -143,6 +154,10 @@
   --dur-slow: 260ms;
   --ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);
   --ease-spring: cubic-bezier(0.34, 1.2, 0.64, 1);
+  /* Flutuação: seno de ida e volta. `--ease-out` numa animação
+     `alternate` freia no fim e ARRANCA na volta — o que dá o
+     vaivém de elevador. Esta curva desacelera nas duas pontas. */
+  --ease-float: cubic-bezier(0.37, 0, 0.63, 1);
 
   /* Vidro — desfoque controlado, uma camada só por região */
   --glass-blur: 20px;
@@ -167,6 +182,71 @@
   --button-danger-bg-hover: #b91c1c;
   --button-danger-bg-active: #991b1b;
   --button-danger-fg: #ffffff;
+
+  /* -------------------------------------------------------------------
+   * PORTA DE ENTRADA (login, cadastro)
+   *
+   * Bloco próprio, e não reaproveitamento de `--surface-*`, por um motivo
+   * de produto: o painel institucional é SEMPRE grafite, nos dois temas.
+   * Ele é a marca, não uma superfície do app — trocá-lo com o tema
+   * apagaria a assinatura justamente na tela em que ela mais importa.
+   *
+   * Estes aqui não mudam com o tema. Os do painel do formulário mudam, e
+   * estão nos blocos claro/escuro mais abaixo.
+   * ----------------------------------------------------------------- */
+  --auth-brand-bg: #171717; /* graphite */
+  --auth-brand-fg: #f5f7f2; /* cloud white */
+  /* Os alfas destes dois subiram depois de medir o pior caso: com o
+     rastro do cursor por baixo, 0.72 e 0.52 caíam para 4.09:1 e 3.52:1
+     contra o fundo mais claro que o efeito produz ali. Em 0.86 e 0.74
+     passam os dois, e a hierarquia com a manchete (alfa 1) continua
+     visível. */
+  --auth-brand-fg-soft: rgba(245, 247, 242, 0.86);
+  --auth-brand-fg-muted: rgba(245, 247, 242, 0.74);
+  --auth-accent: #c7ff38; /* acid lime */
+
+  /* Costura entre os painéis. A largura é a faixa em que a curva pode
+     passear; o traço é o desenho em si. */
+  --auth-seam-w: 13vw;
+  --auth-seam-stroke: 9px;
+  --auth-seam-glow: 26px;
+
+  /* Atmosfera do painel institucional.
+     O teto existe por causa do texto: a headline é branca sobre grafite
+     (16.62:1) e as correntes CLAREIAM o fundo — quanto mais forte a
+     atmosfera, menor o contraste dela. O valor aqui foi escolhido medindo
+     o pixel do canvas atrás da headline, não no olho. */
+  --auth-ether-opacity: 1;
+  /* A 3.5% a placa quase não existia, e movimento de coisa invisível é
+     movimento invisível — aumentar só a amplitude não resolvia.
+     Subiu duas vezes: para 7.5% e, a pedido do dono em 2/set/2026, para
+     15%. Nesse patamar a placa deixa de ser refração sugerida e passa a
+     LER como uma superfície de vidro — é mudança de direção visual, não
+     de intensidade, e foi decidida assim de propósito.
+     Quem proteje o texto é a `.tf-auth-mask`: na coluna da esquerda
+     estas camadas ficam em 10–12% do valor, então a placa clara não
+     chega perto da manchete. Mexer aqui exige medir o contraste. */
+  --auth-shard-fill: rgba(245, 247, 242, 0.15);
+  --auth-shard-edge: rgba(245, 247, 242, 0.36);
+
+
+  /* Halo do foco e do scanner. É DECORAÇÃO: quem indica o foco de verdade
+     é `--auth-focus-ring`, que muda com o tema.
+     A razão está medida: acid lime sobre cloud white dá **1.09:1**. Um
+     anel de foco nessa razão é invisível, e foco invisível reprova a
+     2.4.11 e deixa quem navega por teclado sem saber onde está. No claro
+     o anel é grafite (16.62:1) com este halo por cima; no escuro o lime
+     sozinho já dá 13.70:1 e vira o anel. Mesma lição do `--brand-300`
+     contra o `--brand-700` no resto do sistema. */
+  --auth-focus-soft: rgba(199, 255, 56, 0.16);
+
+  /* Alturas da porta de entrada. Maiores que as do app (40px) de
+     propósito: aqui não há densidade a defender, e 50px é alvo de toque
+     confortável no celular sem precisar de uma segunda medida. */
+  --auth-field-h: 50px;
+  --auth-cta-h: 50px;
+  /* Coluna do formulário. */
+  --auth-form-w: 420px;
 }
 
 /* ---------------------------------------------------------------------
@@ -312,6 +392,30 @@
   --button-primary-bg-active: #0c111d;
   --button-primary-fg: #ffffff;
   --button-primary-sheen: rgba(255, 255, 255, 0.16);
+
+  /* Painel do formulário — claro. Cloud white de fundo, campo branco puro:
+     o campo precisa se destacar do painel, e é essa diferença de 5% que
+     faz a caixa existir sem depender de borda forte. */
+  --auth-panel-bg: #f5f7f2;
+  --auth-panel-fg: #171717; /* 16.62:1 */
+  /* O brand book pede um verde-sálvia acinzentado aqui. #718078, o tom
+     exato, dá 3.85:1 sobre cloud white e reprova em texto normal — este é
+     o mesmo tom, dois degraus mais escuro, com 5.04:1. */
+  --auth-panel-fg-secondary: #5f6d65;
+  --auth-field-bg: #ffffff;
+  --auth-field-border: rgba(23, 23, 23, 0.1);
+  --auth-field-border-hover: rgba(23, 23, 23, 0.2);
+  /* Placeholder é texto, e texto passa em AA. Fica igual ao secundário —
+     o que separa "vazio" de "preenchido" é o grafite do valor digitado,
+     que salta de 5:1 para 16:1. */
+  --auth-field-placeholder: #5f6d65;
+  --auth-focus-ring: #171717; /* 16.62:1 sobre o painel */
+  --auth-negative: #b42318; /* 6.09:1 */
+  /* Botão da porta de entrada: grafite da MARCA, não o `--button-primary-bg`
+     azulado do app. Aqui a referência pede o preto do brand book. */
+  --auth-cta-bg: #171717;
+  --auth-cta-bg-hover: #232323;
+  --auth-cta-fg: #f5f7f2;
 }
 
 /* ---------------------------------------------------------------------
@@ -428,6 +532,26 @@
   --button-primary-bg-active: #d4d8e2;
   --button-primary-fg: #101828;
   --button-primary-sheen: rgba(255, 255, 255, 0.5);
+
+  /* Painel do formulário — escuro. O painel fica UM degrau acima do
+     grafite institucional (#20211f contra #171717): a costura verde
+     continua separando os dois, mas sem virar uma tela preta só. */
+  --auth-panel-bg: #20211f;
+  --auth-panel-fg: #f5f7f2;
+  --auth-panel-fg-secondary: #98a49c; /* 6.26:1 */
+  --auth-field-bg: #282a27;
+  --auth-field-border: rgba(245, 247, 242, 0.12);
+  --auth-field-border-hover: rgba(245, 247, 242, 0.24);
+  --auth-field-placeholder: #8c988f; /* 5.39:1 */
+  /* Aqui o lime PODE ser o anel de foco: 13.70:1 sobre o painel escuro. */
+  --auth-focus-ring: #c7ff38;
+  --auth-negative: #f87171; /* 5.85:1 */
+  /* Grafite sobre painel escuro sumiria. No escuro o CTA inverte, como o
+     resto do sistema já faz com `--button-primary-bg`. */
+  --auth-cta-bg: #f5f7f2;
+  --auth-cta-bg-hover: #ffffff;
+  --auth-cta-fg: #171717;
+  --auth-shard-fill: rgba(245, 247, 242, 0.045);
 }
 
 /* Fallback: sistema em escuro e sem tema explícito escolhido pelo usuário.
@@ -516,6 +640,21 @@
     --button-primary-bg-active: #d4d8e2;
     --button-primary-fg: #101828;
     --button-primary-sheen: rgba(255, 255, 255, 0.5);
+
+    /* Espelho do bloco [data-theme="dark"] acima. */
+    --auth-panel-bg: #20211f;
+    --auth-panel-fg: #f5f7f2;
+    --auth-panel-fg-secondary: #98a49c;
+    --auth-field-bg: #282a27;
+    --auth-field-border: rgba(245, 247, 242, 0.12);
+    --auth-field-border-hover: rgba(245, 247, 242, 0.24);
+    --auth-field-placeholder: #8c988f;
+    --auth-focus-ring: #c7ff38;
+    --auth-negative: #f87171;
+    --auth-cta-bg: #f5f7f2;
+    --auth-cta-bg-hover: #ffffff;
+    --auth-cta-fg: #171717;
+    --auth-shard-fill: rgba(245, 247, 242, 0.045);
   }
 }
 

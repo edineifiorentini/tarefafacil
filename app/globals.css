@@ -501,3 +501,219 @@ button:not(:disabled),
     opacity: 0.35;
   }
 }
+
+/* =====================================================================
+ * PORTA DE ENTRADA (login, cadastro)
+ *
+ * Três efeitos, e só três. A proporção que o dono pediu é 80% superfície
+ * estável, 15% transparência, 5% movimento — então o que se anima aqui é
+ * pequeno, curto e tem função: mostrar foco, mostrar que o cursor está
+ * sobre o botão, mostrar que a tela chegou.
+ *
+ * O bloco global de `prefers-reduced-motion` lá em cima já zera a duração
+ * de tudo isto. Não há um segundo bloco de acessibilidade escondido aqui.
+ * =================================================================== */
+
+/* Scanner — a linha que atravessa o campo UMA vez, ao receber foco.
+   Referência do Scanner do React Bits reduzida ao que serve: um sinal de
+   que o cursor de texto chegou ali. Em laço contínuo seria enfeite, e
+   enfeite num formulário de login atrapalha quem só quer entrar. */
+.tf-scan {
+  position: relative;
+  overflow: hidden;
+}
+
+.tf-scan::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--auth-focus-soft) 48%,
+    transparent 100%
+  );
+}
+
+.tf-scan:focus-within::after {
+  animation: tf-scan var(--dur-slow) var(--ease-out) 1;
+}
+
+@keyframes tf-scan {
+  from {
+    opacity: 1;
+    transform: translateX(-100%);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+}
+
+/* Reflexo do cursor no botão principal. As coordenadas chegam por
+   custom property (`--tf-mx` / `--tf-my`) escritas em rAF — muda pintura,
+   não geometria, então não provoca reflow. Sem hover (toque), nada
+   acontece: o `::before` fica em opacidade zero. */
+.tf-cta {
+  position: relative;
+  isolation: isolate;
+}
+
+.tf-cta::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--dur-base) var(--ease-out);
+  background: radial-gradient(
+    140px circle at var(--tf-mx, 50%) var(--tf-my, 50%),
+    var(--auth-focus-soft),
+    transparent 72%
+  );
+}
+
+.tf-cta:hover::before,
+.tf-cta:focus-visible::before {
+  opacity: 1;
+}
+
+/* Aero shards — três placas grandes, quase transparentes, à deriva.
+   Refração de atmosfera, não vidro quebrado: por isso são POUCAS, GRANDES
+   e de baixo contraste.
+
+   A amplitude vem por custom property, uma por placa: com um valor fixo
+   as três subiam a mesma distância e o conjunto lia como um bloco só. A
+   primeira versão andava 20px em 22s — meio pixel por segundo, ou seja,
+   parado. Hoje cada placa percorre o dobro da própria amplitude a cada
+   ciclo, e os ciclos são de durações diferentes para elas nunca
+   sincronizarem. */
+@keyframes tf-shard-drift {
+  from {
+    transform: translate3d(0, var(--tf-shard-amp, 12px), 0);
+  }
+  to {
+    transform: translate3d(0, calc(var(--tf-shard-amp, 12px) * -1), 0);
+  }
+}
+
+/* Respiro da inclinação. `rotate` é propriedade independente de
+   `transform`, então as duas animações convivem sem uma sobrescrever a
+   outra. São 2.2 graus: o suficiente para a placa parecer boiar em vez
+   de subir num trilho, e pouco o bastante para não virar um balanço. */
+@keyframes tf-shard-tilt {
+  from {
+    rotate: calc(var(--tf-shard-rot, 0deg) - 2.2deg);
+  }
+  to {
+    rotate: calc(var(--tf-shard-rot, 0deg) + 2.2deg);
+  }
+}
+
+/* Entrada do formulário: sobe 6px uma vez, e para. `tf-rise` já existia. */
+.tf-auth-enter {
+  animation: tf-rise var(--dur-slow) var(--ease-out) both;
+}
+
+/* Preenchimento automático do navegador. Sem isto o Chrome pinta o campo
+   de azul-claro e o TAFLOW some dali — e é justamente o campo de e-mail,
+   que quase todo mundo deixa o navegador preencher. `box-shadow` interno
+   é o único jeito de trocar esse fundo. A transição longa é o truque
+   conhecido para atrasar a pintura nativa. */
+.tf-auth-input:-webkit-autofill,
+.tf-auth-input:-webkit-autofill:hover,
+.tf-auth-input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px var(--auth-field-bg) inset;
+  -webkit-text-fill-color: var(--auth-panel-fg);
+  caret-color: var(--auth-panel-fg);
+  transition: background-color 100000s ease-in-out 0s;
+}
+
+/* Campo da porta de entrada. Os estados vivem AQUI e não em `style` no
+   componente: hover e focus-within não existem em estilo inline, e um
+   `style` inline venceria a classe do Tailwind na cascata — foi por isso
+   que a primeira versão não pintava o foco. */
+.tf-auth-field {
+  height: var(--auth-field-h);
+  background-color: var(--auth-field-bg);
+  border: 1px solid var(--auth-field-border);
+  transition:
+    border-color var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out);
+}
+
+.tf-auth-field:hover {
+  border-color: var(--auth-field-border-hover);
+}
+
+/* O anel é a borda em `--auth-focus-ring` (grafite no claro, lime no
+   escuro — medido, ver tokens.css) mais um halo lime decorativo. A
+   espessura da BORDA não muda: quem muda é a cor e o box-shadow, que não
+   ocupam espaço e portanto não empurram o layout. */
+.tf-auth-field:focus-within {
+  border-color: var(--auth-focus-ring);
+  box-shadow:
+    0 0 0 1px var(--auth-focus-ring),
+    0 0 0 5px var(--auth-focus-soft);
+}
+
+.tf-auth-field[data-erro] {
+  border-color: var(--auth-negative);
+}
+
+.tf-auth-field[data-erro]:focus-within {
+  border-color: var(--auth-negative);
+  box-shadow:
+    0 0 0 1px var(--auth-negative),
+    0 0 0 5px color-mix(in srgb, var(--auth-negative) 18%, transparent);
+}
+
+.tf-auth-field:has(input:disabled) {
+  opacity: 0.6;
+}
+
+.tf-auth-input::placeholder {
+  color: var(--auth-field-placeholder);
+}
+
+/* Cor e altura do CTA ficam na classe, não em `style` inline, para o
+   :hover conseguir vencer. Mesma lição do campo. */
+.tf-cta {
+  height: var(--auth-cta-h);
+  background-color: var(--auth-cta-bg);
+  color: var(--auth-cta-fg);
+}
+
+.tf-cta:hover:not(:disabled) {
+  background-color: var(--auth-cta-bg-hover);
+}
+
+/* Máscara da coluna do texto, na porta de entrada.
+   Vale para TODAS as camadas de atmosfera — correntes, fragmentos, o
+   degradê estático — e é por isso que ela é uma classe e não um
+   `destination-out` dentro do canvas, como foi na primeira versão: as
+   duas camadas de CSS ficam ACIMA do canvas e escapavam da máscara dele.
+   Medido: com elas somadas, a manchete caía para 4.06:1.
+   Os 12% da esquerda não são zero de propósito: atmosfera nenhuma ali
+   deixaria a metade do painel chapada. Mexer nos números exige medir o
+   contraste do texto de novo. */
+.tf-auth-mask {
+  -webkit-mask-image: linear-gradient(
+    102deg,
+    rgba(0, 0, 0, 0.1) 0%,
+    rgba(0, 0, 0, 0.12) 46%,
+    #000 88%
+  );
+  mask-image: linear-gradient(
+    102deg,
+    rgba(0, 0, 0, 0.1) 0%,
+    rgba(0, 0, 0, 0.12) 46%,
+    #000 88%
+  );
+}
