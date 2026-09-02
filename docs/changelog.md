@@ -91,6 +91,11 @@ webhook passaram de `x-tarefafacil-*` para **`x-taflow-*`**. Se você já
 conferia a assinatura, ajuste o nome do cabeçalho. A conta da assinatura em
 si não mudou.
 
+**Ícone da marca na aba do navegador.** Até agora a aba mostrava o ícone do
+Next.js, que veio no setup do projeto e nunca foi trocado. Agora é o
+monograma do TAFLOW — verde ácido e branco-nuvem sobre grafite, que funciona
+tanto em aba clara quanto escura.
+
 **A marca do TAFLOW na barra lateral.** Empresa que ainda não subiu a logo
 dela agora mostra a nossa, e ela acompanha o tema: escrita grafite no claro,
 cor nuvem no escuro. O verde da assinatura não muda.
