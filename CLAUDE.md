@@ -73,6 +73,17 @@ Radix UI · TanStack Query · dnd-kit · Zod · Storybook 9 · Vitest · Playwri
     do tamanho de propósito — amarrar as duas coisas foi o erro que produziu
     o seletor com três linhas idênticas.
 
+13. **Cron do webhook é DIÁRIO enquanto a conta for Hobby.** O plano Hobby
+    da Vercel aceita só um disparo por dia; expressão como `0 * * * *`
+    **falha o deploy inteiro**, não o cron. Foi o que travou produção de
+    27/ago a 2/set/2026: dezesseis commits empurrados, dezesseis builds
+    falhados, e o sintoma era "nenhum deploy aparece". `vercel.json` é JSON
+    estrito e não aceita comentário — por isso a regra está aqui. Voltar
+    para de hora em hora só depois do plano Pro, e conferindo o deploy.
+
+    O custo de ser diário: entrega de webhook pode demorar até 24h. Hoje
+    isso não dói, porque não há nenhum destino cadastrado.
+
 ## Cores
 
 **A cor da marca é escolha da empresa** (0071), e o padrão desde a 0084 é
