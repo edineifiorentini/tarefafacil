@@ -19,6 +19,16 @@ import { join } from "node:path";
  * O Satori aceita um subconjunto do CSS: flexbox sim, grid não, e todo
  * elemento com mais de um filho precisa de `display: flex` explícito.
  * Nada aqui depende de recurso fora dessa lista.
+ *
+ * **A Inter vem do repositório, não de pacote nem da rede.** O
+ * `@vercel/og` só traz a Geist embutida, e a imagem sairia numa fonte
+ * que o resto do produto não usa. São dois arquivos `.woff` do subset
+ * latino, 61KB somados, em `assets/fonts` — com a licença SIL OFL ao
+ * lado, que é o que a fonte exige de quem a redistribui.
+ *
+ * `.woff` e não `.woff2`: o Satori lê TTF, OTF e WOFF, e o WOFF2 ele
+ * não abre. Ficam fora de `public/` porque são lidos no servidor, na
+ * geração da imagem — não servidos ao navegador.
  */
 
 export const alt =
@@ -30,6 +40,14 @@ export const contentType = "image/png";
 const GRAFITE = "#171717";
 const NUVEM = "#f5f7f2";
 const LIME = "#c7ff38";
+
+const fonte = (peso: "Regular" | "Bold") =>
+  readFile(join(process.cwd(), `assets/fonts/Inter-${peso}.woff`));
+
+const [interRegular, interBold] = await Promise.all([
+  fonte("Regular"),
+  fonte("Bold"),
+]);
 
 /** O wordmark oficial, em negativo, como data URI. */
 const marca = await (async () => {
@@ -53,6 +71,7 @@ export default function Image() {
         background: GRAFITE,
         padding: "64px 72px",
         position: "relative",
+        fontFamily: "Inter",
       }}
     >
       {/* O halo lime do canto, como no hero da página. */}
@@ -136,6 +155,12 @@ export default function Image() {
         </div>
       </div>
     </div>,
-    size
+    {
+      ...size,
+      fonts: [
+        { name: "Inter", data: interRegular, style: "normal", weight: 400 },
+        { name: "Inter", data: interBold, style: "normal", weight: 700 },
+      ],
+    }
   );
 }
