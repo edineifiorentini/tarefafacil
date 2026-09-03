@@ -1,3 +1,6 @@
+import { Suspense } from "react";
+
+import { Skeleton } from "@/components/ui/Skeleton";
 import { ReportsView } from "@/components/reports/ReportsView";
 
 export const metadata = { title: "Relatórios — TAFLOW" };
@@ -8,6 +11,10 @@ export const metadata = { title: "Relatórios — TAFLOW" };
  * Reúne o que antes estava espalhado. O relatório de equipe, que tinha rota
  * própria (`/equipe`), virou aba daqui: a barra lateral tem pressão de
  * espaço documentada, e trocar dois itens por um é melhor que somar.
+ *
+ * O `Suspense` é exigência do `useSearchParams`, que os filtros usam para
+ * viver na URL — sem ele o build reclama do limite de renderização
+ * estática. O fallback tem a altura do conteúdo para a página não saltar.
  */
 export default function RelatoriosPage() {
   return (
@@ -17,10 +24,12 @@ export default function RelatoriosPage() {
           Relatórios
         </h2>
         <p className="text-fg-secondary mt-1">
-          O que os setores produziram, e onde os prazos estão em risco
+          Entenda a produção, os gargalos e os riscos da operação.
         </p>
       </div>
-      <ReportsView />
+      <Suspense fallback={<Skeleton variant="block" className="h-96" />}>
+        <ReportsView />
+      </Suspense>
     </div>
   );
 }

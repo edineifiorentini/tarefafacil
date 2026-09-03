@@ -7,13 +7,27 @@ import type { ReactNode } from "react";
 // navegação por teclado — Radix já move o foco com as setas nos triggers).
 export function Tabs({
   defaultValue,
+  value,
+  onValueChange,
   children,
 }: {
-  defaultValue: string;
+  defaultValue?: string;
+  /**
+   * Aba controlada de fora. Serve a quem guarda a aba na URL — sem isso,
+   * abrir um link de relatório cairia sempre na primeira aba, e o link
+   * deixaria de valer como link.
+   */
+  value?: string;
+  onValueChange?: (value: string) => void;
   children: ReactNode;
 }) {
   return (
-    <RadixTabs.Root defaultValue={defaultValue} className="flex flex-col gap-4">
+    <RadixTabs.Root
+      defaultValue={defaultValue}
+      value={value}
+      onValueChange={onValueChange}
+      className="flex flex-col gap-4"
+    >
       {children}
     </RadixTabs.Root>
   );

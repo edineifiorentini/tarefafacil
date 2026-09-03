@@ -21,6 +21,7 @@ export function MetricCard({
   trendUnit,
   trendInvert,
   trendLabel,
+  trendNote,
   series,
   hint,
 }: {
@@ -33,6 +34,15 @@ export function MetricCard({
   trendUnit?: string;
   trendInvert?: boolean;
   trendLabel?: string;
+  /**
+   * O que aparece NO LUGAR da tendência quando ela não pôde ser calculada.
+   *
+   * Existe para separar duas coisas que a ausência do selo confunde:
+   * "ninguém pediu comparação" e "pediram, mas o período anterior estava
+   * vazio". A segunda precisa ser dita — sem isso, um cartão sem selo
+   * parece estável, e estável é uma afirmação que ninguém fez.
+   */
+  trendNote?: string;
   series?: number[];
   /**
    * Como este número é calculado. Métrica de painel administrativo sem
@@ -76,6 +86,10 @@ export function MetricCard({
                   invert={trendInvert}
                   label={trendLabel}
                 />
+              ) : trendNote ? (
+                <span className="text-fg-muted text-[length:var(--text-caption-size)]">
+                  {trendNote}
+                </span>
               ) : null}
             </div>
 

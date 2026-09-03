@@ -40,6 +40,50 @@ export const EMPTY_LIST_FILTERS: ListFilters = {
   dueWithinDays: null,
 };
 
+const STATUS_VALIDOS: StatusFilter[] = [
+  "todas",
+  "aberta",
+  "concluida",
+  "cancelada",
+  "atrasada",
+];
+
+/**
+ * Os filtros escritos na URL.
+ *
+ * Existe para o relatório poder mandar alguém para cá já filtrado: clicar
+ * em "4 atrasadas" abre a Lista nas quatro. Sem isto, o número do relatório
+ * seria um beco — dá para ver que existem quatro e não dá para ver QUAIS.
+ *
+ * **Tudo é validado.** A barra de endereço é entrada de usuário como
+ * qualquer outra, e um `?status=xyz` colado ali não pode virar um filtro
+ * inválido que esconde a lista inteira sem explicar por quê. Valor
+ * desconhecido é ignorado, e o filtro fica no padrão.
+ */
+export function filtrosDaURL(params: URLSearchParams): ListFilters {
+  const status = params.get("status") ?? "";
+  const prazo = Number(params.get("prazo"));
+  const setores = (params.get("setores") ?? "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  return {
+    ...EMPTY_LIST_FILTERS,
+    status: STATUS_VALIDOS.includes(status as StatusFilter)
+      ? (status as StatusFilter)
+      : "todas",
+    sectorIds: setores,
+    assigneeId: params.get("responsavel") || null,
+    // Só os três horizontes que o seletor oferece: um "?prazo=3" viraria um
+    // estado que a interface não consegue mostrar nem desfazer.
+    dueWithinDays:
+      prazo === 7 || prazo === 14 || prazo === 30
+        ? (prazo as 7 | 14 | 30)
+        : null,
+  };
+}
+
 const PRIORITY_RANK: Record<string, number> = {
   urgente: 0,
   alta: 1,

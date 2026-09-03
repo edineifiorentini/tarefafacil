@@ -16,6 +16,69 @@ Datas no formato dia/mês/ano.
 
 ---
 
+## 3/set/2026
+
+**Relatórios responde primeiro se está tudo bem, e só depois mostra a
+tabela.** A tela abria numa lista de números por setor — boa para
+conferir, ruim para decidir. Agora ela abre numa **Visão geral** com
+cinco indicadores no topo: demandas criadas, entregues, percentual no
+prazo, atrasadas agora e tempo médio de ciclo.
+
+**Cada número diz como foi calculado.** Passe o cursor no ícone ao lado
+do rótulo. É proposital: "79% no prazo" pode significar coisas muito
+diferentes, e aqui significa uma só — entregues até a data combinada,
+dividido pelas que TINHAM data combinada. Demanda sem prazo não entra
+na conta, nem como acerto nem como erro.
+
+**Duas coisas que pareciam a mesma e não são.** "Atrasadas" conta o que
+está vencido e ainda aberto — o que dá para salvar hoje. Uma demanda
+entregue com três dias de atraso não aparece ali; ela entra na
+pontualidade, que é história. Somar as duas dava um número que não
+respondia a pergunta nenhuma.
+
+**Gráfico de fluxo: quanto entrou contra quanto saiu.** Quando as duas
+linhas se afastam, a fila está crescendo — e dá para ver em qual semana
+começou. O saldo aparece ao passar o cursor.
+
+**Risco de prazo, em três grupos.** No prazo, em atenção (vence nos
+próximos 7 dias) e atrasadas. As demandas sem prazo aparecem à parte,
+por escrito: elas não estão "no prazo", estão sem prazo.
+
+**Gargalos do fluxo.** Mostra em qual coluna do seu quadro as demandas
+abertas estão paradas, e há quantos dias. As etapas são as suas colunas
+de verdade — nada é inventado. Quando uma etapa concentra a maior parte
+da espera, a tela diz isso em uma frase.
+
+**Dá para investigar qualquer número.** Clique em "4 atrasadas" e a
+Lista abre com as quatro. Clique num setor e a tela inteira passa a
+falar só dele.
+
+**Filtros que valem para tudo, e que cabem num link.** Período (agora
+com "Últimos 7 dias", "Mês anterior", "Este trimestre" e período
+personalizado), setor e responsável comandam todos os blocos. O
+endereço guarda o que você escolheu: mandar o relatório para alguém é
+copiar a barra do navegador.
+
+**Comparar período.** Ligue o interruptor e cada indicador mostra a
+variação em relação ao intervalo anterior de mesma duração. Quando não
+há base para comparar, ele diz "Sem base para comparação" — nunca
+inventa um crescimento de 100% porque o mês anterior estava vazio.
+
+**A tabela continua, e ganhou colunas.** Em andamento, atrasadas e uma
+coluna de Risco (Saudável, Atenção ou Crítico) que explica o motivo ao
+passar o cursor. Dá para buscar setor, escolher quais colunas ver e
+ordenar por qualquer uma delas.
+
+**"Prazos da equipe" virou "Prazos e equipe"**, com o volume concluído,
+a pontualidade e o tempo médio de cada pessoa no período — ao lado da
+carga e dos prazos que já estavam lá.
+
+**Exportar respeita o que está na tela.** O arquivo sai com o período,
+os setores e os responsáveis escritos no topo, e traz todas as linhas —
+não só a página visível.
+
+---
+
 ## 2/set/2026
 
 **O TAFLOW tem endereço próprio: [taflow.com.br](https://taflow.com.br).**

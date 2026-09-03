@@ -555,6 +555,92 @@ do próprio TAFLOW**, não o cliente do workspace.
 
 Nada disso vai para produção sem teste contra o ambiente de homologação.
 
+### Relatórios — o que ainda NÃO dá para medir (3/set/2026)
+
+A Visão geral foi construída sobre os campos que existem. Três coisas
+ficaram de fora porque o banco não as guarda, e nenhuma delas foi
+disfarçada com uma estimativa na tela:
+
+1. **Não existe `started_at`.** O tempo de ciclo conta da CRIAÇÃO até a
+   conclusão — o tempo que o cliente esperou. Separar "tempo de fila" de
+   "tempo de execução" exigiria registrar quando alguém começou de fato,
+   e hoje não há esse carimbo. A dica do cartão diz isso por extenso.
+
+2. **O tempo por etapa é a espera de AGORA, não o histórico.**
+   `task_activity` registra troca de `column_id` desde a 0025, então dá
+   para saber há quanto tempo cada demanda aberta está parada onde está.
+   O que NÃO dá é somar quanto tempo o mês inteiro passou em "Aprovação",
+   porque isso exigiria percorrer entradas e saídas de tudo o que já
+   passou por lá. O rótulo na tela diz "parada há", nunca "levou".
+
+   Um detalhe que vale saber: o gatilho da 0025 é `after update`, então a
+   coluna inicial não gera registro. Para quem nunca se moveu, a conta
+   começa em `created_at` — o cartão informa quantas demandas estão nesse
+   caso.
+
+3. **`task_approval` não alimenta o relatório.** Ele existe (0083) mas só
+   grava aprovação vinda de link público. Um número de "tempo aguardando
+   cliente" tirado dali cobriria uma fatia pequena das demandas e
+   pareceria falar de todas.
+
+**A regra de "em atenção" NÃO foi inventada aqui.** É
+`JANELA_DO_RELATORIO` (0082): sete dias, o mesmo horizonte de "Próximos
+dias" na tela Hoje. Dois números diferentes para "o que é urgente"
+fariam duas telas do mesmo produto discordarem.
+
+**A classificação de saúde do setor é nova e é configuração**, não
+constante de desenho: 85%, 70% e a base mínima de 5 vivem em
+`LIMITES_DE_SAUDE` (`lib/reports/setores.ts`). Quando alguém quiser
+mudar, é uma linha. Ainda não há tela para isso.
+
+A **base mínima** nasceu da primeira execução com dados reais: cinco de
+dez setores saíram "Crítico" com ZERO demandas atrasadas, todos por
+"pontualidade de 67%" — que, sobre três entregas, é uma entrega. Metade
+da tabela em vermelho apaga o sinal de quem está mal de verdade. Abaixo
+da base, a taxa é MOSTRADA mas não classifica; quem classifica é o que
+não depende de amostra, ou seja prazo vencido e prazo próximo.
+
+Daí também o quarto estado, **"Em dia"**: nada vencido nem vencendo, sem
+base para julgar a taxa. Ele existe porque "Saudável" com 0% de
+pontualidade é o mesmo erro de "Crítico" sobre três entregas, na direção
+contrária. É cinza, nunca verde — a cor não pode prometer o que o rótulo
+não promete.
+
+#### Quatro defeitos que só a tela com dados reais mostrou (3/set/2026)
+
+Ficam registrados porque nenhum deles apareceria em teste unitário nem
+em revisão de código, e os quatro são armadilhas que se repetem:
+
+1. **`sr-only` sem ancestral posicionado estica a página.** É
+   `position: absolute`; sem um `relative` por perto ele resolve contra o
+   bloco inicial do documento. O motivo do selo de saúde (longo e
+   `nowrap`) empurrava `<html>` para 714px numa janela de 367 — rolagem
+   horizontal na página inteira. E as `<caption class="sr-only">` das
+   tabelas faziam o mesmo na VERTICAL: `<html>` com 3638px numa janela de
+   602, com uma segunda barra de rolagem ao lado da barra da casca.
+   Remédio: `relative` no selo e nas tabelas.
+2. **Nome acessível montado por justaposição.** O vão entre "1" e
+   "atrasadas" era `gap` do flex, que é visual: o leitor de tela
+   anunciava "1atrasadas". Botão que faz coisa ganha `aria-label`
+   escrito, não montado.
+3. **Rótulo de eixo não escala.** O SVG escala junto com o cartão, então
+   texto de 10 unidades vira menos de 5px reais num painel estreito.
+   Metade dos rótulos some por consulta de contêiner.
+4. **Decimal com ponto no CSV.** O arquivo já escolheu o Excel em
+   português (ponto e vírgula, BOM); nele "1.7" é texto, e a coluna para
+   de somar.
+
+Um quinto, de raciocínio e não de pixel: o cartão **"Atrasadas" não tem
+comparação com o período anterior**, e não pode ter. Ele é retrato de
+AGORA — `indicadoresDe` mede o vencimento contra hoje, não contra o
+recorte —, então o cálculo do período anterior devolve o mesmo número e o
+selo diria "estável" sobre uma mudança que ninguém mediu.
+
+**Sem biblioteca de gráficos, de novo por decisão.** O produto desenha
+tudo em SVG sobre `lib/charts/path.ts` (`CashFlowChart`, `Sparkline`,
+agora `DemandFlowChart`). Trazer Recharts para desenhar duas linhas
+somaria centenas de kilobytes e uma segunda gramática de gráfico.
+
 ### A landing já promete boleto e cartão (3/set/2026)
 
 **Isto abre exceção a um princípio registrado neste documento**, e por

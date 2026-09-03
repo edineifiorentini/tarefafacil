@@ -8,6 +8,7 @@ import {
   IconTrash,
   IconX,
 } from "@tabler/icons-react";
+import { useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 
 import { useShell } from "@/components/shell/shell-context";
@@ -17,6 +18,7 @@ import { Select } from "@/components/ui/Select";
 import {
   EMPTY_LIST_FILTERS,
   filterTasks,
+  filtrosDaURL,
   groupTasks,
   sortTasks,
   type GroupBy,
@@ -90,6 +92,7 @@ const SORT_OPTIONS: { value: SortBy; label: string }[] = [
 const FILTER_W = "max-w-60";
 
 export function ListView() {
+  const searchParams = useSearchParams();
   const workspace = useWorkspace();
   const { data: tasks = [], isLoading } = useTasks(workspace.id);
   const { data: sectors = [] } = useSectors(workspace.id);
@@ -103,7 +106,14 @@ export function ListView() {
   const toggleCancel = useToggleTaskCancel(workspace.id);
   const bulk = useBulkTaskActions(workspace.id);
 
-  const [filters, setFilters] = useState<ListFilters>(EMPTY_LIST_FILTERS);
+  // Inicializador preguiçoso: os filtros da URL valem na PRIMEIRA
+  // renderização e depois saem do caminho. Sincronizar nos dois sentidos
+  // faria o estado brigar com a barra de endereço a cada tecla digitada na
+  // busca — e a Lista, ao contrário do relatório, não é uma tela feita para
+  // ser mandada por link.
+  const [filters, setFilters] = useState<ListFilters>(() =>
+    filtrosDaURL(new URLSearchParams(searchParams.toString()))
+  );
   const [groupBy, setGroupBy] = useState<GroupBy>("none");
   const [sortBy, setSortBy] = useState<SortBy>("due");
   const [selected, setSelected] = useState<Set<string>>(new Set());
