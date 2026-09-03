@@ -560,17 +560,25 @@ export const DUVIDAS = {
     {
       id: "teste",
       pergunta: "Como funcionam os sete dias de teste?",
-      resposta: "TODO(product-rule): confirmar regra antes da publicação",
+      resposta:
+        "Você cria a conta e usa o sistema inteiro por sete dias, sem informar forma de pagamento. Nenhum recurso fica bloqueado no período.",
     },
     {
       id: "cartao",
       pergunta: "Preciso cadastrar um cartão?",
-      resposta: "TODO(product-rule): confirmar regra antes da publicação",
+      resposta:
+        "Não. O cadastro não pede cartão. A forma de pagamento só é escolhida quando os sete dias terminam.",
     },
     {
       id: "depois",
       pergunta: "O que acontece depois do período gratuito?",
-      resposta: "TODO(product-rule): confirmar regra antes da publicação",
+      // TODO(product-rule): o gateway do sistema hoje só emite PIX
+      // (`lib/billing/gateway.ts` tem `createPixCharge` e mais nada).
+      // Boleto e cartão estão prometidos aqui porque são a regra que o
+      // dono definiu em 2/set/2026 — mas precisam existir em código
+      // antes de o primeiro teste vencer, ou a promessa não se cumpre.
+      resposta:
+        "Ao fim dos sete dias você escolhe como pagar: boleto, cartão ou Pix. Nada é cobrado antes disso.",
     },
     {
       id: "plano",

@@ -39,6 +39,13 @@ export async function proxy(request: NextRequest) {
     // quem ainda não tem conta. Comparação EXATA, nunca `startsWith`,
     // que aqui casaria com a aplicação inteira.
     path === "/" ||
+    // A imagem social. Ela é buscada por robô de WhatsApp, LinkedIn e
+    // Facebook, que obviamente não têm sessão — sem esta linha o
+    // scraper recebia 307 para o login e o link era compartilhado sem
+    // prévia nenhuma. O `matcher` lá embaixo não a cobre: ele isenta
+    // caminhos com extensão de imagem, e esta rota não tem extensão.
+    path === "/opengraph-image" ||
+    path === "/twitter-image" ||
     path.startsWith("/login") ||
     // Cadastro e termos: quem abre não tem conta, por definição.
     path.startsWith("/cadastro") ||

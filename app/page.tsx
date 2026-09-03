@@ -36,9 +36,17 @@ const DESCRICAO =
 export const metadata: Metadata = {
   title: TITULO,
   description: DESCRICAO,
-  // Sem `canonical` e sem `metadataBase`: o domínio definitivo existe
-  // (taflow.com.br), mas ele vive em variável de ambiente e apontar
-  // errado é pior do que não apontar.
+  // O `metadataBase` existe agora porque a imagem social existe: um
+  // scraper de rede social precisa da URL ABSOLUTA da imagem, e sem
+  // esta base o Next emitiria um caminho relativo que o WhatsApp e o
+  // LinkedIn não resolvem.
+  //
+  // Sai da variável de ambiente, com o domínio como último recurso —
+  // em pré-visualização da Vercel a variável aponta para o endereço
+  // daquele deploy, que é o certo ali.
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_APP_URL ?? "https://www.taflow.com.br"
+  ),
   openGraph: {
     title: TITULO,
     description: DESCRICAO,
