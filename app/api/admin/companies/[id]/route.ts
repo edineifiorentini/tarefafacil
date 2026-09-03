@@ -164,6 +164,29 @@ export async function POST(
       if (!Number.isFinite(dias)) {
         return NextResponse.json({ error: "valor_invalido" }, { status: 400 });
       }
+
+      // Plano vitalício não tem prazo para estender (0085). O gatilho no
+      // banco zeraria a data de qualquer jeito; recusar aqui é o que
+      // transforma um "não aconteceu nada" numa frase que explica por quê.
+      // Para dar prazo a esta empresa, tire-a do vitalício antes.
+      if (empresa.plan_id) {
+        const { data: plano } = await db
+          .from("billing_plan")
+          .select("vitalicio")
+          .eq("id", empresa.plan_id)
+          .maybeSingle();
+        if (plano?.vitalicio) {
+          return NextResponse.json(
+            {
+              error: "plano_vitalicio",
+              message:
+                "Esta empresa está no plano vitalício: o acesso dela não " +
+                "vence. Para dar prazo, troque o plano antes.",
+            },
+            { status: 409 }
+          );
+        }
+      }
       // Conta a partir de HOJE quando o acesso já venceu, e a partir do
       // vencimento quando ainda está valendo: renovar quem tem 20 dias pela
       // frente não pode encurtar o prazo dele.

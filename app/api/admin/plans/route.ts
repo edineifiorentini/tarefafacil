@@ -17,6 +17,12 @@ type PlanoEntrada = {
   max_users?: number;
   is_public?: boolean;
   active?: boolean;
+  /**
+   * Plano sem cobrança e sem fim (0085). Marcável só aqui, que é a rota do
+   * dono da plataforma — o cliente troca de plano por `/api/workspace/plan`,
+   * que só enxerga plano público.
+   */
+  vitalicio?: boolean;
   notes?: string | null;
 };
 
@@ -33,6 +39,19 @@ function validar(body: PlanoEntrada): string | null {
     return "máximo de usuários inválido";
   }
   return null;
+}
+
+/**
+ * Vitalício nunca é público (0085).
+ *
+ * Um plano marcado como vitalício E visível no cadastro daria acesso
+ * perpétuo de graça a qualquer pessoa que se inscrevesse — o oposto do que
+ * ele existe para fazer. A coerção fica aqui, no servidor, porque a
+ * interface pode ser contornada e esta combinação não pode existir.
+ */
+function publicoPermitido(body: PlanoEntrada): boolean {
+  if (body.vitalicio) return false;
+  return body.is_public ?? false;
 }
 
 export async function GET() {
@@ -88,7 +107,8 @@ export async function POST(request: Request) {
       name: body.name!.trim(),
       price_cents: body.price_cents!,
       max_users: body.max_users!,
-      is_public: body.is_public ?? false,
+      is_public: publicoPermitido(body),
+      vitalicio: body.vitalicio ?? false,
       notes: body.notes ?? null,
     })
     .select()
@@ -122,7 +142,8 @@ export async function PATCH(request: Request) {
       name: body.name!.trim(),
       price_cents: body.price_cents!,
       max_users: body.max_users!,
-      is_public: body.is_public ?? false,
+      is_public: publicoPermitido(body),
+      vitalicio: body.vitalicio ?? false,
       active: body.active ?? true,
       notes: body.notes ?? null,
     })

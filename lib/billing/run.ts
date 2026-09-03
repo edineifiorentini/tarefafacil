@@ -67,7 +67,7 @@ export async function runBilling(opts: {
     db
       .from("subscription")
       .select("workspace_id, plan_id, status, billing_day, cancel_at"),
-    db.from("billing_plan").select("id, name, price_cents"),
+    db.from("billing_plan").select("id, name, price_cents, vitalicio"),
     db
       .from("workspace")
       .select("id, name, plan_id, trial, suspended, deleted_at")
@@ -97,6 +97,7 @@ export async function runBilling(opts: {
         id: string;
         name: string;
         price_cents: number;
+        vitalicio: boolean;
       }[]
     ).map((p) => [p.id, p])
   );
@@ -161,6 +162,11 @@ export async function runBilling(opts: {
     const decisao = decideCharge({
       planCode: plano.id,
       priceCents: plano.price_cents,
+      // 0085. Quem está no vitalício sai daqui com `pulou` e motivo
+      // próprio — nunca chega no `insert` abaixo, e portanto nunca tem
+      // fatura para `settle.ts` liquidar e empurrar data de vencimento.
+      // É assim que a promessa se mantém sem um segundo portão de acesso.
+      vitalicio: plano.vitalicio,
       status: a.status as "ativa" | "pendente" | "vencida" | "cancelada",
       billingDay: a.billing_day,
       chargedPeriods: periodos.get(a.workspace_id) ?? [],

@@ -43,6 +43,10 @@ function PlanRowItem({ plan }: { plan: PlanRow }) {
         price_cents: centsOf(price),
         max_users: Number(maxUsers),
         is_public: plan.is_public,
+        // Vai no corpo porque a rota escreve `vitalicio ?? false`: sem esta
+        // linha, um "Salvar" no nome do plano tiraria a cortesia de quem
+        // está nele sem ninguém pedir.
+        vitalicio: plan.vitalicio,
         active: plan.active,
         ...body,
       }),
@@ -60,8 +64,11 @@ function PlanRowItem({ plan }: { plan: PlanRow }) {
   });
 
   const toggle = useMutation({
-    mutationFn: (body: { is_public?: boolean; active?: boolean }) =>
-      patch(body),
+    mutationFn: (body: {
+      is_public?: boolean;
+      vitalicio?: boolean;
+      active?: boolean;
+    }) => patch(body),
     onSuccess: invalidate,
     onError: () => toast.show({ message: "Não foi possível atualizar" }),
   });
@@ -126,8 +133,19 @@ function PlanRowItem({ plan }: { plan: PlanRow }) {
       <td className="px-3 py-2">
         <Checkbox
           checked={plan.is_public}
+          // Vitalício não pode aparecer no cadastro: seria acesso perpétuo de
+          // graça para qualquer um. O servidor recusa de todo jeito; o
+          // `disabled` só evita o clique que não ia dar em nada.
+          disabled={plan.vitalicio}
           onCheckedChange={(c) => toggle.mutate({ is_public: c === true })}
           aria-label={`Plano ${plan.name} aparece no cadastro`}
+        />
+      </td>
+      <td className="px-3 py-2">
+        <Checkbox
+          checked={plan.vitalicio}
+          onCheckedChange={(c) => toggle.mutate({ vitalicio: c === true })}
+          aria-label={`Plano ${plan.name} é vitalício`}
         />
       </td>
       <td className="px-3 py-2">
@@ -209,6 +227,7 @@ function CreatePlan() {
   const [price, setPrice] = useState("");
   const [maxUsers, setMaxUsers] = useState("5");
   const [isPublic, setIsPublic] = useState(false);
+  const [vitalicio, setVitalicio] = useState(false);
 
   const create = useMutation({
     mutationFn: async () => {
@@ -220,6 +239,7 @@ function CreatePlan() {
           price_cents: centsOf(price),
           max_users: Number(maxUsers),
           is_public: isPublic,
+          vitalicio,
         }),
       });
       if (!res.ok) throw new Error("falha");
@@ -230,6 +250,7 @@ function CreatePlan() {
       setPrice("");
       setMaxUsers("5");
       setIsPublic(false);
+      setVitalicio(false);
       setOpen(false);
       void qc.invalidateQueries({ queryKey: KEY });
     },
@@ -286,11 +307,20 @@ function CreatePlan() {
       </label>
       <label className="text-fg-secondary flex items-center gap-2 py-2 text-[length:var(--text-caption-size)]">
         <Checkbox
-          checked={isPublic}
+          checked={isPublic && !vitalicio}
+          disabled={vitalicio}
           onCheckedChange={(c) => setIsPublic(c === true)}
           aria-label="Mostrar no cadastro"
         />
         Mostrar no cadastro
+      </label>
+      <label className="text-fg-secondary flex items-center gap-2 py-2 text-[length:var(--text-caption-size)]">
+        <Checkbox
+          checked={vitalicio}
+          onCheckedChange={(c) => setVitalicio(c === true)}
+          aria-label="Plano vitalício"
+        />
+        Vitalício
       </label>
       <Button
         type="submit"
@@ -335,7 +365,9 @@ export function AdminPlans() {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <p className="text-fg-secondary text-[length:var(--text-small-size)]">
           Mudar o preço vale do próximo ciclo. Plano sem “mostrar no cadastro”
-          só é atribuído por você, na aba Empresas.
+          só é atribuído por você, na aba Empresas. Plano vitalício nunca é
+          cobrado e o acesso dele não tem vencimento — por isso ele também não
+          aparece no cadastro.
         </p>
         <CreatePlan />
       </div>
@@ -355,6 +387,7 @@ export function AdminPlans() {
                 <th className="px-3 py-2 font-medium">Valor por mês</th>
                 <th className="px-3 py-2 font-medium">Usuários</th>
                 <th className="px-3 py-2 font-medium">No cadastro</th>
+                <th className="px-3 py-2 font-medium">Vitalício</th>
                 <th className="px-3 py-2 font-medium">Ativo</th>
                 <th className="px-3 py-2 font-medium">Empresas</th>
                 <th className="px-3 py-2" />

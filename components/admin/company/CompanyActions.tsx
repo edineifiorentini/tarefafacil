@@ -23,7 +23,13 @@ import { SensitiveActionDialog } from "./SensitiveActionDialog";
  * pede que exclusão definitiva não seja ação primária.
  */
 
-type Plano = { id: string; name: string; max_users: number };
+type Plano = {
+  id: string;
+  name: string;
+  max_users: number;
+  /** Sem cobrança e sem vencimento (0085). O seletor precisa dizer isso. */
+  vitalicio: boolean;
+};
 
 export function CompanyActions({
   empresaId,
@@ -104,6 +110,7 @@ export function CompanyActions({
             {planos.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.name} — {p.max_users} assentos
+                {p.vitalicio ? " · sem cobrança, sem vencimento" : ""}
               </option>
             ))}
           </select>

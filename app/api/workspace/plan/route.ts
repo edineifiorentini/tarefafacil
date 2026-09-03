@@ -49,6 +49,39 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 
+  // Do vitalício não se sai clicando (0085).
+  //
+  // O plano é privado, então quem o deixasse não conseguiria voltar: ele não
+  // aparece nesta lista nem no cadastro, e só a plataforma reatribui. Um
+  // clique curioso apagaria uma promessa de forma irreversível, sem nada
+  // registrando que ela existiu.
+  //
+  // Quem realmente quiser um plano maior fala com a gente — e aí quem move é
+  // quem pode desfazer.
+  const { data: empresa } = await db
+    .from("workspace")
+    .select("plan_id")
+    .eq("id", body.workspaceId)
+    .maybeSingle();
+  if (empresa?.plan_id) {
+    const { data: atual } = await db
+      .from("billing_plan")
+      .select("vitalicio")
+      .eq("id", empresa.plan_id)
+      .maybeSingle();
+    if (atual?.vitalicio) {
+      return NextResponse.json(
+        {
+          error: "plano_vitalicio",
+          message:
+            "Seu acesso é vitalício e não tem cobrança. Fale com a gente " +
+            "antes de trocar: a troca não se desfaz sozinha.",
+        },
+        { status: 409 }
+      );
+    }
+  }
+
   // Só plano publicado. Plano feito sob medida para outro cliente não pode
   // ser escolhido por quem descobriu o id.
   const { data: plano } = await db

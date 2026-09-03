@@ -78,7 +78,14 @@ export function chargeExpiresAt(now: Date): Date {
 }
 
 export type ChargeDecision =
-  | { charge: false; reason: "plano gratuito" | "cancelada" | "já cobrado" }
+  | {
+      charge: false;
+      reason:
+        | "plano vitalício"
+        | "plano gratuito"
+        | "cancelada"
+        | "já cobrado";
+    }
   | { charge: true; cycle: Cycle; amountCents: number };
 
 /**
@@ -92,12 +99,23 @@ export type ChargeDecision =
 export function decideCharge(input: {
   planCode: string;
   priceCents: number;
+  /** `billing_plan.vitalicio` (0085): plano sem cobrança e sem fim. */
+  vitalicio?: boolean;
   status: SubscriptionStatus;
   billingDay: number;
   /** `period_start` das cobranças que já existem. */
   chargedPeriods: string[];
   now: Date;
 }): ChargeDecision {
+  // Vitalício vem ANTES de tudo, inclusive de "cancelada", porque é o fato
+  // mais forte: é uma promessa feita a uma pessoa, e o relatório da execução
+  // precisa dizer o motivo verdadeiro. Ficar escondido atrás de "plano
+  // gratuito" faria a promessa parecer um efeito colateral do preço zero —
+  // e no dia em que alguém cadastrasse um vitalício com preço, ele seria
+  // cobrado sem ninguém decidir isso.
+  if (input.vitalicio) {
+    return { charge: false, reason: "plano vitalício" };
+  }
   if (input.status === "cancelada")
     return { charge: false, reason: "cancelada" };
   // Plano gratuito não gera cobrança de R$ 0 — fatura de zero real só

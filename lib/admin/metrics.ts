@@ -184,8 +184,17 @@ export function contaNoMrr(
  *
  * Fora da conta: teste gratuito, empresa sem plano e assinatura que não está
  * `ativa`. Cada plano tem um preço mensal (`billing_plan.price_cents`), então
- * a normalização é direta — quando existir plano anual ou vitalício, este é o
- * ponto que precisa dividir por 12 ou sair da conta.
+ * a normalização é direta.
+ *
+ * **O vitalício chegou (0085) e não precisou de exceção aqui.** Este comentário
+ * previa que ele teria de "sair da conta"; não teve, porque o plano é de preço
+ * zero e a soma já o ignora sozinha. As empresas nele continuam contando como
+ * ativas, que é o que elas são — o painel mostra seis empresas ativas e o MRR
+ * que elas geram, que é zero, e as duas coisas são verdade.
+ *
+ * O que ainda vale do aviso original: **plano ANUAL** continua sem tratamento e
+ * entraria aqui como se fosse mensal. Quando existir, é este o ponto que
+ * precisa dividir por 12.
  */
 function mrrDe(
   workspaces: WorkspaceCru[],

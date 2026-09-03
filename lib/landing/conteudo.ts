@@ -591,7 +591,9 @@ export const DUVIDAS = {
     {
       id: "plano",
       pergunta: "Posso mudar de plano?",
-      resposta: "TODO(product-rule): confirmar regra antes da publicação",
+      // Regra definida pelo dono em 3/set/2026.
+      resposta:
+        "Sim, a qualquer momento. A troca passa a valer na virada do próximo ciclo, então você não paga dois planos no mesmo mês.",
     },
     {
       id: "cliente-conta",

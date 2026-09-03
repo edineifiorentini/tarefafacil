@@ -100,6 +100,45 @@ describe("decideCharge", () => {
     const d = decideCharge({ ...base, status: "cancelada" });
     expect(d).toEqual({ charge: false, reason: "cancelada" });
   });
+
+  // 0085 — a promessa feita a quem testou o produto antes de ele ter preço.
+  describe("plano vitalício", () => {
+    it("não é cobrado", () => {
+      const d = decideCharge({ ...base, vitalicio: true });
+      expect(d).toEqual({ charge: false, reason: "plano vitalício" });
+    });
+
+    it("não é cobrado NEM COM PREÇO cadastrado", () => {
+      // Este é o teste que existe por causa da promessa. Se um dia alguém
+      // puser valor no plano vitalício — ou marcar como vitalício um plano
+      // que já tem preço —, ninguém pode ser cobrado por isso. É a razão
+      // de a decisão olhar a bandeira e não o valor.
+      const d = decideCharge({ ...base, vitalicio: true, priceCents: 9900 });
+      expect(d).toEqual({ charge: false, reason: "plano vitalício" });
+    });
+
+    it("dá o motivo verdadeiro, não 'plano gratuito'", () => {
+      // O relatório da execução é o que o dono lê. "Plano gratuito" faria
+      // a cortesia parecer efeito colateral do preço zero.
+      const d = decideCharge({ ...base, vitalicio: true, priceCents: 0 });
+      expect(d).toMatchObject({ reason: "plano vitalício" });
+    });
+
+    it("ganha até de assinatura cancelada", () => {
+      const d = decideCharge({
+        ...base,
+        vitalicio: true,
+        status: "cancelada",
+      });
+      expect(d).toEqual({ charge: false, reason: "plano vitalício" });
+    });
+
+    it("plano comum segue cobrando — a bandeira não vaza", () => {
+      // O pedido do dono foi "os outros planos como já está funcionando".
+      expect(decideCharge({ ...base, vitalicio: false }).charge).toBe(true);
+      expect(decideCharge(base).charge).toBe(true);
+    });
+  });
 });
 
 describe("deriveStatus", () => {

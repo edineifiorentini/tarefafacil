@@ -49,8 +49,12 @@ export function PlanChooser() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ workspaceId: workspace.id, planId }),
       });
-      if (!res.ok) throw new Error("falha");
-      return (await res.json()) as { plan: string };
+      const corpo = (await res.json()) as { plan?: string; message?: string };
+      // A mensagem do servidor é mais específica que qualquer texto genérico
+      // daqui — é ela que explica, por exemplo, por que um acesso vitalício
+      // não troca de plano sozinho.
+      if (!res.ok) throw new Error(corpo.message ?? "falha");
+      return corpo as { plan: string };
     },
     onSuccess: (data) => {
       toast.show({ message: `Plano ${data.plan} escolhido` });
@@ -58,7 +62,13 @@ export function PlanChooser() {
       // O plano vive no workspace, que o layout do servidor carrega.
       router.refresh();
     },
-    onError: () => toast.show({ message: "Não foi possível escolher o plano" }),
+    onError: (e) =>
+      toast.show({
+        message:
+          e instanceof Error && e.message !== "falha"
+            ? e.message
+            : "Não foi possível escolher o plano",
+      }),
   });
 
   if (isPending) return <p className="text-fg-secondary">Carregando…</p>;

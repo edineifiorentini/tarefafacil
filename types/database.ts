@@ -1204,6 +1204,13 @@ export type Database = {
           max_users: number;
           /** Aparece para quem se cadastra sozinho. */
           is_public: boolean;
+          /**
+           * Sem cobrança e sem fim (0085). Nunca gera fatura, e um gatilho
+           * mantém `workspace.access_expires_at` nulo para quem está nele.
+           * Nunca é público: seria acesso perpétuo de graça a quem se
+           * cadastrasse.
+           */
+          vitalicio: boolean;
           active: boolean;
           notes: string | null;
           created_at: string;
@@ -1215,6 +1222,7 @@ export type Database = {
           price_cents: number;
           max_users: number;
           is_public?: boolean;
+          vitalicio?: boolean;
           active?: boolean;
           notes?: string | null;
         };
@@ -1223,6 +1231,7 @@ export type Database = {
           price_cents?: number;
           max_users?: number;
           is_public?: boolean;
+          vitalicio?: boolean;
           active?: boolean;
           notes?: string | null;
         };

@@ -24,6 +24,11 @@ export type PlanRow = {
   price_cents: number;
   max_users: number;
   is_public: boolean;
+  /**
+   * Plano sem cobrança e sem fim (0085). Nunca gera fatura e a empresa nele
+   * nunca tem data de vencimento de acesso. Marcável só pelo dono.
+   */
+  vitalicio: boolean;
   active: boolean;
   notes: string | null;
   /** Quantas empresas estão neste plano — é o que decide se dá pra excluir. */

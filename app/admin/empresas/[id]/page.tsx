@@ -36,7 +36,7 @@ export default async function AdminEmpresaPage({
   const db = createAdminClient();
   const { data: planos } = await db
     .from("billing_plan")
-    .select("id, name, max_users")
+    .select("id, name, max_users, vitalicio")
     .eq("active", true)
     .order("price_cents", { ascending: true });
 
@@ -82,7 +82,12 @@ export default async function AdminEmpresaPage({
           contatoEmail={empresa.contatoEmail}
           contatoTelefone={empresa.contatoTelefone}
           planos={
-            (planos ?? []) as { id: string; name: string; max_users: number }[]
+            (planos ?? []) as {
+              id: string;
+              name: string;
+              max_users: number;
+              vitalicio: boolean;
+            }[]
           }
         />
       </header>

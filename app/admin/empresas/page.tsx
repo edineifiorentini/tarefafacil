@@ -67,7 +67,9 @@ export default async function AdminEmpresasPage({
     listCompanies(),
     db
       .from("billing_plan")
-      .select("id, name, price_cents, max_users, is_public, active, notes")
+      .select(
+        "id, name, price_cents, max_users, is_public, vitalicio, active, notes"
+      )
       .order("price_cents", { ascending: true }),
   ]);
 

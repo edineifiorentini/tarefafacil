@@ -641,6 +641,61 @@ tudo em SVG sobre `lib/charts/path.ts` (`CashFlowChart`, `Sparkline`,
 agora `DemandFlowChart`). Trazer Recharts para desenhar duas linhas
 somaria centenas de kilobytes e uma segunda gramática de gráfico.
 
+### Plano vitalício — a promessa deixou de depender de acaso (3/set/2026)
+
+O dono prometeu **acesso vitalício sem cobrança** a quem estava testando
+o produto antes de ele ter preço, e pediu que isso fosse um **plano**
+atribuível só por ele.
+
+**A cortesia já existia; a garantia não.** Em 27/ago/2026 ele renomeou
+pelo painel o plano "Gratuito" da 0050 para "Vitalício", tornou-o privado
+e o atribuiu a cinco empresas. Do lado do código, porém, ele era apenas
+um plano de preço zero — e a promessa se sustentava em duas coincidências:
+
+1. `decideCharge` dispensava a cobrança pelo motivo **"plano gratuito"**.
+   Bastava alguém pôr valor no plano para começar a cobrar de quem tinha
+   a promessa.
+2. `access_expires_at` estava nulo nessas empresas porque **nada nunca a
+   preencheu**. Ausência de dado não é decisão registrada.
+
+A 0085 troca as duas coincidências por invariantes:
+
+- `billing_plan.vitalicio` é a bandeira, e é o **primeiro** teste de
+  `decideCharge` — antes do preço e antes de "cancelada". O motivo no
+  relatório passa a ser "plano vitalício", que é a verdade.
+- um gatilho em `workspace` zera `access_expires_at` sempre que o plano é
+  vitalício, venha a data da liquidação de uma cobrança, do "conceder
+  acesso" da tela de Empresas ou de correção manual no banco.
+
+**O gatilho existe para não haver um segundo portão.** Cinco módulos leem
+`access_expires_at` com contas próprias (`app/(app)/layout`,
+`admin/status`, `admin/metrics`, `admin/health`, `admin/subscriptions`);
+ensinar plano a todos seria criar cinco chances de divergir. Garantindo o
+invariante na origem, os cinco acertam de graça.
+
+Vitalício **nunca é público** — a rota de planos coage `is_public` a
+falso. Um plano vitalício visível no cadastro daria acesso perpétuo de
+graça a qualquer pessoa que se inscrevesse.
+
+Ser privado abria, porém, uma porta de mão única: `/api/workspace/plan`
+deixava o dono da empresa trocar de plano sozinho, e o vitalício não
+aparece na lista para se voltar. Um clique curioso apagava a promessa
+sem volta. A rota agora **recusa a saída do vitalício** e manda falar
+com a gente — quem move é quem pode desfazer. Vale também para o
+"conceder acesso" da tela de Empresas, que recusa com a mesma clareza
+em vez de gravar uma data que o gatilho apagaria em silêncio.
+
+**A migration não reatribui plano nenhum.** Quem recebe a cortesia já foi
+escolhido, uma empresa de cada vez, por quem fez a promessa.
+
+#### O que ficou de fora, e é decisão do dono
+
+A empresa **"Edinei Fiorentini"** (a do próprio dono) está no plano
+**Pro**, com assinatura ativa. É a única das seis que geraria fatura
+quando `BILLING_AUTO=1` for ligado. Não foi movida porque a promessa foi
+feita a quem testa, não a quem cobra — mas cobrar de si mesmo é uma
+escolha, e ela é dele. Trocar são dois cliques em Plataforma → Empresas.
+
 ### A landing já promete boleto e cartão (3/set/2026)
 
 **Isto abre exceção a um princípio registrado neste documento**, e por
