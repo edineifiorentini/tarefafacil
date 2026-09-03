@@ -1,4 +1,20 @@
-import { IconSearch } from "@tabler/icons-react";
+import {
+  IconBriefcase,
+  IconCalendarMonth,
+  IconChartBar,
+  IconChartFunnel,
+  IconFileText,
+  IconLayoutDashboard,
+  IconLayoutKanban,
+  IconLayoutList,
+  IconMessages,
+  IconMoneybag,
+  IconSearch,
+  IconSun,
+  IconUsers,
+} from "@tabler/icons-react";
+
+import type { IconComponent } from "@/components/ui/types";
 
 import { TaflowMark } from "@/components/branding/TaflowMark";
 import { MOCKUP } from "@/lib/landing/conteudo";
@@ -20,33 +36,58 @@ import { MOCKUP } from "@/lib/landing/conteudo";
  * quando o ponteiro entra ou algo recebe foco aqui dentro.
  */
 
-const SERIE = [18, 26, 22, 34, 30, 46, 40, 58, 52, 68, 64, 86];
+/** Os mesmos ícones que a casca do app usa em cada item. */
+const ICONES: Record<string, IconComponent> = {
+  dashboard: IconLayoutDashboard,
+  sol: IconSun,
+  lista: IconLayoutList,
+  quadro: IconLayoutKanban,
+  calendario: IconCalendarMonth,
+  chat: IconMessages,
+  relatorio: IconChartBar,
+  clientes: IconUsers,
+  funil: IconChartFunnel,
+  servicos: IconBriefcase,
+  financeiro: IconMoneybag,
+  contratos: IconFileText,
+};
 
-/** Constrói o caminho da linha a partir da série, em viewBox 375×118. */
-function caminho(): { linha: string; area: string } {
-  const largura = 375;
-  const altura = 118;
-  const max = Math.max(...SERIE);
-  const passo = largura / (SERIE.length - 1);
-  const pontos = SERIE.map((v, i) => {
+/** Caminho de uma série qualquer, normalizado numa caixa l×a. */
+function caminho(
+  pontos: readonly number[],
+  l: number,
+  a: number,
+  teto: number
+) {
+  const passo = l / (pontos.length - 1);
+  const p = pontos.map((v, i) => {
     const x = i * passo;
-    const y = altura - (v / max) * (altura - 14) - 7;
+    const y = a - (v / teto) * (a - 8) - 4;
     return `${x.toFixed(1)},${y.toFixed(1)}`;
   });
-  const linha = `M ${pontos.join(" L ")}`;
-  const area = `${linha} L ${largura},${altura} L 0,${altura} Z`;
-  return { linha, area };
+  return {
+    linha: `M ${p.join(" L ")}`,
+    area: `M ${p.join(" L ")} L ${l},${a} L 0,${a} Z`,
+  };
 }
 
-export function ProductPreview() {
-  const { linha, area } = caminho();
+/** As cores das três séries do app: entregue, planejada, atrasada. */
+const CORES = {
+  entregue: "#0e9f76",
+  planejada: "#7c3aed",
+  atrasada: "#ef4444",
+} as const;
 
+export function ProductPreview() {
   return (
     <div className="lp-scan-host relative overflow-hidden rounded-[24px] border border-[var(--taflow-border-default)] bg-[var(--taflow-bg-surface)] shadow-[var(--taflow-elev-floating)]">
       <div className="flex">
-        {/* Sidebar — grafite, com a marca em negativo. */}
-        <div className="flex w-[92px] shrink-0 flex-col gap-1 bg-[var(--taflow-bg-inverse)] px-3 py-5 sm:w-[118px]">
-          <div className="mb-6 px-1">
+        {/* Sidebar — o menu COMPLETO do sistema, com os mesmos grupos,
+            ícones e atalhos de `components/shell/Sidebar.tsx`. Some
+            abaixo de `sm`: doze linhas de 24px num celular espremeriam
+            o conteúdo, e ali o que importa é o dashboard. */}
+        <div className="hidden w-[152px] shrink-0 flex-col bg-[var(--taflow-bg-inverse)] px-2.5 py-4 sm:flex">
+          <div className="mb-4 px-1.5">
             {/* A marca segue o tema por token; aqui o fundo é grafite
                 sempre, então a tinta é fixada em nuvem. */}
             <TaflowMark
@@ -54,7 +95,7 @@ export function ProductPreview() {
               className="block"
               style={
                 {
-                  height: 20,
+                  height: 18,
                   width: "auto",
                   ["--marca-tinta" as string]: "var(--taflow-text-inverse)",
                 } as React.CSSProperties
@@ -62,22 +103,46 @@ export function ProductPreview() {
             />
           </div>
 
-          {MOCKUP.navegacao.map((item, i) => (
-            <div
-              key={item}
-              className={`relative flex h-[34px] items-center rounded-[8px] px-2.5 text-[11px] font-medium ${
-                i === 0
-                  ? "bg-[rgba(255,255,255,0.08)] text-[var(--taflow-text-inverse)]"
-                  : "text-[var(--taflow-text-secondary-inverse)]"
-              }`}
-            >
-              {i === 0 ? (
-                <span
-                  aria-hidden="true"
-                  className="absolute left-1 h-5 w-[3px] rounded-full bg-[var(--taflow-bg-accent)]"
-                />
+          {MOCKUP.menu.map((bloco, b) => (
+            <div key={bloco.grupo ?? `g${b}`} className="mb-1.5">
+              {bloco.grupo ? (
+                <p className="mb-1 px-2 text-[8px] font-semibold tracking-[0.1em] text-[rgba(139,152,144,0.75)]">
+                  {bloco.grupo}
+                </p>
               ) : null}
-              <span className={i === 0 ? "pl-2.5" : ""}>{item}</span>
+              {bloco.itens.map((item) => {
+                const Icone = ICONES[item.icone];
+                const ativo = item.rotulo === MOCKUP.titulo;
+                return (
+                  <div
+                    key={item.rotulo}
+                    className={`relative flex h-[26px] items-center gap-2 rounded-[6px] px-2 text-[10px] font-medium ${
+                      ativo
+                        ? "bg-[rgba(255,255,255,0.09)] text-[var(--taflow-text-inverse)]"
+                        : "text-[var(--taflow-text-secondary-inverse)]"
+                    }`}
+                  >
+                    {ativo ? (
+                      <span
+                        aria-hidden="true"
+                        className="absolute left-0 h-3.5 w-[2px] rounded-full bg-[var(--taflow-bg-accent)]"
+                      />
+                    ) : null}
+                    <Icone
+                      size={13}
+                      stroke={1.75}
+                      aria-hidden="true"
+                      className="shrink-0"
+                    />
+                    <span className="truncate">{item.rotulo}</span>
+                    {"atalho" in item && item.atalho ? (
+                      <span className="ml-auto text-[8px] text-[rgba(139,152,144,0.6)]">
+                        {item.atalho}
+                      </span>
+                    ) : null}
+                  </div>
+                );
+              })}
             </div>
           ))}
         </div>
@@ -106,116 +171,192 @@ export function ProductPreview() {
             </div>
           </div>
 
-          {/* Indicadores — os QUATRO do dashboard real, na ordem de lá.
-              O Figma desenha três; o quarto ("Taxa de conclusão")
-              existe no produto e foi incluído a pedido do dono, para
-              quem vem da LP reconhecer a tela ao entrar. 2×2 no
-              estreito e 4 em linha a partir do `sm`, como o app faz. */}
+          {/* Indicadores — os QUATRO do dashboard real, cada um com o
+              seu sparkline e a comparação, como no app. */}
           <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-2.5">
-            {MOCKUP.indicadores.map((ind) => (
-              <div
-                key={ind.nome}
-                className="rounded-[14px] border border-[var(--taflow-border-default)] bg-[var(--taflow-bg-surface)] p-3"
-              >
-                <p className="truncate text-[10px] font-medium text-[var(--taflow-text-secondary)]">
-                  {ind.nome}
-                </p>
-                <div className="mt-1.5 flex items-end gap-1.5">
-                  <span className="text-[20px] leading-none font-semibold text-[var(--taflow-text-primary)]">
+            {MOCKUP.indicadores.map((ind) => {
+              const teto = Math.max(...ind.serie);
+              const { linha, area } = caminho(ind.serie, 52, 22, teto);
+              const cor =
+                ind.sinal === "alta"
+                  ? "var(--taflow-status-success)"
+                  : ind.sinal === "baixa"
+                    ? "var(--taflow-status-danger)"
+                    : "var(--taflow-text-secondary)";
+              return (
+                <div
+                  key={ind.nome}
+                  className="rounded-[14px] border border-[var(--taflow-border-default)] bg-[var(--taflow-bg-surface)] p-2.5"
+                >
+                  <p className="truncate text-[9px] font-medium text-[var(--taflow-text-secondary)]">
+                    {ind.nome}
+                  </p>
+                  <p className="mt-1 text-[19px] leading-none font-semibold text-[var(--taflow-text-primary)]">
                     {ind.valor}
-                  </span>
-                  <span
-                    className="text-[9px] font-semibold"
-                    style={{
-                      color:
-                        ind.sinal === "alta"
-                          ? "var(--taflow-status-success)"
-                          : "var(--taflow-status-danger)",
-                    }}
-                  >
-                    {ind.tendencia}
-                  </span>
+                  </p>
+                  <div className="mt-1.5 flex items-end justify-between gap-1">
+                    <span
+                      className="rounded-full px-1.5 py-0.5 text-[8px] font-semibold"
+                      style={{
+                        color: cor,
+                        backgroundColor: `color-mix(in srgb, ${cor} 12%, transparent)`,
+                      }}
+                    >
+                      {ind.tendencia}
+                    </span>
+                    {/* O sparkline do MetricCard. */}
+                    <svg
+                      viewBox="0 0 52 22"
+                      className="h-[22px] w-[52px] shrink-0"
+                      aria-hidden="true"
+                    >
+                      <path d={area} fill={cor} fillOpacity="0.12" />
+                      <path
+                        d={linha}
+                        fill="none"
+                        stroke={cor}
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        vectorEffect="non-scaling-stroke"
+                      />
+                    </svg>
+                  </div>
                 </div>
-                <p className="mt-1 truncate text-[8px] text-[var(--taflow-text-secondary)]">
-                  {MOCKUP.comparacao}
-                </p>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
-          {/* Gráfico */}
-          <div className="relative mt-3 overflow-hidden rounded-[16px] bg-[var(--taflow-bg-subtle)] p-4">
-            <p className="text-[12px] font-semibold text-[var(--taflow-text-primary)]">
-              {MOCKUP.grafico.titulo}
-            </p>
-            <div className="mt-1 flex items-end gap-2">
-              <span className="text-[26px] leading-none font-semibold text-[var(--taflow-text-primary)]">
-                {MOCKUP.grafico.valor}
-              </span>
-              <span className="pb-1 text-[10px] text-[var(--taflow-text-secondary)]">
-                {MOCKUP.grafico.ajuda}
+          {/* "Entrega do mês" — as TRÊS séries do app, com legenda e
+              seletor de período. */}
+          <div className="lp-scan-host relative mt-3 overflow-hidden rounded-[16px] border border-[var(--taflow-border-default)] p-4">
+            <div className="flex items-start justify-between gap-3">
+              <p className="text-[12px] font-semibold text-[var(--taflow-text-primary)]">
+                {MOCKUP.grafico.titulo}
+              </p>
+              <span className="shrink-0 rounded-[8px] border border-[var(--taflow-border-default)] px-2 py-1 text-[9px] text-[var(--taflow-text-secondary)]">
+                {MOCKUP.grafico.periodo} ⌄
               </span>
             </div>
 
+            <div className="mt-1.5 flex flex-wrap items-end gap-2">
+              <span className="text-[24px] leading-none font-semibold text-[var(--taflow-text-primary)]">
+                {MOCKUP.grafico.valor}
+              </span>
+              <span className="pb-0.5 text-[10px] text-[var(--taflow-text-secondary)]">
+                {MOCKUP.grafico.unidade}
+              </span>
+              <span
+                className="ml-auto rounded-full px-1.5 py-0.5 text-[8px] font-semibold"
+                style={{
+                  color: "var(--taflow-status-success)",
+                  backgroundColor:
+                    "color-mix(in srgb, var(--taflow-status-success) 12%, transparent)",
+                }}
+              >
+                {MOCKUP.grafico.tendencia}
+              </span>
+            </div>
+
+            {/* Legenda, com o ponto da cor de cada série. */}
+            <div className="mt-2 flex flex-wrap gap-3">
+              {MOCKUP.grafico.series.map((serie) => (
+                <span
+                  key={serie.nome}
+                  className="flex items-center gap-1 text-[8px] text-[var(--taflow-text-secondary)]"
+                >
+                  <span
+                    aria-hidden="true"
+                    className="h-1.5 w-1.5 rounded-full"
+                    style={{ backgroundColor: CORES[serie.cor] }}
+                  />
+                  {serie.nome}
+                </span>
+              ))}
+            </div>
+
             <svg
-              viewBox="0 0 375 118"
+              viewBox="0 0 300 96"
               preserveAspectRatio="none"
-              className="mt-3 block h-[86px] w-full"
+              className="mt-2 block h-[92px] w-full"
               aria-hidden="true"
-              focusable="false"
             >
-              <defs>
-                <linearGradient id="lp-area" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#c7ff38" stopOpacity="0.55" />
-                  <stop offset="100%" stopColor="#c7ff38" stopOpacity="0" />
-                </linearGradient>
-              </defs>
-              {/* As quatro linhas de grade do Figma. */}
-              {[0.12, 0.38, 0.64, 0.9].map((p) => (
+              {[0, 0.33, 0.66, 1].map((p) => (
                 <line
                   key={p}
                   x1="0"
-                  x2="375"
-                  y1={118 * p}
-                  y2={118 * p}
+                  x2="300"
+                  y1={92 * p + 2}
+                  y2={92 * p + 2}
                   stroke="var(--taflow-border-default)"
                   strokeWidth="1"
                   vectorEffect="non-scaling-stroke"
                 />
               ))}
-              <path d={area} fill="url(#lp-area)" />
-              <path
-                d={linha}
-                fill="none"
-                stroke="var(--taflow-text-primary)"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                vectorEffect="non-scaling-stroke"
-              />
+              {MOCKUP.grafico.series.map((serie) => {
+                const teto = Math.max(
+                  ...MOCKUP.grafico.series.flatMap((x) => [...x.pontos])
+                );
+                const { linha, area } = caminho(serie.pontos, 300, 96, teto);
+                return (
+                  <g key={serie.nome}>
+                    <path d={area} fill={CORES[serie.cor]} fillOpacity="0.1" />
+                    <path
+                      d={linha}
+                      fill="none"
+                      stroke={CORES[serie.cor]}
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      vectorEffect="non-scaling-stroke"
+                    />
+                  </g>
+                );
+              })}
             </svg>
 
-            {/* A varredura do Scanner: uma passada por interação. */}
+            <div className="mt-1 flex justify-between text-[8px] text-[var(--taflow-text-secondary)]">
+              {MOCKUP.grafico.eixoX.map((r) => (
+                <span key={r}>{r}</span>
+              ))}
+            </div>
+
             <span className="lp-scanner" />
           </div>
 
-          {/* Próximas entregas */}
+          {/* Próximas entregas — com a etiqueta do setor e o estado,
+              como no painel do app. */}
           <div className="mt-3 rounded-[14px] border border-[var(--taflow-border-default)] p-3">
             <p className="text-[11px] font-semibold text-[var(--taflow-text-primary)]">
               {MOCKUP.agenda.titulo}
             </p>
+            <p className="mt-0.5 text-[9px] text-[var(--taflow-text-secondary)]">
+              {MOCKUP.agenda.subtitulo}
+            </p>
             <ul className="mt-2 flex flex-col gap-1.5">
               {MOCKUP.agenda.itens.map((item) => (
-                <li key={item.hora} className="flex items-center gap-2">
-                  <span
-                    aria-hidden="true"
-                    className="h-[6px] w-[6px] shrink-0 rounded-full bg-[var(--taflow-bg-accent)]"
-                  />
-                  <span className="w-9 shrink-0 text-[10px] font-medium text-[var(--taflow-text-secondary)]">
+                <li key={item.tarefa} className="flex items-center gap-1.5">
+                  <span className="shrink-0 rounded-[6px] bg-[var(--taflow-bg-subtle)] px-1.5 py-0.5 text-[8px] font-medium text-[var(--taflow-text-secondary)]">
                     {item.hora}
                   </span>
-                  <span className="truncate text-[10px] text-[var(--taflow-text-primary)]">
+                  <span className="min-w-0 flex-1 truncate text-[9px] text-[var(--taflow-text-primary)]">
                     {item.tarefa}
+                  </span>
+                  <span className="hidden shrink-0 rounded-[6px] bg-[var(--taflow-bg-accent-soft)] px-1.5 py-0.5 text-[8px] font-medium text-[var(--taflow-text-primary)] sm:inline">
+                    {item.setor}
+                  </span>
+                  <span className="flex shrink-0 items-center gap-1 text-[8px] text-[var(--taflow-text-secondary)]">
+                    <span
+                      aria-hidden="true"
+                      className="h-1.5 w-1.5 rounded-full"
+                      style={{
+                        backgroundColor:
+                          item.estado === "Pendente"
+                            ? "var(--taflow-status-danger)"
+                            : "var(--taflow-status-success)",
+                      }}
+                    />
+                    {item.estado}
                   </span>
                 </li>
               ))}

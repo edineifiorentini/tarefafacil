@@ -93,32 +93,119 @@ export const HERO = {
  * cliente.
  */
 export const MOCKUP = {
-  navegacao: ["Dashboard", "Hoje", "Quadro", "Clientes", "Financeiro"],
+  /**
+   * O menu COMPLETO do sistema, agrupado como em
+   * `components/shell/Sidebar.tsx`: o trabalho do dia em cima e sempre
+   * aberto, relatórios soltos, o comercial num grupo que recolhe, e o
+   * financeiro no fim porque é dado restrito. Os atalhos são os mesmos
+   * que o app aceita — quem vê aqui e entra depois encontra a mesma
+   * tecla.
+   */
+  menu: [
+    {
+      grupo: null,
+      itens: [
+        { rotulo: "Dashboard", icone: "dashboard", atalho: "1" },
+        { rotulo: "Hoje", icone: "sol", atalho: "2" },
+        { rotulo: "Lista", icone: "lista", atalho: "3" },
+        { rotulo: "Quadro", icone: "quadro", atalho: "4" },
+        { rotulo: "Calendário", icone: "calendario", atalho: "5" },
+        { rotulo: "Chat", icone: "chat", atalho: "8" },
+      ],
+    },
+    { grupo: null, itens: [{ rotulo: "Relatórios", icone: "relatorio" }] },
+    {
+      grupo: "COMERCIAL",
+      itens: [
+        { rotulo: "Clientes", icone: "clientes", atalho: "6" },
+        { rotulo: "Funil", icone: "funil", atalho: "7" },
+        { rotulo: "Serviços", icone: "servicos" },
+      ],
+    },
+    {
+      grupo: "GESTÃO",
+      itens: [
+        { rotulo: "Financeiro", icone: "financeiro" },
+        { rotulo: "Contratos", icone: "contratos" },
+      ],
+    },
+  ],
   titulo: "Dashboard",
   ajuda: "Seu fluxo, em tempo real.",
   busca: "Buscar...",
+  /** Cada indicador tem sparkline no app; a série vai junto. */
   indicadores: [
-    { nome: "Demandas abertas", valor: "24", tendencia: "+8%", sinal: "alta" },
-    { nome: "Em produção", valor: "11", tendencia: "+3%", sinal: "alta" },
-    { nome: "Atrasadas", valor: "2", tendencia: "-1", sinal: "baixa" },
+    {
+      nome: "Demandas abertas",
+      valor: "24",
+      tendencia: "↗ 33.3%",
+      sinal: "alta",
+      serie: [8, 10, 9, 13, 12, 18, 21, 24],
+    },
+    {
+      nome: "Em produção",
+      valor: "11",
+      tendencia: "↗ 50%",
+      sinal: "alta",
+      serie: [4, 5, 5, 7, 6, 9, 10, 11],
+    },
+    {
+      nome: "Atrasadas",
+      valor: "2",
+      tendencia: "— 0%",
+      sinal: "neutro",
+      serie: [3, 4, 6, 5, 3, 2, 2, 2],
+    },
     {
       nome: "Taxa de conclusão",
       valor: "87%",
-      tendencia: "+4 p.p.",
-      sinal: "alta",
+      tendencia: "↘ 3 p.p.",
+      sinal: "baixa",
+      serie: [70, 74, 78, 80, 84, 88, 90, 87],
     },
   ],
   comparacao: "vs. semana anterior",
+  /**
+   * "Entrega do mês" com as TRÊS séries do app — entregues, planejadas
+   * e atrasadas —, o seletor de mês e a legenda. O gráfico anterior
+   * tinha uma linha só, e era justamente o que o dono apontou.
+   */
   grafico: {
     titulo: "Entrega do mês",
+    periodo: "Setembro de 2026",
     valor: "86",
-    ajuda: "+18% vs. mês anterior",
+    unidade: "entregas",
+    tendencia: "↗ 18%",
+    comparacao: "vs. mês anterior",
+    eixoX: ["Sem 1", "Sem 2", "Sem 3", "Sem 4"],
+    series: [
+      { nome: "Entregues", cor: "entregue", pontos: [12, 19, 26, 29] },
+      { nome: "Planejadas", cor: "planejada", pontos: [18, 22, 28, 34] },
+      { nome: "Atrasadas", cor: "atrasada", pontos: [3, 2, 4, 1] },
+    ],
   },
   agenda: {
     titulo: "Próximas entregas",
+    subtitulo: "Hoje, 2 de setembro",
     itens: [
-      { hora: "10:30", tarefa: "Campanha de lançamento" },
-      { hora: "15:00", tarefa: "Revisão do vídeo institucional" },
+      {
+        hora: "dia",
+        tarefa: "Convite e envio",
+        setor: "Administração",
+        estado: "Em andamento",
+      },
+      {
+        hora: "10:30",
+        tarefa: "Campanha de lançamento",
+        setor: "Criação",
+        estado: "Em andamento",
+      },
+      {
+        hora: "15:00",
+        tarefa: "Revisão do institucional",
+        setor: "Vídeo",
+        estado: "Pendente",
+      },
     ],
   },
   aprovacao: {
