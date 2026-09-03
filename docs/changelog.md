@@ -18,6 +18,32 @@ Datas no formato dia/mês/ano.
 
 ## 3/set/2026
 
+**Três respostas sobre pagamento que estavam em aberto.** Elas apareciam
+como pendentes no FAQ da página inicial desde que ela entrou no ar. Agora
+estão escritas, e valem:
+
+- **o cadastro não pede cartão.** Você cria a conta e usa o sistema
+  inteiro por sete dias sem informar forma de pagamento nenhuma. Nenhum
+  recurso fica bloqueado no período;
+- **ao fim dos sete dias você escolhe como pagar: boleto, cartão ou
+  Pix.** Nada é cobrado antes disso;
+- **dá para mudar de plano a qualquer momento.** A troca passa a valer na
+  virada do próximo ciclo, então você não paga dois planos no mesmo mês.
+
+Continuam em aberto, e vale saber: **os preços ainda não estão
+publicados** e as páginas "Sobre" e "Central de ajuda" ainda não existem.
+
+**Quem testou o TAFLOW antes de ele ter preço não paga.** Se você está
+entre as primeiras empresas do sistema, seu acesso é vitalício e sem
+cobrança — não tem data para vencer e não vai gerar fatura.
+
+Uma consequência prática, e ela vale **só para quem está no vitalício**:
+a tela de planos não deixa trocar sozinho. Se tentar, ela avisa e pede
+para falar com a gente antes. É de propósito — o vitalício não aparece na
+lista para se voltar a ele, então sair por um clique curioso seria perder
+algo que não volta. Nos demais planos a troca continua livre, como está
+dito acima.
+
 **Relatórios responde primeiro se está tudo bem, e só depois mostra a
 tabela.** A tela abria numa lista de números por setor — boa para
 conferir, ruim para decidir. Agora ela abre numa **Visão geral** com
@@ -116,6 +142,9 @@ estão marcadas como pendentes** e **as páginas "Sobre" e "Central de
 ajuda" ainda não existem** — no rodapé elas aparecem sem link, em vez de
 levar a lugar nenhum.
 
+> As quatro respostas do FAQ foram escritas no dia seguinte — estão no
+> alto desta página. Os preços e as duas páginas continuam em aberto.
+
 **Quem entrava pelo Google não conseguia terminar o cadastro.** Depois de
 autorizar a conta, a tela "Falta pouco" — a que pede nome e CPF/CNPJ —
 simplesmente não carregava. E não havia saída: enquanto o cadastro não
@@ -124,6 +153,20 @@ fechava, o sistema mandava de volta para a mesma tela quebrada. Corrigido.
 Quem ficou parado nisso: entre de novo e a tela vai aparecer normalmente.
 Nenhum dado foi perdido — a conta já estava criada, faltava só o último
 passo.
+
+**Os setores agora recolhem na barra lateral.** Quem tem muitos setores
+via a lista empurrar Configurações e Sair para fora da tela. Agora existe
+uma setinha ao lado de "Setores": clique e a lista fecha, deixando o
+número de setores à vista para você saber que eles continuam ali.
+
+O sistema lembra da sua escolha — ela vale no computador em que você
+clicou, e continua valendo depois de fechar o navegador.
+
+**Compartilhar o link do TAFLOW agora mostra uma prévia.** Antes, colar
+`taflow.com.br` no WhatsApp, no LinkedIn ou no e-mail produzia um link
+seco. Agora aparece um cartão com a marca, a frase do produto e o
+endereço. Se você já compartilhou o link antes e ainda vê o formato
+antigo, é o cache de quem recebeu — some sozinho.
 
 **Tela de entrar nova.** A porta de entrada agora tem dois lados: à
 esquerda o painel da marca, em grafite, com a frase do produto; à direita o
