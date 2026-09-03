@@ -80,8 +80,25 @@ const CORES = {
 
 export function ProductPreview() {
   return (
+    // **Uma frase para o leitor de tela, e o resto escondido.**
+    //
+    // Sem isto a árvore de acessibilidade despeja quarenta nós:
+    // "Demandas abertas, 24, seta para cima 33,3 por cento, Em
+    // produção, 11..." — dados de uma empresa que não existe,
+    // anunciados como se fossem informação. Numa página de vendas isso
+    // é ruído, e ruído que engana.
+    //
+    // A primeira tentativa foi `role="img"` com `aria-label`, que pela
+    // especificação torna os filhos apresentacionais. Só que a árvore
+    // continuou listando tudo, e comportamento que eu não consigo
+    // verificar não vai para produção. `sr-only` mais `aria-hidden`
+    // funciona igual em qualquer tecnologia assistiva, e dá para provar.
     <div className="lp-scan-host relative overflow-hidden rounded-[24px] border border-[var(--taflow-border-default)] bg-[var(--taflow-bg-surface)] shadow-[var(--taflow-elev-floating)]">
-      <div className="flex">
+      <p className="sr-only">
+        Interface do TAFLOW: painel com o menu do sistema, indicadores de
+        demandas, gráfico de entregas do mês e lista de próximas entregas.
+      </p>
+      <div aria-hidden="true" className="flex">
         {/* Sidebar — o menu COMPLETO do sistema, com os mesmos grupos,
             ícones e atalhos de `components/shell/Sidebar.tsx`. Some
             abaixo de `sm`: doze linhas de 24px num celular espremeriam

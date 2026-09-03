@@ -85,8 +85,8 @@ export const HERO = {
  * precisa reconhecer a mesma tela. Então os rótulos vêm de
  * `components/dashboard/DashboardView.tsx` e de `components/shell/
  * Sidebar.tsx`: os quatro indicadores são os quatro de lá, na ordem de
- * lá, com a mesma comparação ("vs. semana anterior"), e o gráfico é a
- * "Entrega do mês" com o mesmo recorte.
+ * lá, com o mesmo sparkline, e o gráfico é a "Entrega do mês" com as
+ * três séries — entregues, planejadas e atrasadas.
  *
  * Os NÚMEROS continuam sendo exemplo de interface — a página é estática
  * e não consulta banco. Nenhum deles é apresentado como resultado de
@@ -164,7 +164,6 @@ export const MOCKUP = {
       serie: [70, 74, 78, 80, 84, 88, 90, 87],
     },
   ],
-  comparacao: "vs. semana anterior",
   /**
    * "Entrega do mês" com as TRÊS séries do app — entregues, planejadas
    * e atrasadas —, o seletor de mês e a legenda. O gráfico anterior
@@ -176,7 +175,6 @@ export const MOCKUP = {
     valor: "86",
     unidade: "entregas",
     tendencia: "↗ 18%",
-    comparacao: "vs. mês anterior",
     eixoX: ["Sem 1", "Sem 2", "Sem 3", "Sem 4"],
     series: [
       { nome: "Entregues", cor: "entregue", pontos: [12, 19, 26, 29] },
