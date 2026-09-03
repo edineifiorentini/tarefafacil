@@ -23,6 +23,7 @@ export function AppShell({
   workspaces,
   isAdmin,
   commercialOpen,
+  sectorsOpen,
   children,
 }: {
   sectors: Sector[];
@@ -30,6 +31,7 @@ export function AppShell({
   isAdmin: boolean;
   /** Grupo Comercial aberto? Vem do cookie, lido no servidor. */
   commercialOpen: boolean;
+  sectorsOpen: boolean;
   children: ReactNode;
 }) {
   const router = useRouter();
@@ -93,6 +95,7 @@ export function AppShell({
           sectors={sectors}
           workspaces={workspaces}
           commercialOpen={commercialOpen}
+          sectorsOpen={sectorsOpen}
         />
       </aside>
 
@@ -109,6 +112,7 @@ export function AppShell({
               sectors={sectors}
               workspaces={workspaces}
               commercialOpen={commercialOpen}
+              sectorsOpen={sectorsOpen}
             />
           </Dialog.Content>
         </Dialog.Portal>

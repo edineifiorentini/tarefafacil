@@ -112,6 +112,15 @@ const restrictedDestinations: Destination[] = [
 /** Cookie do estado do grupo. Vem do servidor para não piscar na abertura. */
 export const NAV_COMMERCIAL_COOKIE = "nav_comercial";
 
+/**
+ * Cookie dos setores.
+ *
+ * **O padrão é ABERTO**, ao contrário do comercial — daí a leitura ser
+ * `!== "0"` lá no layout e não `=== "1"`. Setor é a espinha do produto:
+ * quem nunca mexeu no botão precisa continuar vendo a lista.
+ */
+export const NAV_SECTORS_COOKIE = "nav_setores";
+
 /** Altura de 44px no toque, 40px no ponteiro (alvo confortável em ambos). */
 const itemBase =
   "group flex h-11 items-center gap-3 rounded-sm px-3 text-[length:var(--text-small-size)] transition-colors [transition-duration:var(--dur-fast)] lg:h-10";
@@ -171,14 +180,17 @@ export function Sidebar({
   sectors: initialSectors,
   workspaces,
   commercialOpen,
+  sectorsOpen,
 }: {
   sectors: Sector[];
   workspaces: Workspace[];
   /** Estado do grupo Comercial, vindo do cookie lido no servidor. */
   commercialOpen: boolean;
+  sectorsOpen: boolean;
 }) {
   const pathname = usePathname();
   const [comercialAberto, setComercialAberto] = useState(commercialOpen);
+  const [setoresAberto, setSetoresAberto] = useState(sectorsOpen);
   const workspace = useWorkspace();
   const { data: sectors = [] } = useSectors(workspace.id, initialSectors);
   const { openPanel, closePanel, setMobileNavOpen } = useShell();
@@ -210,6 +222,12 @@ export function Sidebar({
     // Cookie, não localStorage: o servidor lê na próxima visita e a barra já
     // vem no estado certo, sem o grupo abrir e fechar na frente da pessoa.
     document.cookie = `${NAV_COMMERCIAL_COOKIE}=${novo ? "1" : "0"}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`;
+  }
+
+  function toggleSetores() {
+    const novo = !setoresAberto;
+    setSetoresAberto(novo);
+    document.cookie = `${NAV_SECTORS_COOKIE}=${novo ? "1" : "0"}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`;
   }
 
   return (
@@ -280,11 +298,37 @@ export function Sidebar({
       {/* `min-h`: os setores são a espinha do produto e não podem ser o
           único bloco que cede espaço. Antes disto, num notebook de 768px,
           sobravam 34 pixels para doze setores. */}
-      <div className="mt-4 min-h-48 flex-1 overflow-auto px-3">
-        <div className="flex items-center justify-between px-3 py-1">
-          <span className="text-fg-muted text-[length:var(--text-caption-size)] font-semibold tracking-[0.08em] uppercase">
+      <div
+        className={`mt-4 overflow-auto px-3 ${
+          setoresAberto ? "min-h-48 flex-1" : ""
+        }`}
+      >
+        <div className="flex items-center gap-1 px-3 py-1">
+          {/* Mesmo padrão do grupo Comercial: a etiqueta É o botão, com
+              seta que gira e a contagem aparecendo quando está fechado —
+              fechado, o grupo precisa dizer que existe algo aqui dentro. */}
+          <button
+            type="button"
+            onClick={toggleSetores}
+            aria-expanded={setoresAberto}
+            aria-controls="nav-setores"
+            className="text-fg-muted hover:text-fg flex min-w-0 flex-1 items-center gap-1 text-[length:var(--text-caption-size)] font-semibold tracking-[0.08em] uppercase transition-colors [transition-duration:var(--dur-fast)]"
+          >
+            <IconChevronRight
+              size={14}
+              stroke={2}
+              aria-hidden
+              className={`shrink-0 transition-transform [transition-duration:var(--dur-fast)] ${
+                setoresAberto ? "rotate-90" : ""
+              }`}
+            />
             Setores
-          </span>
+            {!setoresAberto && sectors.length > 0 ? (
+              <span className="tnum text-fg-muted ml-auto font-normal tracking-normal">
+                {sectors.length}
+              </span>
+            ) : null}
+          </button>
           <button
             type="button"
             aria-label="Novo setor"
@@ -300,7 +344,11 @@ export function Sidebar({
           </button>
         </div>
 
-        <SectorNav sectors={sectors} />
+        {setoresAberto ? (
+          <div id="nav-setores">
+            <SectorNav sectors={sectors} />
+          </div>
+        ) : null}
       </div>
 
       <div className="border-line mt-auto space-y-0.5 border-t p-3">

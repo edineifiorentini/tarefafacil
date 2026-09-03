@@ -2,7 +2,10 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 
-import { NAV_COMMERCIAL_COOKIE } from "@/components/shell/Sidebar";
+import {
+  NAV_COMMERCIAL_COOKIE,
+  NAV_SECTORS_COOKIE,
+} from "@/components/shell/Sidebar";
 import { isPlatformAdmin } from "@/lib/admin/admin";
 import { Providers } from "@/components/providers";
 import { AppShell } from "@/components/shell/AppShell";
@@ -144,6 +147,10 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
               commercialOpen={
                 cookieStore.get(NAV_COMMERCIAL_COOKIE)?.value === "1"
               }
+              // `!== "0"` e não `=== "1"`: os setores nascem ABERTOS.
+              // Quem nunca tocou no botão não tem cookie, e não pode
+              // perder de vista a lista que organiza o trabalho todo.
+              sectorsOpen={cookieStore.get(NAV_SECTORS_COOKIE)?.value !== "0"}
             >
               {children}
             </AppShell>
