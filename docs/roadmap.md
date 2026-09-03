@@ -547,12 +547,38 @@ do próprio TAFLOW**, não o cliente do workspace.
 **O que falta, e depende de credencial**
 
 1. Cliente EFI de verdade (Pix com mTLS — a API exige certificado `.p12`).
-2. Rota de webhook com validação de autenticidade e a gravação em
+2. **Boleto e cartão pela EFI** — ver o aviso abaixo.
+3. Rota de webhook com validação de autenticidade e a gravação em
    `payment_event`.
-3. Cron mensal que decide e cria as cobranças.
-4. Tela do dono: plano, próxima cobrança, QR code, histórico.
+4. Cron mensal que decide e cria as cobranças.
+5. Tela do dono: plano, próxima cobrança, QR code, histórico.
 
 Nada disso vai para produção sem teste contra o ambiente de homologação.
+
+### A landing já promete boleto e cartão (3/set/2026)
+
+**Isto abre exceção a um princípio registrado neste documento**, e por
+isso está escrito aqui em vez de descoberto depois.
+
+A resposta do FAQ em `lib/landing/conteudo.ts` diz que, ao fim dos sete
+dias, a pessoa escolhe entre **boleto, cartão ou Pix**. Hoje
+`lib/billing/gateway.ts` tem `createPixCharge` e mais nada — as outras
+duas não existem nem em interface.
+
+Duas seções acima, a tela de Assinatura do app faz o contrário de
+propósito: ela diz com todas as letras que a cobrança automática não
+está ligada, porque _"prometer boleto numa tela que não emite boleto
+seria pior do que não ter a tela"_. A landing promete assim mesmo.
+
+**Foi decisão do dono, em 3/set/2026**, com o argumento de que a página é
+protótipo e a EFI já está escolhida. Quem mexer nisso:
+
+- **não reescreva a frase para só Pix por conta própria.** Ela está
+  errada em relação ao código de hoje e certa em relação ao plano;
+- **a data que importa é a do primeiro vencimento.** A primeira conta foi
+  criada em 2/set/2026, então o primeiro teste termina por volta de
+  9/set. Até lá, ou boleto e cartão existem, ou a frase precisa mudar —
+  e quem decide é o dono.
 
 ---
 
@@ -1827,9 +1853,9 @@ tela do dono com registro de entregas; e os gatilhos que alimentam tudo.
 
 ## 24. Relatório de prazos da equipe — FEITO (31/ago/2026, migration 0082)
 
-Pedido do dono: *"minha equipe sempre me reporta sobre as tarefas e dúvidas,
+Pedido do dono: _"minha equipe sempre me reporta sobre as tarefas e dúvidas,
 mas geralmente não me reporta uma tarefa que está para cumprir ou que está
-em atraso"*.
+em atraso"_.
 
 **Metade não era construir, era corrigir.** `derive.ts` tinha, escrito:
 
@@ -1922,12 +1948,12 @@ foi distribuído.
 O dono perguntou se existe relatório por setor ou por demanda. Existe
 espalhado, e nenhuma peça é um relatório:
 
-| Onde | O que dá |
-|---|---|
-| Dashboard | "Demandas por setor" — contagem de abertas, só os 4 maiores |
-| Hoje | distribuição das pendências por setor e por responsável |
-| Financeiro | rentabilidade por setor, projeto e cliente (0081) |
-| Equipe | prazos com escopo de setor, agrupados por pessoa (0082) |
+| Onde       | O que dá                                                    |
+| ---------- | ----------------------------------------------------------- |
+| Dashboard  | "Demandas por setor" — contagem de abertas, só os 4 maiores |
+| Hoje       | distribuição das pendências por setor e por responsável     |
+| Financeiro | rentabilidade por setor, projeto e cliente (0081)           |
+| Equipe     | prazos com escopo de setor, agrupados por pessoa (0082)     |
 
 Por demanda, o histórico existe DENTRO da demanda: `TaskActivityLog`,
 `TimeTracking`, `ApprovalHistory`, `InsightLog`.

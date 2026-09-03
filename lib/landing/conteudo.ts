@@ -572,11 +572,19 @@ export const DUVIDAS = {
     {
       id: "depois",
       pergunta: "O que acontece depois do período gratuito?",
-      // TODO(product-rule): o gateway do sistema hoje só emite PIX
-      // (`lib/billing/gateway.ts` tem `createPixCharge` e mais nada).
-      // Boleto e cartão estão prometidos aqui porque são a regra que o
-      // dono definiu em 2/set/2026 — mas precisam existir em código
-      // antes de o primeiro teste vencer, ou a promessa não se cumpre.
+      // As três formas são DECISÃO REGISTRADA do dono (3/set/2026),
+      // não um descuido: a página é o protótipo, e a EFI Bank já está
+      // escolhida como provedora — `lib/billing/gateway.ts` já fala em
+      // `txid` da EFI.
+      //
+      // O que existe hoje é só Pix (`createPixCharge`), e o roadmap
+      // guarda o princípio contrário na tela de Assinatura do app:
+      // "prometer boleto numa tela que não emite boleto seria pior do
+      // que não ter a tela". A landing abre exceção a isso de propósito.
+      //
+      // NÃO "corrija" esta frase para só Pix sem falar com o dono. Se a
+      // integração atrasar, quem muda a promessa é ele. Registrado na
+      // seção 10 do roadmap.
       resposta:
         "Ao fim dos sete dias você escolhe como pagar: boleto, cartão ou Pix. Nada é cobrado antes disso.",
     },
