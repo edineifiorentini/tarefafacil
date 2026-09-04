@@ -20,9 +20,15 @@
 //    propósito: três telas do mesmo produto discordarem sobre o que é uma
 //    demanda viva seria pior do que qualquer uma delas estar errada.
 
-import { differenceInCalendarDays, parseISO, startOfWeek, endOfWeek } from "date-fns";
+import {
+  differenceInCalendarDays,
+  endOfWeek,
+  format,
+  parseISO,
+  startOfWeek,
+} from "date-fns";
 
-import { localDayISO } from "@/lib/dates/day";
+import { FUSO_PADRAO, diaCivilEm } from "@/lib/dates/day";
 import type { Task } from "@/types/database";
 
 export type VisaoRapida =
@@ -60,10 +66,20 @@ export function estaAberta(t: Task): boolean {
  * (`groupTasks` com `weekStartsOn: 1`). Não há configuração de semana no
  * workspace — se um dia houver, é este o ponto que lê.
  */
-export function semanaCorrente(agora: Date): { de: string; ate: string } {
+export function semanaCorrente(
+  agora: Date,
+  fuso: string = FUSO_PADRAO
+): { de: string; ate: string } {
+  // Primeiro o DIA CIVIL no fuso pedido, depois a semana em cima dele.
+  //
+  // A ordem inversa é armadilha, e eu caí nela: `startOfWeek` calcula a
+  // borda no fuso do ambiente, e formatar esse instante noutro fuso mistura
+  // duas réguas — sob UTC a semana escorregava um dia. Convertendo primeiro,
+  // o resto da conta acontece toda dentro do mesmo dia civil.
+  const hoje = parseISO(diaCivilEm(agora, fuso));
   return {
-    de: localDayISO(startOfWeek(agora, { weekStartsOn: 1 })),
-    ate: localDayISO(endOfWeek(agora, { weekStartsOn: 1 })),
+    de: format(startOfWeek(hoje, { weekStartsOn: 1 }), "yyyy-MM-dd"),
+    ate: format(endOfWeek(hoje, { weekStartsOn: 1 }), "yyyy-MM-dd"),
   };
 }
 
@@ -73,8 +89,13 @@ export function semanaCorrente(agora: Date): { de: string; ate: string } {
  * Cada regra é uma linha, e todas partem de `estaAberta` exceto
  * "concluidas" — que é justamente a exceção.
  */
-export function naVisao(t: Task, visao: VisaoRapida, agora: Date): boolean {
-  const hoje = localDayISO(agora);
+export function naVisao(
+  t: Task,
+  visao: VisaoRapida,
+  agora: Date,
+  fuso: string = FUSO_PADRAO
+): boolean {
+  const hoje = diaCivilEm(agora, fuso);
 
   switch (visao) {
     case "aberto":
@@ -88,7 +109,7 @@ export function naVisao(t: Task, visao: VisaoRapida, agora: Date): boolean {
 
     case "semana": {
       if (!estaAberta(t) || !t.due_date) return false;
-      const { de, ate } = semanaCorrente(agora);
+      const { de, ate } = semanaCorrente(agora, fuso);
       return t.due_date >= de && t.due_date <= ate;
     }
 
@@ -106,9 +127,10 @@ export function naVisao(t: Task, visao: VisaoRapida, agora: Date): boolean {
 export function aplicarVisao(
   tasks: Task[],
   visao: VisaoRapida,
-  agora: Date = new Date()
+  agora: Date = new Date(),
+  fuso: string = FUSO_PADRAO
 ): Task[] {
-  return tasks.filter((t) => naVisao(t, visao, agora));
+  return tasks.filter((t) => naVisao(t, visao, agora, fuso));
 }
 
 /**
@@ -123,7 +145,8 @@ export function aplicarVisao(
  */
 export function contarVisoes(
   tasks: Task[],
-  agora: Date = new Date()
+  agora: Date = new Date(),
+  fuso: string = FUSO_PADRAO
 ): Record<VisaoRapida, number> {
   const contagem: Record<VisaoRapida, number> = {
     aberto: 0,
@@ -134,8 +157,8 @@ export function contarVisoes(
     concluidas: 0,
   };
 
-  const hoje = localDayISO(agora);
-  const { de, ate } = semanaCorrente(agora);
+  const hoje = diaCivilEm(agora, fuso);
+  const { de, ate } = semanaCorrente(agora, fuso);
 
   for (const t of tasks) {
     if (t.completed_at && !t.cancelled_at) contagem.concluidas++;
@@ -163,7 +186,14 @@ export function contarVisoes(
  *
  * Devolve um número comparável para o `sort` usar.
  */
-export function pesoDaUrgencia(t: Task, agora: Date): number {
+export function pesoDaUrgencia(
+  t: Task,
+  agora: Date,
+  fuso: string = FUSO_PADRAO
+): number {
   if (!t.due_date) return Number.MAX_SAFE_INTEGER;
-  return differenceInCalendarDays(parseISO(t.due_date), parseISO(localDayISO(agora)));
+  return differenceInCalendarDays(
+    parseISO(t.due_date),
+    parseISO(diaCivilEm(agora, fuso))
+  );
 }

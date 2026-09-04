@@ -16,6 +16,7 @@ import {
   porPessoa,
   tarefasDoEscopo,
 } from "@/lib/notifications/escalation";
+import { useFuso } from "@/lib/queries/useFuso";
 import { useCurrentUserId, useMembers } from "@/lib/queries/useMembers";
 import { useSectors } from "@/lib/queries/useSectors";
 import { useTasks } from "@/lib/queries/useTasks";
@@ -68,6 +69,8 @@ export function TeamRiskReport({
   const { data: tasks = [], isLoading } = useTasks(workspace.id);
 
   const meuPapel = members.find((m) => m.user_id === userId)?.role;
+  // O fuso que a pessoa salvou, não o do aparelho em que ela abriu.
+  const fuso = useFuso();
 
   const { risco, periodo, temSemResponsavel } = useMemo(() => {
     if (!userId) {
@@ -90,11 +93,11 @@ export function TeamRiskReport({
       // O bloco de risco continua exatamente como era: janela de 7 dias,
       // a partir de HOJE. Não é filtrado por período de propósito — "vence
       // em três dias" não quer dizer nada dentro de um mês passado.
-      risco: porPessoa(visiveis, { equipe }, agora),
+      risco: porPessoa(visiveis, { equipe, fuso }, agora),
       periodo: linhasPorPessoa(visiveis, filtros.periodo, agora, equipe),
       temSemResponsavel: doEscopo.some((t) => !t.assignee_id),
     };
-  }, [tasks, sectors, userId, meuPapel, members, filtros, agora]);
+  }, [tasks, sectors, userId, meuPapel, members, filtros, agora, fuso]);
 
   const nomePorId = useMemo(
     () =>

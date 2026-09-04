@@ -110,6 +110,27 @@ Radix UI · TanStack Query · dnd-kit · Zod · Storybook 9 · Vitest · Playwri
     **A linha do anexo sobrevive à retirada** (`purged_at`). É ela que
     sustenta o histórico e a frase que o cliente lê no lugar do arquivo.
 
+15. **Server Component pega o fuso do SERVIDOR; Client Component pega o de
+    quem lê.** O mesmo código parece certo nos dois lugares e só um deles
+    está — a Vercel roda em UTC. Isso já produziu dois defeitos: a hora da
+    página de aprovação três horas adiantada (4/set/2026) e "parada há N
+    dias" errando por um na virada.
+
+    Regra prática: **em código que pode rodar no servidor, o fuso vai
+    escrito.** `lib/dates/day.ts` tem as duas famílias — `diaCivilEm`,
+    `diaCivilDeEm`, `mesCivilDeEm` recebem o fuso; `localDayISO` e irmãs
+    perguntam ao ambiente e só valem no navegador. Data com hora em tela
+    vai por `lib/utils/fuso.ts`.
+
+    O fuso de quem lê chega ao cliente por `useFuso()` — semeado pelo
+    layout a partir de `app_user.timezone`, no mesmo formato do
+    `useWorkspace`. Nunca chame `Intl...resolvedOptions()` para decidir:
+    ele responde pelo aparelho, e a preferência salva é que manda.
+
+    `vitest.config.mts` fixa `America/Sao_Paulo` como PADRÃO, com `??=`.
+    Rodar `TZ=UTC npm run test` de propósito é a sonda que acha esta classe
+    de defeito — e é assim que os dois acima apareceram.
+
 ## Cores
 
 **A cor da marca é escolha da empresa** (0071), e o padrão desde a 0084 é

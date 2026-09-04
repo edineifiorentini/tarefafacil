@@ -5,6 +5,8 @@ import {
   startOfWeek,
 } from "date-fns";
 
+import { FUSO_PADRAO, diaCivilEm } from "@/lib/dates/day";
+
 import {
   ehVisaoRapida,
   pesoDaUrgencia,
@@ -227,19 +229,25 @@ const PRIORITY_RANK: Record<string, number> = {
   sem_prioridade: 4,
 };
 
-export function isOverdue(t: Task, now: Date): boolean {
+export function isOverdue(
+  t: Task,
+  now: Date,
+  fuso: string = FUSO_PADRAO
+): boolean {
   return (
     !t.completed_at &&
     !t.cancelled_at &&
     !!t.due_date &&
-    differenceInCalendarDays(parseISO(t.due_date), now) < 0
+    differenceInCalendarDays(parseISO(t.due_date), parseISO(diaCivilEm(now, fuso))) <
+      0
   );
 }
 
 export function filterTasks(
   tasks: Task[],
   f: ListFilters,
-  now: Date = new Date()
+  now: Date = new Date(),
+  fuso: string = FUSO_PADRAO
 ): Task[] {
   const q = f.q.trim().toLowerCase();
   return tasks.filter((t) => {
@@ -260,7 +268,7 @@ export function filterTasks(
         if (!t.cancelled_at) return false;
         break;
       case "atrasada":
-        if (!isOverdue(t, now)) return false;
+        if (!isOverdue(t, now, fuso)) return false;
         break;
       default:
         break;
@@ -271,7 +279,10 @@ export function filterTasks(
 
     if (f.dueWithinDays != null) {
       if (!t.due_date || t.completed_at || t.cancelled_at) return false;
-      const diff = differenceInCalendarDays(parseISO(t.due_date), now);
+      const diff = differenceInCalendarDays(
+        parseISO(t.due_date),
+        parseISO(diaCivilEm(now, fuso))
+      );
       if (diff < 0 || diff > f.dueWithinDays) return false;
     }
     return true;
@@ -282,7 +293,8 @@ export function sortTasks(
   tasks: Task[],
   sortBy: SortBy,
   clientNameById: Map<string, string>,
-  now: Date = new Date()
+  now: Date = new Date(),
+  fuso: string = FUSO_PADRAO
 ): Task[] {
   const arr = [...tasks];
   arr.sort((a, b) => {
@@ -320,7 +332,7 @@ export function sortTasks(
         // mesmo resultado na maioria dos casos e o resultado errado no que
         // importa: com "sem prazo" jogado ao fim por um `if`, e nada
         // separando o atrasado do que ainda dá tempo.
-        return pesoDaUrgencia(a, now) - pesoDaUrgencia(b, now);
+        return pesoDaUrgencia(a, now, fuso) - pesoDaUrgencia(b, now, fuso);
       }
     }
   });

@@ -20,6 +20,7 @@ import {
   useToggleTaskComplete,
   useUpdateTask,
 } from "@/lib/queries/useTasks";
+import { useFuso } from "@/lib/queries/useFuso";
 import { useWorkspace } from "@/lib/queries/useWorkspace";
 import { useWorkspaceColumns } from "@/lib/queries/useWorkspaceColumns";
 import {
@@ -151,22 +152,30 @@ export function ListView() {
     });
   }, [tasks, estado.filtros.q, clientNameById, memberNameById, sectorById]);
 
+  // O fuso que a pessoa salvou. Sem ele, "atrasada" e "vence hoje" sairiam
+  // do relógio do aparelho — e o sino, que usa o salvo, discordaria da
+  // Lista na virada do dia.
+  const fuso = useFuso();
+
   const comFiltros = useMemo(
     // A busca já foi aplicada acima; aqui só os filtros avançados.
-    () => filterTasks(comBusca, { ...estado.filtros, q: "" }),
-    [comBusca, estado.filtros]
+    () => filterTasks(comBusca, { ...estado.filtros, q: "" }, new Date(), fuso),
+    [comBusca, estado.filtros, fuso]
   );
 
-  const contagens = useMemo(() => contarVisoes(comFiltros), [comFiltros]);
+  const contagens = useMemo(
+    () => contarVisoes(comFiltros, new Date(), fuso),
+    [comFiltros, fuso]
+  );
 
   const naVisao = useMemo(
-    () => aplicarVisao(comFiltros, estado.visao),
-    [comFiltros, estado.visao]
+    () => aplicarVisao(comFiltros, estado.visao, new Date(), fuso),
+    [comFiltros, estado.visao, fuso]
   );
 
   const ordenadas = useMemo(
-    () => sortTasks(naVisao, estado.sortBy, clientNameById),
-    [naVisao, estado.sortBy, clientNameById]
+    () => sortTasks(naVisao, estado.sortBy, clientNameById, new Date(), fuso),
+    [naVisao, estado.sortBy, clientNameById, fuso]
   );
 
   const grupos = useMemo(

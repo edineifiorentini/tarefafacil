@@ -17,6 +17,8 @@
 
 import { differenceInCalendarDays, parseISO } from "date-fns";
 
+import { FUSO_PADRAO } from "@/lib/dates/day";
+
 import type { MemberRole, Task } from "@/types/database";
 
 import { isPending, TASK_SOON_DAYS, todayISO } from "./derive";
@@ -100,13 +102,14 @@ export const JANELA_DO_RELATORIO = 7;
 export function riscoDe(
   task: Task,
   agora = new Date(),
-  janelaDias = TASK_SOON_DAYS
+  janelaDias = TASK_SOON_DAYS,
+  fuso: string = FUSO_PADRAO
 ): Risco | null {
   if (!isPending(task)) return null;
 
   const dias = differenceInCalendarDays(
     parseISO(task.due_date as string),
-    parseISO(todayISO(agora))
+    parseISO(todayISO(agora, fuso))
   );
 
   if (dias < 0) return "atrasada";
@@ -165,10 +168,12 @@ export function porPessoa(
     /** Ids que aparecem SEMPRE, mesmo zerados. É a equipe do relatório. */
     equipe?: string[];
     janelaDias?: number;
+    /** Fuso de quem lê. Sem ele, o dia civil viria do ambiente. */
+    fuso?: string;
   } = {},
   agora = new Date()
 ): LinhaDaEquipe[] {
-  const { equipe = [], janelaDias = JANELA_DO_RELATORIO } = opcoes;
+  const { equipe = [], janelaDias = JANELA_DO_RELATORIO, fuso = FUSO_PADRAO } = opcoes;
   const baldes = new Map<string, LinhaDaEquipe>();
 
   const balde = (userId: string | null) => {
@@ -198,7 +203,7 @@ export function porPessoa(
     const linha = balde(t.assignee_id);
     linha.abertas++;
 
-    const risco = riscoDe(t, agora, janelaDias);
+    const risco = riscoDe(t, agora, janelaDias, fuso);
     if (!risco) continue;
 
     if (risco === "atrasada") linha.atrasadas++;

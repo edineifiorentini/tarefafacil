@@ -13,6 +13,7 @@ import {
 import { DropdownMenu } from "radix-ui";
 
 import { Checkbox } from "@/components/ui/Checkbox";
+import { useFuso } from "@/lib/queries/useFuso";
 import { descreverPrazo } from "@/lib/task/deadline";
 import type { Sector, Task } from "@/types/database";
 
@@ -81,7 +82,9 @@ export function TaskListRow({
   const concluida = task.completed_at !== null;
   const cancelada = task.cancelled_at !== null;
   const encerrada = concluida || cancelada;
-  const prazo = descreverPrazo(task);
+  // Chamada de hook em linha funcionaria, mas esconde que é hook.
+  const fuso = useFuso();
+  const prazo = descreverPrazo(task, new Date(), fuso);
 
   return (
     <div

@@ -2324,3 +2324,69 @@ conferida antes de convidar empresa nova.
 **Nada mede o total do servidor.** A cota é por empresa; ninguém soma as
 empresas para responder "quanto dos 10 GB já foi". Com uma empresa isso não
 dói, e com vinte dói.
+
+---
+
+## 29. Fuso por usuário — fase 1 (4/set/2026)
+
+Decidido pelo dono: foco no Brasil, idiomas arquivados até haver expansão.
+
+**O problema real não era internacional.** `lib/dates/day.ts` respondia "que
+dia é hoje" perguntando ao AMBIENTE. No navegador isso acerta — o ambiente é
+o aparelho de quem lê — e por isso funcionou por um ano. No servidor o
+ambiente é UTC, e a Vercel roda em UTC.
+
+**Entregue (itens 1 a 5 do plano)**
+
+- `lib/dates/day.ts` ganhou a família com fuso escrito: `diaCivilEm`,
+  `diaCivilDeEm`, `mesCivilDeEm`, via `Intl` com cache de formatador. As
+  `local*` ficaram, marcadas como "só navegador";
+- `lib/queries/useFuso.ts` — provider e hook no mesmo formato do
+  `useWorkspace`, semeado pelo layout **na consulta a `app_user` que já
+  existia**: nenhuma ida extra ao banco;
+- threading por `derive.ts`, `escalation.ts`, `gargalos.ts`,
+  `task/deadline.ts`, `task/quick-views.ts` e `task/list-view.ts`;
+- `/api/reports/etapas` passou a ler `app_user.timezone` e repassar — é o
+  conserto do defeito de servidor;
+- testes que fixam o resultado brasileiro a partir de instantes UTC, e por
+  isso passam em qualquer máquina.
+
+**O defeito de servidor, e o que ele NÃO era**
+
+Eu afirmei primeiro que o relatório marcava "atrasada" o que vence hoje.
+**Estava errado**: `riscoDe` só é alcançado por `TeamRiskReport`, que é
+Client Component. O caminho de servidor de verdade é `gargalosDoFluxo`, onde
+`differenceInCalendarDays` comparava dias civis de UTC — "parada há N dias"
+errava por um na virada. Menor do que eu disse, e real.
+
+**Uma armadilha registrada porque eu caí nela**
+
+`startOfWeek` calcula a borda no fuso do ambiente. Formatar esse instante
+noutro fuso mistura duas réguas, e sob UTC a semana escorregava um dia. A
+ordem certa é converter primeiro para o dia civil no fuso pedido e fazer a
+conta da semana em cima dele.
+
+### O que ficou de fora, e é o próximo passo
+
+**Não existe onde escolher o fuso.** `app_user.timezone` é `not null default
+'America/Sao_Paulo'` e **nada na interface o altera** — era lido só pelo
+envio ao Google Agenda. Como o cliente agora segue o valor salvo, na prática
+todo mundo segue São Paulo.
+
+**Consequência a corrigir logo:** quem trabalha em Manaus, Rio Branco ou
+Noronha tinha o dia civil certo pelo aparelho e passou a ter o de São Paulo.
+A diferença só aparece na virada do dia — entre 23h e meia-noite no horário
+de lá —, mas é regressão. O campo em Configurações → Conta, com o fuso do
+navegador já preenchido como sugestão, fecha isso e era o item 6 do plano.
+
+**Módulos ainda no fuso do ambiente**, todos consumidos por Client
+Component: `reports/overview.ts`, `reports/sector.ts`, `reports/periodo.ts`,
+`dashboard/trends.ts`, `finance/stats.ts`, `today/summary.ts`. Corretos hoje,
+porque no navegador o ambiente é quem lê. Viram defeito no dia em que algum
+deles virar rota de servidor — que é exatamente como os dois anteriores
+nasceram. `TZ=UTC npm run test` acusa três deles.
+
+**Cobrança fora por decisão do dono.** `lib/billing/cycle.ts` linha 150 tem
+o mesmo `localDayISO(input.now)`. O cron roda 06:00 UTC (03:00 no Brasil,
+mesmo dia civil), então passa por sorte de horário; `settle.ts`, disparado
+pelo admin a qualquer hora, não tem essa sorte.

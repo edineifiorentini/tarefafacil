@@ -1,6 +1,6 @@
 import { differenceInCalendarDays, parseISO } from "date-fns";
 
-import { localDayISO } from "@/lib/dates/day";
+import { FUSO_PADRAO, diaCivilEm } from "@/lib/dates/day";
 import type { Contract, FinanceEntry, Task } from "@/types/database";
 
 import type { DerivedAlert, FeedEvent, FeedItem } from "./types";
@@ -26,11 +26,21 @@ const CONTRACT_SOON_DAYS = 30;
 const FINANCE_SOON_DAYS = 7;
 
 /**
- * Data de hoje no fuso local. Reexporta `localDayISO` para não haver duas
- * respostas para "que dia é hoje" no código — foi assim que o painel (UTC) e
- * o sino (local) passaram a discordar por três horas toda noite.
+ * Data de hoje no fuso PEDIDO — e o padrão não é mais o do ambiente.
+ *
+ * Era `localDayISO`, que pergunta ao ambiente. No navegador isso acerta
+ * (o ambiente é o aparelho de quem lê), e foi assim durante um ano. Mas o
+ * acerto era circunstancial: no dia em que um destes módulos virou rota de
+ * servidor, o ambiente passou a ser UTC — foi o que aconteceu com a página
+ * de aprovação em 4/set/2026, três horas adiantada em produção.
+ *
+ * Com o fuso escrito e o padrão brasileiro, o ambiente deixa de opinar. Quem
+ * tem o fuso do usuário à mão passa ele: a preferência salva vale mais que a
+ * configuração do aparelho em que a pessoa abriu.
  */
-export const todayISO = localDayISO;
+export function todayISO(now: Date, fuso: string = FUSO_PADRAO): string {
+  return diaCivilEm(now, fuso);
+}
 
 /** Dias de calendário entre duas datas ISO. Negativo = a primeira já passou. */
 function daysUntil(dateISO: string, todayIso: string): number {
@@ -55,11 +65,11 @@ export function isPending(task: Task): boolean {
  */
 export function deriveTaskAlerts(
   tasks: Task[],
-  options: { myId: string | null; alsoTeamOverdue?: boolean },
+  options: { myId: string | null; alsoTeamOverdue?: boolean; fuso?: string },
   now: Date
 ): DerivedAlert[] {
-  const today = todayISO(now);
-  const { myId, alsoTeamOverdue = false } = options;
+  const { myId, alsoTeamOverdue = false, fuso = FUSO_PADRAO } = options;
+  const today = todayISO(now, fuso);
   const alerts: DerivedAlert[] = [];
 
   for (const task of tasks) {
@@ -119,9 +129,10 @@ export function deriveTaskAlerts(
  */
 export function deriveContractAlerts(
   contracts: Contract[],
-  now: Date
+  now: Date,
+  fuso: string = FUSO_PADRAO
 ): DerivedAlert[] {
-  const today = todayISO(now);
+  const today = todayISO(now, fuso);
   const alerts: DerivedAlert[] = [];
 
   for (const contract of contracts) {
@@ -158,11 +169,12 @@ export function deriveContractAlerts(
 export function deriveFinanceAlerts(
   entries: FinanceEntry[],
   now: Date,
-  canSeeFinance: boolean
+  canSeeFinance: boolean,
+  fuso: string = FUSO_PADRAO
 ): DerivedAlert[] {
   if (!canSeeFinance) return [];
 
-  const today = todayISO(now);
+  const today = todayISO(now, fuso);
   const alerts: DerivedAlert[] = [];
 
   for (const entry of entries) {

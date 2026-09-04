@@ -17,6 +17,8 @@ import { PendingApproval } from "@/components/workspace/PendingApproval";
 import { BrandSync } from "@/components/branding/BrandSync";
 import { SupportBanner } from "@/components/shell/SupportBanner";
 import { PomodoroProvider } from "@/lib/pomodoro/PomodoroContext";
+import { FUSO_PADRAO } from "@/lib/dates/day";
+import { FusoProvider } from "@/lib/queries/useFuso";
 import { WorkspaceProvider } from "@/lib/queries/useWorkspace";
 import { createClient } from "@/lib/supabase/server";
 import { SUPPORT_COOKIE, readSupportCookie } from "@/lib/support/session";
@@ -38,7 +40,9 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   // existia, então ninguém antigo cai aqui.
   const { data: perfil } = await supabase
     .from("app_user")
-    .select("onboarding_completed_at")
+    // O fuso viaja nesta consulta que já existia: uma ida a menos ao
+    // banco, e o cliente recebe o valor pronto em vez de perguntar depois.
+    .select("onboarding_completed_at, timezone")
     .eq("id", user.id)
     .maybeSingle();
   if (perfil && !perfil.onboarding_completed_at) {
@@ -128,6 +132,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
           expiresAt={new Date(emSuporte.exp * 1000).toISOString()}
         />
       ) : null}
+      <FusoProvider fuso={perfil?.timezone ?? FUSO_PADRAO}>
       <WorkspaceProvider workspace={workspace}>
         {/* Primeiro acesso: a empresa escolhe a cor antes de entrar (0084).
             Fica DENTRO do WorkspaceProvider porque a tela precisa da
@@ -158,6 +163,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
         </PomodoroProvider>
         )}
       </WorkspaceProvider>
+      </FusoProvider>
     </Providers>
   );
 }

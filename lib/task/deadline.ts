@@ -17,7 +17,7 @@
 import { differenceInCalendarDays, format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
-import { localDayISO } from "@/lib/dates/day";
+import { FUSO_PADRAO, diaCivilDeEm, diaCivilEm } from "@/lib/dates/day";
 import type { Task } from "@/types/database";
 
 /**
@@ -72,7 +72,8 @@ export function descreverPrazo(
     Task,
     "due_date" | "due_time" | "completed_at" | "cancelled_at"
   >,
-  agora: Date = new Date()
+  agora: Date = new Date(),
+  fuso: string = FUSO_PADRAO
 ): PrazoDaLinha {
   // Cancelada saiu do fluxo. Mostrar prazo aqui sugere uma entrega que
   // ninguém espera mais.
@@ -86,7 +87,7 @@ export function descreverPrazo(
   }
 
   if (task.completed_at) {
-    const entregueEm = localDayISO(parseISO(task.completed_at));
+    const entregueEm = diaCivilDeEm(task.completed_at, fuso);
     const titulo = `Concluída em ${porExtenso(entregueEm, null)}`;
 
     // Diz QUANDO saiu, não só que saiu. O chip de status ao lado já
@@ -137,7 +138,7 @@ export function descreverPrazo(
   // Aberta. Só aqui a conta olha para HOJE.
   const dias = differenceInCalendarDays(
     parseISO(task.due_date),
-    parseISO(localDayISO(agora))
+    parseISO(diaCivilEm(agora, fuso))
   );
   const titulo = porExtenso(task.due_date, task.due_time);
   const hora = horaCurta(task.due_time);

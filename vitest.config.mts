@@ -24,7 +24,11 @@ const dirname = import.meta.dirname;
 // Component na Vercel resolve em UTC. A defesa não é o fuso do teste, é
 // nunca deixar o ambiente responder — data em servidor vai por
 // `lib/utils/fuso.ts`, com o fuso escrito.
-process.env.TZ = "America/Sao_Paulo";
+// `??=` e não `=`: o pin é o PADRÃO, não uma trava. Quem escrever
+// `TZ=UTC npm run test` de propósito está sondando exatamente esta classe
+// de defeito e precisa que o shell vença. CI não define TZ, então cai no
+// padrão e fica determinística.
+process.env.TZ ??= "America/Sao_Paulo";
 
 // Dois projetos:
 // - "unit": testes de unidade em jsdom (rápidos). É o que `npm run test` roda.

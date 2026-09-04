@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
+import { FUSO_PADRAO } from "@/lib/dates/day";
 import { escopoDe, tarefasDoEscopo } from "@/lib/notifications/escalation";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -131,11 +132,21 @@ export async function GET(request: Request) {
     if (data) movimentos.push(...(data as MovimentoDeColuna[]));
   }
 
+  // O fuso de quem pediu o relatório, e não o da máquina que responde.
+  // Aqui o ambiente é a Vercel, que roda em UTC: sem isto, "parada há N
+  // dias" erra por um na virada do dia brasileiro.
+  const { data: perfil } = await supabase
+    .from("app_user")
+    .select("timezone")
+    .eq("id", user.id)
+    .maybeSingle();
+
   const etapas = gargalosDoFluxo(
     abertas,
     (colunasRes.data ?? []) as ColunaDoQuadro[],
     movimentos,
-    new Date()
+    new Date(),
+    perfil?.timezone ?? FUSO_PADRAO
   );
 
   return NextResponse.json({

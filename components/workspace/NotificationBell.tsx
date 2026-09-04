@@ -20,6 +20,7 @@ import { useMemo, useState } from "react";
 
 import { useShell } from "@/components/shell/shell-context";
 import { TaskDetailPanel } from "@/components/task/TaskDetailPanel";
+import { useFuso } from "@/lib/queries/useFuso";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 import {
@@ -128,6 +129,8 @@ export function NotificationBell() {
   // Mesmo motivo do painel: preso na montagem, "atrasada há 3 dias" não
   // sumia depois de entregar a demanda.
   const now = useAsOf(tasksQuery.dataUpdatedAt);
+  // A preferência salva manda no dia civil, não o aparelho.
+  const fuso = useFuso();
 
   // A preferência filtra a EXIBIÇÃO. O evento continua gravado: religar
   // um tipo traz o histórico de volta em vez de revelar um buraco.
@@ -140,17 +143,27 @@ export function NotificationBell() {
           [
             ...deriveTaskAlerts(
               tasks,
-              { myId: myId ?? null, alsoTeamOverdue: canManage },
+              { myId: myId ?? null, alsoTeamOverdue: canManage, fuso },
               now
             ),
-            ...deriveContractAlerts(contracts, now),
-            ...deriveFinanceAlerts(financeEntries, now, canManage),
+            ...deriveContractAlerts(contracts, now, fuso),
+            ...deriveFinanceAlerts(financeEntries, now, canManage, fuso),
           ],
           stored.map(toFeedEvent)
         ),
         prefs ?? DEFAULT_PREFS
       ),
-    [tasks, contracts, financeEntries, stored, myId, canManage, now, prefs]
+    [
+      tasks,
+      contracts,
+      financeEntries,
+      stored,
+      myId,
+      canManage,
+      now,
+      prefs,
+      fuso,
+    ]
   );
 
   const alerts = feed.filter((f) => f.nature === "alerta");

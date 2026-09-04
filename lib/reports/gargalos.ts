@@ -30,6 +30,8 @@
 
 import { differenceInCalendarDays, parseISO } from "date-fns";
 
+import { FUSO_PADRAO, diaCivilDeEm, diaCivilEm } from "@/lib/dates/day";
+
 import type { Task } from "@/types/database";
 
 /** O recorte de `board_column` que este módulo precisa. */
@@ -110,7 +112,15 @@ export function gargalosDoFluxo(
   tasks: Task[],
   colunas: ColunaDoQuadro[],
   movimentos: MovimentoDeColuna[],
-  agora: Date
+  agora: Date,
+  /**
+   * Fuso de quem lê. **Esta função roda no SERVIDOR** (rota
+   * /api/reports/etapas), e lá o ambiente é UTC: sem o fuso escrito,
+   * `differenceInCalendarDays` compara dias civis de UTC e "parada há N
+   * dias" erra por um na virada — a demanda que entrou na etapa às 22h de
+   * ontem aparece parada há zero dias.
+   */
+  fuso: string = FUSO_PADRAO
 ): EtapaDoFluxo[] {
   const abertas = tasks.filter((t) => !t.completed_at && !t.cancelled_at);
   const porId = new Map(colunas.map((c) => [c.id, c] as const));
@@ -155,9 +165,14 @@ export function gargalosDoFluxo(
     if (coluna && !e.colunaIds.includes(coluna.id)) e.colunaIds.push(coluna.id);
 
     const desde = entrada.get(t.id) ?? t.created_at;
+    // Dia civil escrito dos dois lados, para a subtração não herdar o
+    // fuso do ambiente.
     const dias = Math.max(
       0,
-      differenceInCalendarDays(agora, parseISO(desde))
+      differenceInCalendarDays(
+        parseISO(diaCivilEm(agora, fuso)),
+        parseISO(diaCivilDeEm(desde, fuso))
+      )
     );
     e.somaDias += dias;
   }
