@@ -90,6 +90,13 @@ Radix UI · TanStack Query · dnd-kit · Zod · Storybook 9 · Vitest · Playwri
     impõe um — ele é espelho do limite do projeto, **nunca maior**, senão o
     arquivo passa aqui e estoura lá com um 413 sem explicação.
 
+    **O limite do projeto é 52.428.800 bytes (50 MB exatos), medido em
+    4/set/2026** pelos dois caminhos do storage — `upload()` e URL assinada
+    com PUT, que é o que o app usa. Um byte a mais volta
+    `413 Payload too large`. `quota.test.ts` trava esse número: aumentar a
+    constante sem aumentar no painel do Supabase quebra o teste antes de
+    quebrar o upload de alguém. Mudou lá? Meça de novo e atualize os dois.
+
     Link do Google Drive (`kind = 'link'`) não ocupa byte e **nunca é
     apagado** — o arquivo não é nosso. É a saída de quem bate na cota.
 

@@ -215,3 +215,28 @@ describe("formatação de espaço", () => {
     expect(formatarEspaco(COTA_PADRAO_BYTES)).toBe("1,00 GB");
   });
 });
+
+describe("o teto por arquivo não pode passar do limite do Supabase", () => {
+  it("continua nos 50 MB medidos em produção", () => {
+    // Este teste não valida lógica — ele trava um número que vive FORA do
+    // repositório. O limite do projeto no Supabase foi medido em
+    // 4/set/2026 pelos dois caminhos do storage: 52.428.800 bytes passam,
+    // 52.428.801 são recusados com 413 "Payload too large".
+    //
+    // Se alguém aumentar a constante sem aumentar lá, o arquivo passa na
+    // validação do navegador e estoura no meio do upload — erro cru, no
+    // pior momento. Aqui a falha chega antes, com a instrução junto.
+    expect(TETO_POR_ARQUIVO).toBe(52_428_800);
+  });
+
+  it("um arquivo do tamanho exato do limite é aceito", () => {
+    // A borda importa: `>` e não `>=`. Recusar exatamente 50 MB rejeitaria
+    // um arquivo que o servidor aceita.
+    const r = cabeNoServidor({
+      tamanhoDoArquivo: 52_428_800,
+      usadoAgora: 0,
+      cota: COTA_PADRAO_BYTES,
+    });
+    expect(r.cabe).toBe(true);
+  });
+});

@@ -26,12 +26,20 @@ export const COTA_PADRAO_BYTES = 1_073_741_824;
  * Teto por arquivo — **espelho do limite do projeto no Supabase**, não uma
  * regra de produto.
  *
- * Ele existe só para o erro chegar claro e antes do envio começar. Precisa
- * ser MENOR OU IGUAL ao limite configurado no painel do Supabase: se for
- * maior, o arquivo passa aqui e estoura lá, e a pessoa vê "Falha no upload
- * (413)" sem saber o que fazer.
+ * **Medido em 4/set/2026, não deduzido da documentação**, pelos dois
+ * caminhos do storage. `50 * 1024 * 1024` exatos passam; um byte a mais é
+ * recusado:
  *
- * Quem aumentar aqui precisa aumentar lá primeiro.
+ *     50 MB       HTTP 200  aceitou
+ *     50 MB + 1B  HTTP 400  statusCode 413, "Payload too large"
+ *
+ * Ou seja: este número é IGUAL ao limite, e é o máximo que ele pode ser.
+ * Ele existe para o erro chegar claro e antes do envio começar — sem ele a
+ * pessoa recebe aquele 413 cru no meio do upload, que não diz o que fazer.
+ *
+ * Quem aumentar aqui precisa aumentar no painel do Supabase PRIMEIRO, e
+ * medir de novo. `quota.test.ts` trava esse valor de propósito: um aumento
+ * distraído quebra o teste antes de quebrar o upload de alguém.
  */
 export const TETO_POR_ARQUIVO = 50 * 1024 * 1024;
 
