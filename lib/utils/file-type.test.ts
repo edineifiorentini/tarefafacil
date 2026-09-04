@@ -42,7 +42,69 @@ describe("recado de voz", () => {
   it("reconhece o formato mesmo sem o navegador informar o tipo", async () => {
     const r = await validateFile(arquivo(EBML, "recado.webm"));
     expect(r.ok).toBe(true);
-    if (r.ok) expect(r.mime).toBe("audio/webm");
+    // O palpite do contêiner mudou de propósito em set/2026: `.webm` sem
+    // tipo informado passou a valer VÍDEO, porque WebM é antes de tudo um
+    // formato de vídeo e um vídeo rotulado como áudio abre num player sem
+    // imagem — defeito visível para o cliente na tela de aprovação.
+    //
+    // O recado de voz não é atingido: `VoiceRecorder` sempre constrói o
+    // File com `{ type }`, e o tipo informado prevalece sobre o palpite.
+    // Este caso aqui é o arquivo que chega sem tipo nenhum.
+    if (r.ok) expect(r.mime).toBe("video/webm");
+  });
+
+  it("recado do Safari continua áudio, mesmo com marca genérica", async () => {
+    // `isom` é a marca que o MediaRecorder do Safari costuma gravar. Só
+    // pela marca isto viraria vídeo; a extensão `.m4a` é que resolve.
+    const isom = [...FTYP, 0x69, 0x73, 0x6f, 0x6d];
+    const r = await validateFile(arquivo(isom, "recado-2026-09-04-10-00.m4a"));
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.mime).toBe("audio/mp4");
+  });
+});
+
+describe("áudio e vídeo da aprovação (set/2026)", () => {
+  it("aceita MP3 com etiqueta ID3", async () => {
+    const r = await validateFile(
+      arquivo([0x49, 0x44, 0x33, 0x03], "radio.mp3")
+    );
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.mime).toBe("audio/mpeg");
+  });
+
+  it("aceita MP3 sem etiqueta, pelo sincronismo do quadro", async () => {
+    const r = await validateFile(
+      arquivo([0xff, 0xfb, 0x90, 0x00], "radio.mp3")
+    );
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.mime).toBe("audio/mpeg");
+  });
+
+  it("MP4 de vídeo não é mais rotulado como áudio", async () => {
+    const isom = [...FTYP, 0x69, 0x73, 0x6f, 0x6d];
+    const r = await validateFile(arquivo(isom, "campanha.mp4"));
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.mime).toBe("video/mp4");
+  });
+
+  it("MOV do celular vira video/quicktime", async () => {
+    const qt = [...FTYP, 0x71, 0x74, 0x20, 0x20];
+    const r = await validateFile(arquivo(qt, "gravacao.mov"));
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.mime).toBe("video/quicktime");
+  });
+
+  it("o tipo informado pelo navegador continua prevalecendo", async () => {
+    const isom = [...FTYP, 0x69, 0x73, 0x6f, 0x6d];
+    const r = await validateFile(arquivo(isom, "x.mp4", "video/mp4"));
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.mime).toBe("video/mp4");
+  });
+
+  it("JPEG não é confundido com MP3 — os dois começam com 0xFF", async () => {
+    const r = await validateFile(arquivo([0xff, 0xd8, 0xff, 0xe0], "foto.jpg"));
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.mime).toBe("image/jpeg");
   });
 });
 

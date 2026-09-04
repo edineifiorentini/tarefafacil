@@ -1,9 +1,17 @@
+import { TETO_POR_ARQUIVO, formatarEspaco } from "@/lib/storage/quota";
+
 // Validação de arquivo por magic number (não pela extensão) — seção 10.2.
 // Bloqueia executáveis mesmo renomeados; permite imagens, PDF, zip-family
-// (docx/xlsx/pptx/zip), áudio (recado de voz) e textos (txt/md/csv/svg)
-// pela extensão.
+// (docx/xlsx/pptx/zip), áudio (MP3, WAV, OGG, M4A e recado de voz), vídeo
+// (MP4, WebM, MOV) e textos (txt/md/csv/svg) pela extensão.
+//
+// Áudio e vídeo entraram em set/2026 para a aprovação do cliente: a campanha
+// que vai para aprovação é peça de rede social, e isso é rádio, vídeo e
+// carrossel, não só imagem. O MP3 era recusado por não ter assinatura aqui.
 
-const MAX_BYTES = 25 * 1024 * 1024; // 25 MB
+// O teto por arquivo mora em lib/storage/quota.ts desde a 0086, junto com a
+// cota por empresa — que é a regra de verdade. Aqui ele é só a trava que faz
+// o erro chegar ANTES do envio começar, em vez de virar um 413 cru no meio.
 const TEXT_EXT = ["txt", "md", "csv", "svg"];
 
 function startsWith(bytes: Uint8Array, sig: number[], offset = 0): boolean {
@@ -21,7 +29,25 @@ const BLOCKED_SIGNATURES: number[][] = [
   [0xfe, 0xed, 0xfa, 0xcf], // Mach-O BE
 ];
 
-function detectMime(bytes: Uint8Array): string | null {
+/** Os quatro bytes da marca do MP4, no offset 8, como texto. */
+function marcaFtyp(bytes: Uint8Array): string {
+  return String.fromCharCode(...bytes.slice(8, 12));
+}
+
+/**
+ * MP3 não tem uma assinatura só, tem duas — e as duas são comuns.
+ *
+ * Arquivo com metadado começa com a etiqueta ID3 ("ID3"); arquivo sem
+ * metadado começa direto num quadro, cujo sincronismo são onze bits ligados:
+ * `0xFF` seguido de um byte com os três bits altos em 1. Faltavam as duas, e
+ * era por isso que todo MP3 era recusado como "tipo não permitido".
+ */
+function ehMp3(bytes: Uint8Array): boolean {
+  if (startsWith(bytes, [0x49, 0x44, 0x33])) return true;
+  return bytes[0] === 0xff && (bytes[1] & 0xe0) === 0xe0;
+}
+
+function detectMime(bytes: Uint8Array, extensao: string): string | null {
   if (startsWith(bytes, [0x89, 0x50, 0x4e, 0x47])) return "image/png";
   if (startsWith(bytes, [0xff, 0xd8, 0xff])) return "image/jpeg";
   if (startsWith(bytes, [0x47, 0x49, 0x46, 0x38])) return "image/gif";
@@ -33,16 +59,39 @@ function detectMime(bytes: Uint8Array): string | null {
   }
   if (startsWith(bytes, [0x25, 0x50, 0x44, 0x46])) return "application/pdf";
 
-  // --- Recado de voz -------------------------------------------------
+  // --- Áudio e vídeo --------------------------------------------------
   // O MediaRecorder entrega WebM (EBML) no Chrome e no Firefox e MP4
-  // (ftyp, no offset 4) no Safari. Os dois contêineres também carregam
-  // vídeo, então o rótulo devolvido aqui é só o palpite do contêiner: o
-  // mime final vem de `file.type`, quando o navegador informa. Isso não
-  // afrouxa a trava — executável renomeado continua parando na lista de
-  // assinaturas bloqueadas e em não ser reconhecido por nenhuma destas.
-  if (startsWith(bytes, [0x1a, 0x45, 0xdf, 0xa3])) return "audio/webm";
-  if (startsWith(bytes, [0x66, 0x74, 0x79, 0x70], 4)) return "audio/mp4";
+  // (ftyp, no offset 4) no Safari. **Os dois contêineres carregam áudio OU
+  // vídeo**, e essa ambiguidade era um defeito real: os dois caíam em
+  // `audio/…` fixo, então um MP4 de vídeo enviado sem `file.type` — o
+  // navegador nem sempre informa — era guardado como áudio e abria num
+  // player sem imagem.
+  //
+  // O MP4 diz de si mesmo: a marca no offset 8 separa os dois casos.
+  // `M4A `/`M4B ` são áudio; `isom`, `mp42`, `avc1` e afins são vídeo.
+  //
+  // O WebM não diz sem que se percorra o EBML atrás das faixas, o que é
+  // caro para o que se ganha. Aí a extensão decide — e ela pode, porque
+  // aqui ela não autoriza nada: o arquivo JÁ provou pela assinatura que é
+  // um contêiner WebM legítimo, e a extensão só escolhe entre dois rótulos
+  // igualmente seguros. Executável renomeado continua parando antes, na
+  // lista de assinaturas bloqueadas.
+  if (startsWith(bytes, [0x1a, 0x45, 0xdf, 0xa3])) {
+    return extensao === "weba" ? "audio/webm" : "video/webm";
+  }
+  if (startsWith(bytes, [0x66, 0x74, 0x79, 0x70], 4)) {
+    // A extensão vem ANTES da marca, e não é preciosismo: o recado de voz
+    // do Safari sai `.m4a`, mas o MediaRecorder de lá nem sempre carimba a
+    // marca `M4A ` — sai `isom`, que é a marca genérica. Só pela marca, um
+    // recado viraria vídeo.
+    if (extensao === "m4a" || extensao === "m4b") return "audio/mp4";
+    const marca = marcaFtyp(bytes);
+    if (marca.startsWith("M4A") || marca.startsWith("M4B")) return "audio/mp4";
+    if (marca.startsWith("qt")) return "video/quicktime";
+    return "video/mp4";
+  }
   if (startsWith(bytes, [0x4f, 0x67, 0x67, 0x53])) return "audio/ogg";
+  if (ehMp3(bytes)) return "audio/mpeg";
   if (
     startsWith(bytes, [0x50, 0x4b, 0x03, 0x04]) ||
     startsWith(bytes, [0x50, 0x4b, 0x05, 0x06]) ||
@@ -56,8 +105,11 @@ export type Validation =
   { ok: true; mime: string } | { ok: false; reason: string };
 
 export async function validateFile(file: File): Promise<Validation> {
-  if (file.size > MAX_BYTES) {
-    return { ok: false, reason: "Arquivo acima de 25 MB" };
+  if (file.size > TETO_POR_ARQUIVO) {
+    return {
+      ok: false,
+      reason: `Arquivo acima de ${formatarEspaco(TETO_POR_ARQUIVO)}`,
+    };
   }
   const bytes = new Uint8Array(await file.slice(0, 16).arrayBuffer());
 
@@ -67,11 +119,12 @@ export async function validateFile(file: File): Promise<Validation> {
     }
   }
 
-  const detected = detectMime(bytes);
+  const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
+
+  const detected = detectMime(bytes, ext);
   if (detected) return { ok: true, mime: file.type || detected };
 
   // Sem assinatura binária → só aceita como texto pela extensão.
-  const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
   if (TEXT_EXT.includes(ext)) {
     return { ok: true, mime: file.type || "text/plain" };
   }

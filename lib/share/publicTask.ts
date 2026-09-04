@@ -42,16 +42,61 @@ export type PublicSubtask = {
  * minutos. Mandar a chave do storage daqui transformaria "ver a peça" em
  * "ter o arquivo para sempre".
  */
+/**
+ * Como a peça será mostrada.
+ *
+ * Decidido pelo MIME do banco, nunca pela extensão do nome: nome de arquivo
+ * é digitado por gente e mente com frequência. "outro" não é falha — é a
+ * resposta honesta para um .zip ou um .ai, e a tela diz isso em vez de
+ * tentar desenhar o que não sabe.
+ */
+export type TipoDePreview = "imagem" | "video" | "audio" | "pdf" | "outro";
+
 export type PublicDeliverable = {
   id: string;
   filename: string;
   /** Decide se a peça é desenhada na tela ou apenas listada. */
   mimeType: string | null;
   isImage: boolean;
+  tipo: TipoDePreview;
+  /** Só para exibir "2,4 MB". Não é usado para autorizar nada. */
+  sizeBytes: number | null;
+  /**
+   * Quando o arquivo saiu do servidor por prazo (0086), se saiu.
+   *
+   * O item continua na lista de propósito. Sumir com ele deixaria o cliente
+   * achando que nunca houve peça nenhuma; com a data, ele lê o que
+   * aconteceu e sabe o que pedir.
+   */
+  retiradoEm: string | null;
 };
+
+function classificar(mime: string | null): TipoDePreview {
+  const m = (mime ?? "").toLowerCase();
+  if (m.startsWith("image/")) return "imagem";
+  if (m.startsWith("video/")) return "video";
+  if (m.startsWith("audio/")) return "audio";
+  if (m === "application/pdf") return "pdf";
+  return "outro";
+}
+
+/**
+ * A situação da APROVAÇÃO — que não é a situação da demanda.
+ *
+ * A distinção importa: uma demanda "em andamento" pode já ter sido
+ * aprovada, e uma "concluída" pode nunca ter passado por aqui. Quem abre o
+ * link quer saber o que ELE precisa fazer, não em que coluna a demanda
+ * está internamente.
+ */
+export type EstadoDaAprovacao = "aguardando" | "aprovado" | "ajustes";
 
 export type PublicTaskView = {
   title: string;
+  /** Logo da empresa que compartilhou. Cai na marca do TAFLOW quando falta. */
+  orgLogoUrl: string | null;
+  /** Avatar de quem responde pela demanda, quando existe. */
+  assigneeAvatarUrl: string | null;
+  approvalState: EstadoDaAprovacao;
   description: string | null;
   sectorName: string | null;
   /** "aberta" | "concluida" | "cancelada" — sem vocabulário interno. */
@@ -124,7 +169,7 @@ export async function readSharedTask(token: string): Promise<ShareResult> {
     task.assignee_id
       ? db
           .from("app_user")
-          .select("display_name")
+          .select("display_name, avatar_url")
           .eq("id", task.assignee_id)
           .maybeSingle()
       : Promise.resolve({ data: null }),
@@ -137,14 +182,14 @@ export async function readSharedTask(token: string): Promise<ShareResult> {
     // visual não é controle de acesso (§15).
     db
       .from("attachment")
-      .select("id, filename, mime_type, kind")
+      .select("id, filename, mime_type, kind, size_bytes, purged_at")
       .eq("task_id", link.entity_id)
       .eq("entregavel", true)
       .eq("kind", "file")
       .order("created_at", { ascending: true }),
     db
       .from("workspace")
-      .select("name")
+      .select("name, logo_url")
       .eq("id", link.workspace_id)
       .maybeSingle(),
     // A última resposta DESTE link. De outro link não interessa: quem abre
@@ -173,6 +218,7 @@ export async function readSharedTask(token: string): Promise<ShareResult> {
       // display_name e não e-mail: e-mail é dado pessoal e não ajuda o
       // visitante em nada.
       assigneeName: assignee?.display_name ?? null,
+      assigneeAvatarUrl: assignee?.avatar_url ?? null,
       subtasks: (subtasks ?? []).map((s) => ({
         title: s.title,
         done: s.completed_at !== null,
@@ -184,9 +230,21 @@ export async function readSharedTask(token: string): Promise<ShareResult> {
         // Decidido pelo mime do banco, não pela extensão do nome: nome de
         // arquivo é digitado por gente e mente com frequência.
         isImage: (a.mime_type ?? "").startsWith("image/"),
+        tipo: classificar(a.mime_type),
+        sizeBytes: a.size_bytes,
+        retiradoEm: a.purged_at,
       })),
       updatedAt: task.updated_at,
       orgName: org?.name ?? null,
+      orgLogoUrl: org?.logo_url ?? null,
+      // A situação DA APROVAÇÃO, derivada da última resposta deste link.
+      // "aguardando" enquanto ninguém respondeu.
+      approvalState:
+        ultima?.decision === "aprovado"
+          ? "aprovado"
+          : ultima?.decision === "ajuste"
+            ? "ajustes"
+            : "aguardando",
       lastDecision: (ultima?.decision as "aprovado" | "ajuste") ?? null,
       lastDecisionAt: ultima?.created_at ?? null,
     },

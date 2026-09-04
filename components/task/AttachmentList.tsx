@@ -27,6 +27,8 @@ import {
   useUploadAttachment,
 } from "@/lib/queries/useAttachments";
 import { useWorkspace } from "@/lib/queries/useWorkspace";
+
+import { StorageMeter } from "./StorageMeter";
 import { formatBytes } from "@/lib/utils/file-type";
 import type { Attachment } from "@/types/database";
 
@@ -328,6 +330,8 @@ export function AttachmentList({ taskId }: { taskId: string }) {
           </button>
         </div>
       ) : null}
+
+      {workspace?.id ? <StorageMeter workspaceId={workspace.id} /> : null}
 
       <div className="flex items-center gap-2">
         <Button

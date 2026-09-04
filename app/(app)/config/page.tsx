@@ -13,6 +13,8 @@ const GCAL_MESSAGES: Record<string, string> = {
   sem_refresh:
     "O Google não devolveu autorização de longo prazo. Reconecte e conceda o acesso",
   indisponivel: "Integração com o Google indisponível neste ambiente",
+  sem_permissao:
+    "Só quem administra a empresa conecta o Google. A conta é uma só para todo o workspace — peça a um administrador",
 };
 
 /**

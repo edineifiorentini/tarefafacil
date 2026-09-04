@@ -73,15 +73,31 @@ export async function GET(
   // marcado, e pertencer à MESMA empresa do link.
   const { data: anexo } = await db
     .from("attachment")
-    .select("storage_key, filename, mime_type, workspace_id")
+    .select("storage_key, filename, mime_type, workspace_id, purged_at")
     .eq("id", id)
     .eq("task_id", link.entity_id)
     .eq("entregavel", true)
     .eq("kind", "file")
     .maybeSingle();
 
-  if (!anexo || !anexo.storage_key || anexo.workspace_id !== link.workspace_id) {
+  if (
+    !anexo ||
+    !anexo.storage_key ||
+    anexo.workspace_id !== link.workspace_id
+  ) {
     return NextResponse.json({ erro: "não encontrado" }, { status: 404 });
+  }
+
+  // 6. O arquivo já cumpriu o prazo no servidor (0086)?
+  //
+  // 410 e não 404: o recurso EXISTIU e não existe mais, e a diferença
+  // importa para quem está do outro lado. Assinar a URL aqui devolveria um
+  // erro cru do storage, que não explica nada.
+  if (anexo.purged_at) {
+    return NextResponse.json(
+      { erro: "retirado", retiradoEm: anexo.purged_at },
+      { status: 410 }
+    );
   }
 
   const { data: assinada, error } = await db.storage

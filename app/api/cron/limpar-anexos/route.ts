@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 
+import type { MotivoDaRetirada } from "@/lib/storage/quota";
+import { podeSairDoServidor } from "@/lib/storage/quota";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 /**
@@ -40,6 +42,100 @@ const MAX_POR_EXECUCAO = 500;
 /** Segundo nível que marca arquivo de mensagem, não de demanda. */
 const PASTA_CHAT = "chat";
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Teto da retirada por prazo. Mesma razão do teto da varredura de órfãos. */
+const MAX_RETIRADAS = 200;
+
+/**
+ * Tira do servidor o material de aprovação que já cumpriu o prazo (0086).
+ *
+ * **É a operação INVERSA da varredura de órfãos, e por isso mora numa
+ * função própria.** A de cima apaga o que NÃO está referenciado; esta apaga
+ * o que ESTÁ — arquivo vivo, de demanda real. Misturar as duas num laço só
+ * seria o caminho mais curto para um dia apagar a coisa errada.
+ *
+ * As travas estão em `podeSairDoServidor`, e as três que mais importam:
+ * link do Drive nunca sai, anexo interno nunca sai por tempo, e quem já saiu
+ * não sai de novo.
+ *
+ * A linha do anexo NÃO é apagada — só o objeto. É ela que sustenta o
+ * histórico e a frase que o cliente lê no lugar do arquivo.
+ */
+async function retirarVencidos(db: ReturnType<typeof createAdminClient>) {
+  const { data: candidatos, error } = await db
+    .from("attachment")
+    .select("id, task_id, storage_key, entregavel, created_at, purged_at")
+    .eq("entregavel", true)
+    .not("storage_key", "is", null)
+    .is("purged_at", null)
+    .limit(2000);
+
+  if (error) return { erro: error.message };
+  if (!candidatos || candidatos.length === 0) {
+    return { avaliados: 0, retirados: 0 };
+  }
+
+  // A data de aprovação vem da demanda, não do anexo: `record_task_approval`
+  // registra o veredito da DEMANDA e não recebe id de anexo. Uma consulta só
+  // para todas as tarefas envolvidas — não uma por anexo.
+  const tarefas = [...new Set(candidatos.map((c) => c.task_id))];
+  const { data: aprovacoes } = await db
+    .from("task_approval")
+    .select("task_id, created_at")
+    .in("task_id", tarefas)
+    .eq("decision", "aprovado")
+    .order("created_at", { ascending: false });
+
+  // A mais recente por tarefa: reaprovar depois de ajustes reinicia o prazo.
+  const aprovadoEm = new Map<string, string>();
+  for (const a of aprovacoes ?? []) {
+    if (!aprovadoEm.has(a.task_id)) aprovadoEm.set(a.task_id, a.created_at);
+  }
+
+  const agora = new Date();
+  const sair: { id: string; chave: string; motivo: MotivoDaRetirada }[] = [];
+
+  for (const c of candidatos) {
+    if (sair.length >= MAX_RETIRADAS) break;
+    const motivo = podeSairDoServidor(
+      {
+        storageKey: c.storage_key,
+        entregavel: c.entregavel,
+        criadoEm: c.created_at,
+        aprovadoEm: aprovadoEm.get(c.task_id) ?? null,
+        jaRetiradoEm: c.purged_at,
+      },
+      agora
+    );
+    if (motivo) sair.push({ id: c.id, chave: c.storage_key!, motivo });
+  }
+
+  if (sair.length === 0) {
+    return { avaliados: candidatos.length, retirados: 0 };
+  }
+
+  // O objeto primeiro, a marca depois. Nesta ordem, uma falha no meio deixa
+  // arquivo apagado com linha ainda sem marca — a varredura seguinte tenta
+  // de novo e a remoção é idempotente. Na ordem inversa, a linha diria
+  // "retirado" com o arquivo ainda ocupando espaço, e ninguém voltaria lá.
+  const rm = await db.storage.from(BUCKET).remove(sair.map((s) => s.chave));
+  if (rm.error) return { erro: rm.error.message, tentados: sair.length };
+
+  const carimbo = agora.toISOString();
+  for (const s of sair) {
+    await db
+      .from("attachment")
+      .update({ purged_at: carimbo, purge_reason: s.motivo })
+      .eq("id", s.id);
+  }
+
+  return {
+    avaliados: candidatos.length,
+    retirados: sair.length,
+    porAprovacao: sair.filter((s) => s.motivo === "aprovado_30d").length,
+    semDecisao: sair.filter((s) => s.motivo === "sem_decisao_45d").length,
+  };
+}
 
 function autorizado(request: Request): boolean {
   const segredo = process.env.CRON_SECRET;
@@ -163,12 +259,18 @@ export async function GET(request: Request) {
     }
   }
 
+  // Retenção por prazo (0086). Roda DEPOIS da varredura de órfãos: o que
+  // ela retira vira objeto sem dono, e a semana seguinte já o encontra
+  // limpo — nesta, a linha ainda o referencia.
+  const retencao = await retirarVencidos(db);
+
   // A resposta é o registro da execução: sem isso, um cron que roda errado
   // por meses passa despercebido.
   return NextResponse.json({
     inspecionados,
     referenciados: referenciados.size,
     removidos: orfaos.length,
+    retencao,
     // Pastas fora do formato de anexo de demanda. Se este número crescer,
     // alguém guardou outro tipo de arquivo no bucket e esta rota precisa
     // aprender a reconhecê-lo.

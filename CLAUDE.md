@@ -84,6 +84,25 @@ Radix UI · TanStack Query · dnd-kit · Zod · Storybook 9 · Vitest · Playwri
     O custo de ser diário: entrega de webhook pode demorar até 24h. Hoje
     isso não dói, porque não há nenhum destino cadastrado.
 
+14. **Espaço é por EMPRESA, não por arquivo** (0086, 4/set/2026). O teto é
+    `workspace.storage_limit_bytes`, 1 GB por padrão num servidor de 10 GB.
+    O teto por arquivo em `lib/storage/quota.ts` existe só porque o Supabase
+    impõe um — ele é espelho do limite do projeto, **nunca maior**, senão o
+    arquivo passa aqui e estoura lá com um 413 sem explicação.
+
+    Link do Google Drive (`kind = 'link'`) não ocupa byte e **nunca é
+    apagado** — o arquivo não é nosso. É a saída de quem bate na cota.
+
+    Material de aprovação sai do servidor 30 dias depois de aprovado, ou aos
+    45 sem resposta. **Anexo interno não tem prazo**: briefing e referência
+    são material de trabalho, e o dono pediu prazo para material de
+    aprovação. Quem retira é a varredura de `/api/cron/limpar-anexos`, que é
+    a operação INVERSA da varredura de órfãos ao lado — aquela apaga o que
+    ninguém referencia, esta apaga arquivo vivo. Não junte as duas.
+
+    **A linha do anexo sobrevive à retirada** (`purged_at`). É ela que
+    sustenta o histórico e a frase que o cliente lê no lugar do arquivo.
+
 ## Cores
 
 **A cor da marca é escolha da empresa** (0071), e o padrão desde a 0084 é

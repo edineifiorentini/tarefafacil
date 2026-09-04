@@ -29,11 +29,21 @@ export type ContractStatus =
 export type BillingPeriod = "unico" | "mensal" | "trimestral" | "anual";
 export type GcalStatus = "active" | "expired" | "revoked";
 
+// Por que o arquivo saiu do servidor (0086). Espelha o check da migration.
+export type PurgeReason = "aprovado_30d" | "sem_decisao_45d";
+
 // Cor da marca por empresa (0071). Espelha o `check` da migration e a lista
 // em lib/branding/themes.ts — mudar um sem o outro passa no typecheck e
 // estoura no insert.
 export type BrandThemeId =
-  "taflow" | "azul" | "indigo" | "lilas" | "teal" | "verde" | "magenta" | "grafite";
+  | "taflow"
+  | "azul"
+  | "indigo"
+  | "lilas"
+  | "teal"
+  | "verde"
+  | "magenta"
+  | "grafite";
 
 // Conta de recebimento da empresa (0067). Espelham o `check` da migration —
 // mudar um lado sem o outro deixa o typecheck passar e o insert estourar.
@@ -176,6 +186,11 @@ export type Database = {
            * ainda restaurável. Remoção física só depois de 30 dias assim.
            */
           deleted_at: string | null;
+          /**
+           * Teto de espaço no servidor, em bytes (0086). Padrão 1 GB.
+           * Só conta anexo com storage_key — link do Drive não ocupa.
+           */
+          storage_limit_bytes: number;
           created_at: string;
         };
         Insert: {
@@ -196,6 +211,7 @@ export type Database = {
           brand_theme?: BrandThemeId;
           brand_escolhida_em?: string | null;
           logo_url?: string | null;
+          storage_limit_bytes?: number;
           created_at?: string;
         };
         Update: {
@@ -222,6 +238,8 @@ export type Database = {
           logo_url?: string | null;
           /** Exclusão lógica (0073). Só a plataforma escreve. */
           deleted_at?: string | null;
+          /** Cota de espaço (0086). Só a plataforma escreve. */
+          storage_limit_bytes?: number;
           created_at?: string;
         };
         Relationships: [];
@@ -613,6 +631,12 @@ export type Database = {
           uploaded_by: string | null;
           /** Visível ao cliente pelo link público (0083). */
           entregavel: boolean;
+          /**
+           * Quando o arquivo saiu do servidor (0086). A LINHA FICA: o
+           * histórico e a explicação ao cliente dependem dela.
+           */
+          purged_at: string | null;
+          purge_reason: PurgeReason | null;
           created_at: string;
         };
         Insert: {
@@ -628,6 +652,8 @@ export type Database = {
           uploaded_by?: string | null;
           created_at?: string;
           entregavel?: boolean;
+          purged_at?: string | null;
+          purge_reason?: PurgeReason | null;
         };
         Update: {
           /** Publicar é ato explícito, por arquivo (0083). */
@@ -642,6 +668,9 @@ export type Database = {
           mime_type?: string | null;
           size_bytes?: number | null;
           uploaded_by?: string | null;
+          /** Escrito pela varredura do cron (0086). */
+          purged_at?: string | null;
+          purge_reason?: PurgeReason | null;
           created_at?: string;
         };
         Relationships: [];
@@ -2039,6 +2068,16 @@ export type Database = {
       register_share_view: {
         Args: { p_token: string };
         Returns: undefined;
+      };
+      /**
+       * Bytes que a empresa ocupa no servidor (0086).
+       *
+       * Soma só o que tem `storage_key` e ainda não foi retirado. Link do
+       * Drive não entra — é justamente a saída de quem bate na cota.
+       */
+      workspace_storage_used: {
+        Args: { p_workspace: string };
+        Returns: number;
       };
       /**
        * Trilha escrita pelo servidor, com o autor por parâmetro.

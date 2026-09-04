@@ -1173,3 +1173,232 @@ button:not(:disabled),
     display: flex;
   }
 }
+
+/* ===================================================================
+   ÁREA DE APROVAÇÃO — a página pública /d/[token]
+   ===================================================================
+   **Ela é escura sempre, e isso é escolha, não esquecimento.**
+
+   O resto do produto segue o tema de quem usa. Aqui não: esta página
+   existe para alguém julgar um criativo, e o fundo da página tinge a
+   percepção da peça. Um fundo claro faz o mesmo cartaz parecer mais
+   contrastado; um escuro neutro sai da frente. É a razão de galerias,
+   editores de imagem e players serem escuros.
+
+   Como quem abre não tem conta, também não há preferência de tema para
+   respeitar — o link chega por WhatsApp e abre uma vez.
+
+   As cores são as da marca (CLAUDE.md): grafite, acid lime, pearl. O
+   lime aparece só como acento sobre fundo escuro, onde ele tem
+   contraste — nunca como texto sobre claro.
+   =================================================================== */
+
+.ap-pagina {
+  /* O cabeçalho é fixo. Sem isto, um elemento alcançado por Tab ou por
+     âncora encosta no topo e some atrás dele. */
+  scroll-padding-top: 5rem;
+
+  --ap-fundo: #0e1012;
+  --ap-superficie: #171a1d;
+  --ap-superficie-alta: #1e2124;
+  --ap-linha: rgba(245, 247, 242, 0.09);
+  --ap-linha-forte: rgba(245, 247, 242, 0.16);
+  --ap-tinta: #f5f7f2;
+  --ap-tinta-2: #a8b0aa;
+  --ap-tinta-3: #79817c;
+  --ap-lime: #c7ff38;
+  --ap-coral: #fca5a5;
+
+  /* A marca segue A PÁGINA, não o tema de quem abre.
+   *
+   * Esta tela é escura sempre — quem chega não tem conta e não tem
+   * alternador. Mas `--marca-tinta` nasce grafite no `:root` e só vira
+   * nuvem sob tema escuro, então visitante com o sistema no claro recebia
+   * grafite #171717 sobre #0e1012: 1.06:1, medido com
+   * lib/utils/contrast.ts. A escrita sumia e sobrava o acento solto.
+   * Fixada aqui, dá 17.67:1.
+   *
+   * A placa vem junto pelo mesmo motivo, e não é detalhe: quando a EMPRESA
+   * tem logo cadastrada, ela é imagem de terceiro que não dá para
+   * recolorir. Sem a placa, logo escura desaparece nesta página do mesmo
+   * jeito. */
+  --marca-tinta: #f5f7f2;
+  --marca-acento: #c7ff38;
+  --logo-plate: rgba(255, 255, 255, 0.92);
+  --logo-plate-pad: 6px;
+
+  min-height: 100dvh;
+  background: var(--ap-fundo);
+  color: var(--ap-tinta);
+}
+
+/* ---------------------------------------------------------- cascas */
+.ap-cabecalho {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  border-bottom: 1px solid var(--ap-linha);
+  background: color-mix(in srgb, var(--ap-fundo) 82%, transparent);
+  backdrop-filter: blur(10px) saturate(140%);
+  -webkit-backdrop-filter: blur(10px) saturate(140%);
+}
+
+.ap-card {
+  border: 1px solid var(--ap-linha);
+  border-radius: 14px;
+  background: var(--ap-superficie);
+}
+
+.ap-card-topo {
+  border-bottom: 1px solid var(--ap-linha);
+}
+
+.ap-palco {
+  background: #0a0c0d;
+}
+
+/* ---------------------------------------------------------- texto */
+.ap-titulo-card {
+  font-size: var(--text-small-size);
+  font-weight: 600;
+  color: var(--ap-tinta);
+}
+
+.ap-texto {
+  font-size: var(--text-small-size);
+  color: var(--ap-tinta-2);
+}
+
+.ap-meta {
+  font-size: var(--text-caption-size);
+  color: var(--ap-tinta-3);
+}
+
+.ap-icone-fraco {
+  color: var(--ap-tinta-3);
+}
+
+.ap-eyebrow {
+  font-size: var(--text-caption-size);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ap-lime);
+}
+
+/* --------------------------------------------------------- controles */
+.ap-controle {
+  display: inline-flex;
+  height: 2rem;
+  width: 2rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  color: var(--ap-tinta-2);
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+}
+.ap-controle:hover {
+  background: var(--ap-superficie-alta);
+  color: var(--ap-tinta);
+}
+.ap-controle:focus-visible {
+  outline: 2px solid var(--ap-lime);
+  outline-offset: 2px;
+}
+
+.ap-botao-fantasma {
+  border: 1px solid var(--ap-linha-forte);
+  border-radius: 10px;
+  padding: 0.5rem 0.9rem;
+  font-size: var(--text-small-size);
+  color: var(--ap-tinta);
+  transition: background var(--dur-fast) var(--ease-out);
+}
+.ap-botao-fantasma:hover {
+  background: var(--ap-superficie-alta);
+}
+.ap-botao-fantasma:focus-visible {
+  outline: 2px solid var(--ap-lime);
+  outline-offset: 2px;
+}
+
+/* O botão da decisão. Lime sobre grafite: 15,2:1 medido, e é o único
+   lugar da página onde a cor da marca aparece cheia. */
+.ap-botao-principal {
+  display: inline-flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 10px;
+  padding: 0.8rem 1rem;
+  font-size: var(--text-body-size);
+  font-weight: 600;
+  color: #171717;
+  background: var(--ap-lime);
+  transition:
+    filter var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+.ap-botao-principal:hover {
+  filter: brightness(1.06);
+}
+.ap-botao-principal:active {
+  transform: translateY(1px);
+}
+.ap-botao-principal:focus-visible {
+  outline: 2px solid var(--ap-lime);
+  outline-offset: 3px;
+}
+.ap-botao-principal:disabled {
+  opacity: 0.55;
+  filter: none;
+  cursor: not-allowed;
+}
+
+.ap-campo {
+  width: 100%;
+  border: 1px solid var(--ap-linha-forte);
+  border-radius: 10px;
+  background: var(--ap-fundo);
+  padding: 0.65rem 0.8rem;
+  font-size: var(--text-small-size);
+  color: var(--ap-tinta);
+}
+.ap-campo::placeholder {
+  color: var(--ap-tinta-3);
+}
+.ap-campo:focus-visible {
+  outline: 2px solid var(--ap-lime);
+  outline-offset: 1px;
+}
+
+/* -------------------------------------------------------- marca d'água */
+.ap-marca-dagua {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  font-size: clamp(1.5rem, 5vw, 3rem);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: rgba(245, 247, 242, 0.14);
+  transform: rotate(-24deg);
+  user-select: none;
+  white-space: nowrap;
+}
+
+/* ------------------------------------------------------------ entrada */
+.ap-entra {
+  animation: tf-rise var(--dur-slow) var(--ease-out) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ap-entra {
+    animation: none;
+  }
+}

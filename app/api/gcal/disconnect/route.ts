@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 
-import { requireUserAndWorkspace } from "@/lib/auth/context";
+import {
+  papelAlcanca,
+  papelNoWorkspace,
+  requireUserAndWorkspace,
+} from "@/lib/auth/context";
 import { revokeToken } from "@/lib/gcal/oauth";
 import { deleteConnection, getConnection } from "@/lib/gcal/tokens";
 import { stopWatch } from "@/lib/gcal/watch";
@@ -12,6 +16,13 @@ export async function POST() {
   const ctx = await requireUserAndWorkspace();
   if (!ctx) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  }
+
+  // Mesma trava do connect, e aqui pesa mais: desconectar revoga o token no
+  // Google e desliga `gcal_sync` de TODAS as tarefas da empresa. É a ação
+  // mais destrutiva da integração, e estava aberta a qualquer membro.
+  if (!papelAlcanca(await papelNoWorkspace(ctx), "admin")) {
+    return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 
   const conn = await getConnection(ctx.workspaceId);

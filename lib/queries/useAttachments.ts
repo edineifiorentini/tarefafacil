@@ -3,6 +3,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 
+import {
+  COTA_PADRAO_BYTES,
+  cabeNoServidor,
+  medirOcupacao,
+} from "@/lib/storage/quota";
 import { createClient } from "@/lib/supabase/client";
 import { sanitizeFilename, validateFile } from "@/lib/utils/file-type";
 import type { Attachment } from "@/types/database";
@@ -12,6 +17,42 @@ const MAX_PER_TASK = 20;
 
 function attachmentsKey(workspaceId: string, taskId: string) {
   return ["attachments", workspaceId, taskId] as const;
+}
+
+function usoKey(workspaceId: string) {
+  return ["storage-uso", workspaceId] as const;
+}
+
+/**
+ * Quanto a empresa ocupa no servidor, e quanto pode ocupar (0086).
+ *
+ * O total vem de uma função `security definer` no banco, e não de somar os
+ * anexos que a tela por acaso carregou: a tela conhece os anexos de UMA
+ * demanda, e a cota é da empresa inteira.
+ */
+export function useStorageUsage(workspaceId: string) {
+  const supabase = createClient();
+  return useQuery({
+    queryKey: usoKey(workspaceId),
+    queryFn: async () => {
+      const [uso, ws] = await Promise.all([
+        supabase.rpc("workspace_storage_used", { p_workspace: workspaceId }),
+        supabase
+          .from("workspace")
+          .select("storage_limit_bytes")
+          .eq("id", workspaceId)
+          .maybeSingle(),
+      ]);
+      if (uso.error) throw uso.error;
+      return medirOcupacao(
+        Number(uso.data ?? 0),
+        Number(ws.data?.storage_limit_bytes ?? COTA_PADRAO_BYTES)
+      );
+    },
+    // O total muda a cada envio e a cada exclusão; buscar de novo a cada
+    // foco encheria a rede sem mudar nada na tela.
+    staleTime: 30_000,
+  });
 }
 
 function putWithProgress(
@@ -66,6 +107,26 @@ export function useUploadAttachment(workspaceId: string, taskId: string) {
       const validation = await validateFile(file);
       if (!validation.ok) throw new Error(validation.reason);
 
+      // A cota é lida do banco AGORA, e não do cache: quem está enviando
+      // três arquivos seguidos, ou dois colegas ao mesmo tempo, precisa
+      // ver o total de verdade. Cache de 30s aqui deixaria estourar.
+      const [uso, ws] = await Promise.all([
+        supabase.rpc("workspace_storage_used", { p_workspace: workspaceId }),
+        supabase
+          .from("workspace")
+          .select("storage_limit_bytes")
+          .eq("id", workspaceId)
+          .maybeSingle(),
+      ]);
+      if (uso.error) throw uso.error;
+
+      const veredito = cabeNoServidor({
+        tamanhoDoArquivo: file.size,
+        usadoAgora: Number(uso.data ?? 0),
+        cota: Number(ws.data?.storage_limit_bytes ?? COTA_PADRAO_BYTES),
+      });
+      if (!veredito.cabe) throw new Error(veredito.mensagem);
+
       const attId = crypto.randomUUID();
       const path = `${workspaceId}/${taskId}/${attId}-${sanitizeFilename(file.name)}`;
 
@@ -99,7 +160,11 @@ export function useUploadAttachment(workspaceId: string, taskId: string) {
       });
       if (error) throw error;
 
-      await qc.invalidateQueries({ queryKey: key });
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: key }),
+        // O total da empresa mudou: a barra de espaço tem que acompanhar.
+        qc.invalidateQueries({ queryKey: usoKey(workspaceId) }),
+      ]);
     },
     [qc, supabase, workspaceId, taskId, key]
   );
@@ -173,7 +238,12 @@ export function useDeleteAttachment(workspaceId: string, taskId: string) {
     onError: (_e, _v, ctx) => {
       if (ctx) qc.setQueryData(key, ctx.previous);
     },
-    onSettled: () => qc.invalidateQueries({ queryKey: key }),
+    onSettled: () => {
+      void qc.invalidateQueries({ queryKey: key });
+      // Apagar libera espaço, e é justamente o que alguém faz depois de
+      // bater na cota. Sem isto a barra continuaria cheia na tela.
+      void qc.invalidateQueries({ queryKey: usoKey(workspaceId) });
+    },
   });
 }
 

@@ -16,6 +16,91 @@ Datas no formato dia/mês/ano.
 
 ---
 
+## 4/set/2026
+
+**Áudio e vídeo passaram a ser aceitos para aprovação.** MP3 era recusado —
+o sistema não reconhecia o formato e devolvia "tipo de arquivo não
+permitido". Agora entra, e toca dentro da página do cliente, com o tempo
+total aparecendo antes de dar play. Vídeo já entrava, mas tinha um defeito:
+enviado de certas origens, era guardado como se fosse áudio e abria num
+player sem imagem. Corrigido.
+
+**O limite deixou de ser por arquivo e passou a ser por empresa.** Antes
+cada arquivo tinha um teto e o total era livre — o que barrava um vídeo de
+campanha legítimo e não dizia nada sobre quem sobe mil imagens. Agora cada
+empresa tem **1 GB de espaço no servidor**. O aviso aparece na tela de
+anexos quando você chega perto, com quanto já usou.
+
+**A saída para quem precisa de mais é o Google Drive.** Arquivo que está no
+Drive não ocupa espaço aqui — cole o link no campo de anexos em vez de
+enviar o arquivo, e o espaço passa a ser o da sua conta do Drive. Link do
+Drive também nunca é apagado por prazo: o arquivo é seu, não nosso.
+
+**Arquivo de aprovação tem prazo no servidor, e é de propósito.** O TAFLOW é
+gestão de demanda, não um lugar para arquivar. Depois de aprovado, o
+material fica **30 dias** — tempo de ir para a gráfica ou para as redes. Se
+ninguém responder, ele sai em **45 dias**. Quando isso acontece, o link do
+cliente não quebra: ele passa a mostrar a data em que o arquivo saiu e o que
+fazer. **Anexo interno não tem prazo** — briefing, referência e captura de
+tela ficam.
+
+**Só quem administra a empresa conecta ou desconecta o Google.** A conta do
+Google é uma só para a empresa inteira, e qualquer pessoa da equipe podia
+trocá-la — ou desconectar, o que desliga a sincronização de todas as
+demandas de uma vez. Agora isso é de administrador.
+
+**A tela que o seu cliente abre foi refeita.** Aquele link que você manda
+para aprovar um material saía numa página de uma coluna, com o nome dos
+arquivos escritos em lista e dois botões embaixo. Ela funcionava, e não
+parecia o lugar onde alguém assina embaixo.
+
+**Agora o material aparece.** Imagem, vídeo, áudio e PDF abrem dentro da
+página, com zoom, encaixe na tela e tela cheia. Mandou mais de um arquivo?
+Eles viram abas no topo da prévia, e o cliente passa de um para o outro sem
+sair do lugar.
+
+**Do lado, o contexto:** quem é o responsável pela demanda, o que foi
+pedido, quais arquivos foram enviados e em que pé está o trabalho.
+
+**As etapas viraram um caminho.** Antes eram três bolinhas soltas, uma em
+cima da outra — parecia que o cliente precisava escolher uma. Agora há uma
+linha ligando etapa a etapa, com a marcação do que já foi feito, do que está
+em andamento e do que ainda vem. Ele não clica em nada ali: é só para saber
+onde a demanda está.
+
+**Aprovar pede confirmação.** É a única coisa na página que não tem volta, e
+a confirmação diz exatamente o que vai ser aprovado. Quando a demanda tem
+mais de um material, ela avisa que a aprovação vale para todos — e não só
+para o que está na tela.
+
+**O arquivo original continua não saindo dali.** O cliente vê a peça; o que
+não sai é o arquivo de origem — o PSD em camadas, o master em alta. Vale
+dizer com todas as letras: **quem vê uma imagem consegue salvá-la**, e
+nenhuma tela do mundo muda isso. O que o TAFLOW garante é que o endereço do
+seu arquivo no armazenamento nunca chega ao navegador de quem abriu o link,
+e que cada abertura passa por uma checagem do link antes de mostrar
+qualquer coisa.
+
+**A sua marca aparece no topo.** Se a empresa tem logo cadastrada, é a dela
+que o cliente vê. Se não tem, aparece a do TAFLOW. E ela era invisível para
+uma parte das pessoas: quem estivesse com o celular ou o computador no modo
+claro recebia a escrita em grafite sobre a página escura, e enxergava só o
+detalhe verde. Corrigido.
+
+**Uma coisa que talvez você não saiba, e muda o que o seu cliente vê:** a
+prévia só mostra o que estiver **marcado como entregável** na demanda.
+Anexo comum não aparece — é de propósito, para contrato e planilha de custo
+não irem junto por engano. Hoje não há nenhum arquivo marcado assim no
+sistema, o que significa que todo link aberto agora mostra "este material
+ainda não possui uma prévia". Marque o arquivo na demanda e ele passa a
+aparecer.
+
+**O que ainda não existe, para não haver surpresa:** o TAFLOW não guarda
+versões de um arquivo — mandar uma peça nova é mandar um anexo novo. Por
+isso a página não numera versões, não mostra histórico e ainda não libera o
+download depois da aprovação. As três coisas dependem da mesma peça, e ela
+vem junto.
+
 ## 3/set/2026
 
 **Três respostas sobre pagamento que estavam em aberto.** Elas apareciam

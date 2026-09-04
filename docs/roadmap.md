@@ -2171,3 +2171,156 @@ e ótimo na segunda.
 **Impressão ou arquivo.** Imprimir reusa o caminho do contrato (0032) e sai
 rápido. CSV serve para quem vai continuar a conta em planilha. São públicos
 diferentes.
+
+---
+
+## 27. A área de aprovação repaginada (4/set/2026)
+
+A tela pública `/d/[token]` era uma coluna com título, descrição, lista de
+nomes de arquivo e dois botões. Ela funcionava e **não parecia um lugar onde
+se assina embaixo** — que é exatamente o que o cliente faz ali.
+
+Refeita em cima do que já existia: mesma rota, mesmos tokens públicos, mesma
+`record_task_approval`. **Nenhum link já enviado quebrou**, e isso era
+requisito, não consequência feliz.
+
+**Prévia de verdade, por tipo.** Imagem, vídeo, áudio e PDF abrem na página,
+com zoom, encaixe, tela cheia e navegação entre os arquivos. Quem tem mais
+de um material troca por abas (`role="tablist"`), e as abas listam **só
+anexos** — etapa da demanda nunca vira aba, porque etapa não é arquivo.
+
+**Três cards de contexto**: quem responde, o que foi pedido, e as etapas.
+Todos são Server Component: não têm estado nem evento, e mandá-los como
+JavaScript para alguém que abriu um link no celular seria pagar por nada.
+
+**As etapas viraram percurso, e isso foi correção de defeito.** Três
+círculos empilhados leem como grupo de rádio, e o cliente não está
+escolhendo etapa nenhuma. Uma linha vertical liga um marcador ao outro. A
+primeira tentativa nasceu com zero de altura — `align-self: stretch` só
+alcança a caixa de conteúdo, e o vão entre as etapas é preenchimento. A
+linha passou a ser absoluta ancorada no `<li>`. Medido no navegador: 12px,
+alinhada ao centro do marcador.
+
+**Aprovar pede confirmação.** É a única ação sem volta pela interface.
+
+### Decisões de segurança, e o que cada uma de fato garante
+
+- **`storage_key` não cruza a fronteira.** `readSharedTask` monta a resposta
+  campo a campo. Conferido no HTML servido: zero ocorrência do bucket
+  `attachments`, zero de `storage_key`. O único endereço de storage na
+  página é a foto de perfil do responsável, do bucket `avatars`, que é
+  público por desenho (0069) — como o de `logos` (0080).
+- **A marca-d'água é CSS, e está escrito no código que ela não é proteção.**
+  Ela marca a origem para quem for repassar um print; qualquer pessoa com o
+  inspetor a remove em dois cliques.
+- **Sem bloqueio de clique direito.** Não impede nada e ensina o visitante
+  que a tela desconfia dele.
+- **Sem "Link seguro".** O texto diz "Link de aprovação". O link é longo,
+  imprevisível, expira e pode ser revogado — e nada disso o torna seguro no
+  sentido que a palavra promete: quem tiver o endereço entra, porque é
+  exatamente para isso que ele existe.
+- **Nada de IP, localização ou user agent.** Não se começa a guardar dado de
+  visitante em silêncio.
+
+### O que ficou de fora, e por quê
+
+**Não há número de versão, e não há histórico de versões.** O TAFLOW não
+versiona anexo — um arquivo novo é um anexo novo. Escrever "VERSÃO 03" seria
+número inventado numa tela em que a pessoa assina embaixo.
+
+**Não há download depois de aprovar**, pelo mesmo motivo: liberar o original
+exige saber QUAL versão foi aprovada, e não existe versão. A tela promete o
+download em texto ("será liberado após a aprovação") e é a única promessa
+pendente ali — resolver o versionamento resolve as três de uma vez.
+
+**A aprovação é da DEMANDA, não do arquivo.** `record_task_approval` recebe
+token e veredito, não id de anexo. O diálogo de confirmação diz isso com
+todas as letras quando há mais de um material, para ninguém achar que
+aprovou só o que estava na tela.
+
+**O nome de quem responde continua opcional.** O link é anônimo por
+natureza; exigir o nome daria sensação de prova que a implementação não
+sustenta. Tornar obrigatório é decisão de produto.
+
+**Sem "Enviar mensagem" no card do responsável.** Não existe canal seguro
+para um visitante sem conta falar com a equipe, e um botão que abrisse o
+e-mail pessoal exporia o dado que esta página trabalha para não expor. O
+pedido de ajustes já é o caminho que chega nele.
+
+### O que o dono precisa saber
+
+**Nenhum anexo do sistema está marcado como entregável.** Conferido em
+4/set/2026: dois anexos no total, zero marcados. Ou seja, o recurso de 0083
+nunca foi usado, e **o que todo visitante vê hoje é o estado vazio da
+prévia** — "este material ainda não possui uma prévia". A tela nova está
+correta; só não tem o que mostrar até alguém marcar um arquivo como
+entregável na demanda.
+
+---
+
+## 28. Cota de espaço e prazo do arquivo (4/set/2026, migration 0086)
+
+O dono trocou a estratégia depois de ver que o teto por arquivo resolvia o
+problema errado: barrava o vídeo de campanha de 30 MB, que é legítimo, e não
+dizia nada sobre a empresa que sobe mil imagens de 2 MB. O servidor tem
+10 GB e quem o esgota é o total.
+
+**1 GB por empresa** (`workspace.storage_limit_bytes`, por empresa e não
+constante no código — plano diferente pede número diferente, e trocar uma
+coluna não exige deploy). A saída de quem precisa de mais é o Google Drive:
+link já custa zero byte aqui.
+
+**Prazo**: aprovado sai em 30 dias, sem resposta sai em 45. A varredura mora
+em `/api/cron/limpar-anexos`, em função própria — é a operação INVERSA da
+varredura de órfãos que já estava lá, e juntar as duas seria o caminho mais
+curto para um dia apagar arquivo vivo por engano.
+
+**A linha do anexo sobrevive** (`purged_at`): sem ela o histórico perderia o
+registro de que a peça existiu, e o link do cliente passaria a mostrar
+arquivo quebrado em vez de uma frase. A rota do anexo responde **410**, e
+não 404 — o recurso existiu e não existe mais, e a diferença importa.
+
+### Formatos: MP3 entrou, e o vídeo estava com defeito
+
+MP3 era recusado porque o validador não tinha as assinaturas dele — são
+duas: a etiqueta ID3 e o sincronismo de quadro. Testado com arquivo real.
+
+O defeito do vídeo era mais silencioso: `ftyp` caía num `audio/mp4` fixo,
+então MP4 e WebM enviados sem `file.type` do navegador viravam áudio e
+abriam num player sem imagem. Agora a marca no offset 8 decide, com a
+extensão vindo antes dela nos casos `.m4a`/`.m4b` — o recado de voz do
+Safari sai `.m4a` mas nem sempre carimba a marca `M4A `.
+
+### Brecha fechada no caminho
+
+`/api/gcal/connect` e `/api/gcal/disconnect` só exigiam estar logado.
+`google_connection` é chaveada por EMPRESA, então qualquer membro —
+inclusive um `viewer`, que não escreve nada no resto do app — podia
+substituir a conta do Google da empresa, ou desconectar e desligar o
+`gcal_sync` de todas as demandas de uma vez. Agora é `admin`, via
+`papelNoWorkspace` / `papelAlcanca` em `lib/auth/context.ts`.
+
+### O que ficou de fora, declarado
+
+**Não há aviso antes do arquivo sair.** O prazo é cumprido em silêncio, e
+isso é o principal a resolver na próxima rodada: uma varredura que avise a
+equipe alguns dias antes transforma a política em algo previsível em vez de
+susto. Depende de canal de notificação, que hoje é só o sino interno.
+
+**Não há subida direta para o Google Drive.** "Usar o Drive" hoje é colar o
+link, o que já resolve o espaço mas não a comodidade. A integração de
+verdade é rodada própria e tem um custo que não aparece no plano: somar
+escopo `drive.file` **invalida o consentimento de quem já conectou**, então
+todo mundo que hoje sincroniza a Agenda teria que reautorizar. O código já
+força `prompt: "consent"`, então quem reconectar recebe o escopo novo
+sozinho — mas o código precisará checar a coluna `scope` antes de chamar o
+Drive, porque conexão antiga continua válida sem ele.
+
+**A tela de consentimento do Google pode estar barrando outras empresas.**
+Em modo "Testing" só os e-mails cadastrados como teste conectam. Isso é
+configuração do Google Cloud Console, fora do repositório, e precisa ser
+conferida antes de convidar empresa nova.
+
+**Nada mede o total do servidor.** A cota é por empresa; ninguém soma as
+empresas para responder "quanto dos 10 GB já foi". Com uma empresa isso não
+dói, e com vinte dói.
