@@ -1,131 +1,109 @@
 "use client";
 
-import {
-  IconBan,
-  IconCheck,
-  IconLayoutList,
-  IconSearch,
-  IconTrash,
-  IconX,
-} from "@tabler/icons-react";
-import { useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
+
+import { IconChevronRight, IconLayoutList } from "@tabler/icons-react";
 
 import { useShell } from "@/components/shell/shell-context";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { Select } from "@/components/ui/Select";
-import {
-  EMPTY_LIST_FILTERS,
-  filterTasks,
-  filtrosDaURL,
-  groupTasks,
-  sortTasks,
-  type GroupBy,
-  type ListFilters,
-  type SortBy,
-} from "@/lib/task/list-view";
-import { useClients } from "@/lib/queries/useClients";
 import { useBulkTaskActions } from "@/lib/queries/useBulkTasks";
-import { useMembers } from "@/lib/queries/useMembers";
+import { useClients } from "@/lib/queries/useClients";
+import { useCurrentUserId, useMembers } from "@/lib/queries/useMembers";
 import { useSectors } from "@/lib/queries/useSectors";
 import {
   countOpenSubtasks,
   useCompleteTask,
   useDeleteTask,
+  useTasks,
   useToggleTaskCancel,
   useToggleTaskComplete,
-  useTasks,
+  useUpdateTask,
 } from "@/lib/queries/useTasks";
 import { useWorkspace } from "@/lib/queries/useWorkspace";
-import { sectorOptions } from "@/lib/sectors/options";
+import { useWorkspaceColumns } from "@/lib/queries/useWorkspaceColumns";
+import {
+  contarFiltrosAtivos,
+  estadoDaURL,
+  filterTasks,
+  groupTasks,
+  sortTasks,
+} from "@/lib/task/list-view";
+import { aplicarVisao, contarVisoes } from "@/lib/task/quick-views";
 import type { Task } from "@/types/database";
 
 import { ConfirmCompleteDialog } from "./ConfirmCompleteDialog";
 import { TaskDetailPanel } from "./TaskDetailPanel";
-import { TaskRow } from "./TaskRow";
-
-const STATUS_OPTIONS = [
-  { value: "todas", label: "Todas" },
-  { value: "aberta", label: "Abertas" },
-  { value: "atrasada", label: "Atrasadas" },
-  { value: "concluida", label: "Concluídas" },
-  { value: "cancelada", label: "Canceladas" },
-];
-const PRIORITY_OPTIONS = [
-  { value: "__all__", label: "Todas" },
-  { value: "urgente", label: "Urgente" },
-  { value: "alta", label: "Alta" },
-  { value: "media", label: "Normal" },
-  { value: "baixa", label: "Baixa" },
-  { value: "sem_prioridade", label: "Sem prioridade" },
-];
-const DUE_OPTIONS = [
-  { value: "__all__", label: "Qualquer prazo" },
-  { value: "7", label: "Próximos 7 dias" },
-  { value: "14", label: "Próximos 14 dias" },
-  { value: "30", label: "Próximos 30 dias" },
-];
-const GROUP_OPTIONS: { value: GroupBy; label: string }[] = [
-  { value: "none", label: "Sem agrupamento" },
-  { value: "overdue", label: "Atrasadas" },
-  { value: "day", label: "Dia" },
-  { value: "week", label: "Semana" },
-  { value: "client", label: "Cliente" },
-  { value: "assignee", label: "Responsável" },
-  { value: "status", label: "Status" },
-  { value: "no_date", label: "Com/sem data" },
-];
-const SORT_OPTIONS: { value: SortBy; label: string }[] = [
-  { value: "due", label: "Prazo" },
-  { value: "priority", label: "Prioridade" },
-  { value: "client", label: "Cliente" },
-  { value: "created", label: "Criação" },
-  { value: "updated", label: "Atualização" },
-];
+import {
+  ActiveFilterChips,
+  chipsDosFiltros,
+} from "./list/ActiveFilterChips";
+import { BulkActionBar } from "./list/BulkActionBar";
+import { TaskListHeader } from "./list/TaskListHeader";
+import { TaskListRow } from "./list/TaskListRow";
+import { TaskListSkeleton } from "./list/TaskListSkeleton";
+import { TaskListToolbar } from "./list/TaskListToolbar";
+import { TaskQuickViews } from "./list/TaskQuickViews";
+import { useEstadoDaLista } from "./list/useEstadoDaLista";
+import { useSavedViews } from "./list/useSavedViews";
 
 /**
- * Cada filtro tem a largura do próprio rótulo, com teto. Largura fixa cortava
- * "Todos os responsáveis" — e um filtro que não diz o que está filtrando não
- * serve. A barra já quebra em outra linha quando falta espaço.
+ * A Lista.
+ *
+ * COMO A TELA SE MONTA, e a ordem importa:
+ *
+ * 1. as demandas do workspace (cache já compartilhado com Quadro e Hoje);
+ * 2. os FILTROS avançados — é sobre este recorte que os números dos chips
+ *    são contados, para "Atrasadas 4" dizer quatro dentro do que está
+ *    filtrado, e não quatro no workspace inteiro;
+ * 3. a VISÃO rápida;
+ * 4. ordenação e agrupamento, que só mudam a apresentação.
+ *
+ * **As concluídas ficam num bloco recolhido no fim.** Era o defeito mais
+ * caro da tela antiga: num workspace com um mês de uso há mais concluídas
+ * que abertas, e a primeira coisa que se via era uma parede de títulos
+ * riscados. Agora a visão inicial é "Em aberto", e as concluídas aparecem
+ * atrás de um botão que diz quantas são.
+ *
+ * O estado inteiro vive na URL (`useEstadoDaLista`) — por isso voltar do
+ * detalhe devolve a mesma lista, e o link vale como link.
  */
-const FILTER_W = "max-w-60";
-
 export function ListView() {
-  const searchParams = useSearchParams();
   const workspace = useWorkspace();
-  const { data: tasks = [], isLoading } = useTasks(workspace.id);
+  const { data: userId } = useCurrentUserId();
+  const { data: tasks = [], isLoading, isError, refetch } = useTasks(workspace.id);
   const { data: sectors = [] } = useSectors(workspace.id);
   const { data: clients = [] } = useClients(workspace.id);
   const { data: members = [] } = useMembers(workspace.id);
+  const { data: colunas = [] } = useWorkspaceColumns(workspace.id);
   const { openPanel } = useShell();
 
   const toggle = useToggleTaskComplete(workspace.id);
   const complete = useCompleteTask(workspace.id);
   const deleteTask = useDeleteTask(workspace.id);
   const toggleCancel = useToggleTaskCancel(workspace.id);
+  const update = useUpdateTask(workspace.id);
   const bulk = useBulkTaskActions(workspace.id);
 
-  // Inicializador preguiçoso: os filtros da URL valem na PRIMEIRA
-  // renderização e depois saem do caminho. Sincronizar nos dois sentidos
-  // faria o estado brigar com a barra de endereço a cada tecla digitada na
-  // busca — e a Lista, ao contrário do relatório, não é uma tela feita para
-  // ser mandada por link.
-  const [filters, setFilters] = useState<ListFilters>(() =>
-    filtrosDaURL(new URLSearchParams(searchParams.toString()))
+  const { estado, alterar, limpar } = useEstadoDaLista();
+  const { views, salvar, remover } = useSavedViews(
+    userId ?? undefined,
+    workspace.id
   );
-  const [groupBy, setGroupBy] = useState<GroupBy>("none");
-  const [sortBy, setSortBy] = useState<SortBy>("due");
-  const [selected, setSelected] = useState<Set<string>>(new Set());
-  // Seleção fica atrás de um botão. Com a caixa sempre visível ao lado da
-  // de concluir, duas ações diferentes disputavam o mesmo canto da linha e
-  // confundiam quem só queria marcar a demanda como feita.
+
   const [modoSelecao, setModoSelecao] = useState(false);
+  const [selecionadas, setSelecionadas] = useState<Set<string>>(new Set());
+  const [concluidasAbertas, setConcluidasAbertas] = useState(false);
+  const [gruposFechados, setGruposFechados] = useState<Set<string>>(new Set());
   const [confirm, setConfirm] = useState<{ task: Task; count: number } | null>(
     null
   );
 
-  const sectorsById = new Map(sectors.map((s) => [s.id, s]));
+  // ---------------------------------------------------------------- mapas
+  const sectorById = useMemo(
+    () => new Map(sectors.map((s) => [s.id, s])),
+    [sectors]
+  );
   const clientNameById = useMemo(
     () => new Map(clients.map((c) => [c.id, c.name])),
     [clients]
@@ -134,334 +112,375 @@ export function ListView() {
     () => new Map(members.map((m) => [m.user_id, m.display_name ?? m.email])),
     [members]
   );
-
-  const filtered = useMemo(() => filterTasks(tasks, filters), [tasks, filters]);
-  const sorted = useMemo(
-    () => sortTasks(filtered, sortBy, clientNameById),
-    [filtered, sortBy, clientNameById]
+  const memberById = useMemo(
+    () => new Map(members.map((m) => [m.user_id, m])),
+    [members]
   );
-  const groups = useMemo(
-    () => groupTasks(sorted, groupBy, { clientNameById, memberNameById }),
-    [sorted, groupBy, clientNameById, memberNameById]
+  const colunaById = useMemo(
+    () => new Map(colunas.map((c) => [c.id, c.name])),
+    [colunas]
+  );
+  const membrosAtivos = useMemo(
+    () =>
+      members
+        .filter((m) => m.status === "active")
+        .map((m) => ({ id: m.user_id, nome: m.display_name ?? m.email })),
+    [members]
   );
 
-  const hasFilters =
-    filters.q.trim() !== "" ||
-    filters.status !== "todas" ||
-    filters.sectorIds.length > 0 ||
-    filters.priorities.length > 0 ||
-    !!filters.clientId ||
-    !!filters.assigneeId ||
-    filters.dueWithinDays !== null;
+  // --------------------------------------------------------------- cálculo
+  /**
+   * A busca olha título, cliente e responsável — como diz o campo.
+   *
+   * `filterTasks` só sabe título (ela é usada por outras telas). Aqui a
+   * busca é ampliada ANTES, sobre os nomes já resolvidos: cliente e
+   * responsável são id na demanda, e comparar id com texto digitado nunca
+   * encontraria nada.
+   */
+  const comBusca = useMemo(() => {
+    const q = estado.filtros.q.trim().toLowerCase();
+    if (!q) return tasks;
+    return tasks.filter((t) => {
+      if (t.title.toLowerCase().includes(q)) return true;
+      const cliente = t.client_id ? clientNameById.get(t.client_id) : null;
+      if (cliente?.toLowerCase().includes(q)) return true;
+      const pessoa = t.assignee_id ? memberNameById.get(t.assignee_id) : null;
+      if (pessoa?.toLowerCase().includes(q)) return true;
+      const setor = sectorById.get(t.sector_id)?.name;
+      return !!setor?.toLowerCase().includes(q);
+    });
+  }, [tasks, estado.filtros.q, clientNameById, memberNameById, sectorById]);
 
-  async function handleToggle(task: Task, completed: boolean) {
-    if (!completed) {
+  const comFiltros = useMemo(
+    // A busca já foi aplicada acima; aqui só os filtros avançados.
+    () => filterTasks(comBusca, { ...estado.filtros, q: "" }),
+    [comBusca, estado.filtros]
+  );
+
+  const contagens = useMemo(() => contarVisoes(comFiltros), [comFiltros]);
+
+  const naVisao = useMemo(
+    () => aplicarVisao(comFiltros, estado.visao),
+    [comFiltros, estado.visao]
+  );
+
+  const ordenadas = useMemo(
+    () => sortTasks(naVisao, estado.sortBy, clientNameById),
+    [naVisao, estado.sortBy, clientNameById]
+  );
+
+  const grupos = useMemo(
+    () =>
+      groupTasks(ordenadas, estado.groupBy, {
+        clientNameById,
+        memberNameById,
+        sectorById,
+      }),
+    [ordenadas, estado.groupBy, clientNameById, memberNameById, sectorById]
+  );
+
+  /**
+   * As concluídas do bloco do fim.
+   *
+   * Só existem quando a visão é "Em aberto" e não há agrupamento: nas
+   * outras, ou elas não pertencem ao recorte, ou o agrupamento escolhido já
+   * é a divisão que a pessoa pediu — e dois níveis de agrupamento na mesma
+   * tela viram um labirinto.
+   */
+  const concluidas = useMemo(() => {
+    if (estado.visao !== "aberto" || estado.groupBy !== "none") return [];
+    return sortTasks(
+      comFiltros.filter((t) => t.completed_at && !t.cancelled_at),
+      estado.sortBy,
+      clientNameById
+    );
+  }, [comFiltros, estado.visao, estado.groupBy, estado.sortBy, clientNameById]);
+
+  const visiveis = useMemo(
+    () => grupos.flatMap((g) => g.tasks),
+    [grupos]
+  );
+  const total = visiveis.length;
+  const quantidadeDeFiltros = contarFiltrosAtivos(estado.filtros);
+
+  const chips = chipsDosFiltros(
+    estado.filtros,
+    {
+      setor: (id) => sectorById.get(id)?.name ?? "Setor removido",
+      cliente: (id) => clientNameById.get(id) ?? "Cliente removido",
+      responsavel: (id) => memberNameById.get(id) ?? "Removido",
+      prioridade: (v) =>
+        ({
+          urgente: "Urgente",
+          alta: "Alta",
+          media: "Normal",
+          baixa: "Baixa",
+          sem_prioridade: "Sem prioridade",
+        })[v] ?? v,
+      status: (v) =>
+        ({
+          aberta: "Abertas",
+          atrasada: "Atrasadas",
+          concluida: "Concluídas",
+          cancelada: "Canceladas",
+        })[v] ?? v,
+    },
+    (m) => alterar({ filtros: { ...estado.filtros, ...m } })
+  );
+
+  // ----------------------------------------------------------------- ações
+  async function handleToggle(task: Task, concluir: boolean) {
+    if (!concluir) {
       toggle.mutate({ id: task.id, completed: false });
       return;
     }
-    const open = await countOpenSubtasks(task.id);
-    if (open > 0) {
-      setConfirm({ task, count: open });
+    // A confirmação de subtarefas abertas é comportamento existente, e
+    // continua: concluir a mãe sem avisar deixa filhas penduradas.
+    const abertas = await countOpenSubtasks(task.id);
+    if (abertas > 0) {
+      setConfirm({ task, count: abertas });
       return;
     }
     toggle.mutate({ id: task.id, completed: true });
   }
 
-  function toggleSelect(id: string, on: boolean) {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (on) next.add(id);
-      else next.delete(id);
-      return next;
+  function abrir(task: Task) {
+    openPanel({
+      title: "Tarefa",
+      node: <TaskDetailPanel taskId={task.id} />,
     });
   }
 
-  const selectedIds = [...selected];
-
-  function runBulk(action: (ids: string[]) => void) {
-    action(selectedIds);
-    setSelected(new Set());
+  function alternarSelecao(id: string, on: boolean) {
+    setSelecionadas((prev) => {
+      const proximo = new Set(prev);
+      if (on) proximo.add(id);
+      else proximo.delete(id);
+      return proximo;
+    });
   }
 
-  const totalVisible = groups.reduce((sum, g) => sum + g.tasks.length, 0);
+  function emLote(acao: (ids: string[]) => void) {
+    acao([...selecionadas]);
+    setSelecionadas(new Set());
+  }
+
+  const idsVisiveis = visiveis.map((t) => t.id);
+  const todasSelecionadas =
+    idsVisiveis.length > 0 && idsVisiveis.every((id) => selecionadas.has(id));
+
+  function renderLinha(task: Task) {
+    const responsavelId = task.assignee_id;
+    const membro = responsavelId ? memberById.get(responsavelId) : undefined;
+    const cliente = task.client_id ? clientNameById.get(task.client_id) : null;
+
+    return (
+      <TaskListRow
+        key={task.id}
+        task={task}
+        sector={sectorById.get(task.sector_id)}
+        coluna={task.column_id ? colunaById.get(task.column_id) : null}
+        responsavel={
+          membro
+            ? {
+                nome: membro.display_name ?? membro.email,
+                avatarUrl: membro.avatar_url,
+              }
+            : null
+        }
+        secundaria={cliente}
+        membros={membrosAtivos}
+        modoSelecao={modoSelecao}
+        selecionada={selecionadas.has(task.id)}
+        denso={false}
+        onSelectChange={(on) => alternarSelecao(task.id, on)}
+        onToggle={(c) => handleToggle(task, c)}
+        onToggleCancel={(cancel) =>
+          toggleCancel.mutate({ id: task.id, cancel })
+        }
+        onDelete={() => deleteTask(task)}
+        onOpen={() => abrir(task)}
+        onAtribuir={(uid) =>
+          update.mutate({ id: task.id, patch: { assignee_id: uid } })
+        }
+        // Editar prazo abre o detalhe, onde o campo de data já existe com
+        // hora de início, hora de fim e a regra do Google Agenda junto.
+        // Um seletor de data solto na lista seria um segundo lugar de
+        // editar prazo, com metade das regras.
+        onEditarPrazo={() => abrir(task)}
+      />
+    );
+  }
+
+  // --------------------------------------------------------------- estados
+  if (isError) {
+    return (
+      <Casca>
+        <div className="border-line bg-card flex flex-col items-start gap-3 rounded-md border p-6">
+          <p className="text-fg text-[length:var(--text-small-size)] font-medium">
+            Não foi possível carregar as demandas.
+          </p>
+          <p className="text-fg-secondary text-[length:var(--text-small-size)]">
+            Seus filtros continuam aplicados — nada do que você montou se
+            perdeu.
+          </p>
+          <Button variant="secondary" size="sm" onClick={() => void refetch()}>
+            Tentar novamente
+          </Button>
+        </div>
+      </Casca>
+    );
+  }
+
+  const listaVazia = !isLoading && tasks.length === 0;
 
   return (
-    <div className="mx-auto flex w-full max-w-[var(--max-width-app)] flex-col gap-[var(--space-block-gap)] px-4 pb-8 lg:px-6">
-      {/* Barra de ferramentas contida: busca, filtros e, à direita, o que
-          controla a apresentação (agrupar/ordenar). */}
+    <Casca>
+      <header className="flex flex-wrap items-end justify-between gap-x-4 gap-y-1">
+        <div>
+          <h2 className="text-fg text-[length:var(--text-h2-size)] leading-[var(--text-h2-line)] font-semibold">
+            Lista
+          </h2>
+          <p className="text-fg-secondary mt-1">
+            Encontre, organize e atualize todas as demandas.
+          </p>
+        </div>
+        {/* A contagem é do RECORTE, não do workspace. Um total absoluto ao
+            lado de uma lista filtrada faz quem lê procurar as demandas que
+            faltam. */}
+        <span
+          aria-live="polite"
+          className="tnum text-fg-secondary text-[length:var(--text-small-size)]"
+        >
+          {isLoading
+            ? "…"
+            : `${total} ${total === 1 ? "demanda" : "demandas"}`}
+        </span>
+      </header>
+
       <div className="border-line bg-card flex flex-col gap-3 rounded-md border p-3 shadow-[var(--shadow-card)]">
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="relative min-w-56 flex-1">
-            <IconSearch
-              aria-hidden
-              size={16}
-              stroke={1.75}
-              className="text-fg-muted pointer-events-none absolute top-1/2 left-3 -translate-y-1/2"
-            />
-            <input
-              type="search"
-              value={filters.q}
-              onChange={(e) => setFilters((f) => ({ ...f, q: e.target.value }))}
-              placeholder="Buscar por título…"
-              aria-label="Buscar demandas"
-              className="border-line bg-page text-fg placeholder:text-fg-muted h-9 w-full rounded-sm border pr-3 pl-9 text-[length:var(--text-small-size)]"
-            />
-          </div>
+        <TaskListToolbar
+          estado={estado}
+          quantidadeDeFiltros={quantidadeDeFiltros}
+          setores={sectors.map((s) => ({ value: s.id, label: s.name }))}
+          clientes={clients.map((c) => ({ value: c.id, label: c.name }))}
+          responsaveis={membrosAtivos.map((m) => ({
+            value: m.id,
+            label: m.nome,
+          }))}
+          modoSelecao={modoSelecao}
+          views={views}
+          alterar={alterar}
+          onLimparFiltros={limpar}
+          onModoSelecao={(on) => {
+            setModoSelecao(on);
+            // Sair do modo não pode deixar seleção pendurada: a barra some
+            // e as linhas ficariam marcadas sem sinal disso.
+            if (!on) setSelecionadas(new Set());
+          }}
+          onSalvarView={(nome) => salvar(nome, estado)}
+          onAplicarView={(v) =>
+            alterar(estadoDaURL(new URLSearchParams(v.busca)))
+          }
+          onRemoverView={remover}
+        />
 
-          <div className="ml-auto flex items-center gap-2">
-            <Button
-              variant={modoSelecao ? "secondary" : "ghost"}
-              size="sm"
-              aria-pressed={modoSelecao}
-              onClick={() => {
-                setModoSelecao((v) => !v);
-                // Sair do modo não pode deixar seleção pendurada: a barra de
-                // ações some e as demandas ficariam marcadas sem sinal disso.
-                setSelected(new Set());
-              }}
-            >
-              {modoSelecao ? "Concluir seleção" : "Selecionar"}
-            </Button>
-            <div className={FILTER_W}>
-              <Select
-                options={GROUP_OPTIONS}
-                value={groupBy}
-                onValueChange={(v) => setGroupBy(v as GroupBy)}
-                aria-label="Agrupar por"
-              />
-            </div>
-            <div className={FILTER_W}>
-              <Select
-                options={SORT_OPTIONS}
-                value={sortBy}
-                onValueChange={(v) => setSortBy(v as SortBy)}
-                aria-label="Ordenar por"
-              />
-            </div>
-          </div>
-        </div>
+        <TaskQuickViews
+          atual={estado.visao}
+          contagens={contagens}
+          onChange={(v) => alterar({ visao: v })}
+        />
 
-        <div className="border-line flex flex-wrap items-center gap-2 border-t pt-3">
-          <div className={FILTER_W}>
-            <Select
-              options={STATUS_OPTIONS}
-              value={filters.status}
-              onValueChange={(v) =>
-                setFilters((f) => ({
-                  ...f,
-                  status: v as ListFilters["status"],
-                }))
-              }
-              aria-label="Status"
-            />
-          </div>
-          <div className={FILTER_W}>
-            <Select
-              options={[
-                { value: "__all__", label: "Todos os setores" },
-                ...sectorOptions(sectors),
-              ]}
-              value={filters.sectorIds[0] ?? "__all__"}
-              onValueChange={(v) =>
-                setFilters((f) => ({
-                  ...f,
-                  sectorIds: v === "__all__" ? [] : [v],
-                }))
-              }
-              aria-label="Setor"
-            />
-          </div>
-          <div className={FILTER_W}>
-            <Select
-              options={PRIORITY_OPTIONS}
-              value={filters.priorities[0] ?? "__all__"}
-              onValueChange={(v) =>
-                setFilters((f) => ({
-                  ...f,
-                  priorities: v === "__all__" ? [] : [v],
-                }))
-              }
-              aria-label="Prioridade"
-            />
-          </div>
-          <div className={FILTER_W}>
-            <Select
-              options={[
-                { value: "__all__", label: "Todos os clientes" },
-                ...clients.map((c) => ({ value: c.id, label: c.name })),
-              ]}
-              value={filters.clientId ?? "__all__"}
-              onValueChange={(v) =>
-                setFilters((f) => ({
-                  ...f,
-                  clientId: v === "__all__" ? null : v,
-                }))
-              }
-              aria-label="Cliente"
-            />
-          </div>
-          <div className={FILTER_W}>
-            <Select
-              options={[
-                { value: "__all__", label: "Todos os responsáveis" },
-                ...members.map((m) => ({
-                  value: m.user_id,
-                  label: m.display_name ?? m.email,
-                })),
-              ]}
-              value={filters.assigneeId ?? "__all__"}
-              onValueChange={(v) =>
-                setFilters((f) => ({
-                  ...f,
-                  assigneeId: v === "__all__" ? null : v,
-                }))
-              }
-              aria-label="Responsável"
-            />
-          </div>
-          <div className={FILTER_W}>
-            <Select
-              options={DUE_OPTIONS}
-              value={
-                filters.dueWithinDays
-                  ? String(filters.dueWithinDays)
-                  : "__all__"
-              }
-              onValueChange={(v) =>
-                setFilters((f) => ({
-                  ...f,
-                  dueWithinDays:
-                    v === "__all__" ? null : (Number(v) as 7 | 14 | 30),
-                }))
-              }
-              aria-label="Prazo"
-            />
-          </div>
-
-          <div className="ml-auto flex items-center gap-3">
-            <span
-              aria-live="polite"
-              className="tnum text-fg-secondary text-[length:var(--text-small-size)]"
-            >
-              {totalVisible} demanda{totalVisible === 1 ? "" : "s"}
-            </span>
-            {hasFilters ? (
-              <button
-                type="button"
-                onClick={() => setFilters(EMPTY_LIST_FILTERS)}
-                className="text-fg-link text-[length:var(--text-small-size)] whitespace-nowrap hover:underline"
-              >
-                Limpar filtros
-              </button>
-            ) : null}
-          </div>
-        </div>
+        <ActiveFilterChips chips={chips} onLimpar={limpar} />
       </div>
 
-      {selected.size > 0 ? (
-        <div className="tf-glass-strong sticky top-2 z-10 flex flex-wrap items-center gap-2 rounded-md px-3 py-2">
-          <span className="tnum text-fg text-[length:var(--text-small-size)] font-medium">
-            {selected.size} selecionada{selected.size === 1 ? "" : "s"}
-          </span>
-          <div className="ml-auto flex flex-wrap items-center gap-2">
-            <Button
-              variant="secondary"
-              size="sm"
-              leadingIcon={IconCheck}
-              onClick={() => runBulk((ids) => bulk.complete.mutate(ids))}
-            >
-              Concluir
-            </Button>
-            <Button
-              variant="secondary"
-              size="sm"
-              leadingIcon={IconBan}
-              onClick={() => runBulk((ids) => bulk.cancel.mutate(ids))}
-            >
-              Cancelar
-            </Button>
-            <Button
-              variant="danger"
-              size="sm"
-              leadingIcon={IconTrash}
-              onClick={() => runBulk((ids) => bulk.remove.mutate(ids))}
-            >
-              Excluir
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              leadingIcon={IconX}
-              onClick={() => setSelected(new Set())}
-            >
-              Limpar seleção
-            </Button>
-          </div>
-        </div>
-      ) : null}
+      <div className="tf-lista border-line bg-card overflow-hidden rounded-md border shadow-[var(--shadow-card)]">
+        {isLoading ? (
+          <TaskListSkeleton />
+        ) : total === 0 ? (
+          <EmptyState
+            icon={IconLayoutList}
+            title={
+              listaVazia
+                ? "Ainda não existem demandas"
+                : "Nenhuma demanda encontrada"
+            }
+            description={
+              listaVazia
+                ? "Crie a primeira demanda para começar a organizar o trabalho."
+                : "Tente alterar a busca ou remover alguns filtros."
+            }
+            action={
+              listaVazia ? undefined : (
+                <Button variant="secondary" size="sm" onClick={limpar}>
+                  Limpar filtros
+                </Button>
+              )
+            }
+          />
+        ) : (
+          <>
+            <TaskListHeader
+              modoSelecao={modoSelecao}
+              todasSelecionadas={todasSelecionadas}
+              algumaSelecionada={selecionadas.size > 0 && !todasSelecionadas}
+              onSelecionarTodas={(on) =>
+                setSelecionadas(on ? new Set(idsVisiveis) : new Set())
+              }
+            />
 
-      {isLoading ? (
-        <p className="text-fg-secondary">Carregando…</p>
-      ) : groups.length === 0 ? (
-        <EmptyState
-          icon={IconLayoutList}
-          title={
-            hasFilters ? "Nenhuma demanda encontrada" : "Nenhuma demanda ainda"
-          }
-          description={
-            hasFilters
-              ? "Ajuste os filtros para ver outros resultados"
-              : "As demandas do workspace aparecem aqui"
-          }
-        />
-      ) : (
-        <div className="flex flex-col gap-[var(--space-block-gap)]">
-          {groups.map((group) => (
-            <section
-              key={group.key}
-              className="border-line bg-card overflow-hidden rounded-md border shadow-[var(--shadow-card)]"
-            >
-              {groupBy !== "none" ? (
-                <header className="border-line flex items-center gap-2 border-b px-4 py-2.5">
-                  <h2 className="text-fg text-[length:var(--text-small-size)] font-semibold">
-                    {group.label}
-                  </h2>
-                  <span className="tnum bg-sunken text-fg-secondary rounded-xs px-1.5 py-0.5 text-[length:var(--text-caption-size)] font-medium">
-                    {group.tasks.length}
-                  </span>
-                </header>
-              ) : null}
-              <ul className="flex flex-col p-1">
-                {group.tasks.map((task) => (
-                  <li key={task.id}>
-                    <TaskRow
-                      task={task}
-                      sector={sectorsById.get(task.sector_id)}
-                      selected={selected.has(task.id)}
-                      onSelectChange={
-                        modoSelecao
-                          ? (on) => toggleSelect(task.id, on)
-                          : undefined
-                      }
-                      onToggle={(c) => handleToggle(task, c)}
-                      onToggleCancel={(cancel) =>
-                        toggleCancel.mutate({ id: task.id, cancel })
-                      }
-                      onDelete={() => deleteTask(task)}
-                      onOpen={() =>
-                        openPanel({
-                          title: "Tarefa",
-                          node: <TaskDetailPanel taskId={task.id} />,
-                        })
-                      }
-                    />
-                  </li>
-                ))}
-              </ul>
-            </section>
-          ))}
-        </div>
-      )}
+            {estado.groupBy === "none"
+              ? grupos[0]?.tasks.map(renderLinha)
+              : grupos.map((g) => {
+                  const fechado = gruposFechados.has(g.key);
+                  return (
+                    <section key={g.key}>
+                      <CabecalhoDeGrupo
+                        rotulo={g.label}
+                        quantidade={g.tasks.length}
+                        aberto={!fechado}
+                        onAlternar={() =>
+                          setGruposFechados((prev) => {
+                            const p = new Set(prev);
+                            if (p.has(g.key)) p.delete(g.key);
+                            else p.add(g.key);
+                            return p;
+                          })
+                        }
+                      />
+                      {fechado ? null : g.tasks.map(renderLinha)}
+                    </section>
+                  );
+                })}
+          </>
+        )}
+
+        {/* As concluídas, recolhidas. Não abrem a tela cheia de riscado. */}
+        {concluidas.length > 0 ? (
+          <section className="border-line border-t">
+            <CabecalhoDeGrupo
+              rotulo="Concluídas"
+              quantidade={concluidas.length}
+              aberto={concluidasAbertas}
+              acao={concluidasAbertas ? "Ocultar" : "Exibir concluídas"}
+              onAlternar={() => setConcluidasAbertas((v) => !v)}
+            />
+            {concluidasAbertas ? concluidas.map(renderLinha) : null}
+          </section>
+        ) : null}
+      </div>
+
+      <BulkActionBar
+        quantidade={selecionadas.size}
+        setores={sectors.map((s) => ({ value: s.id, label: s.name }))}
+        onConcluir={() => emLote((ids) => bulk.complete.mutate(ids))}
+        onCancelar={() => emLote((ids) => bulk.cancel.mutate(ids))}
+        onMoverParaSetor={(sectorId) =>
+          emLote((ids) => bulk.moveToSector.mutate({ ids, sectorId }))
+        }
+        onExcluir={() => emLote((ids) => bulk.remove.mutate(ids))}
+        onLimpar={() => setSelecionadas(new Set())}
+      />
 
       {confirm ? (
         <ConfirmCompleteDialog
@@ -480,6 +499,61 @@ export function ListView() {
           }}
         />
       ) : null}
+    </Casca>
+  );
+}
+
+function Casca({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="mx-auto flex w-full max-w-[var(--max-width-app)] flex-col gap-[var(--space-block-gap)] px-4 pb-24 lg:px-6">
+      {children}
     </div>
   );
 }
+
+function CabecalhoDeGrupo({
+  rotulo,
+  quantidade,
+  aberto,
+  acao,
+  onAlternar,
+}: {
+  rotulo: string;
+  quantidade: number;
+  aberto: boolean;
+  acao?: string;
+  onAlternar: () => void;
+}) {
+  return (
+    <div className="border-line bg-sunken/40 flex items-center gap-2 border-b px-4 py-2">
+      <button
+        type="button"
+        onClick={onAlternar}
+        aria-expanded={aberto}
+        className="text-fg hover:text-fg-link inline-flex items-center gap-1.5 rounded-xs text-[length:var(--text-small-size)] font-semibold outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-ring)]"
+      >
+        <IconChevronRight
+          size={15}
+          stroke={2}
+          aria-hidden
+          className={`transition-transform [transition-duration:var(--dur-fast)] ${aberto ? "rotate-90" : ""}`}
+        />
+        {rotulo}
+        <span className="text-fg-secondary font-normal">
+          · {quantidade} {quantidade === 1 ? "demanda" : "demandas"}
+        </span>
+      </button>
+
+      {acao ? (
+        <button
+          type="button"
+          onClick={onAlternar}
+          className="text-fg-link ml-auto rounded-xs text-[length:var(--text-caption-size)] outline-none hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-ring)]"
+        >
+          {acao}
+        </button>
+      ) : null}
+    </div>
+  );
+}
+

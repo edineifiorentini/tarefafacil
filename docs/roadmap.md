@@ -555,6 +555,53 @@ do próprio TAFLOW**, não o cliente do workspace.
 
 Nada disso vai para produção sem teste contra o ambiente de homologação.
 
+### Lista — o que a remodelação NÃO resolveu (3/set/2026)
+
+Quatro limites, todos de arquitetura e nenhum escondido na tela:
+
+1. **Tudo continua sendo filtrado no navegador.** `useTasks` traz as
+   demandas do workspace inteiro com `select("*")`, e é o mesmo cache que
+   Quadro, Hoje e Dashboard usam — trocá-lo por paginação de servidor só
+   nesta tela criaria dois caminhos de dados para a mesma entidade. Hoje
+   são 28 demandas e nada disso dói. O ponto em que passa a doer é o
+   tamanho do payload, não o número de linhas renderizadas; quando
+   incomodar, a mudança é em `useTasks`, não na Lista.
+
+2. **Não há paginação nem virtualização.** Pelo mesmo motivo, e porque
+   ambas resolvem um problema que ainda não existe. A grade e os
+   componentes não impedem nenhuma das duas.
+
+3. **Visualização salva vive no navegador.** Procurei infraestrutura de
+   preferência de usuário antes de escrever: não existe.
+   `notification_preference` é de notificação e `platform_setting` é do
+   dono do SaaS. Criar tabela, RLS e rota para guardar filtro de tela é
+   desproporcional — e é decisão que merece o dono junto. A chave inclui
+   usuário E workspace (máquina compartilhada é o caso comum numa
+   prefeitura), e a tela avisa que não sincroniza entre aparelhos.
+
+4. **Ações em lote são as que o hook já fazia**: concluir, cancelar,
+   mover de setor, excluir. Prioridade, prazo e responsável em lote não
+   existem em `useBulkTaskActions`, e botão que não faz nada é pior que
+   botão ausente.
+
+**Três campos que a referência pedia e o banco não tem**, por isso não
+viraram filtro: "tipo de demanda", "situação da aprovação" e um campo de
+status próprio. Aprovação existe em `task_approval`, mas só chega pelo
+link público — um filtro por ela cobriria uma fatia pequena e pareceria
+falar de todas. O que a tela chama de status é a COLUNA do quadro
+(`board_column`), que é por setor.
+
+**Timezone**: a referência falava em "timezone configurado pelo
+workspace". Ele não existe — há `app_user.timezone`, e só o sync do
+Google o usa. A Lista trabalha em dia civil local, como o resto do
+produto (`lib/dates/day.ts`), e os testes cobrem a virada das 21h que é
+onde isso quebraria.
+
+**Editar prazo abre o detalhe**, e é de propósito: ali o campo já existe
+com hora de início, hora de fim e a regra do Google Agenda junto. Um
+seletor de data solto na linha seria um segundo lugar de editar prazo,
+com metade das regras.
+
 ### Relatórios — o que ainda NÃO dá para medir (3/set/2026)
 
 A Visão geral foi construída sobre os campos que existem. Três coisas

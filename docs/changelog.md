@@ -44,6 +44,66 @@ lista para se voltar a ele, então sair por um clique curioso seria perder
 algo que não volta. Nos demais planos a troca continua livre, como está
 dito acima.
 
+**A Lista foi refeita.** Ela abre em **Em aberto**, e não mais numa
+mistura em que as concluídas ocupavam a maior parte da tela. As
+concluídas continuam ali, recolhidas no fim, atrás de um botão que diz
+quantas são.
+
+**Seis atalhos no topo, com a contagem de cada um:** em aberto,
+atrasadas, para hoje, esta semana, sem responsável e concluídas. Os
+números respeitam os filtros — se você filtrou um setor, "Atrasadas 4"
+quer dizer quatro naquele setor.
+
+**Colunas de verdade, com cabeçalho.** Demanda, status, setor,
+responsável e prazo, alinhados de uma linha para a outra. O status é a
+coluna do seu quadro — "Em produção", "Em aprovação", o que você mesmo
+criou. O setor agora aparece com o NOME ao lado da bolinha colorida.
+
+**Concluir e selecionar deixaram de ser a mesma coisa.** Antes, a
+bolinha de concluir e a caixa de seleção dividiam o mesmo canto da linha,
+e era fácil fazer uma querendo a outra. Agora a seleção só existe quando
+você clica em "Selecionar", e enquanto ela está ligada é ela que ocupa o
+lugar — um controle por linha, sempre.
+
+**Datas que dizem a verdade.** Uma demanda entregue com atraso deixou de
+aparecer em vermelho como se ainda estivesse pendente: agora ela diz
+"Concluída com 3 dias de atraso". Demanda cancelada não mostra mais prazo
+— ela saiu do fluxo. E demanda sem prazo diz "Sem prazo" em vez de deixar
+a coluna vazia.
+
+Os prazos passaram a falar em linguagem de gente: "Hoje, 15h", "Amanhã",
+"Em 3 dias", "Atrasada há 2 dias". Passe o cursor para ver a data por
+extenso.
+
+**Os filtros agora aparecem.** Em vez de cinco campos dizendo "Todas",
+há um botão "Filtros" com a contagem do que está ligado, e logo abaixo um
+chip para cada filtro ativo — cada um com o seu X. "Limpar" some tudo de
+uma vez, mas não apaga o que você digitou na busca.
+
+**A busca procura por título, cliente, setor e responsável**, não só pelo
+título.
+
+**Agrupar e ordenar dizem o que estão fazendo.** "Agrupar: Nenhum",
+"Ordenar: Prazo mais próximo". E "prazo mais próximo" agora ordena por
+urgência de verdade: atrasadas primeiro, depois o que vence hoje, depois
+o futuro, e as sem prazo por último.
+
+**O endereço guarda o recorte.** Filtrou, agrupou, ordenou? A barra do
+navegador guarda tudo. Isso significa três coisas: dá para mandar a lista
+para alguém por link, o F5 não perde nada, e **fechar uma demanda devolve
+exatamente a lista de onde você saiu**.
+
+**Salvar visualização.** Montou um recorte que usa toda semana? Dê um
+nome e ele fica guardado. Uma limitação para saber: ele fica no navegador
+em que você salvou, e ainda não acompanha para o celular.
+
+**Ações em lote.** Com demandas selecionadas, aparece uma barra no rodapé
+para concluir, cancelar, mover de setor ou excluir várias de uma vez.
+Excluir pede confirmação — e sugere cancelar, que preserva o histórico.
+
+**No hover da linha:** abrir a demanda e editar o prazo, sem precisar do
+menu.
+
 **Relatórios responde primeiro se está tudo bem, e só depois mostra a
 tabela.** A tela abria numa lista de números por setor — boa para
 conferir, ruim para decidir. Agora ela abre numa **Visão geral** com

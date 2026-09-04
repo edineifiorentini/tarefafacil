@@ -1105,3 +1105,71 @@ button:not(:disabled),
     animation: none;
   }
 }
+
+/* ===================================================================
+   A GRADE DA LISTA
+   ===================================================================
+   Cabeçalho e linhas compartilham esta classe. Se as duas definições
+   morassem em arquivos diferentes, divergiriam no primeiro ajuste de
+   largura — e uma tabela desalinhada é pior que nenhuma: quem lê segue
+   a coluna e encontra outro dado.
+
+   **As trilhas são explícitas, nunca `auto`.** Cada linha é um grid
+   próprio, e grid só alinha colunas dentro do mesmo contêiner. Com
+   `auto`, "Status" teria a largura do texto DAQUELA linha e as colunas
+   dançariam de uma para a outra.
+
+   As colunas somem por consulta de CONTÊINER, não por largura de
+   janela: a Lista mora dentro da casca, que tem barra lateral
+   recolhível — o espaço disponível não é o da tela.
+
+   Ordem no DOM, sempre:
+   controle · demanda · status · setor · responsável · prazo · ações
+   =================================================================== */
+
+.tf-lista {
+  container-type: inline-size;
+  container-name: lista;
+}
+
+.tf-lista-grade {
+  display: grid;
+  align-items: center;
+  gap: 0.75rem;
+  /* Estreito: só o essencial. Título, prazo e ações. */
+  grid-template-columns: 2rem minmax(0, 1fr) auto 2rem;
+}
+
+.tf-lista-status,
+.tf-lista-setor,
+.tf-lista-resp {
+  display: none;
+  min-width: 0;
+}
+
+@container lista (min-width: 40rem) {
+  .tf-lista-grade {
+    grid-template-columns: 2rem minmax(0, 1fr) 8.5rem auto 2rem;
+  }
+  .tf-lista-status {
+    display: block;
+  }
+}
+
+@container lista (min-width: 54rem) {
+  .tf-lista-grade {
+    grid-template-columns: 2rem minmax(0, 1fr) 8.5rem 10rem auto 2rem;
+  }
+  .tf-lista-resp {
+    display: block;
+  }
+}
+
+@container lista (min-width: 68rem) {
+  .tf-lista-grade {
+    grid-template-columns: 2rem minmax(0, 1fr) 8.5rem 11rem 10rem 9.5rem 2rem;
+  }
+  .tf-lista-setor {
+    display: flex;
+  }
+}
