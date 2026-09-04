@@ -8,6 +8,24 @@ import { playwright } from "@vitest/browser-playwright";
 
 const dirname = import.meta.dirname;
 
+// Fuso fixo para os testes, e é preciso dizer o que isto NÃO resolve.
+//
+// Há testes que codificam comportamento brasileiro de propósito — o bloco
+// "fuso horário" de lib/reports/overview.test.ts é o exemplo: eles afirmam
+// que uma entrega às 21h30 do dia 30 conta no mês 30. Isso é verdade no
+// fuso de quem lê, e aquela conta roda em Client Component, então o fuso do
+// leitor é o certo. Sem fixar aqui, os mesmos testes falham em qualquer
+// máquina fora do horário de Brasília — e o GitHub Actions roda em UTC.
+//
+// **O que isto esconde:** código de SERVIDOR que dependa do fuso do
+// ambiente passa a nunca falhar no teste, porque o teste também é
+// brasileiro. Foi assim que a hora da página de aprovação saiu três horas
+// adiantada em produção (4/set/2026) passando por 833 testes: Server
+// Component na Vercel resolve em UTC. A defesa não é o fuso do teste, é
+// nunca deixar o ambiente responder — data em servidor vai por
+// `lib/utils/fuso.ts`, com o fuso escrito.
+process.env.TZ = "America/Sao_Paulo";
+
 // Dois projetos:
 // - "unit": testes de unidade em jsdom (rápidos). É o que `npm run test` roda.
 // - "storybook": roda as stories como testes no navegador (addon-vitest).
