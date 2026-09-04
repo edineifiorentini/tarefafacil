@@ -31,10 +31,18 @@ const PasswordCard = dynamic(
   { ssr: false, loading: () => <Skeleton variant="block" className="h-48" /> }
 );
 
+// Mesmo tratamento dos outros dois: depende de quem está logado, e o
+// servidor não tem a sessão para pré-renderizar igual.
+const TimezoneCard = dynamic(
+  () => import("./TimezoneCard").then((m) => m.TimezoneCard),
+  { ssr: false, loading: () => <Skeleton variant="block" className="h-56" /> }
+);
+
 export function AccountTab() {
   return (
     <>
       <AvatarCard />
+      <TimezoneCard />
       <PasswordCard />
     </>
   );

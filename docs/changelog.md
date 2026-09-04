@@ -18,6 +18,23 @@ Datas no formato dia/mês/ano.
 
 ## 4/set/2026
 
+**Agora dá para escolher seu fuso horário.** Em Configurações → Conta. Ele
+define o que "hoje", "vence hoje" e "atrasada" querem dizer para você — e o
+Brasil tem quatro fusos, então quem trabalha em Manaus, Rio Branco ou
+Fernando de Noronha via a virada do dia pelo horário de Brasília.
+
+A lista começa pelos fusos do país, com o lugar escrito por extenso — "Rio
+Branco (Acre)", e não só o nome técnico. Se o seu computador ou celular
+estiver num fuso diferente do escolhido, aparece um atalho para usar o do
+aparelho. **A sua escolha continua valendo** ao abrir num computador
+emprestado ou num aparelho que voltou de viagem: o aparelho sugere, você
+decide.
+
+**Uma conta que estava errada no servidor.** No relatório de etapas, "parada
+há N dias" podia mostrar um dia a menos para demandas que mudaram de etapa
+no fim da noite. O servidor calculava a virada do dia pelo horário de
+Londres, não pelo do Brasil.
+
 **Áudio e vídeo passaram a ser aceitos para aprovação.** MP3 era recusado —
 o sistema não reconhecia o formato e devolvia "tipo de arquivo não
 permitido". Agora entra, e toca dentro da página do cliente, com o tempo

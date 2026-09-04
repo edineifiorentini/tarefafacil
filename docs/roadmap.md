@@ -2390,3 +2390,30 @@ nasceram. `TZ=UTC npm run test` acusa três deles.
 o mesmo `localDayISO(input.now)`. O cron roda 06:00 UTC (03:00 no Brasil,
 mesmo dia civil), então passa por sorte de horário; `settle.ts`, disparado
 pelo admin a qualquer hora, não tem essa sorte.
+
+### Item 6 entregue no mesmo dia (4/set/2026)
+
+`components/account/TimezoneCard.tsx` em Configurações → Conta, com
+`lib/dates/fusos.ts` guardando a lista. Fecha a regressão descrita acima: o
+campo existia desde a 0001 e nada o alterava.
+
+Decisões registradas:
+
+- **Os fusos do Brasil vêm primeiro, com o lugar por extenso.** "Rio Branco"
+  sozinho não diz que aquilo é o Acre, e caçar o próprio fuso no meio de
+  quatrocentos nomes é como se desiste e fica no errado;
+- **o aparelho sugere, a pessoa decide.** O atalho só aparece quando o
+  navegador diverge do escolhido — atalho que não muda nada é ruído. Quem
+  salvou continua salvo num computador emprestado;
+- **`router.refresh()` depois de gravar.** O `useFuso` é semeado pelo layout
+  do servidor, não por consulta do cliente: sem isso a tela seguiria
+  calculando "hoje" pelo fuso antigo;
+- **o fuso salvo ainda cai na lista** mesmo sendo de fora do Brasil, senão o
+  seletor abriria sem o próprio valor e pareceria quebrado.
+
+O teste do cartão **controla o "aparelho" por mock**, em vez de depender do
+fuso do processo — senão ele passaria aqui e falharia sob `TZ=UTC`, que é a
+classe de defeito que este cartão existe para combater.
+
+**Não verificado no navegador:** a tela fica atrás de login e não há sessão
+disponível nesta máquina. Coberta por sete testes de comportamento.
