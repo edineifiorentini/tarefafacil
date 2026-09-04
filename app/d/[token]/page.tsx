@@ -11,6 +11,11 @@ import {
 import { MediaArea } from "@/components/share/MediaArea";
 import { readSharedTask } from "@/lib/share/publicTask";
 import { createAdminClient } from "@/lib/supabase/admin";
+import {
+  dataDeInstanteBR,
+  dataHoraBR,
+  dataPuraBR,
+} from "@/lib/utils/fuso";
 
 /**
  * A área pública de aprovação. Quem abre não tem conta.
@@ -53,16 +58,6 @@ const ESTADO = {
   aprovado: { label: "Aprovada", cor: "var(--ap-lime)" },
   ajustes: { label: "Ajustes solicitados", cor: "#fcd34d" },
 } as const;
-
-function dataHoraBR(iso: string): string {
-  const d = new Date(iso);
-  const p2 = (n: number) => String(n).padStart(2, "0");
-  return `${p2(d.getDate())}/${p2(d.getMonth() + 1)}/${d.getFullYear()} às ${p2(d.getHours())}:${p2(d.getMinutes())}`;
-}
-
-function dataBR(iso: string): string {
-  return iso.slice(0, 10).split("-").reverse().join("/");
-}
 
 export default async function SharedTaskPage({
   params,
@@ -147,7 +142,7 @@ export default async function SharedTaskPage({
               <IconCalendar size={14} stroke={1.75} aria-hidden />
               Atualizado em {dataHoraBR(view.updatedAt)}
             </span>
-            {view.dueDate ? <span>Prazo: {dataBR(view.dueDate)}</span> : null}
+            {view.dueDate ? <span>Prazo: {dataPuraBR(view.dueDate)}</span> : null}
           </p>
         </header>
 
@@ -191,7 +186,7 @@ export default async function SharedTaskPage({
                 totalDeMateriais={view.entregaveis.length}
                 ultimaDecisao={view.lastDecision}
                 ultimaEm={
-                  view.lastDecisionAt ? dataBR(view.lastDecisionAt) : null
+                  view.lastDecisionAt ? dataDeInstanteBR(view.lastDecisionAt) : null
                 }
               />
             )}
