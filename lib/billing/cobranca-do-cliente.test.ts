@@ -40,7 +40,7 @@ vi.mock("@/lib/supabase/admin", () => ({
       // subscription_charge: leituras e o insert.
       return {
         select: (cols: string) => ({
-          eq: (_c: string, _v: string) => {
+          eq: () => {
             if (cols.includes("period_start") && !cols.includes("id,")) {
               return Promise.resolve({ data: tabelas.cobradas });
             }

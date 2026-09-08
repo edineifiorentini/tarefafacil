@@ -1,10 +1,12 @@
-// Resolve o usuário autenticado + o workspace ativo no servidor, do mesmo jeito
-// que o layout do app (primeiro workspace via RLS).
+// Resolve o usuário autenticado + a empresa ATIVA no servidor, lendo o
+// mesmo cookie que o layout do app lê.
 //
 // Morava em lib/gcal/ por ter nascido lá, mas nunca foi só do Google: a
 // exportação de dados já importava daqui, e agora as rotas de pagamento
 // também. Rota de dinheiro puxando contexto de "lib/gcal" é o tipo de pista
 // falsa que faz alguém procurar acoplamento que não existe.
+
+import { cookies } from "next/headers";
 
 import { createClient } from "@/lib/supabase/server";
 
@@ -14,6 +16,23 @@ export type SessionContext = {
   supabase: Awaited<ReturnType<typeof createClient>>;
 };
 
+/**
+ * O usuário e a empresa ATIVA, do mesmo jeito que a casca decide.
+ *
+ * **O cookie `active_workspace` é a fonte, e ignorá-lo foi um defeito real**
+ * (8/set/2026). Esta função pegava a primeira empresa por data de criação;
+ * o layout, que desenha a tela, lê o cookie que o seletor de empresas
+ * grava. Quem tinha duas empresas via a tela de uma e as rotas
+ * respondendo pela outra: conectar o Google conectava na errada, exportar
+ * exportava a errada, e a cobrança mostraria o Pix da errada.
+ *
+ * Não apareceu antes porque quase todo mundo tem uma empresa só — e com
+ * uma, as duas regras dão a mesma resposta. Encontrado abrindo a tela.
+ *
+ * O `?? workspaces[0]` no fim é o mesmo do layout: cookie ausente ou
+ * apontando para empresa que a pessoa não acessa mais cai na primeira, em
+ * vez de deixar alguém sem empresa nenhuma.
+ */
 export async function requireUserAndWorkspace(): Promise<SessionContext | null> {
   const supabase = await createClient();
   const {
@@ -21,13 +40,19 @@ export async function requireUserAndWorkspace(): Promise<SessionContext | null> 
   } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const { data: ws } = await supabase
+  // A RLS já recorta para as empresas de que a pessoa é membro, então o
+  // cookie não vira uma porta: apontar para empresa alheia não a traz.
+  const { data: workspaces } = await supabase
     .from("workspace")
     .select("id")
-    .order("created_at", { ascending: true })
-    .limit(1)
-    .maybeSingle();
-  if (!ws) return null;
+    .is("deleted_at", null)
+    .order("created_at", { ascending: true });
+
+  if (!workspaces || workspaces.length === 0) return null;
+
+  const cookieStore = await cookies();
+  const escolhida = cookieStore.get("active_workspace")?.value;
+  const ws = workspaces.find((w) => w.id === escolhida) ?? workspaces[0];
 
   return { userId: user.id, workspaceId: ws.id, supabase };
 }
