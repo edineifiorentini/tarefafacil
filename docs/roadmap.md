@@ -2500,3 +2500,52 @@ fazer quando alguém perde o aparelho.
 separada por decisão do dono. O cupom especialmente: a tela dele já registra
 o motivo certo — cupom que o painel cria e o checkout ignora é pior que
 cupom nenhum.
+
+---
+
+## 32. `app_user` órfã quando o usuário é apagado (achado em 8/set/2026)
+
+`app_user.id` é `uuid primary key` **sem chave estrangeira para
+`auth.users`** (0001). Apagar alguém pela autenticação do Supabase remove a
+conta e, por cascade, os vínculos de workspace — mas **a linha de
+`app_user` fica para sempre**.
+
+Encontrado por acidente: apaguei usuários de teste depois de conferir a
+trigger da 0088 e as linhas sobreviveram. A limpeza não falhou; o cascade é
+que não existe.
+
+### Por que importa, além da arrumação
+
+**A pessoa não consegue se recadastrar.** `email` é `not null unique`, e
+`handle_new_user` faz `on conflict (id) do nothing` — o conflito seria de
+E-MAIL, com id novo, então o insert estoura e o cadastro inteiro falha. Quem
+foi apagado e tenta voltar bate numa parede sem explicação.
+
+**A contagem de usuários do painel infla**, porque conta linha de gente que
+não existe mais.
+
+**É questão de LGPD, não só de higiene.** Dado pessoal de quem pediu
+exclusão continua guardado, e quem apagou acredita que apagou.
+
+### As duas saídas, e o que pesa em cada uma
+
+**`on delete cascade` para `auth.users`.** A linha some junto, sem nada para
+lembrar de rodar. O risco é o inverso: qualquer exclusão feita direto no
+painel do Supabase passa a levar o `app_user` na hora, sem revisão — e
+exclusão em cascata é o tipo de coisa que só se descobre errada depois.
+
+**Varredura que recolhe órfãs**, no mesmo cron semanal que já existe. Mais
+lenta e precisa ser lembrada, mas nada some no mesmo segundo em que alguém
+clica errado, e a execução deixa registro. Combina com o padrão que a 0086 e
+a 0088 já usam.
+
+Cuidado que vale para as duas: `audit_log.actor_id` é `on delete set null` de
+propósito — "perder o nome é aceitável, perder o registro do ato não" (0044).
+Qualquer solução aqui precisa preservar isso.
+
+### O que decidir antes
+
+Se a exclusão deve levar junto o que a pessoa **criou** (comentários,
+demandas atribuídas) ou só a identidade. Hoje `assignee_id` não tem
+constraint e ficaria apontando para ninguém — que é diferente de apontar
+para uma linha que existe e diz "usuário removido".
