@@ -12,7 +12,7 @@ import { useToast } from "@/components/ui/Toast";
 const KEY = ["cobranca-atual"] as const;
 
 type Estado =
-  | { estado: "sem_cobranca"; motivo: string }
+  | { estado: "sem_cobranca"; motivo: string; podeGerar: boolean }
   | { estado: "manual"; motivo: string }
   | {
       estado: "aberta";
@@ -90,7 +90,12 @@ export function PixCheckout() {
   if (data.estado === "paga") {
     return (
       <div className="border-line bg-card flex items-start gap-3 rounded-md border p-4">
-        <IconCheck size={18} stroke={2} aria-hidden className="text-fg-secondary mt-0.5 shrink-0" />
+        <IconCheck
+          size={18}
+          stroke={2}
+          aria-hidden
+          className="text-fg-secondary mt-0.5 shrink-0"
+        />
         <div>
           <p className="text-fg text-[length:var(--text-small-size)] font-medium">
             Pagamento em dia
@@ -158,9 +163,13 @@ export function PixCheckout() {
           </details>
         ) : null}
 
+        {/* Dizia "gere um novo", e era promessa que o banco não cumpre: o
+            índice único (workspace, period_start) só deixa existir UMA
+            cobrança por ciclo, então o código vencido não tem substituto que
+            a própria empresa possa emitir. */}
         {data.expiraEm ? (
           <p className="text-fg-muted text-[length:var(--text-caption-size)]">
-            Este código vale até {dataBR(data.expiraEm)}. Depois disso, gere um
+            Este código vale até {dataBR(data.expiraEm)}. Depois disso, peça um
             novo — a conta continua a mesma.
           </p>
         ) : null}
@@ -178,12 +187,17 @@ export function PixCheckout() {
   }
 
   // sem_cobranca e manual: os dois só têm um motivo para mostrar.
+  //
+  // **O botão depende do `podeGerar`, não do estado.** Ele aparecia em todo
+  // `sem_cobranca`, e num plano vitalício o clique respondia "não há
+  // cobrança" — resposta certa para uma pergunta que a tela não devia ter
+  // feito. Quem decide é o servidor, que conhece o plano; a tela só obedece.
   return (
     <div className="border-line bg-card flex flex-col gap-3 rounded-md border p-4">
       <p className="text-fg-secondary text-[length:var(--text-small-size)]">
         {data.motivo}
       </p>
-      {data.estado === "sem_cobranca" ? (
+      {data.estado === "sem_cobranca" && data.podeGerar ? (
         <Button
           size="sm"
           isLoading={gerar.isPending}
