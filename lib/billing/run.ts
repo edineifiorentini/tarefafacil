@@ -245,6 +245,10 @@ export async function runBilling(opts: {
         status: "aberta",
         provider: provedor,
         provider_charge_id: providerChargeId,
+        // O histórico de txid nasce junto com a fatura (0090). Ele é o que
+        // mantém um pagamento casando com a fatura depois que o código for
+        // renovado — e quem renova não tem como voltar no tempo e criá-lo.
+        provider_charge_ids: providerChargeId ? [providerChargeId] : [],
         qr_code: qrCode,
         copia_e_cola: copiaECola,
         expires_at: expiraEm,

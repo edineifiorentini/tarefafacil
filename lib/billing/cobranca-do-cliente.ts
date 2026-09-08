@@ -27,6 +27,11 @@ import { nomeDoProvedor, resolveProvider } from "./provider";
  *
  * A idempotência real é o índice único `(workspace_id, period_start)` no
  * banco. Clicar duas vezes devolve a mesma cobrança, não duas.
+ *
+ * **Renovar não é cobrar de novo** (0090). Código Pix vale sete dias; a
+ * dívida do mês não vence junto com ele. Quando o código expira, a saída é
+ * trocar o código NA MESMA linha — mesmo período, mesmo valor, mesmo índice
+ * único — e não emitir uma segunda cobrança do mesmo mês.
  */
 
 export type EstadoDaCobranca =
@@ -34,15 +39,25 @@ export type EstadoDaCobranca =
       estado: "sem_cobranca";
       motivo: string;
       /**
-       * A tela deve oferecer o botão de gerar?
-       *
-       * **Existe porque ela oferecia sempre**, e num plano vitalício o clique
-       * respondia — corretamente — "não há cobrança". Botão que a regra
-       * recusa é pior que ausência de botão: quem clica aprende que a tela
-       * não sabe do que está falando. Encontrado abrindo a tela em
-       * 8/set/2026.
+       * **Existe porque a tela oferecia o botão sempre**, e num plano
+       * vitalício o clique respondia — corretamente — "não há cobrança".
+       * Botão que a regra recusa é pior que ausência de botão: quem clica
+       * aprende que a tela não sabe do que está falando. Encontrado abrindo
+       * a tela em 8/set/2026.
        */
-      podeGerar: boolean;
+      podeGerar: false;
+    }
+  | {
+      estado: "sem_cobranca";
+      motivo: string;
+      podeGerar: true;
+      /**
+       * `gerar` cria a cobrança do ciclo; `renovar` troca o código de uma
+       * que já existe e venceu. São ações diferentes para quem lê — "gerar
+       * cobrança" onde já há uma dívida soa como uma segunda conta —, e é
+       * o servidor que sabe qual das duas cabe.
+       */
+      acao: "gerar" | "renovar";
     }
   | { estado: "manual"; motivo: string }
   | {
@@ -56,6 +71,9 @@ export type EstadoDaCobranca =
     }
   | { estado: "paga"; pagaEm: string | null; acessoAte: string | null };
 
+const AVISO_MANUAL =
+  "A cobrança automática ainda não está ligada. Combine o pagamento com quem administra o sistema.";
+
 type Avaliacao =
   | {
       cobra: true;
@@ -68,9 +86,33 @@ type Avaliacao =
       motivo: string;
       /** Ciclo corrente. `null` quando nem plano existe para calculá-lo. */
       ciclo: Cycle | null;
-      /** O período já tem cobrança, e ela não está aberta: paga ou vencida. */
+      /** O período já tem cobrança, e ela não está aberta e no prazo. */
       jaCobrado: boolean;
     };
+
+/** O prazo já passou? Sem prazo gravado, não passou. */
+function venceu(prazo: string | null, agora: Date): boolean {
+  return prazo !== null && new Date(prazo).getTime() <= agora.getTime();
+}
+
+/**
+ * Esta linha aceita um código novo?
+ *
+ * `expirada` é o caso óbvio. `aberta` com o prazo no passado é o mesmo caso
+ * antes da varredura diária passar — e ela é DIÁRIA enquanto a conta for
+ * Hobby (regra 13), então esperar por ela seria deixar alguém até 24h
+ * olhando um QR que o banco já recusa.
+ *
+ * `paga` e `cancelada` ficam de fora, e o banco confere isso de novo: a
+ * guarda de verdade está na `renovar_cobranca` (0090).
+ */
+function renovavel(
+  linha: { status: string; expires_at: string | null },
+  agora: Date
+): boolean {
+  if (linha.status === "expirada") return true;
+  return linha.status === "aberta" && venceu(linha.expires_at, agora);
+}
 
 /**
  * O que o ciclo corrente pede — decidido UMA vez, para os dois caminhos.
@@ -168,7 +210,11 @@ export async function estadoAtual(
     .limit(1)
     .maybeSingle();
 
-  if (aberta) {
+  // **Cobrança aberta com o prazo vencido não é cobrança aberta.** Quem
+  // troca o status é a varredura diária; até ela passar, mostrar o código
+  // aqui seria apresentar como válido um Pix que o banco recusa. Cai no
+  // caminho de renovação logo abaixo.
+  if (aberta && !venceu(aberta.expires_at, agora)) {
     return {
       estado: "aberta",
       id: aberta.id,
@@ -187,12 +233,13 @@ export async function estadoAtual(
       estado: "sem_cobranca",
       motivo: "A cobrança deste período ainda não foi gerada.",
       podeGerar: true,
+      acao: "gerar",
     };
   }
 
-  // "Já cobrado" sem nada aberto: ou o ciclo está pago, ou a cobrança dele
-  // venceu. São situações opostas para quem lê, e a diferença está na linha
-  // DESTE ciclo — não na cobrança mais recente, qualquer que seja.
+  // "Já cobrado" sem nada aberto e no prazo: ou o ciclo está pago, ou o
+  // código venceu. São situações opostas para quem lê, e a diferença está na
+  // linha DESTE ciclo — não na cobrança mais recente, qualquer que seja.
   //
   // **Olhar a mais recente era um defeito**: quem pagou agosto e chegou em
   // setembro ainda sem fatura via "Pagamento em dia" ao lado de uma data de
@@ -200,7 +247,7 @@ export async function estadoAtual(
   if (aval.jaCobrado && aval.ciclo) {
     const { data: doCiclo } = await db
       .from("subscription_charge")
-      .select("status, paid_at")
+      .select("status, paid_at, expires_at")
       .eq("workspace_id", workspaceId)
       .eq("period_start", aval.ciclo.start)
       .maybeSingle();
@@ -219,13 +266,22 @@ export async function estadoAtual(
       };
     }
 
-    // Vencida ou cancelada. O índice único `(workspace_id, period_start)`
-    // impede gerar outra para o mesmo ciclo, então oferecer o botão aqui
-    // seria oferecer um erro.
+    if (doCiclo && renovavel(doCiclo, agora)) {
+      return {
+        estado: "sem_cobranca",
+        motivo:
+          "O código Pix deste período venceu. Gere um novo — a conta continua a mesma.",
+        podeGerar: true,
+        acao: "renovar",
+      };
+    }
+
+    // Sobra `cancelada`: cancelar é decisão de alguém, e desfazer por um
+    // clique do cliente seria passar por cima dela.
     return {
       estado: "sem_cobranca",
       motivo:
-        "A cobrança deste período venceu. Peça uma nova a quem administra o sistema.",
+        "A cobrança deste período foi cancelada. Fale com quem administra o sistema.",
       podeGerar: false,
     };
   }
@@ -234,10 +290,10 @@ export async function estadoAtual(
 }
 
 /**
- * Gera (ou devolve) a cobrança do ciclo corrente.
+ * Gera, renova ou devolve a cobrança do ciclo corrente.
  *
- * Se já existe uma aberta, devolve ELA — sem falar com o provedor. É o que
- * torna o botão seguro de clicar duas vezes.
+ * Se já existe uma aberta e no prazo, devolve ELA — sem falar com o
+ * provedor. É o que torna o botão seguro de clicar duas vezes.
  */
 export async function gerarCobranca(
   workspaceId: string,
@@ -249,6 +305,10 @@ export async function gerarCobranca(
   // Tudo que não seja "dá para gerar" volta como está: é a MESMA frase que a
   // tela já mostrava. O clique não é uma segunda opinião.
   if (jaTem.estado !== "sem_cobranca" || !jaTem.podeGerar) return jaTem;
+
+  if (jaTem.acao === "renovar") {
+    return renovarCobranca(db, workspaceId, agora);
+  }
 
   // Avalia de novo em vez de confiar no que a tela leu: entre carregar a
   // página e clicar, o cron pode ter emitido a fatura ou o plano pode ter
@@ -262,11 +322,7 @@ export async function gerarCobranca(
   if (modo.modo === "manual") {
     // Sem provedor não há QR para mostrar. Dizer isso é melhor que criar
     // uma fatura que a tela não sabe pagar.
-    return {
-      estado: "manual",
-      motivo:
-        "A cobrança automática ainda não está ligada. Combine o pagamento com quem administra o sistema.",
-    };
+    return { estado: "manual", motivo: AVISO_MANUAL };
   }
 
   // UM prazo só, usado nos dois lados. Pedir à EFI uma expiração diferente
@@ -316,6 +372,12 @@ export async function gerarCobranca(
     .from("subscription_charge")
     .update({
       provider_charge_id: cobranca.providerChargeId,
+      // O histórico começa aqui (0090). A linha acabou de nascer e só este
+      // pedido a conhece, então escrever a lista inteira é seguro — o
+      // `array_append` atômico faz falta na renovação, não na criação.
+      provider_charge_ids: cobranca.providerChargeId
+        ? [cobranca.providerChargeId]
+        : [],
       qr_code: cobranca.qrCode || null,
       copia_e_cola: cobranca.copiaECola || null,
     })
@@ -329,6 +391,82 @@ export async function gerarCobranca(
     qrCode: cobranca.qrCode || null,
     expiraEm: expiraEm.toISOString(),
     periodo: { inicio: aval.ciclo.start, fim: aval.ciclo.end },
+  };
+}
+
+/**
+ * Código novo para a fatura que venceu. Mesma linha, mesma dívida.
+ *
+ * **A ida ao provedor vem antes da gravação, e a ordem é escolhida.** Ao
+ * contrário: a linha voltaria a `aberta` com o código velho e um prazo
+ * novo, e a tela apresentaria como válido um Pix que o banco recusa —
+ * exatamente o defeito que esta função existe para consertar. Nesta ordem,
+ * uma falha na EFI deixa a fatura como estava e o cliente tenta de novo.
+ *
+ * O preço dessa escolha é a corrida rara em que a fatura é paga entre a
+ * criação do código e a gravação: a `renovar_cobranca` recusa, e o código
+ * novo fica órfão na EFI até expirar sozinho. Ninguém o vê — a tela devolve
+ * o estado fresco —, e é bem melhor que reabrir uma fatura já quitada.
+ */
+async function renovarCobranca(
+  db: ReturnType<typeof createAdminClient>,
+  workspaceId: string,
+  agora: Date
+): Promise<EstadoDaCobranca> {
+  const aval = await avaliarCiclo(db, workspaceId, agora);
+  // Mudou entre a tela e o clique — passou a haver o que cobrar do zero, ou
+  // o plano sumiu. Uma leitura fresca responde melhor que um palpite.
+  if (aval.cobra || !aval.ciclo) return estadoAtual(workspaceId, agora);
+
+  const { data: linha } = await db
+    .from("subscription_charge")
+    .select(
+      "id, amount_cents, plan_name, status, expires_at, period_start, period_end"
+    )
+    .eq("workspace_id", workspaceId)
+    .eq("period_start", aval.ciclo.start)
+    .maybeSingle();
+
+  if (!linha || !renovavel(linha, agora)) {
+    return estadoAtual(workspaceId, agora);
+  }
+
+  const modo = resolveProvider();
+  if (modo.modo === "manual") {
+    return { estado: "manual", motivo: AVISO_MANUAL };
+  }
+
+  const expiraEm = chargeExpiresAt(agora);
+
+  // O VALOR vem da linha, não de uma nova decisão de preço: se o plano
+  // subiu desde a emissão, a fatura de agosto continua valendo o de agosto.
+  const cobranca = await modo.gateway.createPixCharge({
+    amountCents: linha.amount_cents,
+    description: `TAFLOW ${linha.plan_name}`,
+    expiresInSeconds: CHARGE_TTL_DAYS * 86_400,
+    reference: linha.id,
+  });
+
+  const { data: renovou } = await db.rpc("renovar_cobranca", {
+    p_charge_id: linha.id,
+    p_provider_charge_id: cobranca.providerChargeId,
+    p_qr_code: cobranca.qrCode || null,
+    p_copia_e_cola: cobranca.copiaECola || null,
+    p_expires_at: expiraEm.toISOString(),
+  });
+
+  // `null` = o banco recusou: paga, cancelada, ou outro pedido renovou
+  // primeiro. Em qualquer um dos três, o que vale é o estado de agora.
+  if (renovou !== true) return estadoAtual(workspaceId, agora);
+
+  return {
+    estado: "aberta",
+    id: linha.id,
+    valorCents: linha.amount_cents,
+    copiaECola: cobranca.copiaECola || null,
+    qrCode: cobranca.qrCode || null,
+    expiraEm: expiraEm.toISOString(),
+    periodo: { inicio: linha.period_start, fim: linha.period_end },
   };
 }
 

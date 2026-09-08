@@ -25,6 +25,7 @@
 //    do aviso serve para registrar quanto entrou, não para escolher a
 //    fatura: quem escolhe é o identificador do provedor.
 
+import { registrarEventoDePlataforma } from "@/lib/admin/audit";
 import { registrarPagamento } from "@/lib/billing/settle";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { Json } from "@/types/database";
@@ -125,12 +126,7 @@ export async function processarAviso(
   }
 
   // REGRA 4: quem escolhe a fatura é o identificador, nunca o valor.
-  const { data: fatura } = await db
-    .from("subscription_charge")
-    .select("id, status")
-    .eq("provider", aviso.provedor)
-    .eq("provider_charge_id", aviso.providerChargeId)
-    .maybeSingle();
+  const fatura = await acharFatura(db, aviso.provedor, aviso.providerChargeId);
 
   if (!fatura) {
     // 200 de propósito (regra 3): pode ser cobrança criada fora daqui, ou de
@@ -143,6 +139,28 @@ export async function processarAviso(
   }
 
   if (fatura.status === "paga") {
+    // **Isto não é o reenvio do mesmo aviso** — esse já parou na regra 2,
+    // porque o `external_id` da EFI é o endToEndId, único por
+    // transferência. Chegar aqui é OUTRO Pix caindo numa fatura já
+    // quitada, e o caso mais provável passou a existir com a renovação
+    // (0090): o cliente paga o código antigo e o novo.
+    //
+    // Creditar duas vezes está fora de questão, e sumir sem registro é
+    // pior — alguém precisa devolver esse dinheiro, e para devolver
+    // precisa saber que ele entrou.
+    await registrarEventoDePlataforma({
+      autor: `webhook:${aviso.provedor}`,
+      acao: "alterou",
+      entidade: "subscription_charge",
+      entidadeId: fatura.id,
+      resumo: "recebeu pagamento de uma fatura que já estava paga",
+      detalhes: {
+        evento: aviso.externalId,
+        cobranca: aviso.providerChargeId,
+        valorCents: aviso.valorCents,
+        pagoEm: aviso.pagoEm,
+      },
+    });
     return { acao: "fatura_ja_paga", status: 200 };
   }
 
@@ -210,4 +228,43 @@ export async function processarAviso(
     status: 200,
     detalhe: `acesso estendido até ${resultado.acessoAte}`,
   };
+}
+
+/**
+ * A fatura que este identificador do provedor representa.
+ *
+ * **Procura no HISTÓRICO antes da coluna** (0090). Renovar um Pix vencido
+ * troca o `provider_charge_id` da linha; um pagamento feito no código
+ * ANTERIOR chega com o txid velho, e se ele deixasse de casar com a fatura
+ * o resultado seria dinheiro recebido que ninguém credita — e um cliente
+ * cobrado de novo por um mês que ele pagou.
+ *
+ * `contains` é filtro parametrizado. O txid vem de um corpo público e nunca
+ * entra numa expressão de filtro montada com concatenação.
+ *
+ * A consulta pela coluna fica como rede: linha gravada por algum caminho
+ * que não preencheu o histórico ainda é encontrada.
+ */
+async function acharFatura(
+  db: ReturnType<typeof createAdminClient>,
+  provedor: string,
+  providerChargeId: string
+): Promise<{ id: string; status: string } | null> {
+  const { data: porHistorico } = await db
+    .from("subscription_charge")
+    .select("id, status")
+    .eq("provider", provedor)
+    .contains("provider_charge_ids", [providerChargeId])
+    .maybeSingle();
+
+  if (porHistorico) return porHistorico;
+
+  const { data: porColuna } = await db
+    .from("subscription_charge")
+    .select("id, status")
+    .eq("provider", provedor)
+    .eq("provider_charge_id", providerChargeId)
+    .maybeSingle();
+
+  return porColuna ?? null;
 }

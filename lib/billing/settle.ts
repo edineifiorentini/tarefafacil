@@ -71,15 +71,34 @@ export async function registrarPagamento(params: {
   const pagoEm = params.pagoEm ?? new Date().toISOString();
   const valor = params.valorCents ?? fatura.amount_cents;
 
-  const { error: erroFatura } = await db
+  const { data: fechadas, error: erroFatura } = await db
     .from("subscription_charge")
     .update({ status: "paga", paid_at: pagoEm, paid_amount_cents: valor })
     .eq("id", fatura.id)
-    // Só fecha se ainda estiver aberta: se duas pessoas clicarem ao mesmo
-    // tempo, a segunda não encontra linha e não empurra o acesso de novo.
-    .eq("status", "aberta");
+    // Só fecha se ainda estiver por receber: se duas pessoas clicarem ao
+    // mesmo tempo, a segunda não encontra linha e não empurra o acesso de
+    // novo.
+    //
+    // **`expirada` entra aqui, e não é detalhe** (0090): o que vence é o
+    // CÓDIGO, não a dívida. Um Pix pago minutos antes do prazo pode chegar
+    // depois dele — a EFI reenvia até receber 200 — e recusar esse
+    // pagamento seria receber o dinheiro e não creditar.
+    .in("status", ["aberta", "expirada"])
+    .select("id");
   if (erroFatura) {
     return { ok: false, erro: "falhou", mensagem: erroFatura.message };
+  }
+
+  // Nenhuma linha fechada: outro pedido ganhou a corrida entre a leitura
+  // acima e este UPDATE. Parar AQUI é o ponto — seguir empurraria o acesso
+  // por um pagamento que este pedido não registrou, e o mês seria dado duas
+  // vezes por um clique duplo.
+  if (!fechadas || fechadas.length === 0) {
+    return {
+      ok: false,
+      erro: "ja_paga",
+      mensagem: "Esta fatura já está registrada como paga",
+    };
   }
 
   // A carência vem da política da plataforma (0089), e não da constante.

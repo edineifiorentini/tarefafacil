@@ -26,7 +26,10 @@ const tabelas = vi.hoisted(() => ({
 }));
 
 const inserido = vi.fn();
+const atualizado = vi.fn();
 const criarPix = vi.fn();
+/** `renovar_cobranca` (0090). Devolve `true` quando o banco deixou renovar. */
+const chamouRpc = vi.fn();
 
 type Resposta = { data: unknown; error: unknown };
 type Filtros = Record<string, string>;
@@ -92,12 +95,21 @@ function tabela(nome: string) {
         }),
       };
     },
-    update: () => ({ eq: async () => ({ error: null }) }),
+    update: (linha: Record<string, unknown>) => {
+      atualizado(linha);
+      return { eq: async () => ({ error: null }) };
+    },
   };
 }
 
 vi.mock("@/lib/supabase/admin", () => ({
-  createAdminClient: () => ({ from: (nome: string) => tabela(nome) }),
+  createAdminClient: () => ({
+    from: (nome: string) => tabela(nome),
+    rpc: async (nome: string, args: Record<string, unknown>) => ({
+      data: chamouRpc(nome, args),
+      error: null,
+    }),
+  }),
 }));
 
 vi.mock("./provider", () => ({
@@ -116,6 +128,8 @@ const HOJE = new Date("2026-09-10T12:00:00-03:00");
 
 beforeEach(() => {
   inserido.mockReset();
+  atualizado.mockReset();
+  chamouRpc.mockReset().mockReturnValue(true);
   criarPix.mockReset().mockResolvedValue({
     providerChargeId: "txid",
     qrCode: "",
@@ -167,12 +181,15 @@ describe("as travas do decideCharge valem aqui também", () => {
     expect(criarPix).not.toHaveBeenCalled();
   });
 
-  it("período já cobrado não gera de novo", async () => {
+  it("período já cobrado não gera SEGUNDA cobrança", async () => {
+    // Cancelada de propósito: é o estado em que não há nem o que renovar,
+    // então o que sobra é a trava do período.
     tabelas.cobradas = [{ period_start: "2026-09-05" }];
-    tabelas.doCiclo = { status: "expirada", paid_at: null };
+    tabelas.doCiclo = { status: "cancelada", paid_at: null, expires_at: null };
     const r = await gerarCobranca("ws1", HOJE);
     expect(r.estado).toBe("sem_cobranca");
     expect(criarPix).not.toHaveBeenCalled();
+    expect(inserido).not.toHaveBeenCalled();
   });
 });
 
@@ -244,18 +261,15 @@ describe("a tela só oferece o botão quando gerar pode dar certo", () => {
       estado: "sem_cobranca",
       motivo: "A cobrança deste período ainda não foi gerada.",
       podeGerar: true,
+      acao: "gerar",
     });
   });
 
-  it("cobrança do ciclo vencida: não oferece, porque o índice único recusaria", async () => {
+  it("cobrança do ciclo cancelada: não oferece — desfazer não é do cliente", async () => {
     tabelas.cobradas = [{ period_start: "2026-09-05" }];
-    tabelas.doCiclo = { status: "expirada", paid_at: null };
+    tabelas.doCiclo = { status: "cancelada", paid_at: null, expires_at: null };
     const r = await estadoAtual("ws1", HOJE);
     expect(r).toMatchObject({ estado: "sem_cobranca", podeGerar: false });
-    expect(r).toHaveProperty(
-      "motivo",
-      "A cobrança deste período venceu. Peça uma nova a quem administra o sistema."
-    );
   });
 
   it("o clique concorda com a tela: sem podeGerar, não vai ao provedor", async () => {
@@ -294,5 +308,111 @@ describe("'pagamento em dia' fala do ciclo corrente, não da última fatura", ()
     tabelas.acessoAte = "2026-09-10";
     const r = await estadoAtual("ws1", HOJE);
     expect(r).toMatchObject({ estado: "sem_cobranca", podeGerar: true });
+  });
+});
+
+describe("código Pix vencido tem saída: renovar a MESMA linha (0090)", () => {
+  /** A fatura do ciclo, emitida quando o plano custava outro preço. */
+  const DO_CICLO = {
+    id: "fatura-do-ciclo",
+    amount_cents: 4900,
+    plan_name: "Pro",
+    status: "expirada",
+    paid_at: null,
+    expires_at: "2026-09-09T12:00:00Z",
+    period_start: "2026-09-05",
+    period_end: "2026-10-05",
+  };
+
+  it("a tela oferece renovar, não gerar", async () => {
+    tabelas.cobradas = [{ period_start: "2026-09-05" }];
+    tabelas.doCiclo = DO_CICLO;
+    const r = await estadoAtual("ws1", HOJE);
+    expect(r).toEqual({
+      estado: "sem_cobranca",
+      motivo:
+        "O código Pix deste período venceu. Gere um novo — a conta continua a mesma.",
+      podeGerar: true,
+      acao: "renovar",
+    });
+  });
+
+  it("aberta com o prazo no passado NÃO é aberta: nada de QR morto na tela", async () => {
+    // A varredura que troca o status para `expirada` é DIÁRIA (regra 13).
+    // Até ela passar, a linha continua `aberta` — e mostrar o código dela
+    // seria apresentar como válido um Pix que o banco recusa.
+    tabelas.aberta = {
+      id: "fatura-do-ciclo",
+      amount_cents: 4900,
+      copia_e_cola: "000201morto",
+      qr_code: null,
+      expires_at: "2026-09-09T12:00:00Z",
+      period_start: "2026-09-05",
+      period_end: "2026-10-05",
+    };
+    tabelas.cobradas = [{ period_start: "2026-09-05" }];
+    tabelas.doCiclo = { ...DO_CICLO, status: "aberta" };
+
+    const r = await estadoAtual("ws1", HOJE);
+    expect(r).toMatchObject({ podeGerar: true, acao: "renovar" });
+  });
+
+  it("renovar cobra o valor DA FATURA, não o preço de hoje", async () => {
+    // O plano subiu de 49 para 99 desde a emissão. A dívida de setembro
+    // continua sendo a de setembro — renovar troca o código, não o preço.
+    tabelas.cobradas = [{ period_start: "2026-09-05" }];
+    tabelas.doCiclo = DO_CICLO;
+
+    const r = await gerarCobranca("ws1", HOJE);
+
+    expect(criarPix).toHaveBeenCalledWith(
+      expect.objectContaining({ amountCents: 4900 })
+    );
+    // Mesma linha: nenhuma segunda fatura para o mesmo mês.
+    expect(inserido).not.toHaveBeenCalled();
+    expect(chamouRpc).toHaveBeenCalledWith(
+      "renovar_cobranca",
+      expect.objectContaining({
+        p_charge_id: "fatura-do-ciclo",
+        p_provider_charge_id: "txid",
+      })
+    );
+    expect(r).toMatchObject({
+      estado: "aberta",
+      id: "fatura-do-ciclo",
+      valorCents: 4900,
+      copiaECola: "000201…",
+    });
+  });
+
+  it("se o banco recusar a renovação, a tela não inventa", async () => {
+    tabelas.cobradas = [{ period_start: "2026-09-05" }];
+    tabelas.doCiclo = DO_CICLO;
+    // Alguém pagou entre a criação do código e a gravação. A guarda da
+    // `renovar_cobranca` recusa, e o código novo fica órfão na EFI — bem
+    // melhor que reabrir uma fatura já quitada.
+    chamouRpc.mockImplementation(() => {
+      tabelas.doCiclo = {
+        ...DO_CICLO,
+        status: "paga",
+        paid_at: "2026-09-10T09:00:00Z",
+      };
+      return null;
+    });
+
+    const r = await gerarCobranca("ws1", HOJE);
+    expect(r).toMatchObject({ estado: "paga" });
+  });
+
+  it("a criação guarda o txid no histórico desde o começo", async () => {
+    // Sem isto, renovar depois perderia o rastro do primeiro código — e com
+    // ele o pagamento feito nele.
+    await gerarCobranca("ws1", HOJE);
+    expect(atualizado).toHaveBeenCalledWith(
+      expect.objectContaining({
+        provider_charge_id: "txid",
+        provider_charge_ids: ["txid"],
+      })
+    );
   });
 });

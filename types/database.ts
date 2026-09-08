@@ -1309,6 +1309,14 @@ export type Database = {
           status: ChargeStatus;
           provider: string;
           provider_charge_id: string | null;
+          /**
+           * Todo txid já emitido para esta fatura (0090).
+           *
+           * Renovar um Pix vencido troca `provider_charge_id`; o webhook
+           * procura AQUI, senão um pagamento feito no código anterior
+           * deixaria de casar com a fatura.
+           */
+          provider_charge_ids: string[];
           qr_code: string | null;
           copia_e_cola: string | null;
           expires_at: string | null;
@@ -1326,6 +1334,7 @@ export type Database = {
           status?: ChargeStatus;
           provider?: string;
           provider_charge_id?: string | null;
+          provider_charge_ids?: string[];
           qr_code?: string | null;
           copia_e_cola?: string | null;
           expires_at?: string | null;
@@ -1333,8 +1342,10 @@ export type Database = {
         Update: {
           status?: ChargeStatus;
           provider_charge_id?: string | null;
+          provider_charge_ids?: string[];
           qr_code?: string | null;
           copia_e_cola?: string | null;
+          expires_at?: string | null;
           paid_at?: string | null;
           paid_amount_cents?: number | null;
         };
@@ -2104,6 +2115,25 @@ export type Database = {
       workspace_storage_used: {
         Args: { p_workspace: string };
         Returns: number;
+      };
+      /**
+       * Troca o código Pix de uma fatura vencida (0090).
+       *
+       * A dívida não muda — mesma linha, mesmo período, mesmo valor. Só o
+       * código é novo, e o antigo fica no histórico para o webhook.
+       *
+       * Devolve `null` quando não havia o que renovar: fatura paga,
+       * cancelada, ou já renovada por outro pedido no mesmo instante.
+       */
+      renovar_cobranca: {
+        Args: {
+          p_charge_id: string;
+          p_provider_charge_id: string | null;
+          p_qr_code: string | null;
+          p_copia_e_cola: string | null;
+          p_expires_at: string;
+        };
+        Returns: boolean | null;
       };
       /**
        * Trilha escrita pelo servidor, com o autor por parâmetro.

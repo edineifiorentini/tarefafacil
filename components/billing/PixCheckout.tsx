@@ -12,7 +12,13 @@ import { useToast } from "@/components/ui/Toast";
 const KEY = ["cobranca-atual"] as const;
 
 type Estado =
-  | { estado: "sem_cobranca"; motivo: string; podeGerar: boolean }
+  | { estado: "sem_cobranca"; motivo: string; podeGerar: false }
+  | {
+      estado: "sem_cobranca";
+      motivo: string;
+      podeGerar: true;
+      acao: "gerar" | "renovar";
+    }
   | { estado: "manual"; motivo: string }
   | {
       estado: "aberta";
@@ -203,7 +209,12 @@ export function PixCheckout() {
           isLoading={gerar.isPending}
           onClick={() => gerar.mutate()}
         >
-          Gerar cobrança do período
+          {/* Renovar não é uma segunda conta: é o mesmo mês com um código
+              novo. "Gerar cobrança" aqui faria quem já deve pensar que vai
+              dever duas vezes. */}
+          {data.acao === "renovar"
+            ? "Gerar novo código Pix"
+            : "Gerar cobrança do período"}
         </Button>
       ) : null}
     </div>
