@@ -7,6 +7,7 @@ import {
 } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 
+import { PixCheckout } from "@/components/billing/PixCheckout";
 import { PlanChooser } from "@/components/billing/PlanChooser";
 import { daysLeft } from "@/components/billing/TrialBanner";
 import { formatCentsBRL } from "@/lib/finance/money";
@@ -159,12 +160,13 @@ export function SubscriptionCard() {
         ) : null}
       </div>
 
-      {/* A cobrança ainda não existe, e a tela diz isso em vez de fingir. */}
-      <p className="text-fg-muted text-[length:var(--text-caption-size)]">
-        A cobrança automática ainda não está ligada. Escolher um plano aqui
-        registra sua escolha; a conversa sobre pagamento acontece com quem
-        administra a plataforma.
-      </p>
+      {/* O checkout diz o que É verdade AGORA, e ele mesmo se cala quando
+          não há o que cobrar: plano vitalício, plano gratuito, período já
+          pago ou provedor desligado cada um tem sua frase. Antes havia aqui
+          um aviso fixo dizendo que a cobrança não existia — ele era honesto
+          enquanto era verdade, e virou mentira no dia em que passou a
+          existir. Texto fixo sobre estado que muda é dívida com juros. */}
+      <PixCheckout />
 
       <PlanChooser />
     </section>
