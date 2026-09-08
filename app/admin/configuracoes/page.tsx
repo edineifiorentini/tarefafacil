@@ -1,3 +1,4 @@
+import { PoliticaDeCadastro } from "@/components/admin/PoliticaDeCadastro";
 import { SignupGate } from "@/components/admin/SignupGate";
 import { EmConstrucao } from "@/components/admin/shell/EmConstrucao";
 import {
@@ -20,17 +21,23 @@ export default function AdminConfiguracoesPage() {
           Cadastros
         </h2>
         <SignupGate />
+        <PoliticaDeCadastro />
       </section>
 
+      {/* O que sobrou depois da 0088, e o motivo de cada um.
+          A regra desta tela não mudou: campo sem a regra que o respeita
+          vira interruptor que não faz nada. O que caiu daqui caiu porque
+          ganhou a regra; o que ficou, ficou porque ainda não tem onde ser
+          cumprido — e em três casos o lugar nem é este sistema. */}
       <EmConstrucao
-        titulo="O resto das configurações"
+        titulo="O que ainda não dá para ajustar aqui"
         conteudo={[
-          "Duração e plano padrão do teste, assentos iniciais, verificação de e-mail",
-          "Provedores de autenticação aceitos e cadastro somente por convite",
-          "Período de tolerância, regras de cancelamento e comunicação de inadimplência",
-          "Exigência de 2FA para administradores, duração da sessão e retenção da auditoria",
+          "Verificação de e-mail, provedores de autenticação aceitos e duração da sessão — são configuração do Supabase Auth, não coluna nossa",
+          "Comunicação de inadimplência — não há canal: o projeto não tem envio de e-mail nem WhatsApp",
+          "Período de tolerância e regras de cancelamento — vivem na cobrança, que segue em rodada separada",
+          "Exigência de 2FA para administradores — não existe segundo fator no sistema; é rodada própria, com cadastro do fator, desafio no login e códigos de recuperação",
         ]}
-        bloqueio="A tabela platform_setting tem uma coluna só — signups_enabled, que é o controle acima. Cada item desta lista é uma coluna nova mais a regra que a respeita no cadastro, na cobrança ou no login; criar os campos antes das regras produziria um painel cheio de interruptores que não fazem nada."
+        bloqueio="Um interruptor aqui para qualquer um destes seria decorativo: quem administra acreditaria nele e o comportamento não mudaria. Cadastro somente por convite não está na lista porque já funciona — com os cadastros fechados acima, quem tem convite pendente continua entrando."
       />
     </div>
   );

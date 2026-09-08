@@ -1639,10 +1639,32 @@ export type Database = {
         Row: {
           id: boolean;
           signups_enabled: boolean;
+          /**
+           * Dias de teste de quem se cadastra (0088).
+           *
+           * **Não corta acesso** — a 0060 decidiu que quem barra é
+           * `access_expires_at`. Este número muda a contagem que aparece.
+           */
+          trial_days: number;
+          /** Assentos de um workspace novo (0088). O convite respeita. */
+          initial_seats: number;
+          /** Retenção da auditoria (0088). A varredura semanal aplica. */
+          audit_keep_days: number;
           updated_at: string;
         };
-        Insert: { id?: boolean; signups_enabled?: boolean };
-        Update: { signups_enabled?: boolean };
+        Insert: {
+          id?: boolean;
+          signups_enabled?: boolean;
+          trial_days?: number;
+          initial_seats?: number;
+          audit_keep_days?: number;
+        };
+        Update: {
+          signups_enabled?: boolean;
+          trial_days?: number;
+          initial_seats?: number;
+          audit_keep_days?: number;
+        };
         Relationships: [];
       };
       service: {

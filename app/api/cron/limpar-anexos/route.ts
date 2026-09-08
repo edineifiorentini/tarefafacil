@@ -259,6 +259,41 @@ export async function GET(request: Request) {
     }
   }
 
+/**
+ * Apaga a auditoria que passou do prazo (0088).
+ *
+ * O prazo vem de `platform_setting.audit_keep_days`, editável no painel da
+ * plataforma. **Sem esta varredura o campo seria decoração** — e a tela de
+ * Configurações recusa campo que não é cumprido, com razão.
+ *
+ * Apaga em lote pelo banco, e não linha a linha: auditoria de um ano são
+ * dezenas de milhares de linhas, e trazê-las para o Node só para devolvê-las
+ * como lista de ids gastaria memória e tempo sem ganhar nada. O limite de
+ * segurança aqui é a data, que o banco compara sozinho.
+ *
+ * Não há como desfazer. Por isso o mínimo de 30 dias mora num `check` da
+ * 0088, e não só na validação da tela: quem chamar a rota por fora também
+ * esbarra nele.
+ */
+async function limparAuditoria(db: ReturnType<typeof createAdminClient>) {
+  const { data: cfg } = await db
+    .from("platform_setting")
+    .select("audit_keep_days")
+    .limit(1)
+    .maybeSingle();
+
+  const dias = cfg?.audit_keep_days ?? 365;
+  const corte = new Date(Date.now() - dias * 86_400_000).toISOString();
+
+  const { count, error } = await db
+    .from("audit_log")
+    .delete({ count: "exact" })
+    .lt("created_at", corte);
+
+  if (error) return { erro: error.message };
+  return { mantidosDias: dias, corte, removidos: count ?? 0 };
+}
+
   // Retenção por prazo (0086). Roda DEPOIS da varredura de órfãos: o que
   // ela retira vira objeto sem dono, e a semana seguinte já o encontra
   // limpo — nesta, a linha ainda o referencia.
@@ -271,6 +306,7 @@ export async function GET(request: Request) {
     referenciados: referenciados.size,
     removidos: orfaos.length,
     retencao,
+    auditoria: await limparAuditoria(db),
     // Pastas fora do formato de anexo de demanda. Se este número crescer,
     // alguém guardou outro tipo de arquivo no bucket e esta rota precisa
     // aprender a reconhecê-lo.

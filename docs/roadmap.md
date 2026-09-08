@@ -2449,3 +2449,54 @@ isso que `lib/reports/periodo.ts` mudou uma linha e não doze.
 
 **Cobrança continua fora**, por decisão do dono: `lib/billing/cycle.ts:150`
 ainda tem `localDayISO(input.now)`.
+
+---
+
+## 31. Configurações da plataforma — o que ganhou regra (8/set/2026, migration 0088)
+
+A tela recusava campos sem a regra que os cumpre, e estava certa. Esta
+rodada não afrouxou o critério: moveu quatro itens da lista de espera para o
+painel porque cada um ganhou onde ser cumprido.
+
+**Entregue**
+
+- `platform_setting` ganhou `trial_days`, `initial_seats` e
+  `audit_keep_days`, com `check` de sanidade espelhados em
+  `lib/admin/politica.ts` — mudar um lado sem o outro faz o painel aceitar e
+  o banco recusar;
+- `handle_new_user` (a trigger da 0061) passou a LER os dois primeiros em vez
+  dos literais `interval '7 days'` e `default 5`;
+- a varredura semanal ganhou `limparAuditoria`, que aplica o terceiro;
+- o PATCH de `/api/admin/settings` aceita **atualização parcial**: dois
+  cartões editam a mesma linha, e se cada um mandasse o objeto inteiro o
+  último a salvar apagaria o que o outro acabou de mudar.
+
+**Comprovado contra o banco de produção**, criando e apagando usuários de
+teste: com a política em 3 dias e 9 assentos, o workspace nasceu com 3 e 9 —
+prova de que a trigger lê a tabela e não os literais. Zero dia produz
+`trial: false` com data nula, e cadastro fechado continua bloqueando quem não
+tem convite.
+
+**"Cadastro somente por convite" saiu da lista sem virar campo**: já
+funcionava. A trava da 0061 deixa passar quem tem convite pendente, então o
+comportamento existe desde então — faltava a tela dizer.
+
+### O que continua fora, e por quê
+
+**Verificação de e-mail, provedores de autenticação e duração da sessão** são
+configuração do Supabase Auth, não coluna nossa. Um interruptor aqui só
+deixaria de ser decorativo se dirigisse a Management API do Supabase — e aí
+é rodada própria, com credencial de gerenciamento em jogo.
+
+**Comunicação de inadimplência** não tem canal: o projeto não tem nenhuma
+biblioteca de envio de e-mail, e o WhatsApp existe só no catálogo de
+integrações.
+
+**2FA para administradores** não existe em lugar nenhum do sistema. É rodada
+própria: cadastro do fator, desafio no login, códigos de recuperação e o que
+fazer quando alguém perde o aparelho.
+
+**Período de tolerância, regras de cancelamento e cupons** ficam na cobrança,
+separada por decisão do dono. O cupom especialmente: a tela dele já registra
+o motivo certo — cupom que o painel cria e o checkout ignora é pior que
+cupom nenhum.

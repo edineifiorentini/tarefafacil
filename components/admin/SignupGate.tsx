@@ -8,7 +8,20 @@ import { useToast } from "@/components/ui/Toast";
 
 const KEY = ["admin-settings"] as const;
 
-type Settings = { signups_enabled: boolean };
+/**
+ * O aviso do estado aberto cita a duração do teste, que virou configurável
+ * na 0088. Cravar "7 dias" aqui deixaria a frase mentindo no dia em que
+ * alguém mudasse o número logo abaixo, na mesma tela.
+ */
+function textoAberto(dias: number): string {
+  const teste =
+    dias > 0
+      ? ` e ganha ${dias === 1 ? "1 dia" : `${dias} dias`} de teste`
+      : "";
+  return `Qualquer pessoa com e-mail ou conta Google cria um workspace${teste}.`;
+}
+
+type Settings = { signups_enabled: boolean; trial_days: number };
 
 /**
  * Porta de entrada da plataforma.
@@ -80,7 +93,7 @@ export function SignupGate() {
         </p>
         <p className="text-fg-secondary text-[length:var(--text-caption-size)]">
           {aberto
-            ? "Qualquer pessoa com e-mail ou conta Google cria um workspace e ganha 7 dias de teste."
+            ? textoAberto(data.trial_days)
             : "Só entra quem tem convite pendente para o próprio e-mail. Convite por link aberto não cria conta nova enquanto isso."}
         </p>
       </div>

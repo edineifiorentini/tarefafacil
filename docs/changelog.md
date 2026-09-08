@@ -18,6 +18,15 @@ Datas no formato dia/mês/ano.
 
 ## 4/set/2026
 
+**A duração do teste e os assentos de empresa nova saíram do código.**
+Quem administra a plataforma agora ajusta os dois no painel, junto com por
+quanto tempo a auditoria é guardada. Antes eram números fixos que só
+mudavam com alteração no banco.
+
+O campo de teste diz o que faz e o que não faz: ele muda a contagem que
+aparece, **não corta o acesso** — quem barra continua sendo a data de
+vencimento do plano.
+
 **O fuso escolhido agora vale em todas as telas.** Relatórios, painel,
 Hoje e Financeiro ainda calculavam a virada do dia pelo relógio do
 aparelho, enquanto o sino e a Lista já seguiam o que você escolheu — duas
