@@ -47,6 +47,29 @@ export async function POST(
 
   const corpoCru = await request.text();
 
+  // A SONDA DE VALIDAÇÃO VEM ANTES DA AUTENTICAÇÃO, e isso é decisão.
+  //
+  // A EFI CHAMA esta URL para validá-la antes de aceitar o registro, e
+  // exige 200. Ela não manda token nenhum nessa chamada — não teria como,
+  // porque a autenticação dela é mTLS, que a Vercel não entrega até aqui.
+  // Com o portão fechando antes, a validação tomaria 401 e o webhook nunca
+  // conseguiria ser registrado.
+  //
+  // **Isto seria perigoso antes da regra 5, e não é depois dela.** Aviso
+  // forjado não consegue nada: `processarAviso` pergunta à EFI se a
+  // cobrança foi paga antes de quitar qualquer fatura. A autenticação
+  // virou camada extra, não a única linha — e para Asaas e Mercado Pago,
+  // que mandam token e assinatura de verdade, nada disto se aplica.
+  //
+  // O que passa por aqui é só o que NÃO é aviso de pagamento: corpo vazio,
+  // ou qualquer coisa que a tradução não reconhece. Nada é lido, nada é
+  // gravado, nada é quitado.
+  if (ehSondaDeValidacao(provedor, corpoCru)) {
+    console.log(`[webhook/${provedor}] sonda de validação respondida`);
+    return NextResponse.json({ ok: true, acao: "sonda" });
+  }
+
+
   const auth = autenticar(provedor, request.headers, corpoCru);
   if (!auth.ok) {
     // Sem detalhe na resposta: dizer "assinatura inválida" versus "token
@@ -129,4 +152,27 @@ function confirmadorPara(provedor: ProvedorDeWebhook): Confirmador | undefined {
       pagoEm: s.paidAt ? s.paidAt.toISOString() : null,
     };
   };
+}
+
+/**
+ * Isto é a chamada de validação do provedor, e não um aviso de pagamento?
+ *
+ * Deliberadamente estreito: só corpo VAZIO ou JSON que não vira aviso. Um
+ * corpo que a tradução reconhece segue o caminho normal e passa pela
+ * autenticação como sempre passou — a porta aberta aqui não serve para
+ * mandar "pagou", serve para responder "estou de pé".
+ */
+function ehSondaDeValidacao(
+  provedor: ProvedorDeWebhook,
+  corpoCru: string
+): boolean {
+  const limpo = corpoCru.trim();
+  if (limpo === "" || limpo === "{}") return true;
+
+  try {
+    return traduzir(provedor, JSON.parse(limpo)) === null;
+  } catch {
+    // Corpo que não é JSON não é aviso de pagamento de ninguém.
+    return true;
+  }
 }
