@@ -52,8 +52,37 @@ export type AvisoDePagamento = {
   payload: Json;
 };
 
+/**
+ * Confere com o PROVEDOR se a cobrança foi mesmo paga.
+ *
+ * **Esta é a quinta regra, e ela nasceu de um buraco real.** As quatro do
+ * topo assumem que o aviso veio de quem diz ter vindo. Para o Asaas e o
+ * Mercado Pago isso se sustenta: token compartilhado e HMAC sobre o corpo.
+ * Para a EFI, não — ela autentica por mTLS na camada de transporte, e a
+ * Vercel não expõe o certificado do cliente para a função. Sem isso, quem
+ * descobrisse a URL poderia postar `{"pix":[{"txid":"…"}]}` e marcar uma
+ * fatura como paga.
+ *
+ * A resposta não é uma autenticação mais esperta: é parar de acreditar no
+ * corpo. O aviso vira GATILHO — ele diz "vá olhar" — e quem responde se
+ * houve pagamento é o provedor, por uma consulta que sai daqui com o nosso
+ * certificado. Aviso forjado passa a não conseguir nada: perguntamos à EFI,
+ * e a EFI diz que não foi pago.
+ *
+ * Quem não passa confirmador continua no comportamento antigo, e isso é
+ * deliberado: o Asaas e o Mercado Pago já se autenticam de forma que se
+ * sustenta, e obrigá-los a uma ida de rede a mais por aviso seria pagar por
+ * uma proteção que eles já têm.
+ */
+export type Confirmador = (providerChargeId: string) => Promise<{
+  pago: boolean;
+  valorCents: number | null;
+  pagoEm: string | null;
+}>;
+
 export async function processarAviso(
-  aviso: AvisoDePagamento
+  aviso: AvisoDePagamento,
+  confirmar?: Confirmador
 ): Promise<ResultadoDoWebhook> {
   const db = createAdminClient();
 
@@ -117,10 +146,49 @@ export async function processarAviso(
     return { acao: "fatura_ja_paga", status: 200 };
   }
 
+  // REGRA 5: confirmar com o provedor antes de quitar.
+  //
+  // Roda DEPOIS de achar a fatura, e não antes, por dois motivos: aviso que
+  // não casa com fatura nenhuma não merece uma ida de rede, e a consulta é
+  // o passo mais caro da rotina.
+  let valorCents = aviso.valorCents;
+  let pagoEm = aviso.pagoEm;
+
+  if (confirmar) {
+    let confirmacao: Awaited<ReturnType<Confirmador>>;
+    try {
+      confirmacao = await confirmar(aviso.providerChargeId);
+    } catch (e) {
+      // Falha ao CONFERIR não é aviso inválido: pode ser a API do provedor
+      // fora do ar. 500 para o provedor reenviar — é exatamente o caso em
+      // que reenviar resolve.
+      return {
+        acao: "ignorado",
+        status: 500,
+        detalhe: `não foi possível confirmar com o provedor: ${e instanceof Error ? e.message : String(e)}`,
+      };
+    }
+
+    if (!confirmacao.pago) {
+      // O aviso disse que pagou e o provedor diz que não. 200 para não
+      // gerar fila de reenvio, e o corpo cru já está em `payment_event`
+      // para quem for investigar.
+      return {
+        acao: "ignorado",
+        status: 200,
+        detalhe: "o provedor não confirma o pagamento desta cobrança",
+      };
+    }
+
+    // O valor que vale é o do provedor, não o do aviso.
+    valorCents = confirmacao.valorCents;
+    pagoEm = confirmacao.pagoEm;
+  }
+
   const resultado = await registrarPagamento({
     chargeId: fatura.id,
-    valorCents: aviso.valorCents ?? undefined,
-    pagoEm: aviso.pagoEm ?? undefined,
+    valorCents: valorCents ?? undefined,
+    pagoEm: pagoEm ?? undefined,
     // O autor é o provedor, não uma pessoa. A auditoria precisa distinguir
     // "o sistema recebeu" de "alguém marcou à mão" — são confiabilidades
     // diferentes quando se investiga um pagamento contestado.

@@ -1,11 +1,14 @@
 import { NextResponse } from "next/server";
 
+import { lerConfigEfi } from "@/lib/billing/efi/config";
+import { EfiGateway } from "@/lib/billing/efi/gateway";
 import {
   autenticar,
   ehProvedorDeWebhook,
   traduzir,
+  type ProvedorDeWebhook,
 } from "@/lib/billing/webhook-auth";
-import { processarAviso } from "@/lib/billing/webhook";
+import { processarAviso, type Confirmador } from "@/lib/billing/webhook";
 
 /**
  * Recebe aviso de pagamento do provedor.
@@ -73,7 +76,7 @@ export async function POST(
     return NextResponse.json({ ok: true, acao: "ignorado" });
   }
 
-  const resultado = await processarAviso(aviso);
+  const resultado = await processarAviso(aviso, confirmadorPara(provedor));
 
   console.log(
     `[webhook/${provedor}]`,
@@ -89,4 +92,41 @@ export async function POST(
     { ok: resultado.status < 400, acao: resultado.acao },
     { status: resultado.status }
   );
+}
+
+/**
+ * Quem confere o pagamento com o provedor, quando dá para conferir.
+ *
+ * Só a EFI recebe confirmador, e o motivo é a diferença de autenticação: ela
+ * se identifica por mTLS, que a Vercel não entrega para a função, então o
+ * corpo do aviso não prova origem. Perguntar de volta com o nosso
+ * certificado resolve — e torna aviso forjado inútil.
+ *
+ * Asaas e Mercado Pago já se autenticam de um jeito que se sustenta (token
+ * compartilhado e HMAC sobre o corpo). Somar uma ida de rede a cada aviso
+ * deles seria pagar por uma proteção que eles já têm.
+ *
+ * Sem credencial configurada, devolve `undefined`: aí a rota volta ao
+ * comportamento antigo em vez de recusar tudo. Cobrança manual não usa
+ * webhook, e derrubar a rota por falta de variável trocaria funcionamento
+ * reduzido por nenhum.
+ */
+function confirmadorPara(provedor: ProvedorDeWebhook): Confirmador | undefined {
+  if (provedor !== "efi") return undefined;
+
+  const cfg = lerConfigEfi();
+  if (!cfg.ok) {
+    console.warn(`[webhook/efi] sem confirmação: ${cfg.motivo}`);
+    return undefined;
+  }
+
+  const gateway = new EfiGateway(cfg.config);
+  return async (providerChargeId: string) => {
+    const s = await gateway.getChargeStatus(providerChargeId);
+    return {
+      pago: s.paid,
+      valorCents: s.paidAmountCents,
+      pagoEm: s.paidAt ? s.paidAt.toISOString() : null,
+    };
+  };
 }
