@@ -58,10 +58,23 @@ export type ResultadoDaAutenticacao =
  * - **Mercado Pago** assina o corpo com HMAC-SHA256. É mais forte, porque
  *   um token fixo vazado serve para sempre e uma assinatura só vale para
  *   aquele corpo.
- * - **EFI** usa mTLS: o certificado do cliente é validado na camada de
- *   transporte, ANTES de a requisição chegar aqui. Na Vercel isso não
- *   acontece, então cai no segredo compartilhado — anotado como limitação,
- *   não escondido.
+ * - **EFI** não manda nada. Ela se identifica por mTLS na camada de
+ *   transporte, e a Vercel não entrega o certificado do cliente para a
+ *   função — não é limitação de configuração, é o formato da plataforma.
+ *
+ * **Para a EFI, a CONFIRMAÇÃO é a autenticação** (regra 5 em `webhook.ts`).
+ * O aviso dela entra sem token e não decide nada sozinho: `processarAviso`
+ * pergunta à EFI, com o nosso certificado, se aquela cobrança foi paga —
+ * e é a resposta da EFI que vale, inclusive o valor.
+ *
+ * O que um aviso forjado consegue, então: uma linha em `payment_event` e
+ * uma consulta à EFI que vai dizer "não foi pago". Nada de acesso
+ * estendido, nada de fatura quitada. O custo é limitado e conhecido; a
+ * alternativa era um webhook que nunca funciona, porque exigiria da EFI um
+ * cabeçalho que ela não tem como enviar.
+ *
+ * Isto NÃO afrouxa Asaas nem Mercado Pago: os dois mandam prova de origem
+ * e continuam sendo conferidos.
  */
 export function autenticar(
   provedor: ProvedorDeWebhook,
@@ -86,7 +99,11 @@ export function autenticar(
       : { ok: false, status: 401, erro: "assinatura inválida" };
   }
 
-  // Asaas e EFI: segredo compartilhado no cabeçalho.
+  // A EFI não tem como mandar token: ver o bloco acima. A confirmação
+  // com o provedor é quem faz esse papel, e ela roda em processarAviso.
+  if (provedor === "efi") return { ok: true };
+
+  // Asaas: segredo compartilhado no cabeçalho.
   const token =
     cabecalhos.get("asaas-access-token") ??
     cabecalhos.get("authorization")?.replace(/^Bearer /, "") ??

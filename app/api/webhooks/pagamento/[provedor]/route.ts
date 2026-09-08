@@ -99,7 +99,28 @@ export async function POST(
     return NextResponse.json({ ok: true, acao: "ignorado" });
   }
 
-  const resultado = await processarAviso(aviso, confirmadorPara(provedor));
+  const confirmar = confirmadorPara(provedor);
+
+  // TRAVA: para a EFI, a confirmação é a ÚNICA prova de origem.
+  //
+  // O aviso dela entra sem token porque não tem como ser diferente. Se por
+  // cima disso a confirmação também faltar — credencial ausente, variável
+  // esquecida no painel —, o que sobra é uma rota pública que aceita
+  // "pagou" de qualquer um. Recusar é a única resposta segura.
+  //
+  // 503 e não 401: o problema é nosso, não de quem chamou, e a EFI reenvia.
+  // Quando a credencial voltar, os avisos reenviados são processados.
+  if (provedor === "efi" && !confirmar) {
+    console.error(
+      "[webhook/efi] RECUSADO: sem credencial da EFI não há como confirmar o pagamento, e o aviso sozinho não prova nada."
+    );
+    return NextResponse.json(
+      { erro: "confirmação indisponível" },
+      { status: 503 }
+    );
+  }
+
+  const resultado = await processarAviso(aviso, confirmar);
 
   console.log(
     `[webhook/${provedor}]`,
