@@ -15,30 +15,33 @@ import {
  * fuso, que é a propriedade que este módulo precisa ter.
  */
 describe("cycleFor", () => {
+  // Instantes EXPLÍCITOS, com deslocamento escrito. `new Date(ano, mes,
+  // dia)` é meia-noite local: sob TZ=UTC isso já é o dia anterior no
+  // Brasil, e dois destes casos passavam por sorte do ambiente.
   it("depois do dia de cobrança, o ciclo começou neste mês", () => {
-    const c = cycleFor(new Date(2026, 8, 20), 5); // 20/set, cobra dia 5
+    const c = cycleFor(new Date("2026-09-20T12:00:00-03:00"), 5);
     expect(c).toEqual({ start: "2026-09-05", end: "2026-10-05" });
   });
 
   it("antes do dia de cobrança, o ciclo começou no mês passado", () => {
-    const c = cycleFor(new Date(2026, 8, 2), 5); // 02/set
+    const c = cycleFor(new Date("2026-09-02T12:00:00-03:00"), 5);
     expect(c).toEqual({ start: "2026-08-05", end: "2026-09-05" });
   });
 
   it("no próprio dia de cobrança, o ciclo novo já começou", () => {
-    const c = cycleFor(new Date(2026, 8, 5), 5);
+    const c = cycleFor(new Date("2026-09-05T12:00:00-03:00"), 5);
     expect(c.start).toBe("2026-09-05");
   });
 
   it("vira o ano sem se perder", () => {
-    const c = cycleFor(new Date(2027, 0, 3), 10); // 03/jan, cobra dia 10
+    const c = cycleFor(new Date("2027-01-03T12:00:00-03:00"), 10);
     expect(c).toEqual({ start: "2026-12-10", end: "2027-01-10" });
   });
 
   it("dia 28 atravessa fevereiro sem andar", () => {
     // É por isso que o banco limita billing_day a 28: com 31 o ciclo mudaria
     // de data sozinho todo fevereiro.
-    const c = cycleFor(new Date(2027, 1, 28), 28);
+    const c = cycleFor(new Date("2027-02-28T12:00:00-03:00"), 28);
     expect(c).toEqual({ start: "2027-02-28", end: "2027-03-28" });
   });
 });
@@ -219,5 +222,87 @@ describe("cycleLabel", () => {
     expect(cycleLabel({ start: "2026-09-05", end: "2026-10-05" })).toBe(
       "05/09 a 05/10"
     );
+  });
+});
+
+// ------------------------------------------------ fuso (8/set/2026)
+describe("o ciclo não pode depender do fuso do servidor", () => {
+  it("22h de 31/ago no Brasil calcula AGOSTO, não setembro", () => {
+    // 2026-08-31 22:00 BRT === 2026-09-01 01:00 UTC.
+    //
+    // Este é o caso que vale dinheiro: lendo `getDate()` do instante em UTC,
+    // o dia seria 1 e o ciclo viraria setembro inteiro — um mês de
+    // diferença numa conta que cobra alguém. O cron escapava por rodar às
+    // 03:00 do Brasil; o painel, clicado por gente, não.
+    const instante = new Date("2026-09-01T01:00:00Z");
+    expect(cycleFor(instante, 1, "America/Sao_Paulo")).toEqual({
+      start: "2026-08-01",
+      end: "2026-09-01",
+    });
+  });
+
+  it("o mesmo instante em UTC dá setembro — é o defeito que existia", () => {
+    const instante = new Date("2026-09-01T01:00:00Z");
+    expect(cycleFor(instante, 1, "UTC")).toEqual({
+      start: "2026-09-01",
+      end: "2026-10-01",
+    });
+  });
+
+  it("não depende do fuso do processo", () => {
+    // Mesmo instante e mesmo fuso pedido têm que dar o mesmo ciclo aqui e
+    // na Vercel. É a garantia inteira.
+    const instante = new Date("2026-09-15T18:00:00Z");
+    expect(cycleFor(instante, 10, "America/Sao_Paulo")).toEqual({
+      start: "2026-09-10",
+      end: "2026-10-10",
+    });
+  });
+
+  it("decideCharge respeita o fuso na virada", () => {
+    const instante = new Date("2026-09-01T01:00:00Z");
+    const d = decideCharge({
+      planCode: "pro",
+      priceCents: 9900,
+      status: "ativa",
+      billingDay: 1,
+      chargedPeriods: ["2026-08-01"], // agosto já foi cobrado
+      now: instante,
+      fuso: "America/Sao_Paulo",
+    });
+    // No Brasil ainda é agosto, e agosto já está pago: não cobra de novo.
+    expect(d).toEqual({ charge: false, reason: "já cobrado" });
+  });
+});
+
+describe("carência configurável", () => {
+  it("usa o padrão quando ninguém diz", () => {
+    const c = { start: "2026-09-01", end: "2026-10-01" };
+    expect(accessUntil(c)).toBe("2026-10-06");
+  });
+
+  it("aceita outro número", () => {
+    const c = { start: "2026-09-01", end: "2026-10-01" };
+    expect(accessUntil(c, 0)).toBe("2026-10-01");
+    expect(accessUntil(c, 10)).toBe("2026-10-11");
+  });
+
+  it("não depende do fuso — as pontas se cancelam", () => {
+    // `accessUntil` parte de data civil, não de instante. Converter aqui
+    // seria a dupla conversão que já mordeu duas vezes neste projeto.
+    const c = { start: "2026-09-01", end: "2026-10-01" };
+    expect(accessUntil(c, 5)).toBe("2026-10-06");
+  });
+});
+
+describe("o padrão protege quem esquecer de passar o fuso", () => {
+  it("sem fuso explícito, responde pelo Brasil mesmo com o processo em UTC", () => {
+    // Roda com `TZ=UTC npm run test`, que é o fuso da Vercel. Antes da
+    // correção este caso dava setembro, porque o ambiente decidia.
+    const instante = new Date("2026-09-01T01:00:00Z");
+    expect(cycleFor(instante, 1)).toEqual({
+      start: "2026-08-01",
+      end: "2026-09-01",
+    });
   });
 });

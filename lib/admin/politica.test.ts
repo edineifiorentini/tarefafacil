@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   LIMITES,
+  descreverCarencia,
   POLITICA_PADRAO,
   descreverTeste,
   podeSairDaAuditoria,
@@ -13,6 +14,7 @@ const VALIDO = {
   diasDeTeste: 7,
   assentosIniciais: 5,
   diasDeAuditoria: 365,
+  diasDeCarencia: 5,
 };
 
 describe("validação da política", () => {
@@ -113,5 +115,27 @@ describe("texto do campo de teste", () => {
     // mora em access_expires_at, e escrever o contrário aqui enganaria
     // quem administra.
     expect(descreverTeste(7)).toContain("não corta o acesso");
+  });
+});
+
+describe("tolerância de pagamento", () => {
+  it("aceita zero — é escolha válida, ainda que perigosa", () => {
+    expect(validarPolitica({ ...VALIDO, diasDeCarencia: 0 }).ok).toBe(true);
+  });
+
+  it("recusa acima de 60: deixa de ser tolerância e vira gratuidade", () => {
+    const r = validarPolitica({ ...VALIDO, diasDeCarencia: 61 });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.erro).toContain("tolerância");
+  });
+
+  it("o texto do zero avisa que não há folga nenhuma", () => {
+    // Errado para menos corta quem pagou no dia, e quem foi cortado
+    // injustamente não volta. A tela precisa dizer isso antes.
+    expect(descreverCarencia(0)).toContain("mesmo dia do vencimento");
+  });
+
+  it("um dia não vira '1 dias'", () => {
+    expect(descreverCarencia(1)).toContain("1 dia depois");
   });
 });

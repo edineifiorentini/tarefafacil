@@ -6,7 +6,12 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
-import { LIMITES, descreverTeste, validarPolitica } from "@/lib/admin/politica";
+import {
+  LIMITES,
+  descreverCarencia,
+  descreverTeste,
+  validarPolitica,
+} from "@/lib/admin/politica";
 
 const KEY = ["admin-settings"] as const;
 
@@ -15,17 +20,18 @@ type Settings = {
   trial_days: number;
   initial_seats: number;
   audit_keep_days: number;
+  grace_days: number;
 };
 
 const CAMPO_CLASSES =
   "border-line bg-card text-fg w-28 rounded-md border px-3 py-2 text-[length:var(--text-small-size)] outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-ring)]";
 
 /**
- * Os números que valem para todo cadastro novo (0088).
+ * Os números da política da plataforma (0088, 0089).
  *
- * Eram literais no código — `interval '7 days'` dentro da trigger de
- * cadastro e o `default 5` da coluna de assentos —, e mudá-los exigia
- * migration.
+ * Eram literais no código — `interval '7 days'` na trigger de cadastro, o
+ * `default 5` dos assentos, o `GRACE_DAYS = 5` da cobrança —, e mudá-los
+ * exigia migration.
  *
  * **Cada campo aqui diz o que de fato acontece, inclusive quando a resposta
  * é decepcionante.** A duração do teste não corta acesso, e o texto abaixo
@@ -64,13 +70,14 @@ export function PoliticaDeCadastro() {
       const res = await fetch("/api/admin/settings", {
         method: "PATCH",
         headers: { "content-type": "application/json" },
-        // Só os três campos deste cartão. O interruptor de cadastros é do
+        // Só os campos deste cartão. O interruptor de cadastros é do
         // cartão de cima, e mandá-lo aqui gravaria por cima do que ele
         // acabou de mudar.
         body: JSON.stringify({
           trial_days: v.trial_days,
           initial_seats: v.initial_seats,
           audit_keep_days: v.audit_keep_days,
+          grace_days: v.grace_days,
         }),
       });
       if (!res.ok) {
@@ -92,7 +99,8 @@ export function PoliticaDeCadastro() {
   const mudou =
     rascunho.trial_days !== data.trial_days ||
     rascunho.initial_seats !== data.initial_seats ||
-    rascunho.audit_keep_days !== data.audit_keep_days;
+    rascunho.audit_keep_days !== data.audit_keep_days ||
+    rascunho.grace_days !== data.grace_days;
 
   function alterar(campo: keyof Settings, bruto: string) {
     setErro(null);
@@ -108,6 +116,7 @@ export function PoliticaDeCadastro() {
       diasDeTeste: rascunho.trial_days,
       assentosIniciais: rascunho.initial_seats,
       diasDeAuditoria: rascunho.audit_keep_days,
+      diasDeCarencia: rascunho.grace_days,
     });
     // Valida antes de sair da tela: a mesma função que a rota usa, para o
     // erro chegar sem ida ao servidor e com o mesmo texto.
@@ -146,6 +155,16 @@ export function PoliticaDeCadastro() {
         limites={LIMITES.diasDeAuditoria}
         onChange={(v) => alterar("audit_keep_days", v)}
         ajuda="Por quanto tempo o registro de quem mudou o quê é guardado. A varredura semanal apaga o que passou do prazo, e o que sai não volta."
+      />
+
+      <Campo
+        id="pol-carencia"
+        rotulo="Tolerância de pagamento"
+        sufixo="dias"
+        valor={rascunho.grace_days}
+        limites={LIMITES.diasDeCarencia}
+        onChange={(v) => alterar("grace_days", v)}
+        ajuda={descreverCarencia(rascunho.grace_days)}
       />
 
       {erro ? (

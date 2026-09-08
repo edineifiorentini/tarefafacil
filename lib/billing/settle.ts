@@ -82,10 +82,19 @@ export async function registrarPagamento(params: {
     return { ok: false, erro: "falhou", mensagem: erroFatura.message };
   }
 
-  const acessoAte = accessUntil({
-    start: fatura.period_start,
-    end: fatura.period_end,
-  });
+  // A carência vem da política da plataforma (0089), e não da constante.
+  // Ela decide quantos dias o acesso sobrevive ao vencimento — o número
+  // que, errado para menos, corta quem pagou no dia.
+  const { data: politica } = await db
+    .from("platform_setting")
+    .select("grace_days")
+    .limit(1)
+    .maybeSingle();
+
+  const acessoAte = accessUntil(
+    { start: fatura.period_start, end: fatura.period_end },
+    politica?.grace_days ?? undefined
+  );
 
   const { error: erroAcesso } = await db
     .from("workspace")

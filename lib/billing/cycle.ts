@@ -1,6 +1,6 @@
 import { addDays, addMonths, format, parseISO } from "date-fns";
 
-import { localDayISO } from "@/lib/dates/day";
+import { FUSO_PADRAO, diaCivilEm, localDayISO } from "@/lib/dates/day";
 
 /**
  * Regras de ciclo da assinatura. Puro de propósito: é aqui que um erro
@@ -38,11 +38,31 @@ export type Cycle = {
  * `billingDay` é limitado a 28 no banco de propósito: com 29, 30 ou 31 o
  * ciclo andaria sozinho em fevereiro e o assinante seria cobrado em datas
  * diferentes a cada ano.
+ *
+ * **O fuso é escrito, e aqui isso vale dinheiro.** `reference` é um instante
+ * de verdade, e ler `getDate()` dele responde no fuso do AMBIENTE — que na
+ * Vercel é UTC. Com `billingDay = 1`, às 22h de 31/ago no Brasil (01:00 UTC
+ * de 1/set), o dia lido seria 1 em vez de 31, e o ciclo calculado seria
+ * setembro inteiro em vez de agosto: **um mês de diferença numa conta que
+ * cobra alguém**.
+ *
+ * O cron escapava por sorte de horário — roda 06:00 UTC, que é 03:00 no
+ * Brasil, mesma data nos dois. O painel, que um humano clica a qualquer
+ * hora, não escapava.
+ *
+ * Depois da conversão, toda a aritmética segue local e se cancela: `new
+ * Date(ano, mes, dia)` é meia-noite local e `localDayISO` formata local.
  */
-export function cycleFor(reference: Date, billingDay: number): Cycle {
-  const ano = reference.getFullYear();
-  const mes = reference.getMonth();
-  const dia = reference.getDate();
+export function cycleFor(
+  reference: Date,
+  billingDay: number,
+  fuso: string = FUSO_PADRAO
+): Cycle {
+  // O dia civil no fuso pedido, antes de qualquer conta de calendário.
+  const dia0 = parseISO(diaCivilEm(reference, fuso));
+  const ano = dia0.getFullYear();
+  const mes = dia0.getMonth();
+  const dia = dia0.getDate();
 
   // Antes do dia de cobrança, o ciclo corrente começou no mês passado.
   const inicioMes = dia >= billingDay ? mes : mes - 1;
@@ -68,8 +88,14 @@ export function nextCycle(cycle: Cycle): Cycle {
  * gravada em `access_expires_at`. Regra de carência espalhada é regra que
  * um dia diverge.
  */
-export function accessUntil(cycle: Cycle): string {
-  return localDayISO(addDays(parseISO(cycle.end), GRACE_DAYS));
+export function accessUntil(
+  cycle: Cycle,
+  carenciaDias: number = GRACE_DAYS
+): string {
+  // `parseISO` de data civil dá meia-noite local, `addDays` anda local e
+  // `localDayISO` formata local: as pontas se cancelam e isto NÃO precisa
+  // de fuso. Converter aqui introduziria o defeito em vez de corrigir.
+  return localDayISO(addDays(parseISO(cycle.end), carenciaDias));
 }
 
 /** Quando uma cobrança criada agora deve expirar. */
@@ -80,11 +106,7 @@ export function chargeExpiresAt(now: Date): Date {
 export type ChargeDecision =
   | {
       charge: false;
-      reason:
-        | "plano vitalício"
-        | "plano gratuito"
-        | "cancelada"
-        | "já cobrado";
+      reason: "plano vitalício" | "plano gratuito" | "cancelada" | "já cobrado";
     }
   | { charge: true; cycle: Cycle; amountCents: number };
 
@@ -106,6 +128,8 @@ export function decideCharge(input: {
   /** `period_start` das cobranças que já existem. */
   chargedPeriods: string[];
   now: Date;
+  /** Fuso da plataforma. Decide em que dia civil a conta está sendo feita. */
+  fuso?: string;
 }): ChargeDecision {
   // Vitalício vem ANTES de tudo, inclusive de "cancelada", porque é o fato
   // mais forte: é uma promessa feita a uma pessoa, e o relatório da execução
@@ -124,7 +148,7 @@ export function decideCharge(input: {
     return { charge: false, reason: "plano gratuito" };
   }
 
-  const cycle = cycleFor(input.now, input.billingDay);
+  const cycle = cycleFor(input.now, input.billingDay, input.fuso);
   if (input.chargedPeriods.includes(cycle.start)) {
     return { charge: false, reason: "já cobrado" };
   }
@@ -144,10 +168,11 @@ export function deriveStatus(input: {
   latestCharge?: { status: string; periodEnd: string } | null;
   accessExpiresAt: string | null;
   now: Date;
+  fuso?: string;
 }): SubscriptionStatus {
   if (input.cancelled) return "cancelada";
 
-  const hoje = localDayISO(input.now);
+  const hoje = diaCivilEm(input.now, input.fuso ?? FUSO_PADRAO);
 
   // Acesso em dia é o fato que mais importa: se a data cobre hoje, está ativa
   // mesmo que exista fatura aberta do próximo ciclo.

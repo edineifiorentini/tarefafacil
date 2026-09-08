@@ -18,6 +18,13 @@ Datas no formato dia/mês/ano.
 
 ## 4/set/2026
 
+**A tolerância de pagamento virou ajuste do painel.** É quantos dias o
+acesso continua valendo depois do vencimento da fatura — a folga para
+pagamento que ainda está caindo. Era um número fixo no código.
+
+Nada disso liga cobrança: o TAFLOW continua sem emitir fatura, e a tela de
+Assinatura segue dizendo isso.
+
 **A duração do teste e os assentos de empresa nova saíram do código.**
 Quem administra a plataforma agora ajusta os dois no painel, junto com por
 quanto tempo a auditoria é guardada. Antes eram números fixos que só

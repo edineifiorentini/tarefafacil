@@ -2549,3 +2549,57 @@ Se a exclusão deve levar junto o que a pessoa **criou** (comentários,
 demandas atribuídas) ou só a identidade. Hoje `assignee_id` não tem
 constraint e ficaria apontando para ninguém — que é diferente de apontar
 para uma linha que existe e diz "usuário removido".
+
+---
+
+## 33. Cobrança — o defeito do ciclo e a carência (8/set/2026, migration 0089)
+
+Feito enquanto o dono resolve as credenciais da EFI. **Nada aqui liga
+cobrança**: o gateway continua sendo só interface mais um dublê, e
+`provider.ts` segue recusando cair no dublê em produção.
+
+### O defeito, que valia um mês de diferença
+
+`cycleFor` lia `getFullYear/getMonth/getDate` de um INSTANTE, ou seja no
+fuso do ambiente. Com `billingDay = 1`, às 22h de 31/ago no Brasil (01:00
+UTC de 1/set):
+
+```
+no Brasil   dia 31 → ciclo 01/ago a 01/set
+em UTC      dia  1 → ciclo 01/set a 01/out
+```
+
+O cron escapava por sorte de horário — roda 06:00 UTC, que é 03:00 no
+Brasil, mesma data nos dois. **O painel não escapava**: ele é clicado por
+gente, a qualquer hora.
+
+Dois testes de `cycleFor` já existiam com fixture `new Date(ano, mes, dia)`,
+que é meia-noite LOCAL — e dois deles só passavam por sorte do ambiente.
+Trocados por instantes explícitos com deslocamento escrito.
+
+`accessUntil` e `nextCycle` NÃO foram convertidos, de propósito: partem de
+data civil e se cancelam. Converter ali seria a dupla conversão que já mordeu
+duas vezes neste projeto (§29).
+
+### A carência virou política
+
+`GRACE_DAYS = 5` era constante. Agora é `platform_setting.grace_days`, lida
+em `settle.ts` — que é onde `accessUntil` decide até quando o acesso vale.
+Ela NÃO foi parar em `run.ts`: lá não se decide acesso, e um número lido e
+não usado é o começo da próxima divergência.
+
+Zero é permitido e o texto da tela avisa o que significa: sem folga nenhuma
+para pagamento em processamento. O teto de 60 existe para o outro lado —
+mais que isso deixa de ser tolerância e vira gratuidade sem decisão.
+
+Travas conferidas contra o banco de produção: 61 e −1 recusados, 0 e 60
+aceitos.
+
+### O que continua faltando para cobrar de verdade
+
+1. **Cliente EFI** — Pix com mTLS, certificado `.p12`. Depende de credencial.
+2. **Boleto e cartão** — o FAQ da landing promete os três meios e o gateway
+   só tem interface de Pix. Ver o aviso de 3/set neste documento; o prazo
+   que o dono registrou era o primeiro vencimento, por volta de 9/set.
+3. **Cupons** — o bloqueio é mais fundo do que a tela deles diz: não há
+   checkout nenhum, então não há onde o cupom ser ignorado ou respeitado.

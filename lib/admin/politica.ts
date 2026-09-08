@@ -1,7 +1,7 @@
 /**
  * A política da plataforma: os números que valem para todo cadastro novo.
  *
- * Eles moram em `platform_setting` (0088), tabela de uma linha só. Antes
+ * Eles moram em `platform_setting` (0088, 0089), tabela de uma linha só. Antes
  * eram literais espalhados — `interval '7 days'` dentro da trigger de
  * cadastro, `default 5` na coluna de assentos — e mudá-los exigia migration.
  *
@@ -27,6 +27,13 @@ export type PoliticaDaPlataforma = {
   assentosIniciais: number;
   /** Por quanto tempo a auditoria é guardada. A varredura semanal aplica. */
   diasDeAuditoria: number;
+  /**
+   * Dias que o acesso sobrevive ao vencimento da fatura (0089).
+   *
+   * Errado para MENOS corta quem pagou no dia — o pior defeito possível
+   * num SaaS, porque quem foi cortado injustamente não volta.
+   */
+  diasDeCarencia: number;
 };
 
 export const POLITICA_PADRAO: PoliticaDaPlataforma = {
@@ -34,6 +41,7 @@ export const POLITICA_PADRAO: PoliticaDaPlataforma = {
   diasDeTeste: 7,
   assentosIniciais: 5,
   diasDeAuditoria: 365,
+  diasDeCarencia: 5,
 };
 
 /**
@@ -47,6 +55,10 @@ export const LIMITES = {
   diasDeTeste: { min: 0, max: 90 },
   assentosIniciais: { min: 1, max: 500 },
   diasDeAuditoria: { min: 30, max: 3650 },
+  // Zero é permitido e é escolha perigosa: sem folga nenhuma para
+  // pagamento em processamento. Acima de 60 deixa de ser tolerância e
+  // vira gratuidade sem ninguém ter decidido isso.
+  diasDeCarencia: { min: 0, max: 60 },
 } as const;
 
 export type CampoDaPolitica = keyof typeof LIMITES;
@@ -55,11 +67,11 @@ const ROTULO: Record<CampoDaPolitica, string> = {
   diasDeTeste: "Os dias de teste",
   assentosIniciais: "Os assentos iniciais",
   diasDeAuditoria: "A retenção da auditoria",
+  diasDeCarencia: "A tolerância de pagamento",
 };
 
 export type Validacao =
-  | { ok: true; valor: PoliticaDaPlataforma }
-  | { ok: false; erro: string };
+  { ok: true; valor: PoliticaDaPlataforma } | { ok: false; erro: string };
 
 function inteiroNoLimite(v: unknown, campo: CampoDaPolitica): number | string {
   if (typeof v !== "number" || !Number.isInteger(v)) {
@@ -75,7 +87,7 @@ function inteiroNoLimite(v: unknown, campo: CampoDaPolitica): number | string {
 /**
  * Valida o que chegou da tela antes de escrever no banco.
  *
- * Devolve a primeira falha em vez de uma lista: são três campos numa tela
+ * Devolve a primeira falha em vez de uma lista: são poucos campos numa tela
  * pequena, e uma frase que diz o que corrigir resolve mais rápido que um
  * inventário de erros.
  */
@@ -86,13 +98,17 @@ export function validarPolitica(bruto: unknown): Validacao {
   const b = bruto as Record<string, unknown>;
 
   if (typeof b.cadastrosAbertos !== "boolean") {
-    return { ok: false, erro: "O estado dos cadastros precisa ser sim ou não." };
+    return {
+      ok: false,
+      erro: "O estado dos cadastros precisa ser sim ou não.",
+    };
   }
 
   const campos: CampoDaPolitica[] = [
     "diasDeTeste",
     "assentosIniciais",
     "diasDeAuditoria",
+    "diasDeCarencia",
   ];
   const valores: Partial<Record<CampoDaPolitica, number>> = {};
 
@@ -109,6 +125,7 @@ export function validarPolitica(bruto: unknown): Validacao {
       diasDeTeste: valores.diasDeTeste!,
       assentosIniciais: valores.assentosIniciais!,
       diasDeAuditoria: valores.diasDeAuditoria!,
+      diasDeCarencia: valores.diasDeCarencia!,
     },
   };
 }
@@ -127,6 +144,15 @@ export function podeSairDaAuditoria(
 ): boolean {
   const limite = new Date(criadoEm).getTime() + manterDias * 86_400_000;
   return agora.getTime() > limite;
+}
+
+/** O texto sob o campo de carência. O risco do zero fica explícito. */
+export function descreverCarencia(dias: number): string {
+  if (dias === 0) {
+    return "Sem tolerância: o acesso cai no mesmo dia do vencimento. Pagamento em processamento não tem folga nenhuma.";
+  }
+  const plural = dias === 1 ? "1 dia" : `${dias} dias`;
+  return `O acesso continua por ${plural} depois do vencimento da fatura. É a folga para pagamento que ainda está caindo.`;
 }
 
 /** O texto que a tela mostra sob o campo de teste. Verdade, não promessa. */

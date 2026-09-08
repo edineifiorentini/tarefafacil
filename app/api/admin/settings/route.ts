@@ -23,13 +23,15 @@ import { createAdminClient } from "@/lib/supabase/admin";
  * escreve só o que ele conhece.
  */
 
-const COLUNAS = "signups_enabled, trial_days, initial_seats, audit_keep_days";
+const COLUNAS =
+  "signups_enabled, trial_days, initial_seats, audit_keep_days, grace_days";
 
 type Linha = {
   signups_enabled: boolean;
   trial_days: number;
   initial_seats: number;
   audit_keep_days: number;
+  grace_days: number;
 };
 
 function paraPolitica(linha: Linha | null): PoliticaDaPlataforma {
@@ -39,6 +41,7 @@ function paraPolitica(linha: Linha | null): PoliticaDaPlataforma {
     diasDeTeste: linha.trial_days,
     assentosIniciais: linha.initial_seats,
     diasDeAuditoria: linha.audit_keep_days,
+    diasDeCarencia: linha.grace_days,
   };
 }
 
@@ -66,6 +69,7 @@ export async function GET() {
     trial_days: politica.diasDeTeste,
     initial_seats: politica.assentosIniciais,
     audit_keep_days: politica.diasDeAuditoria,
+    grace_days: politica.diasDeCarencia,
     updated_at: linha?.updated_at ?? null,
   });
 }
@@ -97,6 +101,7 @@ export async function PATCH(request: Request) {
     diasDeTeste: body.trial_days ?? base.diasDeTeste,
     assentosIniciais: body.initial_seats ?? base.assentosIniciais,
     diasDeAuditoria: body.audit_keep_days ?? base.diasDeAuditoria,
+    diasDeCarencia: body.grace_days ?? base.diasDeCarencia,
   };
 
   // Valida o resultado FINAL, e não só o que veio: é ele que vai para o
@@ -117,6 +122,7 @@ export async function PATCH(request: Request) {
       trial_days: p.diasDeTeste,
       initial_seats: p.assentosIniciais,
       audit_keep_days: p.diasDeAuditoria,
+      grace_days: p.diasDeCarencia,
     })
     .eq("id", true);
   if (error) {
@@ -129,5 +135,6 @@ export async function PATCH(request: Request) {
     trial_days: p.diasDeTeste,
     initial_seats: p.assentosIniciais,
     audit_keep_days: p.diasDeAuditoria,
+    grace_days: p.diasDeCarencia,
   });
 }

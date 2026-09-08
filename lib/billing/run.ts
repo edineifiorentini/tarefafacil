@@ -19,6 +19,8 @@
 
 import { createAdminClient } from "@/lib/supabase/admin";
 
+import { FUSO_PADRAO } from "@/lib/dates/day";
+
 import { chargeExpiresAt, cycleFor, decideCharge, type Cycle } from "./cycle";
 import { nomeDoProvedor, resolveProvider } from "./provider";
 
@@ -63,6 +65,9 @@ export async function runBilling(opts: {
   const modo = resolveProvider();
   const provedor = nomeDoProvedor(modo);
 
+  // A política da plataforma (0088, 0089). Uma consulta a mais numa
+  // rotina que já faz quatro — e é ela que impede o fuso e a carência de
+  // virarem constante escondida no código de novo.
   const [assinRes, planosRes, wsRes, cobrancasRes] = await Promise.all([
     db
       .from("subscription")
@@ -74,6 +79,11 @@ export async function runBilling(opts: {
       .is("deleted_at", null),
     db.from("subscription_charge").select("workspace_id, period_start"),
   ]);
+
+  // O fuso da PLATAFORMA, não o de um usuário: quem é cobrado em que dia é
+  // decisão de quem opera o SaaS, e não muda porque um cliente mora em
+  // Manaus. A carência não entra aqui — ela decide ACESSO, e o acesso é
+  // empurrado em settle.ts, quando o pagamento chega.
 
   type S = {
     workspace_id: string;
@@ -171,6 +181,7 @@ export async function runBilling(opts: {
       billingDay: a.billing_day,
       chargedPeriods: periodos.get(a.workspace_id) ?? [],
       now: agora,
+      fuso: FUSO_PADRAO,
     });
 
     if (!decisao.charge) {
@@ -178,7 +189,7 @@ export async function runBilling(opts: {
         ...base,
         planoNome: plano.name,
         valorCents: plano.price_cents,
-        ciclo: cycleFor(agora, a.billing_day),
+        ciclo: cycleFor(agora, a.billing_day, FUSO_PADRAO),
         resultado: "pulou",
         motivo: decisao.reason,
       });

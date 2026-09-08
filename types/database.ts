@@ -1650,6 +1650,8 @@ export type Database = {
           initial_seats: number;
           /** Retenção da auditoria (0088). A varredura semanal aplica. */
           audit_keep_days: number;
+          /** Tolerância antes de cortar o acesso (0089). Entra em access_expires_at. */
+          grace_days: number;
           updated_at: string;
         };
         Insert: {
@@ -1658,12 +1660,14 @@ export type Database = {
           trial_days?: number;
           initial_seats?: number;
           audit_keep_days?: number;
+          grace_days?: number;
         };
         Update: {
           signups_enabled?: boolean;
           trial_days?: number;
           initial_seats?: number;
           audit_keep_days?: number;
+          grace_days?: number;
         };
         Relationships: [];
       };
