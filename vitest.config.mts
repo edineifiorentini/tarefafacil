@@ -45,7 +45,14 @@ export default defineConfig({
         // importação de TIPO funcionava (some na transformação); qualquer
         // valor de runtime importado por "@/" quebrava o teste.
         resolve: {
-          alias: { "@": path.resolve(dirname, ".") },
+          alias: {
+            "@": path.resolve(dirname, "."),
+            // `server-only` existe para estourar quando código de servidor é
+            // importado por Client Component. No teste de unidade não há
+            // essa fronteira — e sem o atalho, cada arquivo que a cruza
+            // precisaria de um `vi.mock` próprio.
+            "server-only": path.resolve(dirname, "vitest.server-only.ts"),
+          },
         },
         test: {
           name: "unit",

@@ -5,6 +5,8 @@
 // diria "pago" para dinheiro que não entrou, e o acesso seria empurrado de
 // graça — o pior tipo de bug, porque não dá erro em lugar nenhum.
 
+import { lerConfigEfi } from "./efi/config";
+import { EfiGateway } from "./efi/gateway";
 import { FakeGateway, type PaymentGateway } from "./gateway";
 
 export type ModoDeCobranca =
@@ -31,10 +33,14 @@ export type ModoDeCobranca =
  *     travas juntas de propósito: uma variável esquecida no painel da Vercel
  *     não deve ser suficiente para o sistema começar a dizer que recebeu.
  *
- * Provedor de verdade (EFI) ainda não tem implementação: ela precisa de
- * certificado mTLS, que não existe aqui. Quando existir, entra como mais um
- * ramo — e nada acima desta função muda, que é justamente o motivo de a
- * fronteira `PaymentGateway` existir.
+ * O ramo "efi" entrou em 8/set/2026, com o cliente em `lib/billing/efi/`.
+ * Ele NÃO é o padrão: sem `BILLING_PROVIDER=efi` o sistema segue manual, e
+ * é assim que se evita que um deploy comece a emitir cobrança sem ninguém
+ * ter decidido isso.
+ *
+ * **Credencial incompleta cai em manual, não em erro.** A cobrança manual
+ * fecha o ciclo inteiro sem provedor; derrubar a rota porque faltou uma
+ * variável trocaria um funcionamento reduzido por nenhum.
  */
 export function resolveProvider(): ModoDeCobranca {
   const escolhido = (process.env.BILLING_PROVIDER ?? "manual").toLowerCase();
@@ -50,6 +56,21 @@ export function resolveProvider(): ModoDeCobranca {
       return { modo: "manual" };
     }
     return { modo: "gateway", nome: "fake", gateway: new FakeGateway() };
+  }
+
+  if (escolhido === "efi") {
+    const r = lerConfigEfi();
+    if (!r.ok) {
+      console.warn(`[cobrança] BILLING_PROVIDER=efi ignorado: ${r.motivo} Usando cobrança manual.`);
+      return { modo: "manual" };
+    }
+    // O nome carrega o ambiente porque ele aparece no relatório da execução,
+    // e "efi" sozinho não distingue uma cobrança de teste de uma de verdade.
+    return {
+      modo: "gateway",
+      nome: `efi:${r.config.ambiente}`,
+      gateway: new EfiGateway(r.config),
+    };
   }
 
   if (escolhido !== "manual") {

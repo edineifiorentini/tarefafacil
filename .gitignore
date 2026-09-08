@@ -54,3 +54,13 @@ next-env.d.ts
 
 # Imagens de referencia de design (nao versionar)
 REFERÊNCIAS/
+
+# Certificados e credenciais — nunca versionados.
+# O .p12 da EFI é a identidade que assina cobrança: no GitHub, mesmo em
+# repositório privado, ele passa a existir em cada clone e em cada backup.
+*.p12
+*.pfx
+*.pem
+*.key
+certificate.base64
+*.base64
