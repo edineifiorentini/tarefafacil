@@ -9,7 +9,7 @@
 
 import { addDays, differenceInCalendarDays, parseISO } from "date-fns";
 
-import { localDayISO } from "@/lib/dates/day";
+import { FUSO_PADRAO, diaCivilEm, localDayISO } from "@/lib/dates/day";
 import type { Periodo } from "./sector";
 
 export type { Periodo };
@@ -60,41 +60,59 @@ export function ehChaveDePeriodo(v: string): v is ChaveDePeriodo {
 export function resolverPeriodo(
   chave: ChaveDePeriodo,
   hoje: Date,
-  custom?: { de: string; ate: string }
+  custom?: { de: string; ate: string },
+  fuso: string = FUSO_PADRAO
 ): Periodo {
-  const ate = localDayISO(hoje);
+  // **Só esta linha dependia do ambiente**, e a distinção importa.
+  //
+  // As outras chamadas a `localDayISO` neste arquivo recebem datas
+  // construídas com `new Date(ano, mes, dia)` ou vindas de `parseISO` —
+  // meia-noite LOCAL, formatada LOCAL. As duas pontas usam o mesmo fuso e
+  // se cancelam, então já são independentes. Trocá-las por `diaCivilEm`
+  // seria introduzir defeito: meia-noite local renderizada noutro fuso
+  // pode cair no dia anterior.
+  //
+  // Aqui `hoje` é um INSTANTE de verdade, e é onde o fuso decide.
+  const ate = diaCivilEm(hoje, fuso);
+  // Toda a aritmética de calendário parte do dia civil certo, em
+  // meia-noite LOCAL — assim `getFullYear`/`getMonth` e o `localDayISO`
+  // lá embaixo continuam no mesmo fuso e se cancelam, como sempre fizeram.
+  const dia = parseISO(ate);
 
   switch (chave) {
     case "7d":
-      return { de: localDayISO(addDays(hoje, -6)), ate };
+      return { de: localDayISO(addDays(dia, -6)), ate };
     case "30d":
-      return { de: localDayISO(addDays(hoje, -29)), ate };
+      return { de: localDayISO(addDays(dia, -29)), ate };
     case "90d":
-      return { de: localDayISO(addDays(hoje, -89)), ate };
+      return { de: localDayISO(addDays(dia, -89)), ate };
     case "mes":
       return {
-        de: localDayISO(new Date(hoje.getFullYear(), hoje.getMonth(), 1)),
+        de: localDayISO(new Date(dia.getFullYear(), dia.getMonth(), 1)),
         ate,
       };
     case "mes_anterior": {
-      const inicio = new Date(hoje.getFullYear(), hoje.getMonth() - 1, 1);
-      const fim = new Date(hoje.getFullYear(), hoje.getMonth(), 0);
+      const inicio = new Date(dia.getFullYear(), dia.getMonth() - 1, 1);
+      const fim = new Date(dia.getFullYear(), dia.getMonth(), 0);
       return { de: localDayISO(inicio), ate: localDayISO(fim) };
     }
     case "trimestre": {
-      const mes = Math.floor(hoje.getMonth() / 3) * 3;
+      const mes = Math.floor(dia.getMonth() / 3) * 3;
       return {
-        de: localDayISO(new Date(hoje.getFullYear(), mes, 1)),
+        de: localDayISO(new Date(dia.getFullYear(), mes, 1)),
         ate,
       };
     }
     case "ano":
-      return { de: localDayISO(new Date(hoje.getFullYear(), 0, 1)), ate };
+      return { de: localDayISO(new Date(dia.getFullYear(), 0, 1)), ate };
     case "custom":
       // Sem as duas pontas, cai no padrão em vez de devolver lixo. Data
       // invertida é normalizada: quem escolheu 30/09 e depois 01/09 quis um
       // intervalo, não um erro.
-      if (!custom?.de || !custom?.ate) return resolverPeriodo("30d", hoje);
+      // `hoje` e não `dia`: passar o dia já convertido faria a conversão
+      // acontecer duas vezes, e o período inteiro recuava um dia.
+      if (!custom?.de || !custom?.ate)
+        return resolverPeriodo("30d", hoje, undefined, fuso);
       return custom.de <= custom.ate
         ? { de: custom.de, ate: custom.ate }
         : { de: custom.ate, ate: custom.de };

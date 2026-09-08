@@ -14,7 +14,7 @@
 // - não conta demanda cancelada como entrega nem como atraso. Ela saiu do
 //   fluxo, e contá-la em qualquer coluna distorce o período.
 
-import { localDayOf } from "@/lib/dates/day";
+import { FUSO_PADRAO, diaCivilDeEm } from "@/lib/dates/day";
 import type { Task } from "@/types/database";
 
 /** Recorte de tempo, em dia local (YYYY-MM-DD), com as pontas incluídas. */
@@ -78,7 +78,8 @@ function diasEntre(inicioISO: string, fimISO: string): number {
 export function relatorioPorSetor(
   tasks: Task[],
   periodo: Periodo,
-  hojeISO: string
+  hojeISO: string,
+  fuso: string = FUSO_PADRAO
 ): LinhaDoSetor[] {
   const porSetor = new Map<
     string,
@@ -107,14 +108,14 @@ export function relatorioPorSetor(
   for (const t of tasks) {
     if (!t.sector_id) continue;
 
-    const criadaEm = localDayOf(t.created_at);
+    const criadaEm = diaCivilDeEm(t.created_at, fuso);
     if (dentro(criadaEm, periodo)) linha(t.sector_id).criadas++;
 
     // Cancelada não é entrega nem atraso: saiu do fluxo.
     if (t.cancelled_at) continue;
 
     if (t.completed_at) {
-      const entregueEm = localDayOf(t.completed_at);
+      const entregueEm = diaCivilDeEm(t.completed_at, fuso);
       if (dentro(entregueEm, periodo)) {
         const l = linha(t.sector_id);
         l.entregues++;

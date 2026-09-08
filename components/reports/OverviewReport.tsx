@@ -23,6 +23,7 @@ import { escopoDe, tarefasDoEscopo } from "@/lib/notifications/escalation";
 import { useCurrentUserId, useMembers } from "@/lib/queries/useMembers";
 import { useSectors } from "@/lib/queries/useSectors";
 import { useTasks } from "@/lib/queries/useTasks";
+import { useFuso } from "@/lib/queries/useFuso";
 import { useWorkspace } from "@/lib/queries/useWorkspace";
 import { montarCSV, nomeDoArquivo } from "@/lib/reports/csv";
 import { urlDaLista, type Drill } from "@/lib/reports/drill";
@@ -110,6 +111,7 @@ export function OverviewReport({
 }) {
   const router = useRouter();
   const workspace = useWorkspace();
+  const fuso = useFuso();
   const { data: userId } = useCurrentUserId();
   const { data: members = [] } = useMembers(workspace.id);
   const { data: sectors = [] } = useSectors(workspace.id);
@@ -152,21 +154,29 @@ export function OverviewReport({
   );
 
   const dados = useMemo(() => {
-    const ind = indicadoresDe(visiveis, filtros.periodo, agora);
+    const ind = indicadoresDe(visiveis, filtros.periodo, agora, undefined, fuso);
     const anterior = filtros.comparar
-      ? indicadoresDe(visiveis, periodoAnterior(filtros.periodo), agora)
+      ? indicadoresDe(
+          visiveis,
+          periodoAnterior(filtros.periodo),
+          agora,
+          undefined,
+          fuso
+        )
       : null;
 
     const grauEfetivo = grao ?? granularidadePadrao(filtros.periodo);
     const pontos = serieDeFluxo(
       visiveis,
-      baldesDo(filtros.periodo, grauEfetivo)
+      baldesDo(filtros.periodo, grauEfetivo),
+      fuso
     );
     const setores = linhasPorSetor(
       visiveis,
       filtros.periodo,
       agora,
-      filtros.ordem
+      filtros.ordem,
+      fuso
     );
 
     return {
@@ -179,7 +189,15 @@ export function OverviewReport({
       grauEfetivo,
       setores,
     };
-  }, [visiveis, filtros.periodo, filtros.comparar, filtros.ordem, grao, agora]);
+  }, [
+    visiveis,
+    filtros.periodo,
+    filtros.comparar,
+    filtros.ordem,
+    grao,
+    agora,
+    fuso,
+  ]);
 
   // As etapas do fluxo: a única ida ao servidor. A chave inclui os filtros,
   // então trocar de setor não mostra o resultado do setor anterior — e o

@@ -13,7 +13,8 @@ import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { localDayISO } from "@/lib/dates/day";
+import { useFuso } from "@/lib/queries/useFuso";
+import { diaCivilEm } from "@/lib/dates/day";
 import { useDatedSubtasks, useToggleDatedSubtask } from "@/lib/queries/useHoje";
 import { useMembers } from "@/lib/queries/useMembers";
 import { useSectors } from "@/lib/queries/useSectors";
@@ -71,6 +72,7 @@ const SEM_DATA_VISIVEIS = 8;
 
 export function HojeView() {
   const workspace = useWorkspace();
+  const fuso = useFuso();
   const { data: tasks = [], isPending: carregando } = useTasks(workspace.id);
   const { data: sectors = [] } = useSectors(workspace.id);
   const { data: datedSubtasks = [] } = useDatedSubtasks(workspace.id);
@@ -88,9 +90,12 @@ export function HojeView() {
   const [aba, setAba] = useState<Bucket>("atrasadas");
   const [verTudo, setVerTudo] = useState(false);
 
-  const hojeISO = localDayISO(new Date());
+  // O dia civil de quem lê. Estava vindo do aparelho enquanto a contagem
+  // logo abaixo já usava o fuso salvo — duas respostas para "que dia é
+  // hoje" na mesma tela, que é o defeito que a regra 15 descreve.
+  const hojeISO = diaCivilEm(new Date(), fuso);
   const baldes = bucketTasks(tasks, hojeISO);
-  const concluidas = countConcluidasHoje(tasks, hojeISO);
+  const concluidas = countConcluidasHoje(tasks, hojeISO, fuso);
 
   const sectorsById = new Map(sectors.map((s) => [s.id, s]));
   const tasksById = new Map(tasks.map((t) => [t.id, t]));

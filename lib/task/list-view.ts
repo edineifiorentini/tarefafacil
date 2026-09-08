@@ -357,7 +357,8 @@ export function groupTasks(
     memberNameById: Map<string, string>;
     sectorById?: Map<string, Sector>;
   },
-  now: Date = new Date()
+  now: Date = new Date(),
+  fuso: string = FUSO_PADRAO
 ): TaskGroup[] {
   if (groupBy === "none") {
     return tasks.length ? [{ key: "all", label: "Todas", tasks }] : [];
@@ -376,7 +377,7 @@ export function groupTasks(
   for (const t of tasks) {
     switch (groupBy) {
       case "overdue": {
-        const overdue = isOverdue(t, now);
+        const overdue = isOverdue(t, now, fuso);
         push(overdue ? "overdue" : "ok", overdue ? "Atrasadas" : "No prazo", t);
         break;
       }

@@ -2417,3 +2417,35 @@ classe de defeito que este cartão existe para combater.
 
 **Não verificado no navegador:** a tela fica atrás de login e não há sessão
 disponível nesta máquina. Coberta por sete testes de comportamento.
+
+### Threading concluído (8/set/2026)
+
+Os seis módulos que a seção acima listava como pendentes foram threadeados, e
+com eles `equipe.ts`, `setores.ts` e o `groupTasks` de `list-view.ts`, que só
+apareceram ao seguir as chamadas. **A suíte passa inteira com `TZ=UTC`** —
+antes três testes falhavam ali, e era esse o sintoma de que o ambiente ainda
+decidia.
+
+Fora da cobrança, não resta nenhuma chamada dependente do ambiente.
+
+**Duas armadilhas de dupla conversão, ambas encontradas por medição:**
+
+`resolverPeriodo` chama a si mesma no ramo `custom`. Eu havia reatribuído o
+parâmetro `hoje` para o dia civil já convertido; a recursão convertia de novo
+e **o período inteiro recuava um dia**. A correção separa os papéis: `hoje`
+segue sendo o instante original, `dia` é o dia civil, e a recursão recebe o
+instante.
+
+`serieDeFluxo` indexava os baldes por `diaCivilEm(cursor, fuso)`, mas
+`cursor` nasce de `parseISO` sobre uma data civil — meia-noite LOCAL.
+Converter o que já é civil deslocava o balde um dia. Voltou para
+`localDayISO`, que ali é o certo.
+
+**A regra que as duas ensinam, e que vale escrever:** só carimbo de tempo
+REAL precisa do fuso. Valor derivado de data civil (`parseISO` de um
+`yyyy-mm-dd`, ou `new Date(ano, mes, dia)`) já é local nas duas pontas e se
+cancela — passá-lo pelo fuso introduz o defeito em vez de corrigir. É por
+isso que `lib/reports/periodo.ts` mudou uma linha e não doze.
+
+**Cobrança continua fora**, por decisão do dono: `lib/billing/cycle.ts:150`
+ainda tem `localDayISO(input.now)`.

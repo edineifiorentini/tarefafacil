@@ -10,6 +10,7 @@ import {
   type ChaveDePeriodo,
   type Periodo,
 } from "@/lib/reports/periodo";
+import { useFuso } from "@/lib/queries/useFuso";
 import type { OrdemDeSetor } from "@/lib/reports/setores";
 
 /**
@@ -53,6 +54,8 @@ const ORDENS: OrdemDeSetor[] = [
 const DIA = /^\d{4}-\d{2}-\d{2}$/;
 
 export function useReportFilters(agora: Date) {
+  // O período parte do dia civil de quem lê, não do relógio da máquina.
+  const fuso = useFuso();
   const router = useRouter();
   const params = useSearchParams();
 
@@ -88,9 +91,9 @@ export function useReportFilters(agora: Date) {
       ordem: ORDENS.includes(ordemBruta as OrdemDeSetor)
         ? (ordemBruta as OrdemDeSetor)
         : "atencao",
-      periodo: resolverPeriodo(periodoChave, agora, custom),
+      periodo: resolverPeriodo(periodoChave, agora, custom, fuso),
     };
-  }, [params, agora]);
+  }, [params, agora, fuso]);
 
   const alterar = useCallback(
     (mudanca: Partial<Omit<FiltrosDoRelatorio, "periodo">>) => {

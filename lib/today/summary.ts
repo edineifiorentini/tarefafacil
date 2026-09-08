@@ -1,7 +1,7 @@
 import type { Member } from "@/lib/queries/useMembers";
 import type { Sector, Task } from "@/types/database";
 
-import { localDayOf } from "@/lib/dates/day";
+import { FUSO_PADRAO, diaCivilDeEm } from "@/lib/dates/day";
 
 /**
  * As contas do Hoje.
@@ -170,10 +170,15 @@ function maisCarregados<T extends { count: number }>(itens: T[]): T[] {
  * seguinte em UTC, e a tarefa entregue à noite sumiria do dia de quem a
  * entregou.
  */
-export function countConcluidasHoje(tasks: Task[], hoje: string): number {
+export function countConcluidasHoje(
+  tasks: Task[],
+  hoje: string,
+  fuso: string = FUSO_PADRAO
+): number {
   let n = 0;
   for (const t of tasks) {
-    if (t.completed_at !== null && localDayOf(t.completed_at) === hoje) n++;
+    if (t.completed_at !== null && diaCivilDeEm(t.completed_at, fuso) === hoje)
+      n++;
   }
   return n;
 }

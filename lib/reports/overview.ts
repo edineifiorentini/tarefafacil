@@ -23,7 +23,12 @@
 
 import { addDays, differenceInCalendarDays, parseISO } from "date-fns";
 
-import { localDayISO, localDayOf } from "@/lib/dates/day";
+import {
+  FUSO_PADRAO,
+  diaCivilDeEm,
+  diaCivilEm,
+  localDayISO,
+} from "@/lib/dates/day";
 import { JANELA_DO_RELATORIO } from "@/lib/notifications/escalation";
 import type { Task } from "@/types/database";
 
@@ -116,22 +121,23 @@ export function indicadoresDe(
   tasks: Task[],
   periodo: Periodo,
   agora: Date,
-  janelaDias = JANELA_DE_ATENCAO
+  janelaDias = JANELA_DE_ATENCAO,
+  fuso: string = FUSO_PADRAO
 ): Indicadores {
-  const hoje = localDayISO(agora);
-  const limiteAtencao = localDayISO(addDays(agora, janelaDias));
+  const hoje = diaCivilEm(agora, fuso);
+  const limiteAtencao = diaCivilEm(addDays(agora, janelaDias), fuso);
 
   const ind: Indicadores = { ...ZERO };
   let somaDias = 0;
 
   for (const t of tasks) {
-    const criadaEm = localDayOf(t.created_at);
+    const criadaEm = diaCivilDeEm(t.created_at, fuso);
     if (dentro(criadaEm, periodo)) ind.criadas++;
 
     if (t.cancelled_at) continue;
 
     if (t.completed_at) {
-      const entregueEm = localDayOf(t.completed_at);
+      const entregueEm = diaCivilDeEm(t.completed_at, fuso);
       if (dentro(entregueEm, periodo)) {
         ind.entregues++;
         somaDias += differenceInCalendarDays(
@@ -247,7 +253,11 @@ export type PontoDeFluxo = {
  * consequência, e mostrar a causa (entrada versus saída) é o que permite
  * agir. Quem quiser o acúmulo lê o saldo na dica.
  */
-export function serieDeFluxo(tasks: Task[], baldes: Balde[]): PontoDeFluxo[] {
+export function serieDeFluxo(
+  tasks: Task[],
+  baldes: Balde[],
+  fuso: string = FUSO_PADRAO
+): PontoDeFluxo[] {
   const pontos: PontoDeFluxo[] = baldes.map((b) => ({
     rotulo: b.rotulo,
     de: b.de,
@@ -265,17 +275,23 @@ export function serieDeFluxo(tasks: Task[], baldes: Balde[]): PontoDeFluxo[] {
     let cursor = parseISO(baldes[i].de);
     const fim = parseISO(baldes[i].ate);
     while (cursor <= fim) {
+      // `localDayISO` e não `diaCivilEm`, de propósito: `cursor` nasce de
+      // `parseISO` sobre uma data civil, ou seja, meia-noite LOCAL. Formatar
+      // local devolve a mesma data em qualquer ambiente — as duas pontas se
+      // cancelam. Passar pelo fuso aqui converteria o que JÁ é civil e
+      // deslocaria o balde um dia. Só carimbo de tempo real precisa do fuso,
+      // e é o que as duas linhas abaixo fazem.
       indicePorDia.set(localDayISO(cursor), i);
       cursor = addDays(cursor, 1);
     }
   }
 
   for (const t of tasks) {
-    const iCriada = indicePorDia.get(localDayOf(t.created_at));
+    const iCriada = indicePorDia.get(diaCivilDeEm(t.created_at, fuso));
     if (iCriada !== undefined) pontos[iCriada].criadas++;
 
     if (t.cancelled_at || !t.completed_at) continue;
-    const iEntregue = indicePorDia.get(localDayOf(t.completed_at));
+    const iEntregue = indicePorDia.get(diaCivilDeEm(t.completed_at, fuso));
     if (iEntregue !== undefined) pontos[iEntregue].entregues++;
   }
 

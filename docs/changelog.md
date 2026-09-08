@@ -18,6 +18,11 @@ Datas no formato dia/mês/ano.
 
 ## 4/set/2026
 
+**O fuso escolhido agora vale em todas as telas.** Relatórios, painel,
+Hoje e Financeiro ainda calculavam a virada do dia pelo relógio do
+aparelho, enquanto o sino e a Lista já seguiam o que você escolheu — duas
+respostas para "que dia é hoje" na mesma conta. Agora é uma só.
+
 **Agora dá para escolher seu fuso horário.** Em Configurações → Conta. Ele
 define o que "hoje", "vence hoje" e "atrasada" querem dizer para você — e o
 Brasil tem quatro fusos, então quem trabalha em Manaus, Rio Branco ou

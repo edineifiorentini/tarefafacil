@@ -6,7 +6,8 @@ import { IconChartBar } from "@tabler/icons-react";
 
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { localDayISO } from "@/lib/dates/day";
+import { useFuso } from "@/lib/queries/useFuso";
+import { diaCivilEm } from "@/lib/dates/day";
 import { escopoDe, tarefasDoEscopo } from "@/lib/notifications/escalation";
 import { useCurrentUserId, useMembers } from "@/lib/queries/useMembers";
 import { useSectors } from "@/lib/queries/useSectors";
@@ -46,6 +47,7 @@ export function SectorReport({
   agora: Date;
 }) {
   const workspace = useWorkspace();
+  const fuso = useFuso();
   const { data: userId } = useCurrentUserId();
   const { data: members = [] } = useMembers(workspace.id);
   const { data: sectors = [] } = useSectors(workspace.id);
@@ -75,10 +77,15 @@ export function SectorReport({
     });
 
     return {
-      linhas: relatorioPorSetor(visiveis, filtros.periodo, localDayISO(agora)),
+      linhas: relatorioPorSetor(
+        visiveis,
+        filtros.periodo,
+        diaCivilEm(agora, fuso),
+        fuso
+      ),
       temSemResponsavel: doEscopo.some((t) => !t.assignee_id),
     };
-  }, [tasks, sectors, userId, meuPapel, filtros, agora]);
+  }, [tasks, sectors, userId, meuPapel, filtros, agora, fuso]);
 
   function exportar() {
     // O CSV desta aba ganhou o cabeçalho de contexto (período, setores,

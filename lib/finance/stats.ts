@@ -1,4 +1,4 @@
-import { localDayISO } from "@/lib/dates/day";
+import { FUSO_PADRAO, diaCivilEm } from "@/lib/dates/day";
 import type { FinanceEntry } from "@/types/database";
 
 export type FinanceStats = {
@@ -13,14 +13,15 @@ export type FinanceStats = {
 // "atrasada" nas Demandas): previsto + vencimento no passado.
 export function isOverdue(
   entry: FinanceEntry,
-  now: Date = new Date()
+  now: Date = new Date(),
+  fuso: string = FUSO_PADRAO
 ): boolean {
   if (entry.status !== "previsto") return false;
   // Dia civil LOCAL, não UTC. `due_date` é data sem hora nem fuso; comparar
   // com `toISOString()` fazia, em UTC-3, toda conta que vence hoje aparecer
   // como vencida a partir das 21h. É a mesma correção que o painel e o sino
   // já receberam.
-  return entry.due_date < localDayISO(now);
+  return entry.due_date < diaCivilEm(now, fuso);
 }
 
 // monthISO no formato "YYYY-MM". Recebido/Despesas são do mês (data de
@@ -109,9 +110,10 @@ export function overdueBreakdown(
 /** Quantos dias de atraso. Um dia é "1 dia", não "0 dias". */
 export function daysOverdue(
   entry: FinanceEntry,
-  now: Date = new Date()
+  now: Date = new Date(),
+  fuso: string = FUSO_PADRAO
 ): number {
-  const hoje = new Date(`${localDayISO(now)}T00:00:00`);
+  const hoje = new Date(`${diaCivilEm(now, fuso)}T00:00:00`);
   const venc = new Date(`${entry.due_date}T00:00:00`);
   return Math.max(
     0,

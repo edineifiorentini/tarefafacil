@@ -45,6 +45,7 @@ import { useCurrentUserId, useMembers } from "@/lib/queries/useMembers";
 import { useSectors } from "@/lib/queries/useSectors";
 import { useTasks } from "@/lib/queries/useTasks";
 import { useAsOf } from "@/lib/queries/useAsOf";
+import { useFuso } from "@/lib/queries/useFuso";
 import { useWorkspace } from "@/lib/queries/useWorkspace";
 
 import type { Task } from "@/types/database";
@@ -70,6 +71,7 @@ function monthOptions(current: string) {
 
 export function DashboardView() {
   const ws = useWorkspace();
+  const fuso = useFuso();
   const tasksQuery = useTasks(ws.id);
   const tasks = tasksQuery.data ?? SEM_TAREFAS;
   const isLoading = tasksQuery.isLoading;
@@ -107,8 +109,8 @@ export function DashboardView() {
     [tasks, now]
   );
   const lateSeries = useMemo(
-    () => overdueSeries(tasks, now, WEEKS),
-    [tasks, now]
+    () => overdueSeries(tasks, now, WEEKS, fuso),
+    [tasks, now, fuso]
   );
   const rateSeries = useMemo(
     () => completionRateSeries(tasks, now, WEEKS),
@@ -116,12 +118,12 @@ export function DashboardView() {
   );
 
   const deliveries = useMemo(
-    () => deliveriesByWeek(tasks, month, now),
-    [tasks, month, now]
+    () => deliveriesByWeek(tasks, month, now, fuso),
+    [tasks, month, now, fuso]
   );
   const previousMonthDelivered = useMemo(
-    () => deliveredInMonth(tasks, shiftMonth(month, -1)),
-    [tasks, month]
+    () => deliveredInMonth(tasks, shiftMonth(month, -1), fuso),
+    [tasks, month, fuso]
   );
   const deliveryChange =
     previousMonthDelivered > 0
@@ -130,7 +132,10 @@ export function DashboardView() {
         100
       : 0;
 
-  const upcoming = useMemo(() => upcomingDeliveries(tasks, now), [tasks, now]);
+  const upcoming = useMemo(
+    () => upcomingDeliveries(tasks, now, undefined, fuso),
+    [tasks, now, fuso]
+  );
   const revenue = useMemo(
     () => revenueByMonth(financeEntries, year),
     [financeEntries, year]

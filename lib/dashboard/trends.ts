@@ -1,6 +1,11 @@
 import { endOfWeek, parseISO, subWeeks } from "date-fns";
 
-import { localDayISO, localDayOf, localMonthOf } from "@/lib/dates/day";
+import {
+  FUSO_PADRAO,
+  diaCivilDeEm,
+  diaCivilEm,
+  mesCivilDeEm,
+} from "@/lib/dates/day";
 import type { FinanceEntry, Task } from "@/types/database";
 
 /**
@@ -32,9 +37,13 @@ export function doneBy(task: Task, instant: Date): boolean {
 }
 
 /** Estava aberta E com o prazo já vencido naquele instante. */
-export function overdueAt(task: Task, instant: Date): boolean {
+export function overdueAt(
+  task: Task,
+  instant: Date,
+  fuso: string = FUSO_PADRAO
+): boolean {
   if (!openAt(task, instant)) return false;
-  return !!task.due_date && task.due_date < localDayISO(instant);
+  return !!task.due_date && task.due_date < diaCivilEm(instant, fuso);
 }
 
 /**
@@ -65,9 +74,14 @@ export function openBacklogSeries(
 }
 
 /** Atrasadas ao fim de cada semana. */
-export function overdueSeries(tasks: Task[], now: Date, weeks = 8): number[] {
+export function overdueSeries(
+  tasks: Task[],
+  now: Date,
+  weeks = 8,
+  fuso: string = FUSO_PADRAO
+): number[] {
   return weekEnds(now, weeks).map(
-    (end) => tasks.filter((t) => overdueAt(t, end)).length
+    (end) => tasks.filter((t) => overdueAt(t, end, fuso)).length
   );
 }
 
@@ -126,9 +140,10 @@ export function deliveriesByWeek(
   tasks: Task[],
   monthISO: string,
   /** Instante de leitura — decide o que já pode ser considerado atrasado. */
-  now: Date = nowInstant()
+  now: Date = nowInstant(),
+  fuso: string = FUSO_PADRAO
 ): DeliveriesByWeek {
-  const hoje = localDayISO(now);
+  const hoje = diaCivilEm(now, fuso);
   // Dia 0 do mês seguinte, em UTC, é o último dia deste mês. Usar
   // endOfMonth() aqui daria 23:59 LOCAL e, num fuso atrás de UTC, o
   // getUTCDate() cairia no dia 1º do mês seguinte.
@@ -156,7 +171,7 @@ export function deliveriesByWeek(
     delivered.push(
       tasks.filter((t) => {
         if (t.cancelled_at || !t.completed_at) return false;
-        const day = localDayOf(t.completed_at);
+        const day = diaCivilDeEm(t.completed_at, fuso);
         return day >= fromISO && day <= toISO;
       }).length
     );
@@ -177,7 +192,9 @@ export function deliveriesByWeek(
         if (t.cancelled_at || !t.due_date) return false;
         if (t.due_date < fromISO || t.due_date > toISO) return false;
         if (t.due_date >= hoje && !t.completed_at) return false;
-        return !t.completed_at || localDayOf(t.completed_at) > t.due_date;
+        return (
+          !t.completed_at || diaCivilDeEm(t.completed_at, fuso) > t.due_date
+        );
       }).length
     );
   }
@@ -193,12 +210,16 @@ export function deliveriesByWeek(
 }
 
 /** Total entregue num mês — usado na comparação com o mês anterior. */
-export function deliveredInMonth(tasks: Task[], monthISO: string): number {
+export function deliveredInMonth(
+  tasks: Task[],
+  monthISO: string,
+  fuso: string = FUSO_PADRAO
+): number {
   return tasks.filter(
     (t) =>
       !t.cancelled_at &&
       !!t.completed_at &&
-      localMonthOf(t.completed_at) === monthISO
+      mesCivilDeEm(t.completed_at, fuso) === monthISO
   ).length;
 }
 
@@ -216,9 +237,10 @@ export type UpcomingDelivery = {
 export function upcomingDeliveries(
   tasks: Task[],
   now: Date,
-  limit = 4
+  limit = 4,
+  fuso: string = FUSO_PADRAO
 ): UpcomingDelivery[] {
-  const today = localDayISO(now);
+  const today = diaCivilEm(now, fuso);
 
   return tasks
     .filter((t) => !t.cancelled_at && !!t.due_date && t.due_date >= today)

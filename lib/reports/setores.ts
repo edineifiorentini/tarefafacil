@@ -12,6 +12,7 @@ import {
   type Indicadores,
   type Periodo,
 } from "./overview";
+import { FUSO_PADRAO } from "@/lib/dates/day";
 import type { Task } from "@/types/database";
 
 /**
@@ -185,7 +186,8 @@ export function linhasPorSetor(
   tasks: Task[],
   periodo: Periodo,
   agora: Date,
-  ordem: OrdemDeSetor = "atencao"
+  ordem: OrdemDeSetor = "atencao",
+  fuso: string = FUSO_PADRAO
 ): LinhaDeSetor[] {
   const porSetor = new Map<string, Task[]>();
   for (const t of tasks) {
@@ -197,7 +199,7 @@ export function linhasPorSetor(
 
   const linhas: LinhaDeSetor[] = [];
   for (const [sectorId, doSetor] of porSetor) {
-    const ind = indicadoresDe(doSetor, periodo, agora);
+    const ind = indicadoresDe(doSetor, periodo, agora, undefined, fuso);
     const emAndamento =
       ind.atrasadasAgora +
       ind.emAtencaoAgora +

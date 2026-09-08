@@ -7,6 +7,7 @@ import {
 } from "@tabler/icons-react";
 import { useState } from "react";
 
+import { useFuso } from "@/lib/queries/useFuso";
 import { formatCentsBRL } from "@/lib/finance/money";
 import { daysOverdue, type OverdueGroup } from "@/lib/finance/stats";
 import type { FinanceEntry } from "@/types/database";
@@ -35,6 +36,7 @@ function Bloco({
   icon: typeof IconTrendingUp;
   onOpen?: (entry: FinanceEntry) => void;
 }) {
+  const fuso = useFuso();
   const [aberto, setAberto] = useState(false);
   const quantos = grupo.entries.length;
 
@@ -102,7 +104,7 @@ function Bloco({
                   {e.description}
                 </span>
                 <span className="text-overdue shrink-0 text-[length:var(--text-caption-size)]">
-                  {atrasoLabel(daysOverdue(e, now))}
+                  {atrasoLabel(daysOverdue(e, now, fuso))}
                 </span>
                 <span
                   className={`tnum shrink-0 text-[length:var(--text-small-size)] ${

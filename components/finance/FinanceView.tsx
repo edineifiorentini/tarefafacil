@@ -24,6 +24,7 @@ import {
   periodBalance,
   type CashFlowMode,
 } from "@/lib/finance/cashflow";
+import { useFuso } from "@/lib/queries/useFuso";
 import { formatCentsBRL } from "@/lib/finance/money";
 import { currentMonthISO, monthLabel, shiftMonth } from "@/lib/finance/month";
 import {
@@ -82,6 +83,7 @@ function rotuloDaCategoria(
 
 export function FinanceView() {
   const workspace = useWorkspace();
+  const fuso = useFuso();
   const { data: myId } = useCurrentUserId();
   const { data: members = [] } = useMembers(workspace.id);
   const myRole = members.find((m) => m.user_id === myId)?.role;
@@ -396,7 +398,7 @@ export function FinanceView() {
             </thead>
             <tbody>
               {visible.map((e) => {
-                const overdue = isOverdue(e);
+                const overdue = isOverdue(e, undefined, fuso);
                 return (
                   <tr
                     key={e.id}

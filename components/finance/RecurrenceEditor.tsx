@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/Button";
 import { CurrencyInput } from "@/components/ui/CurrencyInput";
 import { TextInput } from "@/components/ui/TextInput";
 import { useToast } from "@/components/ui/Toast";
-import { localDayISO } from "@/lib/dates/day";
+import { useFuso } from "@/lib/queries/useFuso";
+import { diaCivilEm } from "@/lib/dates/day";
 import { formatCentsBRL, parseCurrencyToCents } from "@/lib/finance/money";
 import { useUpdateRecurrence } from "@/lib/queries/useFinanceRecurrence";
 import type { FinanceRecurrence } from "@/types/database";
@@ -32,6 +33,7 @@ export function RecurrenceEditor({
   onDone: () => void;
 }) {
   const toast = useToast();
+  const fuso = useFuso();
   const update = useUpdateRecurrence(workspaceId);
 
   const [description, setDescription] = useState(rule.description);
@@ -60,7 +62,7 @@ export function RecurrenceEditor({
         // "Todas as não realizadas" alcança até o que já venceu e continua
         // previsto; "daqui para frente" começa hoje.
         fromDate:
-          alcance === "todas" ? rule.starts_on : localDayISO(new Date()),
+          alcance === "todas" ? rule.starts_on : diaCivilEm(new Date(), fuso),
       },
       {
         onSuccess: () => {

@@ -17,6 +17,7 @@ import {
   type Indicadores,
   type Periodo,
 } from "./overview";
+import { FUSO_PADRAO } from "@/lib/dates/day";
 import type { Task } from "@/types/database";
 
 export type LinhaDePessoa = {
@@ -44,7 +45,8 @@ export function linhasPorPessoa(
   tasks: Task[],
   periodo: Periodo,
   agora: Date,
-  equipe: string[] = []
+  equipe: string[] = [],
+  fuso: string = FUSO_PADRAO
 ): LinhaDePessoa[] {
   const porPessoa = new Map<string, Task[]>();
   for (const id of equipe) porPessoa.set(id, []);
@@ -58,7 +60,7 @@ export function linhasPorPessoa(
 
   const linhas: LinhaDePessoa[] = [];
   for (const [chave, delas] of porPessoa) {
-    const ind = indicadoresDe(delas, periodo, agora);
+    const ind = indicadoresDe(delas, periodo, agora, undefined, fuso);
     const abertas =
       ind.atrasadasAgora +
       ind.emAtencaoAgora +
