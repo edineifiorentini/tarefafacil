@@ -4,7 +4,6 @@ import { useMemo, useState } from "react";
 
 import { IconChevronRight, IconLayoutList } from "@tabler/icons-react";
 
-import { useShell } from "@/components/shell/shell-context";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useBulkTaskActions } from "@/lib/queries/useBulkTasks";
@@ -34,11 +33,8 @@ import { aplicarVisao, contarVisoes } from "@/lib/task/quick-views";
 import type { Task } from "@/types/database";
 
 import { ConfirmCompleteDialog } from "./ConfirmCompleteDialog";
-import { TaskDetailPanel } from "./TaskDetailPanel";
-import {
-  ActiveFilterChips,
-  chipsDosFiltros,
-} from "./list/ActiveFilterChips";
+import { useTaskModal } from "./useTaskModal";
+import { ActiveFilterChips, chipsDosFiltros } from "./list/ActiveFilterChips";
 import { BulkActionBar } from "./list/BulkActionBar";
 import { TaskListHeader } from "./list/TaskListHeader";
 import { TaskListRow } from "./list/TaskListRow";
@@ -72,12 +68,17 @@ import { useSavedViews } from "./list/useSavedViews";
 export function ListView() {
   const workspace = useWorkspace();
   const { data: userId } = useCurrentUserId();
-  const { data: tasks = [], isLoading, isError, refetch } = useTasks(workspace.id);
+  const {
+    data: tasks = [],
+    isLoading,
+    isError,
+    refetch,
+  } = useTasks(workspace.id);
   const { data: sectors = [] } = useSectors(workspace.id);
   const { data: clients = [] } = useClients(workspace.id);
   const { data: members = [] } = useMembers(workspace.id);
   const { data: colunas = [] } = useWorkspaceColumns(workspace.id);
-  const { openPanel } = useShell();
+  const { abrirTarefa } = useTaskModal();
 
   const toggle = useToggleTaskComplete(workspace.id);
   const complete = useCompleteTask(workspace.id);
@@ -205,10 +206,7 @@ export function ListView() {
     );
   }, [comFiltros, estado.visao, estado.groupBy, estado.sortBy, clientNameById]);
 
-  const visiveis = useMemo(
-    () => grupos.flatMap((g) => g.tasks),
-    [grupos]
-  );
+  const visiveis = useMemo(() => grupos.flatMap((g) => g.tasks), [grupos]);
   const total = visiveis.length;
   const quantidadeDeFiltros = contarFiltrosAtivos(estado.filtros);
 
@@ -254,10 +252,7 @@ export function ListView() {
   }
 
   function abrir(task: Task) {
-    openPanel({
-      title: "Tarefa",
-      node: <TaskDetailPanel taskId={task.id} />,
-    });
+    abrirTarefa(task.id);
   }
 
   function alternarSelecao(id: string, on: boolean) {
@@ -361,9 +356,7 @@ export function ListView() {
           aria-live="polite"
           className="tnum text-fg-secondary text-[length:var(--text-small-size)]"
         >
-          {isLoading
-            ? "…"
-            : `${total} ${total === 1 ? "demanda" : "demandas"}`}
+          {isLoading ? "…" : `${total} ${total === 1 ? "demanda" : "demandas"}`}
         </span>
       </header>
 
@@ -565,4 +558,3 @@ function CabecalhoDeGrupo({
     </div>
   );
 }
-

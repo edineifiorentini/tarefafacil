@@ -4,7 +4,6 @@ import { IconChevronRight, IconSparkles } from "@tabler/icons-react";
 import Link from "next/link";
 import { useState } from "react";
 
-import { useShell } from "@/components/shell/shell-context";
 import { PendingDistributionCard } from "@/components/today/PendingDistributionCard";
 import { PriorityTabs, type TabDef } from "@/components/today/PriorityTabs";
 import { TodayIndicators } from "@/components/today/TodayIndicators";
@@ -37,8 +36,7 @@ import type { Subtask, Task } from "@/types/database";
 
 import { ConfirmCompleteDialog } from "./ConfirmCompleteDialog";
 import { DueChip } from "./DueChip";
-import { QuickAdd } from "./QuickAdd";
-import { TaskDetailPanel } from "./TaskDetailPanel";
+import { useTaskModal } from "./useTaskModal";
 import { TaskRow } from "./TaskRow";
 
 const TITULOS: Record<Bucket, string> = {
@@ -82,7 +80,7 @@ export function HojeView() {
   const deleteTask = useDeleteTask(workspace.id);
   const toggleSub = useToggleDatedSubtask(workspace.id);
   const updateTask = useUpdateTask(workspace.id);
-  const { openPanel } = useShell();
+  const { abrirTarefa, abrirNovaTarefa } = useTaskModal();
 
   const [confirm, setConfirm] = useState<{ task: Task; count: number } | null>(
     null
@@ -124,7 +122,7 @@ export function HojeView() {
     baldes.sem_data.length;
 
   function openTask(id: string) {
-    openPanel({ title: "Tarefa", node: <TaskDetailPanel taskId={id} /> });
+    abrirTarefa(id);
   }
 
   async function handleToggle(task: Task, completed: boolean) {
@@ -212,12 +210,7 @@ export function HojeView() {
         title="Seu dia está livre"
         description="Nada com prazo para agora. Registre a próxima tarefa."
         action={
-          <Button
-            variant="primary"
-            onClick={() =>
-              openPanel({ title: "Nova tarefa", node: <QuickAdd /> })
-            }
-          >
+          <Button variant="primary" onClick={() => abrirNovaTarefa()}>
             Nova tarefa
           </Button>
         }

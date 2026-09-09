@@ -16,7 +16,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { DropdownMenu } from "radix-ui";
 import { useState } from "react";
 
-import { QuickAdd } from "@/components/task/QuickAdd";
+import { useTaskModal } from "@/components/task/useTaskModal";
 import { Avatar } from "@/components/ui/Avatar";
 import { NotificationBell } from "@/components/workspace/NotificationBell";
 import { useCurrentUserId, useMembers } from "@/lib/queries/useMembers";
@@ -93,7 +93,8 @@ export function TopBar({ isAdmin }: { isAdmin: boolean }) {
   const pathname = usePathname();
   const router = useRouter();
   const workspace = useWorkspace();
-  const { openPanel, setMobileNavOpen } = useShell();
+  const { setMobileNavOpen } = useShell();
+  const { abrirNovaTarefa } = useTaskModal();
   const { data: myId } = useCurrentUserId();
   const { data: members = [] } = useMembers(workspace.id);
   const [query, setQuery] = useState("");
@@ -247,9 +248,7 @@ export function TopBar({ isAdmin }: { isAdmin: boolean }) {
 
         <button
           type="button"
-          onClick={() =>
-            openPanel({ title: "Nova tarefa", node: <QuickAdd /> })
-          }
+          onClick={() => abrirNovaTarefa()}
           className="tf-sheen inline-flex h-11 items-center gap-2 rounded-sm bg-[var(--button-primary-bg)] px-4 text-[length:var(--text-small-size)] font-medium whitespace-nowrap text-[var(--button-primary-fg)] shadow-[var(--shadow-peek)] transition-colors [transition-duration:var(--dur-fast)] hover:bg-[var(--button-primary-bg-hover)]"
         >
           <IconPlus size={18} stroke={2} aria-hidden />

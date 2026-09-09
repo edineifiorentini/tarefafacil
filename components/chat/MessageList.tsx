@@ -11,8 +11,7 @@ import { useEffect, useRef } from "react";
 
 import { AudioMessage } from "@/components/chat/AudioMessage";
 import { MessageReactions } from "@/components/chat/MessageReactions";
-import { useShell } from "@/components/shell/shell-context";
-import { TaskDetailPanel } from "@/components/task/TaskDetailPanel";
+import { useTaskModal } from "@/components/task/useTaskModal";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -68,7 +67,7 @@ export function MessageList({
 }) {
   const workspace = useWorkspace();
   const { data: members = [] } = useMembers(workspace.id);
-  const { openPanel } = useShell();
+  const { abrirTarefa } = useTaskModal();
   const abrirArquivo = useChatFileUrl();
   const toast = useToast();
   const fim = useRef<HTMLDivElement>(null);
@@ -153,13 +152,7 @@ export function MessageList({
                   <button
                     type="button"
                     disabled={!msg.entity_id}
-                    onClick={() =>
-                      msg.entity_id &&
-                      openPanel({
-                        title: "Tarefa",
-                        node: <TaskDetailPanel taskId={msg.entity_id} />,
-                      })
-                    }
+                    onClick={() => msg.entity_id && abrirTarefa(msg.entity_id)}
                     className="text-fg-secondary hover:bg-hover inline-flex max-w-full items-center gap-1.5 rounded-full px-3 py-1 text-[length:var(--text-caption-size)] transition-colors [transition-duration:var(--dur-fast)] disabled:pointer-events-none"
                   >
                     <IconClipboardPlus

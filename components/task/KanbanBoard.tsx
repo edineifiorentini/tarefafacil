@@ -1,7 +1,6 @@
 "use client";
 
 import { Board } from "@/components/board/Board";
-import { useShell } from "@/components/shell/shell-context";
 import { useSubtaskProgress, useTaskTagsBulk } from "@/lib/queries/useCardMeta";
 import {
   useBoardColumns,
@@ -16,7 +15,7 @@ import { useWorkspace } from "@/lib/queries/useWorkspace";
 import type { Task } from "@/types/database";
 
 import { TaskCard } from "./TaskCard";
-import { TaskDetailPanel } from "./TaskDetailPanel";
+import { useTaskModal } from "./useTaskModal";
 
 export function KanbanBoard({ sectorId }: { sectorId: string }) {
   const workspace = useWorkspace();
@@ -31,7 +30,7 @@ export function KanbanBoard({ sectorId }: { sectorId: string }) {
   const deleteColumn = useDeleteColumn(workspace.id, sectorId);
   const reorderColumn = useReorderColumn(workspace.id, sectorId);
   const setWipLimit = useSetColumnWipLimit(workspace.id, sectorId);
-  const { openPanel } = useShell();
+  const { abrirTarefa } = useTaskModal();
 
   const firstColumnId = columns[0]?.id ?? "";
 
@@ -64,12 +63,7 @@ export function KanbanBoard({ sectorId }: { sectorId: string }) {
           task={t}
           tags={tagsByTask?.get(t.id)}
           progress={progressByTask?.get(t.id)}
-          onOpen={() =>
-            openPanel({
-              title: "Tarefa",
-              node: <TaskDetailPanel taskId={t.id} />,
-            })
-          }
+          onOpen={() => abrirTarefa(t.id)}
         />
       )}
       onMove={(itemId, toColumnId, toPosition) => {

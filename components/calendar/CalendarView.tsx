@@ -28,8 +28,7 @@ import Link from "next/link";
 import { HoverCard } from "radix-ui";
 import { useState } from "react";
 
-import { useShell } from "@/components/shell/shell-context";
-import { TaskDetailPanel } from "@/components/task/TaskDetailPanel";
+import { useTaskModal } from "@/components/task/useTaskModal";
 import { Button } from "@/components/ui/Button";
 import { IconButton } from "@/components/ui/IconButton";
 import { ProgressBar } from "@/components/ui/ProgressBar";
@@ -273,7 +272,7 @@ export function CalendarView() {
   const { data: projects = [] } = useProjects(workspace.id);
   const { data: sectors = [] } = useSectors(workspace.id);
   const update = useUpdateTask(workspace.id);
-  const { openPanel } = useShell();
+  const { abrirTarefa } = useTaskModal();
 
   const [month, setMonth] = useState(() => startOfMonth(new Date()));
   const [layers, setLayers] = useState({ tasks: true, projects: true });
@@ -302,7 +301,7 @@ export function CalendarView() {
   const sectorsById = new Map(sectors.map((s) => [s.id, s]));
 
   function openTask(id: string) {
-    openPanel({ title: "Tarefa", node: <TaskDetailPanel taskId={id} /> });
+    abrirTarefa(id);
   }
 
   function onDragEnd(event: DragEndEvent) {

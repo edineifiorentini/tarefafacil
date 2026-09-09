@@ -3,7 +3,6 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
 
-import { useShell } from "@/components/shell/shell-context";
 import { useSectors } from "@/lib/queries/useSectors";
 import {
   countOpenSubtasks,
@@ -16,7 +15,7 @@ import { useWorkspace } from "@/lib/queries/useWorkspace";
 import type { Task } from "@/types/database";
 
 import { ConfirmCompleteDialog } from "./ConfirmCompleteDialog";
-import { TaskDetailPanel } from "./TaskDetailPanel";
+import { useTaskModal } from "./useTaskModal";
 import { TaskRow } from "./TaskRow";
 
 // Lista de tarefas reutilizável (Setor via TaskList, Projeto, etc.):
@@ -34,7 +33,7 @@ export function TaskRows({
   const complete = useCompleteTask(workspace.id);
   const deleteTask = useDeleteTask(workspace.id);
   const toggleCancel = useToggleTaskCancel(workspace.id);
-  const { openPanel } = useShell();
+  const { abrirTarefa } = useTaskModal();
   const [confirm, setConfirm] = useState<{ task: Task; count: number } | null>(
     null
   );
@@ -71,12 +70,7 @@ export function TaskRows({
               onToggleCancel={(cancel) =>
                 toggleCancel.mutate({ id: task.id, cancel })
               }
-              onOpen={() =>
-                openPanel({
-                  title: "Tarefa",
-                  node: <TaskDetailPanel taskId={task.id} />,
-                })
-              }
+              onOpen={() => abrirTarefa(task.id)}
             />
           </li>
         ))}

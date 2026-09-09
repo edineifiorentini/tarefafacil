@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 
-import { useShell } from "@/components/shell/shell-context";
 import { useSectors } from "@/lib/queries/useSectors";
 import {
   countOpenSubtasks,
@@ -15,7 +14,7 @@ import { useWorkspace } from "@/lib/queries/useWorkspace";
 import type { Task } from "@/types/database";
 
 import { ConfirmCompleteDialog } from "./ConfirmCompleteDialog";
-import { TaskDetailPanel } from "./TaskDetailPanel";
+import { useTaskModal } from "./useTaskModal";
 import { TaskRow } from "./TaskRow";
 
 type StatusFilter = "abertas" | "concluidas" | "todas";
@@ -33,7 +32,7 @@ export function TaskList({ sectorId }: { sectorId?: string }) {
   const toggle = useToggleTaskComplete(workspace.id);
   const complete = useCompleteTask(workspace.id);
   const deleteTask = useDeleteTask(workspace.id);
-  const { openPanel } = useShell();
+  const { abrirTarefa } = useTaskModal();
 
   const [filter, setFilter] = useState<StatusFilter>("abertas");
   const [confirm, setConfirm] = useState<{ task: Task; count: number } | null>(
@@ -99,12 +98,7 @@ export function TaskList({ sectorId }: { sectorId?: string }) {
                 sector={sectorsById.get(task.sector_id)}
                 onToggle={(c) => handleToggle(task, c)}
                 onDelete={() => deleteTask(task)}
-                onOpen={() =>
-                  openPanel({
-                    title: "Tarefa",
-                    node: <TaskDetailPanel taskId={task.id} />,
-                  })
-                }
+                onOpen={() => abrirTarefa(task.id)}
               />
             </li>
           ))}

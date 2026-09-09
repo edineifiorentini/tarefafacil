@@ -14,8 +14,7 @@ import {
 import { useMemo, useState } from "react";
 
 import { LineChart } from "@/components/charts/LineChart";
-import { useShell } from "@/components/shell/shell-context";
-import { TaskDetailPanel } from "@/components/task/TaskDetailPanel";
+import { useTaskModal } from "@/components/task/useTaskModal";
 import { Avatar } from "@/components/ui/Avatar";
 import { ChartCard } from "@/components/ui/ChartCard";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -79,7 +78,7 @@ export function DashboardView() {
   const { data: clients = [] } = useClients(ws.id);
   const { data: members = [] } = useMembers(ws.id);
   const { data: myId } = useCurrentUserId();
-  const { openPanel } = useShell();
+  const { abrirTarefa } = useTaskModal();
 
   const myRole = members.find((m) => m.user_id === myId)?.role;
   const canSeeFinance = myRole === "owner" || myRole === "admin";
@@ -158,7 +157,7 @@ export function DashboardView() {
   }));
 
   function openTask(taskId: string) {
-    openPanel({ title: "Tarefa", node: <TaskDetailPanel taskId={taskId} /> });
+    abrirTarefa(taskId);
   }
 
   if (isLoading) {

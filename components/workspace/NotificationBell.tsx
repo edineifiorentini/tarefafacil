@@ -18,8 +18,7 @@ import { useRouter } from "next/navigation";
 import { Popover } from "radix-ui";
 import { useMemo, useState } from "react";
 
-import { useShell } from "@/components/shell/shell-context";
-import { TaskDetailPanel } from "@/components/task/TaskDetailPanel";
+import { useTaskModal } from "@/components/task/useTaskModal";
 import { useFuso } from "@/lib/queries/useFuso";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
@@ -104,7 +103,7 @@ export function NotificationBell() {
   const workspace = useWorkspace();
   const router = useRouter();
   const toast = useToast();
-  const { openPanel } = useShell();
+  const { abrirTarefa } = useTaskModal();
   const [open, setOpen] = useState(false);
 
   const { data: myId } = useCurrentUserId();
@@ -178,10 +177,7 @@ export function NotificationBell() {
   function go(target: FeedTarget) {
     setOpen(false);
     if (target.type === "task") {
-      openPanel({
-        title: "Tarefa",
-        node: <TaskDetailPanel taskId={target.id} />,
-      });
+      abrirTarefa(target.id);
       return;
     }
     if (target.type === "chat") {

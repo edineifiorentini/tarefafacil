@@ -5,6 +5,7 @@ import { IconChevronDown } from "@tabler/icons-react";
 import { useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 
+import { ModalFrame } from "@/components/shell/ModalFrame";
 import { useShell } from "@/components/shell/shell-context";
 import { Button } from "@/components/ui/Button";
 import { Select } from "@/components/ui/Select";
@@ -21,8 +22,6 @@ import { sectorOptions } from "@/lib/sectors/options";
 import { quickAddSchema, type QuickAddInput } from "@/lib/validation/task";
 
 import { SectorForm } from "@/components/sector/SectorForm";
-
-import { TaskDetailPanel } from "./TaskDetailPanel";
 
 /** "Nenhum" precisa de um valor: Radix Select não aceita item com value "". */
 const NENHUM = "__none__";
@@ -52,7 +51,20 @@ function Campo({
   );
 }
 
-export function QuickAdd({ defaultSectorId }: { defaultSectorId?: string }) {
+export function QuickAdd({
+  defaultSectorId,
+  onCriada,
+}: {
+  defaultSectorId?: string;
+  /**
+   * A tarefa nasceu. Quem abriu o formulário decide o que fazer com ela.
+   *
+   * O formulário NÃO abre a tarefa sozinho de propósito: ele não deveria
+   * conhecer o recipiente em que está, e conhecê-lo fecharia um ciclo de
+   * imports com o hook que o monta.
+   */
+  onCriada?: (taskId: string) => void;
+}) {
   const workspace = useWorkspace();
   const { data: sectors = [] } = useSectors(workspace.id);
   const { data: members = [] } = useMembers(workspace.id);
@@ -60,7 +72,7 @@ export function QuickAdd({ defaultSectorId }: { defaultSectorId?: string }) {
   const { data: projects = [] } = useProjects(workspace.id);
   const createTask = useCreateTask(workspace.id);
   const toast = useToast();
-  const { openPanel, closePanel } = useShell();
+  const { openModal, closeModal } = useShell();
 
   // Fechado por padrão: o caminho rápido é o que faz este formulário valer.
   // Quem abriu uma vez costuma abrir de novo, então fica aberto no registro
@@ -112,11 +124,7 @@ export function QuickAdd({ defaultSectorId }: { defaultSectorId?: string }) {
             // 6s em vez de 5: este aviso tem ação, e ação precisa de tempo
             // para ser notada e alcançada.
             duration: 6000,
-            onAction: () =>
-              openPanel({
-                title: "Tarefa",
-                node: <TaskDetailPanel taskId={task.id} />,
-              }),
+            onAction: () => onCriada?.(task.id),
           });
         },
         onError: () =>
@@ -150,9 +158,14 @@ export function QuickAdd({ defaultSectorId }: { defaultSectorId?: string }) {
           variant="primary"
           size="sm"
           onClick={() =>
-            openPanel({
-              title: "Novo setor",
-              node: <SectorForm mode="create" onDone={closePanel} />,
+            openModal({
+              titulo: "Novo setor",
+              largura: "media",
+              node: (
+                <ModalFrame titulo="Novo setor">
+                  <SectorForm mode="create" onDone={closeModal} />
+                </ModalFrame>
+              ),
             })
           }
         >

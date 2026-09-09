@@ -8,11 +8,12 @@ import { Dialog } from "radix-ui";
 
 import { TrialBanner } from "@/components/billing/TrialBanner";
 import { GcalReconnectBanner } from "@/components/gcal/GcalReconnectBanner";
-import { QuickAdd } from "@/components/task/QuickAdd";
+import { useTaskModal } from "@/components/task/useTaskModal";
 import { useGcalPoller } from "@/lib/queries/useGcal";
 import { useWorkspace } from "@/lib/queries/useWorkspace";
 import type { Sector, Workspace } from "@/types/database";
 
+import { CenterModal } from "./CenterModal";
 import { DetailPanel } from "./DetailPanel";
 import { Sidebar } from "./Sidebar";
 import { TopBar } from "./TopBar";
@@ -36,7 +37,8 @@ export function AppShell({
 }) {
   const router = useRouter();
   const workspace = useWorkspace();
-  const { openPanel, mobileNavOpen, setMobileNavOpen } = useShell();
+  const { mobileNavOpen, setMobileNavOpen } = useShell();
+  const { abrirNovaTarefa } = useTaskModal();
 
   // Sincronização de entrada do Google por polling (design 9.5, E16).
   useGcalPoller(workspace.id);
@@ -73,7 +75,7 @@ export function AppShell({
         case "n":
         case "N":
           e.preventDefault();
-          openPanel({ title: "Nova tarefa", node: <QuickAdd /> });
+          abrirNovaTarefa();
           break;
         case "/":
           e.preventDefault();
@@ -85,7 +87,7 @@ export function AppShell({
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [router, openPanel]);
+  }, [router, abrirNovaTarefa]);
 
   return (
     <div className="flex h-dvh">
@@ -132,6 +134,7 @@ export function AppShell({
 
       {/* Painel de detalhe */}
       <DetailPanel />
+      <CenterModal />
     </div>
   );
 }
