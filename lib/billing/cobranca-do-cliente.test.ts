@@ -30,6 +30,8 @@ const atualizado = vi.fn();
 const criarPix = vi.fn();
 /** `renovar_cobranca` (0090). Devolve `true` quando o banco deixou renovar. */
 const chamouRpc = vi.fn();
+/** Auditoria de plataforma: é onde o motivo da recusa do provedor fica. */
+const registrarEvento = vi.fn();
 
 type Resposta = { data: unknown; error: unknown };
 type Filtros = Record<string, string>;
@@ -112,6 +114,10 @@ vi.mock("@/lib/supabase/admin", () => ({
   }),
 }));
 
+vi.mock("@/lib/admin/audit", () => ({
+  registrarEventoDePlataforma: registrarEvento,
+}));
+
 vi.mock("./provider", () => ({
   resolveProvider: () => ({
     modo: "gateway",
@@ -130,6 +136,7 @@ beforeEach(() => {
   inserido.mockReset();
   atualizado.mockReset();
   chamouRpc.mockReset().mockReturnValue(true);
+  registrarEvento.mockReset().mockResolvedValue(undefined);
   criarPix.mockReset().mockResolvedValue({
     providerChargeId: "txid",
     qrCode: "",
@@ -322,6 +329,8 @@ describe("código Pix vencido tem saída: renovar a MESMA linha (0090)", () => {
     expires_at: "2026-09-09T12:00:00Z",
     period_start: "2026-09-05",
     period_end: "2026-10-05",
+    provider: "efi:homologacao",
+    copia_e_cola: "000201…antigo",
   };
 
   it("a tela oferece renovar, não gerar", async () => {
@@ -349,6 +358,7 @@ describe("código Pix vencido tem saída: renovar a MESMA linha (0090)", () => {
       expires_at: "2026-09-09T12:00:00Z",
       period_start: "2026-09-05",
       period_end: "2026-10-05",
+      provider: "efi:homologacao",
     };
     tabelas.cobradas = [{ period_start: "2026-09-05" }];
     tabelas.doCiclo = { ...DO_CICLO, status: "aberta" };
@@ -413,6 +423,126 @@ describe("código Pix vencido tem saída: renovar a MESMA linha (0090)", () => {
         provider_charge_id: "txid",
         provider_charge_ids: ["txid"],
       })
+    );
+  });
+});
+
+describe("fatura que ficou sem código não é um beco (0091)", () => {
+  /**
+   * O caso real: a linha nasce antes da ida ao provedor — é o que faz o
+   * índice único segurar dois cliques —, o provedor recusa, e sobra uma
+   * fatura `aberta` sem txid e sem copia e cola. Aconteceu em produção em
+   * 8/set/2026 e prendia o cliente até o prazo de sete dias correr.
+   */
+  const SEM_CODIGO = {
+    id: "fatura-orfa",
+    amount_cents: 9900,
+    plan_name: "Pro",
+    status: "aberta",
+    paid_at: null,
+    // Prazo NO FUTURO: sem a regra nova, isto contaria como pagável.
+    expires_at: "2026-09-17T12:00:00Z",
+    period_start: "2026-09-05",
+    period_end: "2026-10-05",
+    provider: "efi:homologacao",
+    copia_e_cola: null,
+    qr_code: null,
+  };
+
+  it("não se apresenta como cobrança pagável", async () => {
+    tabelas.aberta = SEM_CODIGO;
+    tabelas.cobradas = [{ period_start: "2026-09-05" }];
+    tabelas.doCiclo = SEM_CODIGO;
+
+    const r = await estadoAtual("ws1", HOJE);
+
+    expect(r.estado).not.toBe("aberta");
+    expect(r).toMatchObject({ podeGerar: true, acao: "renovar" });
+    // A frase certa: um código que nunca existiu não "venceu".
+    expect(r).toHaveProperty(
+      "motivo",
+      "A cobrança deste período ficou sem código Pix. Gere um novo — a conta continua a mesma."
+    );
+  });
+
+  it("renova sem esperar os sete dias", async () => {
+    tabelas.aberta = SEM_CODIGO;
+    tabelas.cobradas = [{ period_start: "2026-09-05" }];
+    tabelas.doCiclo = SEM_CODIGO;
+
+    const r = await gerarCobranca("ws1", HOJE);
+
+    expect(chamouRpc).toHaveBeenCalledWith(
+      "renovar_cobranca",
+      expect.objectContaining({ p_charge_id: "fatura-orfa" })
+    );
+    expect(r).toMatchObject({ estado: "aberta", id: "fatura-orfa" });
+  });
+
+  it("cobrança MANUAL sem código continua normal — ela nasce assim", async () => {
+    // Quem manda o Pix é uma pessoa. Tratar isso como defeito ofereceria
+    // "gerar código" a quem nunca teve provedor.
+    tabelas.aberta = { ...SEM_CODIGO, provider: "manual" };
+
+    const r = await estadoAtual("ws1", HOJE);
+
+    expect(r).toMatchObject({ estado: "aberta", id: "fatura-orfa" });
+  });
+});
+
+describe("quando o provedor recusa, a falha fala", () => {
+  it("o motivo vai para a auditoria e a tela convida a tentar de novo", async () => {
+    criarPix.mockRejectedValue(
+      new Error("A EFI recusou a criação da cobrança (401). token inválido")
+    );
+
+    const r = await gerarCobranca("ws1", HOJE);
+
+    // Nada de 500 mudo: o estado diz o que fazer.
+    expect(r).toEqual({
+      estado: "sem_cobranca",
+      motivo:
+        "Não foi possível falar com o provedor de pagamento agora. Tente de novo em alguns minutos.",
+      podeGerar: true,
+      acao: "renovar",
+    });
+
+    // E o motivo REAL fica registrado, que é o que faltava para investigar.
+    expect(registrarEvento).toHaveBeenCalledWith(
+      expect.objectContaining({
+        entidade: "subscription_charge",
+        resumo: "o provedor não gerou o código Pix",
+        detalhes: expect.objectContaining({
+          provedor: "efi:homologacao",
+          motivo: "A EFI recusou a criação da cobrança (401). token inválido",
+        }),
+      })
+    );
+  });
+
+  it("a mesma coisa vale renovando", async () => {
+    tabelas.cobradas = [{ period_start: "2026-09-05" }];
+    tabelas.doCiclo = {
+      id: "fatura-do-ciclo",
+      amount_cents: 4900,
+      plan_name: "Pro",
+      status: "expirada",
+      paid_at: null,
+      expires_at: "2026-09-09T12:00:00Z",
+      period_start: "2026-09-05",
+      period_end: "2026-10-05",
+      provider: "efi:homologacao",
+      copia_e_cola: "000201…antigo",
+    };
+    criarPix.mockRejectedValue(new Error("timeout falando com a EFI"));
+
+    const r = await gerarCobranca("ws1", HOJE);
+
+    expect(r).toMatchObject({ estado: "sem_cobranca", acao: "renovar" });
+    // A fatura não foi tocada: o banco nem chegou a ser chamado.
+    expect(chamouRpc).not.toHaveBeenCalled();
+    expect(registrarEvento).toHaveBeenCalledWith(
+      expect.objectContaining({ entidadeId: "fatura-do-ciclo" })
     );
   });
 });

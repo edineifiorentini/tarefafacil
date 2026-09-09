@@ -29,8 +29,13 @@ export async function GET() {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
-  const estado = await estadoAtual(ctx.workspaceId);
-  return NextResponse.json(estado);
+  try {
+    const estado = await estadoAtual(ctx.workspaceId);
+    return NextResponse.json(estado);
+  } catch (e) {
+    console.error("[billing/cobranca] falha ao ler o estado", e);
+    return NextResponse.json({ error: "falha" }, { status: 500 });
+  }
 }
 
 export async function POST() {
@@ -43,6 +48,16 @@ export async function POST() {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 
-  const estado = await gerarCobranca(ctx.workspaceId);
-  return NextResponse.json(estado);
+  // **500 de corpo vazio não é resposta para uma ação de pagamento.** Era o
+  // que esta rota devolvia quando a EFI recusava, e o efeito foi duplo:
+  // quem clicava via um erro genérico, e do lado de cá não sobrava nada
+  // para investigar. `gerarCobranca` já trata a recusa do provedor e
+  // registra o motivo na auditoria; este `catch` é para o resto.
+  try {
+    const estado = await gerarCobranca(ctx.workspaceId);
+    return NextResponse.json(estado);
+  } catch (e) {
+    console.error("[billing/cobranca] falha ao gerar", e);
+    return NextResponse.json({ error: "falha" }, { status: 500 });
+  }
 }

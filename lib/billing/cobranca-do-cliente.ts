@@ -1,5 +1,6 @@
 import "server-only";
 
+import { registrarEventoDePlataforma } from "@/lib/admin/audit";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { FUSO_PADRAO } from "@/lib/dates/day";
 
@@ -10,6 +11,7 @@ import {
   cycleFor,
   decideCharge,
 } from "./cycle";
+import type { PixCharge } from "./gateway";
 import { nomeDoProvedor, resolveProvider } from "./provider";
 
 /**
@@ -74,6 +76,16 @@ export type EstadoDaCobranca =
 const AVISO_MANUAL =
   "A cobrança automática ainda não está ligada. Combine o pagamento com quem administra o sistema.";
 
+/**
+ * O provedor recusou ou não respondeu.
+ *
+ * Não diz o que a EFI respondeu, de propósito: o texto dela é para quem
+ * opera, e vai para a auditoria. Para quem paga, o que importa é que a
+ * falha não foi dele e que tentar de novo é a atitude certa.
+ */
+const AVISO_PROVEDOR =
+  "Não foi possível falar com o provedor de pagamento agora. Tente de novo em alguns minutos.";
+
 type Avaliacao =
   | {
       cobra: true;
@@ -96,22 +108,84 @@ function venceu(prazo: string | null, agora: Date): boolean {
 }
 
 /**
+ * Fatura que existe mas não tem como ser paga.
+ *
+ * A linha nasce ANTES da ida ao provedor — é o que faz o índice único
+ * segurar dois cliques simultâneos. O preço disso é que uma falha do
+ * provedor deixa a fatura para trás: `aberta`, sem código, e com o período
+ * já contando como cobrado, o que impedia gerar qualquer coisa naquele mês.
+ * Aconteceu em produção em 8/set/2026, e foi assim que apareceu.
+ *
+ * **Fatura de cobrança manual nasce sem código de propósito** — quem manda
+ * o Pix é uma pessoa. Por isso a pergunta não é só "tem código", é "tinha
+ * um provedor que deveria ter dado um".
+ */
+function semCodigo(linha: {
+  provider: string;
+  copia_e_cola: string | null;
+}): boolean {
+  return linha.provider !== "manual" && !linha.copia_e_cola;
+}
+
+/**
  * Esta linha aceita um código novo?
  *
  * `expirada` é o caso óbvio. `aberta` com o prazo no passado é o mesmo caso
  * antes da varredura diária passar — e ela é DIÁRIA enquanto a conta for
  * Hobby (regra 13), então esperar por ela seria deixar alguém até 24h
- * olhando um QR que o banco já recusa.
+ * olhando um QR que o banco já recusa. `aberta` sem código nunca teve o que
+ * recusar: esperar o prazo de sete dias seria uma semana de nada.
  *
  * `paga` e `cancelada` ficam de fora, e o banco confere isso de novo: a
- * guarda de verdade está na `renovar_cobranca` (0090).
+ * guarda de verdade está na `renovar_cobranca` (0090, 0091).
  */
 function renovavel(
-  linha: { status: string; expires_at: string | null },
+  linha: {
+    status: string;
+    expires_at: string | null;
+    provider: string;
+    copia_e_cola: string | null;
+  },
   agora: Date
 ): boolean {
   if (linha.status === "expirada") return true;
-  return linha.status === "aberta" && venceu(linha.expires_at, agora);
+  if (linha.status !== "aberta") return false;
+  return venceu(linha.expires_at, agora) || semCodigo(linha);
+}
+
+/**
+ * Guarda o motivo real da recusa do provedor onde alguém possa achar.
+ *
+ * A mensagem da EFI carrega o status e o texto dela — nada de credencial —,
+ * e sem este registro a falha vira um 500 de corpo vazio: o cliente não
+ * consegue pagar, e ninguém do outro lado fica sabendo. Foi exatamente esse
+ * silêncio que escondeu a falha de 8/set/2026.
+ */
+async function anotarFalhaDoProvedor(params: {
+  chargeId: string;
+  workspaceId: string;
+  provedor: string;
+  erro: unknown;
+}): Promise<void> {
+  const motivo =
+    params.erro instanceof Error ? params.erro.message : String(params.erro);
+
+  console.error(
+    `[cobrança] o provedor recusou o código Pix (${params.provedor}): ${motivo}`
+  );
+
+  await registrarEventoDePlataforma({
+    autor: "sistema",
+    acao: "alterou",
+    entidade: "subscription_charge",
+    entidadeId: params.chargeId,
+    resumo: "o provedor não gerou o código Pix",
+    detalhes: {
+      workspaceId: params.workspaceId,
+      provedor: params.provedor,
+      motivo,
+    },
+  });
 }
 
 /**
@@ -202,7 +276,7 @@ export async function estadoAtual(
   const { data: aberta } = await db
     .from("subscription_charge")
     .select(
-      "id, amount_cents, copia_e_cola, qr_code, expires_at, period_start, period_end"
+      "id, amount_cents, copia_e_cola, qr_code, expires_at, period_start, period_end, provider"
     )
     .eq("workspace_id", workspaceId)
     .eq("status", "aberta")
@@ -210,11 +284,11 @@ export async function estadoAtual(
     .limit(1)
     .maybeSingle();
 
-  // **Cobrança aberta com o prazo vencido não é cobrança aberta.** Quem
-  // troca o status é a varredura diária; até ela passar, mostrar o código
-  // aqui seria apresentar como válido um Pix que o banco recusa. Cai no
-  // caminho de renovação logo abaixo.
-  if (aberta && !venceu(aberta.expires_at, agora)) {
+  // **Cobrança aberta com o prazo vencido não é cobrança aberta**, e sem
+  // código também não. Quem troca o status é a varredura diária; até ela
+  // passar, mostrar o código aqui seria apresentar como válido um Pix que o
+  // banco recusa. Os dois casos caem na renovação logo abaixo.
+  if (aberta && !venceu(aberta.expires_at, agora) && !semCodigo(aberta)) {
     return {
       estado: "aberta",
       id: aberta.id,
@@ -247,7 +321,7 @@ export async function estadoAtual(
   if (aval.jaCobrado && aval.ciclo) {
     const { data: doCiclo } = await db
       .from("subscription_charge")
-      .select("status, paid_at, expires_at")
+      .select("status, paid_at, expires_at, provider, copia_e_cola")
       .eq("workspace_id", workspaceId)
       .eq("period_start", aval.ciclo.start)
       .maybeSingle();
@@ -269,8 +343,12 @@ export async function estadoAtual(
     if (doCiclo && renovavel(doCiclo, agora)) {
       return {
         estado: "sem_cobranca",
-        motivo:
-          "O código Pix deste período venceu. Gere um novo — a conta continua a mesma.",
+        // Duas histórias diferentes, e quem lê merece a certa: um código
+        // que venceu é o passar do tempo; um que nunca chegou a existir é
+        // uma falha nossa com o provedor.
+        motivo: semCodigo(doCiclo)
+          ? "A cobrança deste período ficou sem código Pix. Gere um novo — a conta continua a mesma."
+          : "O código Pix deste período venceu. Gere um novo — a conta continua a mesma.",
         podeGerar: true,
         acao: "renovar",
       };
@@ -361,12 +439,32 @@ export async function gerarCobranca(
     };
   }
 
-  const cobranca = await modo.gateway.createPixCharge({
-    amountCents: aval.valorCents,
-    description: `TAFLOW ${aval.plano.name}`,
-    expiresInSeconds: CHARGE_TTL_DAYS * 86_400,
-    reference: criada.id,
-  });
+  let cobranca: PixCharge;
+  try {
+    cobranca = await modo.gateway.createPixCharge({
+      amountCents: aval.valorCents,
+      description: `TAFLOW ${aval.plano.name}`,
+      expiresInSeconds: CHARGE_TTL_DAYS * 86_400,
+      reference: criada.id,
+    });
+  } catch (e) {
+    // A LINHA FICA. Ela guarda a referência que já foi para o provedor, e é
+    // por ela que a tela passa a oferecer um código novo — apagar aqui
+    // resolveria o caso comum e perderia o raro em que a cobrança nasceu lá
+    // e a resposta se perdeu no caminho.
+    await anotarFalhaDoProvedor({
+      chargeId: criada.id,
+      workspaceId,
+      provedor: nomeDoProvedor(modo),
+      erro: e,
+    });
+    return {
+      estado: "sem_cobranca",
+      motivo: AVISO_PROVEDOR,
+      podeGerar: true,
+      acao: "renovar",
+    };
+  }
 
   await db
     .from("subscription_charge")
@@ -421,7 +519,7 @@ async function renovarCobranca(
   const { data: linha } = await db
     .from("subscription_charge")
     .select(
-      "id, amount_cents, plan_name, status, expires_at, period_start, period_end"
+      "id, amount_cents, plan_name, status, expires_at, period_start, period_end, provider, copia_e_cola"
     )
     .eq("workspace_id", workspaceId)
     .eq("period_start", aval.ciclo.start)
@@ -440,12 +538,30 @@ async function renovarCobranca(
 
   // O VALOR vem da linha, não de uma nova decisão de preço: se o plano
   // subiu desde a emissão, a fatura de agosto continua valendo o de agosto.
-  const cobranca = await modo.gateway.createPixCharge({
-    amountCents: linha.amount_cents,
-    description: `TAFLOW ${linha.plan_name}`,
-    expiresInSeconds: CHARGE_TTL_DAYS * 86_400,
-    reference: linha.id,
-  });
+  let cobranca: PixCharge;
+  try {
+    cobranca = await modo.gateway.createPixCharge({
+      amountCents: linha.amount_cents,
+      description: `TAFLOW ${linha.plan_name}`,
+      expiresInSeconds: CHARGE_TTL_DAYS * 86_400,
+      reference: linha.id,
+    });
+  } catch (e) {
+    // A fatura não foi tocada: continua renovável, e tentar de novo é a
+    // resposta certa.
+    await anotarFalhaDoProvedor({
+      chargeId: linha.id,
+      workspaceId,
+      provedor: nomeDoProvedor(modo),
+      erro: e,
+    });
+    return {
+      estado: "sem_cobranca",
+      motivo: AVISO_PROVEDOR,
+      podeGerar: true,
+      acao: "renovar",
+    };
+  }
 
   const { data: renovou } = await db.rpc("renovar_cobranca", {
     p_charge_id: linha.id,
