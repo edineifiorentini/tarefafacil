@@ -81,7 +81,10 @@ export function TaskDetailPanel({ taskId }: { taskId: string }) {
   const [confirmandoExclusao, setConfirmandoExclusao] = useState(false);
   const toggleCancel = useToggleTaskCancel(workspace.id);
   const syncEvent = useSyncTaskEvent();
-  const { closePanel } = useShell();
+  // Fecha o MODAL, não o painel: a tarefa mora nele desde 9/set/2026, e
+  // `closePanel` virou no-op — excluir deixava o modal aberto mostrando uma
+  // tarefa que já não existe.
+  const { closeModal } = useShell();
 
   const [status, setStatus] = useState<SaveStatus>("idle");
   const pending = useRef<TablesUpdate<"task">>({});
@@ -493,7 +496,7 @@ export function TaskDetailPanel({ taskId }: { taskId: string }) {
         onOpenChange={setConfirmandoExclusao}
         onConfirm={() => {
           deleteTask(task);
-          closePanel();
+          closeModal();
         }}
       />
     </div>
