@@ -141,6 +141,12 @@ export async function POST(request: Request) {
   }
 
   const cookieStore = await cookies();
+
+  // De onde o admin veio, guardado ANTES de sobrescrever logo abaixo. É o
+  // caminho de volta: sem ele, encerrar o suporte deixava o admin apontando
+  // para a empresa do cliente, e o login seguinte caía dentro dela.
+  const voltarPara = cookieStore.get("active_workspace")?.value;
+
   cookieStore.set(
     SUPPORT_COOKIE,
     signSupportCookie({
@@ -148,6 +154,7 @@ export async function POST(request: Request) {
       workspaceId: workspace.id,
       adminEmail: admin.email,
       exp: Math.floor(expiraEm.getTime() / 1000),
+      ...(voltarPara ? { voltarPara } : {}),
     }),
     {
       httpOnly: true,

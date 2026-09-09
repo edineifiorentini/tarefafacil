@@ -22,6 +22,21 @@ export type SupportClaim = {
   adminEmail: string;
   /** Epoch em segundos. */
   exp: number;
+  /**
+   * A empresa que o admin estava vendo ANTES de entrar como suporte.
+   *
+   * Abrir um suporte reescreve `active_workspace` para a empresa do
+   * cliente — sem isso a casca abriria na empresa errada durante a visita.
+   * O que faltava era o caminho de volta: ao encerrar, o cookie continuava
+   * apontando para o cliente, e o admin logava de novo dentro da conta que
+   * tinha acabado de visitar. Defeito relatado pelo dono em 9/set/2026.
+   *
+   * Viaja aqui dentro, e não num cookie à parte, porque este é assinado:
+   * ninguém escreve à mão um "volte para a empresa X". Ausente quando o
+   * admin não tinha nenhuma empresa ativa — aí o encerramento apaga o
+   * cookie em vez de restaurar.
+   */
+  voltarPara?: string;
 };
 
 export function supportConfigured(): boolean {

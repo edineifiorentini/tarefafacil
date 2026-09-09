@@ -88,3 +88,39 @@ describe("cookie de acesso de suporte", () => {
     }
   });
 });
+
+describe("o caminho de volta viaja assinado", () => {
+  /**
+   * Abrir um suporte reescreve `active_workspace` para a empresa do
+   * cliente. Encerrar precisa desfazer isso, senão o admin loga de novo
+   * dentro da conta que acabou de visitar — defeito relatado pelo dono em
+   * 9/set/2026.
+   */
+  it("guarda e devolve a empresa de onde o admin veio", () => {
+    const c = claim({ voltarPara: "44444444-4444-4444-4444-444444444444" });
+    expect(readSupportCookie(signSupportCookie(c))?.voltarPara).toBe(
+      "44444444-4444-4444-4444-444444444444"
+    );
+  });
+
+  it("sem empresa anterior, o campo simplesmente não existe", () => {
+    // O encerramento distingue os dois casos: com destino, restaura; sem
+    // destino, apaga o cookie. Um `voltarPara` vazio faria a restauração
+    // gravar lixo.
+    expect(readSupportCookie(signSupportCookie(claim()))?.voltarPara).toBe(
+      undefined
+    );
+  });
+
+  it("não dá para trocar o destino sem refazer a assinatura", () => {
+    // O ataque: alterar `voltarPara` para a empresa de outra pessoa e
+    // encerrar o suporte para cair dentro dela. A RLS ainda barraria, mas a
+    // assinatura barra antes.
+    const cookie = signSupportCookie(claim({ voltarPara: "aaa" }));
+    const [, assinatura] = cookie.split(".");
+    const trocado = Buffer.from(
+      JSON.stringify(claim({ voltarPara: "bbb" }))
+    ).toString("base64url");
+    expect(readSupportCookie(`${trocado}.${assinatura}`)).toBeNull();
+  });
+});

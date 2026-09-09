@@ -45,6 +45,26 @@ export async function POST() {
   // que faz a faixa sumir e o proxy parar de derrubar a navegação.
   cookieStore.delete(SUPPORT_COOKIE);
 
+  // **DESFAZ O `active_workspace`, e isto é a metade que faltava.**
+  //
+  // Abrir o suporte reescreve esse cookie para a empresa do cliente — sem
+  // isso a casca abriria na empresa errada durante a visita. Encerrar não
+  // desfazia nada: o cookie continuava apontando para o cliente, e como ele
+  // sobrevive ao `signOut`, o admin logava de novo e caía DENTRO da conta
+  // que tinha acabado de visitar. Quando ele é membro daquela empresa, a
+  // casca abre lá mesmo; quando não é, cai na primeira empresa dele, que
+  // também não é onde ele estava. Relatado pelo dono em 9/set/2026.
+  //
+  // Com claim legível, volta para onde ele estava. Sem claim — cookie
+  // vencido ou adulterado, que é justamente quando o encerramento é
+  // forçado —, apaga: melhor abrir na primeira empresa do próprio admin do
+  // que na do cliente.
+  if (claim?.voltarPara) {
+    cookieStore.set("active_workspace", claim.voltarPara, { path: "/" });
+  } else {
+    cookieStore.delete("active_workspace");
+  }
+
   if (claim) {
     const db = createAdminClient();
     const { data: sessao } = await db
