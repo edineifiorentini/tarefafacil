@@ -1,65 +1,44 @@
 "use client";
 
-import { useState } from "react";
-
-import { IconCheck, IconCopy, IconQrcode } from "@tabler/icons-react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { Button } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useToast } from "@/components/ui/Toast";
+import type { PainelDeCobranca } from "@/lib/billing/painel";
+import {
+  CHAVE_DA_COBRANCA,
+  usePaymentStatus,
+} from "@/lib/queries/usePaymentStatus";
 
-const KEY = ["cobranca-atual"] as const;
-
-type Estado =
-  | { estado: "sem_cobranca"; motivo: string; podeGerar: false }
-  | {
-      estado: "sem_cobranca";
-      motivo: string;
-      podeGerar: true;
-      acao: "gerar" | "renovar";
-    }
-  | { estado: "manual"; motivo: string }
-  | {
-      estado: "aberta";
-      id: string;
-      valorCents: number;
-      copiaECola: string | null;
-      qrCode: string | null;
-      expiraEm: string | null;
-      periodo: { inicio: string; fim: string };
-    }
-  | { estado: "paga"; pagaEm: string | null; acessoAte: string | null };
+import { PaymentSuccessCard } from "./PaymentSuccessCard";
+import { PixPaymentCard } from "./PixPaymentCard";
 
 /**
  * O pagamento visto por quem paga.
  *
- * **O copia e cola vem antes do QR code na hierarquia da tela**, e não é
- * detalhe: no celular — que é onde quase todo Pix é pago — ninguém aponta a
- * câmera para a própria tela. O QR serve para quem está no computador com o
- * celular na mão, e por isso fica visível mas em segundo plano.
+ * Este componente decide QUAL estado mostrar e não desenha nenhum deles —
+ * cada um tem o seu arquivo. É o que mantém "aguardando" e "confirmado"
+ * como dois estados da MESMA cobrança, em vez de duas telas que precisam
+ * ser mantidas em sincronia.
  *
- * A tela NÃO fica perguntando ao servidor se pagou. Pix cai em segundos,
- * mas quem acabou de pagar volta e recarrega; uma consulta a cada dois
- * segundos gastaria banco e provedor por uma pressa que a pessoa não tem. O
- * botão de conferir é explícito.
+ * O servidor é quem diz o estado. O navegador consulta, exibe e oferece as
+ * ações — em momento nenhum ele decide que algo foi pago.
  */
 export function PixCheckout() {
   const toast = useToast();
   const qc = useQueryClient();
-  const [copiado, setCopiado] = useState(false);
-
-  const { data, isPending } = useQuery({
-    queryKey: KEY,
-    queryFn: async (): Promise<Estado> => {
-      const res = await fetch("/api/billing/cobranca");
-      if (!res.ok) throw new Error("falha");
-      return (await res.json()) as Estado;
-    },
-  });
+  const {
+    estado,
+    carregando,
+    proximaEm,
+    conferir,
+    conferindo,
+    erroAoConferir,
+  } = usePaymentStatus();
 
   const gerar = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (): Promise<PainelDeCobranca> => {
       const res = await fetch("/api/billing/cobranca", { method: "POST" });
       if (!res.ok) {
         throw new Error(
@@ -68,142 +47,62 @@ export function PixCheckout() {
             : "Não foi possível gerar a cobrança."
         );
       }
-      return (await res.json()) as Estado;
+      return (await res.json()) as PainelDeCobranca;
     },
     onSuccess: (novo) => {
-      qc.setQueryData(KEY, novo);
-      if (novo.estado === "manual" || novo.estado === "sem_cobranca") {
-        toast.show({ message: novo.motivo });
+      qc.setQueryData(CHAVE_DA_COBRANCA, novo);
+      const c = novo.cobranca;
+      if (c.estado === "manual" || c.estado === "sem_cobranca") {
+        toast.show({ message: c.motivo });
       }
     },
     onError: (e: Error) => toast.show({ message: e.message }),
   });
 
-  async function copiar(texto: string) {
-    try {
-      await navigator.clipboard.writeText(texto);
-      setCopiado(true);
-      // Volta sozinho: um "copiado" permanente deixa de informar.
-      window.setTimeout(() => setCopiado(false), 2500);
-    } catch {
-      toast.show({ message: "Não foi possível copiar. Selecione e copie." });
-    }
-  }
+  if (carregando) return <Skeleton variant="block" className="h-40" />;
+  if (!estado) return null;
 
-  if (isPending) return <Skeleton variant="block" className="h-32" />;
-  if (!data) return null;
-
-  if (data.estado === "paga") {
+  if (estado.estado === "paga") {
     return (
-      <div className="border-line bg-card flex items-start gap-3 rounded-md border p-4">
-        <IconCheck
-          size={18}
-          stroke={2}
-          aria-hidden
-          className="text-fg-secondary mt-0.5 shrink-0"
-        />
-        <div>
-          <p className="text-fg text-[length:var(--text-small-size)] font-medium">
-            Pagamento em dia
-          </p>
-          <p className="text-fg-secondary text-[length:var(--text-caption-size)]">
-            {data.acessoAte
-              ? `Seu acesso está garantido até ${dataBR(data.acessoAte)}.`
-              : "Nada em aberto."}
-          </p>
-        </div>
-      </div>
+      <PaymentSuccessCard
+        valorCents={estado.valorCents}
+        pagaEm={estado.pagaEm}
+        periodo={estado.periodo}
+        acessoAte={estado.acessoAte}
+        referencia={estado.referencia}
+      />
     );
   }
 
-  if (data.estado === "aberta") {
+  if (estado.estado === "aberta") {
     return (
-      <div className="border-line bg-card flex flex-col gap-4 rounded-md border p-4">
-        <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <p className="text-fg text-[length:var(--text-h3-size)] font-semibold">
-            {reais(data.valorCents)}
-          </p>
-          <p className="text-fg-secondary text-[length:var(--text-caption-size)]">
-            {dataBR(data.periodo.inicio)} a {dataBR(data.periodo.fim)}
-          </p>
-        </div>
-
-        {data.copiaECola ? (
-          <div className="flex flex-col gap-2">
-            <p className="text-fg text-[length:var(--text-small-size)] font-medium">
-              Pix copia e cola
-            </p>
-            <div className="flex gap-2">
-              <input
-                readOnly
-                value={data.copiaECola}
-                onFocus={(e) => e.currentTarget.select()}
-                aria-label="Código Pix copia e cola"
-                className="border-line bg-sunken text-fg-secondary min-w-0 flex-1 rounded-md border px-3 py-2 font-mono text-[length:var(--text-caption-size)] outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-ring)]"
-              />
-              <Button
-                size="sm"
-                leadingIcon={copiado ? IconCheck : IconCopy}
-                onClick={() => void copiar(data.copiaECola as string)}
-              >
-                {copiado ? "Copiado" : "Copiar"}
-              </Button>
-            </div>
-          </div>
-        ) : null}
-
-        {data.qrCode ? (
-          <details className="group">
-            <summary className="text-fg-secondary hover:text-fg inline-flex cursor-pointer items-center gap-2 text-[length:var(--text-small-size)]">
-              <IconQrcode size={16} stroke={1.75} aria-hidden />
-              Ver QR code
-            </summary>
-            {/* eslint-disable-next-line @next/next/no-img-element -- data URI
-                vinda do provedor; o otimizador do Next não processa e forçá-lo
-                faria a imagem passar pelo servidor sem ganho. */}
-            <img
-              src={data.qrCode}
-              alt="QR code para pagamento por Pix"
-              className="mt-3 h-48 w-48 rounded-md bg-white p-2"
-            />
-          </details>
-        ) : null}
-
-        {/* Dizia "gere um novo", e era promessa que o banco não cumpre: o
-            índice único (workspace, period_start) só deixa existir UMA
-            cobrança por ciclo, então o código vencido não tem substituto que
-            a própria empresa possa emitir. */}
-        {data.expiraEm ? (
-          <p className="text-fg-muted text-[length:var(--text-caption-size)]">
-            Este código vale até {dataBR(data.expiraEm)}. Depois disso, peça um
-            novo — a conta continua a mesma.
-          </p>
-        ) : null}
-
-        <Button
-          variant="secondary"
-          size="sm"
-          isLoading={gerar.isPending}
-          onClick={() => void qc.invalidateQueries({ queryKey: KEY })}
-        >
-          Já paguei, conferir
-        </Button>
-      </div>
+      <PixPaymentCard
+        valorCents={estado.valorCents}
+        periodo={estado.periodo}
+        expiraEm={estado.expiraEm}
+        copiaECola={estado.copiaECola}
+        qrCode={estado.qrCode}
+        proximaEm={proximaEm}
+        conferir={conferir}
+        conferindo={conferindo}
+        erro={erroAoConferir}
+      />
     );
   }
 
-  // sem_cobranca e manual: os dois só têm um motivo para mostrar.
+  // `sem_cobranca` e `manual`: os dois têm um motivo para mostrar, e a
+  // diferença está em haver ou não uma ação possível.
   //
   // **O botão depende do `podeGerar`, não do estado.** Ele aparecia em todo
   // `sem_cobranca`, e num plano vitalício o clique respondia "não há
   // cobrança" — resposta certa para uma pergunta que a tela não devia ter
-  // feito. Quem decide é o servidor, que conhece o plano; a tela só obedece.
+  // feito. Quem decide é o servidor, que conhece o plano.
   return (
-    <div className="border-line bg-card flex flex-col gap-3 rounded-md border p-4">
+    <div className="border-line bg-card flex flex-col items-start gap-3 rounded-md border p-4">
       <p className="text-fg-secondary text-[length:var(--text-small-size)]">
-        {data.motivo}
+        {estado.motivo}
       </p>
-      {data.estado === "sem_cobranca" && data.podeGerar ? (
+      {estado.estado === "sem_cobranca" && estado.podeGerar ? (
         <Button
           size="sm"
           isLoading={gerar.isPending}
@@ -212,22 +111,11 @@ export function PixCheckout() {
           {/* Renovar não é uma segunda conta: é o mesmo mês com um código
               novo. "Gerar cobrança" aqui faria quem já deve pensar que vai
               dever duas vezes. */}
-          {data.acao === "renovar"
+          {estado.acao === "renovar"
             ? "Gerar novo código Pix"
             : "Gerar cobrança do período"}
         </Button>
       ) : null}
     </div>
   );
-}
-
-function reais(centavos: number): string {
-  return (centavos / 100).toLocaleString("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  });
-}
-
-function dataBR(iso: string): string {
-  return iso.slice(0, 10).split("-").reverse().join("/");
 }

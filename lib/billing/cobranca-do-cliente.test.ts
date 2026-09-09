@@ -296,14 +296,53 @@ describe("a tela só oferece o botão quando gerar pode dar certo", () => {
 describe("'pagamento em dia' fala do ciclo corrente, não da última fatura", () => {
   it("ciclo pago: em dia, com a data de acesso", async () => {
     tabelas.cobradas = [{ period_start: "2026-09-05" }];
-    tabelas.doCiclo = { status: "paga", paid_at: "2026-09-06T10:00:00Z" };
+    tabelas.doCiclo = {
+      id: "abcd1234-0000-0000-0000-000000000000",
+      status: "paga",
+      paid_at: "2026-09-06T10:00:00Z",
+      // Pagou 89 numa fatura de 99: o que a tela mostra é o que ENTROU.
+      paid_amount_cents: 8900,
+      amount_cents: 9900,
+      period_start: "2026-09-05",
+      period_end: "2026-10-05",
+      provider: "efi:producao",
+      copia_e_cola: "000201…",
+    };
     tabelas.acessoAte = "2026-10-10";
+
     const r = await estadoAtual("ws1", HOJE);
+
     expect(r).toEqual({
       estado: "paga",
       pagaEm: "2026-09-06T10:00:00Z",
       acessoAte: "2026-10-10",
+      valorCents: 8900,
+      periodo: { inicio: "2026-09-05", fim: "2026-10-05" },
+      // Determinística: mesma fatura, mesmo código, sempre. É o que o
+      // cliente cita no suporte — e nunca é o txid, que muda a cada
+      // renovação de código (0090).
+      referencia: "TF-20260905-ABCD",
     });
+  });
+
+  it("sem valor recebido gravado, mostra o valor da fatura", async () => {
+    // Fatura antiga, quitada antes de `paid_amount_cents` existir. Mostrar
+    // "R$ 0,00" ali seria pior que mostrar o valor cobrado.
+    tabelas.cobradas = [{ period_start: "2026-09-05" }];
+    tabelas.doCiclo = {
+      id: "ffff1234-0000-0000-0000-000000000000",
+      status: "paga",
+      paid_at: "2026-09-06T10:00:00Z",
+      paid_amount_cents: null,
+      amount_cents: 9900,
+      period_start: "2026-09-05",
+      period_end: "2026-10-05",
+      provider: "efi:producao",
+      copia_e_cola: "000201…",
+    };
+
+    const r = await estadoAtual("ws1", HOJE);
+    expect(r).toMatchObject({ estado: "paga", valorCents: 9900 });
   });
 
   it("pagou o mês passado e o mês corrente ainda não tem fatura: NÃO é em dia", async () => {

@@ -1322,6 +1322,13 @@ export type Database = {
           expires_at: string | null;
           paid_at: string | null;
           paid_amount_cents: number | null;
+          /**
+           * Última vez que o servidor perguntou o estado ao provedor (0092).
+           *
+           * Não confundir com `paid_at`, que é quando o dinheiro entrou.
+           * Este campo só segura a frequência da conciliação.
+           */
+          provider_checked_at: string | null;
           created_at: string;
         };
         Insert: {
@@ -1348,6 +1355,7 @@ export type Database = {
           expires_at?: string | null;
           paid_at?: string | null;
           paid_amount_cents?: number | null;
+          provider_checked_at?: string | null;
         };
         Relationships: [];
       };

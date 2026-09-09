@@ -12,6 +12,7 @@ import { PlanChooser } from "@/components/billing/PlanChooser";
 import { daysLeft } from "@/components/billing/TrialBanner";
 import { formatCentsBRL } from "@/lib/finance/money";
 import { createClient } from "@/lib/supabase/client";
+import { usePaymentStatus } from "@/lib/queries/usePaymentStatus";
 import { useWorkspace } from "@/lib/queries/useWorkspace";
 import type { BillingPlan } from "@/types/database";
 
@@ -27,12 +28,15 @@ function Linha({
   icon: Icon,
   rotulo,
   valor,
+  nota,
   chip,
   tom,
 }: {
   icon: typeof IconSparkles;
   rotulo: string;
   valor: string;
+  /** Uma frase de apoio. O chip é curto demais para explicar um estado. */
+  nota?: string;
   chip?: string;
   tom?: "alerta";
 }) {
@@ -53,6 +57,11 @@ function Linha({
         <p className="text-fg text-[length:var(--text-small-size)] font-medium">
           {valor}
         </p>
+        {nota ? (
+          <p className="text-fg-secondary text-[length:var(--text-caption-size)]">
+            {nota}
+          </p>
+        ) : null}
       </div>
       {chip ? (
         <span
@@ -79,6 +88,10 @@ function Linha({
  */
 export function SubscriptionCard() {
   const workspace = useWorkspace();
+  // Mesma chave de consulta do checkout: uma requisição só, cache
+  // compartilhado. Duas chaves para o mesmo dado fariam o resumo e o
+  // pagamento discordarem a cada nove segundos.
+  const { assinatura } = usePaymentStatus();
   const supabase = createClient();
 
   const { data: plano } = useQuery({
@@ -112,14 +125,24 @@ export function SubscriptionCard() {
       </div>
 
       <div className="border-line bg-card rounded-md border">
+        {/* **A situação vem do SERVIDOR**, e essa é a correção.
+            Aqui a linha era `suspended ? "Bloqueada" : teste ? "Em teste" :
+            "Ativa"` — "Ativa" era o que sobrava, e empresa com acesso
+            vencido há dez dias lia "Ativa" do mesmo jeito. O navegador não
+            tem como fazer essa conta: a RLS de `subscription` só responde ao
+            dono, então quem sabe se a assinatura foi cancelada é o servidor.
+            Ele devolve o ESTADO e nunca o valor (0049). */}
         <Linha
           icon={IconCircleCheck}
           rotulo="Situação"
-          valor={
-            workspace.suspended ? "Bloqueada" : emTeste ? "Em teste" : "Ativa"
-          }
+          valor={assinatura?.rotulo ?? "—"}
+          nota={assinatura?.explicacao ?? undefined}
           chip={emTeste ? "Teste grátis" : undefined}
-          tom={workspace.suspended ? "alerta" : undefined}
+          tom={
+            assinatura?.tom === "critico" || assinatura?.tom === "atencao"
+              ? "alerta"
+              : undefined
+          }
         />
 
         <Linha

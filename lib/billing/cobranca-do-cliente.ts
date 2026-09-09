@@ -71,7 +71,27 @@ export type EstadoDaCobranca =
       expiraEm: string | null;
       periodo: { inicio: string; fim: string };
     }
-  | { estado: "paga"; pagaEm: string | null; acessoAte: string | null };
+  | {
+      estado: "paga";
+      pagaEm: string | null;
+      acessoAte: string | null;
+      /** Quanto entrou de fato — pagamento parcial existe. */
+      valorCents: number;
+      periodo: { inicio: string; fim: string };
+      /**
+       * Referência para quem precisa citar este pagamento no suporte.
+       *
+       * **Não é comprovante, e não pretende ser.** A EFI não devolve
+       * comprovante nenhum — medido em 9/set/2026: a resposta de
+       * `/v2/cob/{txid}` traz status, valor e horário, e nada parecido com
+       * um documento. Quem quiser recibo pega no próprio banco, onde o
+       * `endToEndId` do Pix aparece no extrato.
+       *
+       * Derivada do período e do id da fatura, sem coluna nova: estável
+       * entre recargas e sem expor o identificador do provedor.
+       */
+      referencia: string;
+    };
 
 const AVISO_MANUAL =
   "A cobrança automática ainda não está ligada. Combine o pagamento com quem administra o sistema.";
@@ -327,7 +347,9 @@ export async function estadoAtual(
   if (aval.jaCobrado && aval.ciclo) {
     const { data: doCiclo } = await db
       .from("subscription_charge")
-      .select("status, paid_at, expires_at, provider, copia_e_cola")
+      .select(
+        "id, status, paid_at, paid_amount_cents, amount_cents, expires_at, provider, copia_e_cola, period_start, period_end"
+      )
       .eq("workspace_id", workspaceId)
       .eq("period_start", aval.ciclo.start)
       .maybeSingle();
@@ -343,6 +365,12 @@ export async function estadoAtual(
         estado: "paga",
         pagaEm: doCiclo.paid_at,
         acessoAte: ws?.access_expires_at ?? null,
+        // O que ENTROU, com o valor da fatura de reserva. Pagamento parcial
+        // existe, e mostrar o valor cobrado no lugar do recebido esconderia
+        // justamente a diferença que alguém precisaria ver.
+        valorCents: doCiclo.paid_amount_cents ?? doCiclo.amount_cents,
+        periodo: { inicio: doCiclo.period_start, fim: doCiclo.period_end },
+        referencia: referenciaPublica(doCiclo.period_start, doCiclo.id),
       };
     }
 
@@ -590,6 +618,20 @@ async function renovarCobranca(
     expiraEm: expiraEm.toISOString(),
     periodo: { inicio: linha.period_start, fim: linha.period_end },
   };
+}
+
+/**
+ * Um código curto para o cliente citar no suporte.
+ *
+ * Determinístico: mesmo período e mesma fatura dão sempre o mesmo código,
+ * então ele sobrevive a recarregar a página e pode ser lido no telefone.
+ *
+ * **Não usa o identificador do provedor.** O txid é dado de integração e
+ * muda quando um código Pix é renovado (0090) — citá-lo daria ao cliente um
+ * número que deixa de existir.
+ */
+function referenciaPublica(periodoInicio: string, chargeId: string): string {
+  return `TF-${periodoInicio.replaceAll("-", "")}-${chargeId.slice(0, 4).toUpperCase()}`;
 }
 
 /** O motivo do `decideCharge`, dito para quem paga e não para quem opera. */
