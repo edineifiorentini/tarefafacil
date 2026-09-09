@@ -70,9 +70,45 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
   );
 }
 
+type TarefaDetalhada = NonNullable<ReturnType<typeof useTaskDetail>["data"]>;
+
+/**
+ * A tarefa, buscada antes de o formulário existir.
+ *
+ * **A separação conserta um defeito de estado inicial.** O formulário
+ * guarda título, setor, prioridade e o resto em `useState`, semeados a
+ * partir da tarefa — e `useState` só lê o valor inicial UMA vez. Quando o
+ * componente montava com a busca ainda em voo, todos os campos nasciam
+ * vazios e não se corrigiam quando a resposta chegava.
+ *
+ * Pelo modal isso nunca aparecia: a Lista, o Quadro e o Calendário já
+ * deixam a demanda no cache antes de alguém clicar. A rota
+ * `/tarefa/[id]` abre fria — e ali a tela mostrava título em branco,
+ * "Selecione…" no setor e "Normal" numa demanda urgente. Encontrado em
+ * 9/set/2026, abrindo a página nova.
+ *
+ * O `key` é a outra metade: sem ele, ir de uma tarefa para outra reusaria
+ * a mesma instância e o estado da anterior ficaria na tela.
+ */
 export function TaskDetailPanel({ taskId }: { taskId: string }) {
   const workspace = useWorkspace();
   const { data: task } = useTaskDetail(workspace.id, taskId);
+
+  if (!task) {
+    return <p className="text-fg-secondary">Carregando…</p>;
+  }
+
+  return <TaskDetailForm key={task.id} task={task} taskId={taskId} />;
+}
+
+function TaskDetailForm({
+  task,
+  taskId,
+}: {
+  task: TarefaDetalhada;
+  taskId: string;
+}) {
+  const workspace = useWorkspace();
   const { data: sectors = [] } = useSectors(workspace.id);
   const update = useUpdateTask(workspace.id);
   const deleteTask = useDeleteTask(workspace.id);
@@ -89,37 +125,33 @@ export function TaskDetailPanel({ taskId }: { taskId: string }) {
   const pending = useRef<TablesUpdate<"task">>({});
   const timer = useRef<number | undefined>(undefined);
 
-  const [title, setTitle] = useState(task?.title ?? "");
-  const [description, setDescription] = useState(task?.description ?? "");
-  const [sectorId, setSectorId] = useState(task?.sector_id ?? "");
-  const [dueDate, setDueDate] = useState(task?.due_date ?? "");
-  const [dueTime, setDueTime] = useState((task?.due_time ?? "").slice(0, 5));
+  const [title, setTitle] = useState(task.title ?? "");
+  const [description, setDescription] = useState(task.description ?? "");
+  const [sectorId, setSectorId] = useState(task.sector_id ?? "");
+  const [dueDate, setDueDate] = useState(task.due_date ?? "");
+  const [dueTime, setDueTime] = useState((task.due_time ?? "").slice(0, 5));
   const [dueEndTime, setDueEndTime] = useState(
-    (task?.due_end_time ?? "").slice(0, 5)
+    (task.due_end_time ?? "").slice(0, 5)
   );
-  const [timeOpen, setTimeOpen] = useState(!!task?.due_time);
-  const [endOpen, setEndOpen] = useState(!!task?.due_end_time);
-  const [priority, setPriority] = useState<string>(task?.priority ?? "media");
+  const [timeOpen, setTimeOpen] = useState(!!task.due_time);
+  const [endOpen, setEndOpen] = useState(!!task.due_end_time);
+  const [priority, setPriority] = useState<string>(task.priority ?? "media");
   const [projectId, setProjectId] = useState<string | null>(
-    task?.project_id ?? null
+    task.project_id ?? null
   );
   const [assigneeId, setAssigneeId] = useState<string | null>(
-    task?.assignee_id ?? null
+    task.assignee_id ?? null
   );
   const [clientId, setClientId] = useState<string | null>(
-    task?.client_id ?? null
+    task.client_id ?? null
   );
-  const [service, setService] = useState(task?.service ?? "");
+  const [service, setService] = useState(task.service ?? "");
   const [estimateHours, setEstimateHours] = useState(
-    task?.estimate_minutes ? String(task.estimate_minutes / 60) : ""
+    task.estimate_minutes ? String(task.estimate_minutes / 60) : ""
   );
   const { data: projects = [] } = useProjects(workspace.id, sectorId);
   const { data: members = [] } = useMembers(workspace.id);
   const { data: clients = [] } = useClients(workspace.id);
-
-  if (!task) {
-    return <p className="text-fg-secondary">Carregando…</p>;
-  }
 
   const cancelled = task.cancelled_at !== null;
 
@@ -136,7 +168,7 @@ export function TaskDetailPanel({ taskId }: { taskId: string }) {
           onSuccess: () => {
             setStatus("saved");
             // Reflete a edição no evento do Google, se a tarefa sincroniza.
-            if (task?.gcal_sync) void syncEvent(taskId);
+            if (task.gcal_sync) void syncEvent(taskId);
           },
           onError: () => setStatus("idle"),
         }
