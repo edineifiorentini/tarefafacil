@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { flushSync } from "react-dom";
 
 import { useShell, type ModalContent } from "@/components/shell/shell-context";
 
@@ -64,10 +65,24 @@ export function TaskUrlSync() {
   useEffect(() => {
     function aoVoltar() {
       const id = new URL(window.location.href).searchParams.get(PARAM_TAREFA);
-      // Voltou PARA uma tarefa (o histórico tinha duas) — reabre. Voltou
-      // para fora dela, fecha.
-      if (id) abrirTarefa(id, { comUrl: false });
-      else closeModal();
+
+      // **`flushSync` porque `popstate` não é evento discreto para o React.**
+      //
+      // A atualização entra em prioridade normal, e o agendador cede lugar
+      // para o resto do trabalho da página até a fila expirar. Medido em
+      // 9/set/2026, com a aba visível e em foco: o evento chegava em 42ms e
+      // o modal só sumia da tela **4 segundos depois** — contra 213ms
+      // fechando pelo X, que é clique e portanto discreto.
+      //
+      // Quatro segundos de modal pendurado depois de apertar voltar é o
+      // tipo de coisa que faz a pessoa apertar de novo, e aí ela sai da
+      // página. Resposta a navegação é urgente por definição.
+      flushSync(() => {
+        // Voltou PARA uma tarefa (o histórico tinha duas) — reabre. Voltou
+        // para fora dela, fecha.
+        if (id) abrirTarefa(id, { comUrl: false });
+        else closeModal();
+      });
     }
     window.addEventListener("popstate", aoVoltar);
     return () => window.removeEventListener("popstate", aoVoltar);
