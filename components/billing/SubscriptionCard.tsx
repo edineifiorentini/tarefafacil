@@ -1,99 +1,42 @@
 "use client";
 
-import {
-  IconCalendarEvent,
-  IconCircleCheck,
-  IconSparkles,
-} from "@tabler/icons-react";
+import { useRef } from "react";
+
+import { IconCalendarEvent } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 
 import { BillingHistory } from "@/components/billing/BillingHistory";
 import { PixCheckout } from "@/components/billing/PixCheckout";
 import { PlanChooser } from "@/components/billing/PlanChooser";
+import { SubscriptionSummary } from "@/components/billing/SubscriptionSummary";
 import { daysLeft } from "@/components/billing/TrialBanner";
-import { formatCentsBRL } from "@/lib/finance/money";
-import { dataLongaDeInstanteBR, dataLongaPuraBR } from "@/lib/utils/fuso";
-import { createClient } from "@/lib/supabase/client";
 import { usePaymentStatus } from "@/lib/queries/usePaymentStatus";
 import { useWorkspace } from "@/lib/queries/useWorkspace";
+import { createClient } from "@/lib/supabase/client";
+import { dataLongaDeInstanteBR } from "@/lib/utils/fuso";
 import type { BillingPlan } from "@/types/database";
 
-// `dataLonga` morava aqui e tratava as DUAS datas como instante. O
-// `access_expires_at` guarda uma data civil escrita como texto, e
-// `new Date(...).toLocaleDateString()` num navegador brasileiro devolvia o
-// dia anterior — a mesma data aparecia como "13 de outubro" no resumo e
-// "14/10" no card do pagamento. Cada uma tem agora a sua função, e o
-// comentário do porquê mora em `lib/utils/fuso.ts`.
-
-function Linha({
-  icon: Icon,
-  rotulo,
-  valor,
-  nota,
-  chip,
-  tom,
-}: {
-  icon: typeof IconSparkles;
-  rotulo: string;
-  valor: string;
-  /** Uma frase de apoio. O chip é curto demais para explicar um estado. */
-  nota?: string;
-  chip?: string;
-  tom?: "alerta";
-}) {
-  return (
-    <div className="border-line flex flex-wrap items-center gap-3 border-b px-4 py-3 last:border-0">
-      <Icon
-        size={18}
-        stroke={1.75}
-        aria-hidden
-        className={
-          tom === "alerta" ? "text-overdue shrink-0" : "text-fg-muted shrink-0"
-        }
-      />
-      <div className="min-w-0 flex-1">
-        <p className="text-fg-muted text-[length:var(--text-caption-size)]">
-          {rotulo}
-        </p>
-        <p className="text-fg text-[length:var(--text-small-size)] font-medium">
-          {valor}
-        </p>
-        {nota ? (
-          <p className="text-fg-secondary text-[length:var(--text-caption-size)]">
-            {nota}
-          </p>
-        ) : null}
-      </div>
-      {chip ? (
-        <span
-          className={`shrink-0 rounded-full px-2 py-0.5 text-[length:var(--text-caption-size)] font-medium ${
-            tom === "alerta"
-              ? "bg-[var(--status-overdue-bg)] text-[var(--status-overdue-fg)]"
-              : "bg-sunken text-fg-secondary"
-          }`}
-        >
-          {chip}
-        </span>
-      ) : null}
-    </div>
-  );
-}
-
 /**
- * A assinatura desta empresa, para o dono ver sem precisar perguntar.
+ * Assinatura e pagamentos, do jeito que quem paga precisa ver.
  *
- * Enquanto a cobrança do EFI não existe, esta tela não cobra nem bloqueia:
- * ela mostra a situação e registra qual plano a pessoa quer. É honesta
- * quanto a isso — prometer boleto numa tela que não emite boleto seria pior
- * do que não ter a tela.
+ * Este componente COMPÕE e quase não desenha: o resumo, o pagamento, a
+ * escolha de plano e o histórico são cada um o seu arquivo. Foi assim que a
+ * mesma tela passou a servir "aguardando" e "confirmado" sem virar dois
+ * caminhos para manter em sincronia.
+ *
+ * A `dataLonga` que morava aqui tratava as DUAS datas como instante — e
+ * `access_expires_at` guarda uma data civil escrita como texto. O acesso
+ * aparecia vencendo um dia antes do que valia. As duas funções certas moram
+ * hoje em `lib/utils/fuso.ts`, com o porquê ao lado.
  */
 export function SubscriptionCard() {
   const workspace = useWorkspace();
   // Mesma chave de consulta do checkout: uma requisição só, cache
   // compartilhado. Duas chaves para o mesmo dado fariam o resumo e o
   // pagamento discordarem a cada nove segundos.
-  const { assinatura } = usePaymentStatus();
+  const { assinatura, proximaRenovacao } = usePaymentStatus();
   const supabase = createClient();
+  const planos = useRef<HTMLDivElement | null>(null);
 
   const { data: plano } = useQuery({
     enabled: !!workspace.plan_id,
@@ -118,71 +61,61 @@ export function SubscriptionCard() {
     <section className="flex flex-col gap-5">
       <div>
         <h2 className="text-fg text-[length:var(--text-h3-size)] font-semibold">
-          Assinatura
+          Assinatura e pagamentos
         </h2>
         <p className="text-fg-secondary text-[length:var(--text-small-size)]">
-          Situação da sua empresa no TAFLOW.
+          Gerencie seu plano, cobranças e formas de pagamento.
         </p>
       </div>
 
-      <div className="border-line bg-card rounded-md border">
-        {/* **A situação vem do SERVIDOR**, e essa é a correção.
-            Aqui a linha era `suspended ? "Bloqueada" : teste ? "Em teste" :
-            "Ativa"` — "Ativa" era o que sobrava, e empresa com acesso
-            vencido há dez dias lia "Ativa" do mesmo jeito. O navegador não
-            tem como fazer essa conta: a RLS de `subscription` só responde ao
-            dono, então quem sabe se a assinatura foi cancelada é o servidor.
-            Ele devolve o ESTADO e nunca o valor (0049). */}
-        <Linha
-          icon={IconCircleCheck}
-          rotulo="Situação"
-          valor={assinatura?.rotulo ?? "—"}
-          nota={assinatura?.explicacao ?? undefined}
-          chip={emTeste ? "Teste grátis" : undefined}
-          tom={
-            assinatura?.tom === "critico" || assinatura?.tom === "atencao"
-              ? "alerta"
-              : undefined
-          }
-        />
+      <SubscriptionSummary
+        assinatura={assinatura}
+        proximaRenovacao={proximaRenovacao}
+        plano={plano ?? null}
+        // Leva até a escolha de plano, que é onde a troca acontece de
+        // verdade. Um botão abrindo outro caminho para a mesma decisão
+        // criaria dois lugares para mantê-la.
+        aoGerenciar={() =>
+          planos.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+        }
+      />
 
-        <Linha
-          icon={IconSparkles}
-          rotulo="Plano"
-          valor={plano ? plano.name : "Nenhum plano escolhido"}
-          chip={
-            plano
-              ? plano.price_cents === 0
-                ? "Grátis"
-                : `${formatCentsBRL(plano.price_cents)} por mês`
-              : undefined
-          }
-        />
-
-        {emTeste && workspace.trial_ends_at ? (
-          <Linha
-            icon={IconCalendarEvent}
-            rotulo={acabou ? "Teste terminou em" : "Teste vai até"}
-            valor={dataLongaDeInstanteBR(workspace.trial_ends_at)}
-            chip={
-              acabou
-                ? "Terminou"
-                : dias === 1
-                  ? "Último dia"
-                  : `Faltam ${dias} dias`
+      {/* O teste tem prazo próprio e fica FORA do resumo: ele é temporário,
+          e os três blocos de cima valem para a vida inteira da conta. */}
+      {emTeste && workspace.trial_ends_at ? (
+        <div className="border-line bg-card flex flex-wrap items-center gap-3 rounded-md border px-4 py-3">
+          <IconCalendarEvent
+            size={18}
+            stroke={1.75}
+            aria-hidden
+            className={
+              acabou ? "text-overdue shrink-0" : "text-fg-muted shrink-0"
             }
-            tom={acabou || dias === 1 ? "alerta" : undefined}
           />
-        ) : null}
-
-        {workspace.access_expires_at ? (
-          <Linha
-            icon={IconCalendarEvent}
-            rotulo="Acesso liberado até"
-            valor={dataLongaPuraBR(workspace.access_expires_at)}
-          />
-        ) : null}
-      </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-fg-muted text-[length:var(--text-caption-size)]">
+              {acabou ? "Teste terminou em" : "Teste vai até"}
+            </p>
+            <p className="text-fg text-[length:var(--text-small-size)] font-medium">
+              {/* `trial_ends_at` é instante de verdade — precisa do fuso. */}
+              {dataLongaDeInstanteBR(workspace.trial_ends_at)}
+            </p>
+          </div>
+          <span
+            className={`shrink-0 rounded-full px-2 py-0.5 text-[length:var(--text-caption-size)] font-medium ${
+              acabou || dias === 1
+                ? "bg-[var(--status-overdue-bg)] text-[var(--status-overdue-fg)]"
+                : "bg-sunken text-fg-secondary"
+            }`}
+          >
+            {acabou
+              ? "Terminou"
+              : dias === 1
+                ? "Último dia"
+                : `Faltam ${dias} dias`}
+          </span>
+        </div>
+      ) : null}
 
       {/* O checkout diz o que É verdade AGORA, e ele mesmo se cala quando
           não há o que cobrar: plano vitalício, plano gratuito, período já
@@ -192,7 +125,9 @@ export function SubscriptionCard() {
           existir. Texto fixo sobre estado que muda é dívida com juros. */}
       <PixCheckout />
 
-      <PlanChooser />
+      <div ref={planos}>
+        <PlanChooser />
+      </div>
 
       <BillingHistory />
     </section>

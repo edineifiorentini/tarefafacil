@@ -4,6 +4,7 @@ import { FUSO_PADRAO, diaCivilDeEm, diaCivilEm } from "@/lib/dates/day";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 import { estadoAtual, type EstadoDaCobranca } from "./cobranca-do-cliente";
+import { cycleFor } from "./cycle";
 import { situacaoDaAssinatura, type LeituraDaAssinatura } from "./situacao";
 
 /**
@@ -23,17 +24,28 @@ import { situacaoDaAssinatura, type LeituraDaAssinatura } from "./situacao";
 export type PainelDeCobranca = {
   cobranca: EstadoDaCobranca;
   assinatura: LeituraDaAssinatura;
+  /**
+   * Data civil da próxima cobrança. `null` quando não haverá nenhuma.
+   *
+   * Sai do servidor porque depende do `billing_day` da assinatura, e a RLS
+   * de `subscription` só responde ao dono. É data, não valor — cabe na
+   * régua que o dono escolheu em 9/set/2026.
+   *
+   * `null` para vitalício, cancelada, plano gratuito e para quem ainda não
+   * tem assinatura. A tela diz o motivo em vez de inventar uma data.
+   */
+  proximaRenovacao: string | null;
 };
 
 export async function painelDaCobranca(
   workspaceId: string,
   agora = new Date()
 ): Promise<PainelDeCobranca> {
-  const [cobranca, assinatura] = await Promise.all([
+  const [cobranca, lida] = await Promise.all([
     estadoAtual(workspaceId, agora),
     lerAssinatura(workspaceId, agora),
   ]);
-  return { cobranca, assinatura };
+  return { cobranca, ...lida };
 }
 
 /**
@@ -49,7 +61,7 @@ export async function painelEmVoltaDe(
   workspaceId: string,
   agora = new Date()
 ): Promise<PainelDeCobranca> {
-  return { cobranca, assinatura: await lerAssinatura(workspaceId, agora) };
+  return { cobranca, ...(await lerAssinatura(workspaceId, agora)) };
 }
 
 /**
@@ -73,7 +85,10 @@ export async function painelEmVoltaDe(
 async function lerAssinatura(
   workspaceId: string,
   agora: Date
-): Promise<LeituraDaAssinatura> {
+): Promise<{
+  assinatura: LeituraDaAssinatura;
+  proximaRenovacao: string | null;
+}> {
   const db = createAdminClient();
 
   const [{ data: ws }, { data: assinatura }] = await Promise.all([
@@ -84,7 +99,7 @@ async function lerAssinatura(
       .maybeSingle(),
     db
       .from("subscription")
-      .select("plan_id, status")
+      .select("plan_id, status, billing_day")
       .eq("workspace_id", workspaceId)
       .maybeSingle(),
   ]);
@@ -96,12 +111,12 @@ async function lerAssinatura(
   const { data: plano } = planId
     ? await db
         .from("billing_plan")
-        .select("vitalicio")
+        .select("vitalicio, price_cents")
         .eq("id", planId)
         .maybeSingle()
     : { data: null };
 
-  return situacaoDaAssinatura({
+  const leitura = situacaoDaAssinatura({
     suspensa: ws?.suspended ?? false,
     emTeste: ws?.trial ?? false,
     testeAte: ws?.trial_ends_at
@@ -112,4 +127,22 @@ async function lerAssinatura(
     acessoAte: ws?.access_expires_at ? ws.access_expires_at.slice(0, 10) : null,
     hoje: diaCivilEm(agora, FUSO_PADRAO),
   });
+
+  // Só existe renovação onde vai haver cobrança. Vitalício, gratuito,
+  // cancelada e quem ainda não tem assinatura ficam sem data — e a tela diz
+  // o motivo em vez de mostrar um dia que nunca vai chegar.
+  const vaiCobrar =
+    Boolean(assinatura) &&
+    !plano?.vitalicio &&
+    (plano?.price_cents ?? 0) > 0 &&
+    assinatura?.status !== "cancelada";
+
+  return {
+    assinatura: leitura,
+    // `cycleFor().end` é o primeiro dia do período seguinte, que é
+    // exatamente quando a próxima fatura nasce.
+    proximaRenovacao: vaiCobrar
+      ? cycleFor(agora, assinatura!.billing_day, FUSO_PADRAO).end
+      : null,
+  };
 }

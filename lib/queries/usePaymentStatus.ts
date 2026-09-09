@@ -66,6 +66,8 @@ export type PaymentStatus = {
    * dia 1º; a tela antiga tratava as duas como a mesma coisa.
    */
   assinatura: LeituraDaAssinatura | undefined;
+  /** Data civil da próxima cobrança. Nula quando não haverá nenhuma. */
+  proximaRenovacao: string | null | undefined;
   carregando: boolean;
   /** Segundos até a próxima consulta. `null` quando não há consulta em curso. */
   proximaEm: number | null;
@@ -124,6 +126,7 @@ export function usePaymentStatus(): PaymentStatus {
   return {
     estado: query.data?.cobranca,
     assinatura: query.data?.assinatura,
+    proximaRenovacao: query.data?.proximaRenovacao,
     carregando: query.isPending,
     proximaEm,
     acompanhando,

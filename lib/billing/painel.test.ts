@@ -59,8 +59,8 @@ beforeEach(() => {
     trial_ends_at: null,
     access_expires_at: null,
   };
-  tabelas.assinatura = { plan_id: "p1", status: "ativa" };
-  tabelas.plano = { vitalicio: false };
+  tabelas.assinatura = { plan_id: "p1", status: "ativa", billing_day: 5 };
+  tabelas.plano = { vitalicio: false, price_cents: 9900 };
 });
 
 describe("`access_expires_at` é data civil, e não pode andar para trás", () => {
@@ -129,14 +129,14 @@ describe("o que sai do painel", () => {
   it("assinatura cancelada aparece — e o navegador não conseguiria saber", async () => {
     // A RLS de `subscription` só responde ao dono (0049). É por isso que
     // esta leitura mora no servidor.
-    tabelas.assinatura = { plan_id: "p1", status: "cancelada" };
+    tabelas.assinatura = { plan_id: "p1", status: "cancelada", billing_day: 5 };
 
     const r = await painelDaCobranca("ws1", AGORA);
     expect(r.assinatura.situacao).toBe("cancelada");
   });
 
   it("plano vitalício explica que não haverá cobrança", async () => {
-    tabelas.plano = { vitalicio: true };
+    tabelas.plano = { vitalicio: true, price_cents: 0 };
 
     const r = await painelDaCobranca("ws1", AGORA);
     expect(r.assinatura.situacao).toBe("vitalicia");
@@ -148,5 +148,43 @@ describe("o que sai do painel", () => {
     const r = await painelDaCobranca("ws1", AGORA);
     const campos = Object.keys(r.assinatura).sort();
     expect(campos).toEqual(["explicacao", "rotulo", "situacao", "tom"]);
+  });
+});
+
+describe("próxima renovação", () => {
+  it("plano pago e assinatura ativa: a data do próximo ciclo", async () => {
+    tabelas.assinatura = { plan_id: "p1", status: "ativa", billing_day: 5 };
+    tabelas.plano = { vitalicio: false, price_cents: 9900 };
+
+    // 9/set com cobrança no dia 5 → o ciclo corrente é 05/09 a 05/10, e a
+    // próxima fatura nasce no primeiro dia do período seguinte.
+    const r = await painelDaCobranca("ws1", AGORA);
+    expect(r.proximaRenovacao).toBe("2026-10-05");
+  });
+
+  it("vitalício não tem renovação", async () => {
+    // Mostrar uma data faria o cliente esperar uma cobrança que nunca vem.
+    tabelas.plano = { vitalicio: true, price_cents: 0 };
+    const r = await painelDaCobranca("ws1", AGORA);
+    expect(r.proximaRenovacao).toBeNull();
+  });
+
+  it("cancelada não tem renovação", async () => {
+    tabelas.assinatura = { plan_id: "p1", status: "cancelada", billing_day: 5 };
+    tabelas.plano = { vitalicio: false, price_cents: 9900 };
+    const r = await painelDaCobranca("ws1", AGORA);
+    expect(r.proximaRenovacao).toBeNull();
+  });
+
+  it("plano gratuito não tem renovação", async () => {
+    tabelas.plano = { vitalicio: false, price_cents: 0 };
+    const r = await painelDaCobranca("ws1", AGORA);
+    expect(r.proximaRenovacao).toBeNull();
+  });
+
+  it("sem assinatura configurada, também não", async () => {
+    tabelas.assinatura = null;
+    const r = await painelDaCobranca("ws1", AGORA);
+    expect(r.proximaRenovacao).toBeNull();
   });
 });
