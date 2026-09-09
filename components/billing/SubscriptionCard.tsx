@@ -7,6 +7,7 @@ import {
 } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 
+import { BillingHistory } from "@/components/billing/BillingHistory";
 import { PixCheckout } from "@/components/billing/PixCheckout";
 import { PlanChooser } from "@/components/billing/PlanChooser";
 import { daysLeft } from "@/components/billing/TrialBanner";
@@ -192,6 +193,8 @@ export function SubscriptionCard() {
       <PixCheckout />
 
       <PlanChooser />
+
+      <BillingHistory />
     </section>
   );
 }
