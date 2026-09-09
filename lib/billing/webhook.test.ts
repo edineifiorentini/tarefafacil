@@ -43,13 +43,12 @@ vi.mock("@/lib/supabase/admin", () => ({
       }
       return {
         select: () => ({
-          eq: () => ({
-            eq: () => ({
-              maybeSingle: async () => ({ data: porColuna() }),
-            }),
-            contains: () => ({
-              maybeSingle: async () => ({ data: porHistorico() }),
-            }),
+          // A busca NÃO filtra mais por `provider` na consulta: o nome
+          // gravado carrega o ambiente e o do aviso não, então a conferência
+          // virou comparação por prefixo, depois de achar pelo txid.
+          eq: () => ({ maybeSingle: async () => ({ data: porColuna() }) }),
+          contains: () => ({
+            maybeSingle: async () => ({ data: porHistorico() }),
           }),
         }),
       };
@@ -77,9 +76,11 @@ const AVISO = {
 beforeEach(() => {
   insert.mockReset().mockResolvedValue({ error: null });
   atualizouEvento.mockReset();
-  porHistorico
-    .mockReset()
-    .mockReturnValue({ id: "fatura-1", status: "aberta" });
+  porHistorico.mockReset().mockReturnValue({
+    id: "fatura-1",
+    status: "aberta",
+    provider: "efi:producao",
+  });
   porColuna.mockReset().mockReturnValue(null);
   registrarEvento.mockReset().mockResolvedValue(undefined);
   registrarPagamento
@@ -163,7 +164,11 @@ describe("a confirmação não roda à toa", () => {
   });
 
   it("fatura já paga não pergunta de novo", async () => {
-    porHistorico.mockReturnValue({ id: "f1", status: "paga" });
+    porHistorico.mockReturnValue({
+      id: "f1",
+      status: "paga",
+      provider: "efi:producao",
+    });
     const confirmar = vi.fn();
 
     const r = await processarAviso(AVISO, confirmar);
@@ -179,7 +184,11 @@ describe("renovar o código não faz o pagamento anterior sumir", () => {
     // aviso atrasou, e nesse meio tempo alguém renovou. `provider_charge_id`
     // já é o código NOVO — só o histórico ainda conhece o velho.
     porColuna.mockReturnValue(null);
-    porHistorico.mockReturnValue({ id: "fatura-1", status: "aberta" });
+    porHistorico.mockReturnValue({
+      id: "fatura-1",
+      status: "aberta",
+      provider: "efi:producao",
+    });
 
     const confirmar = vi
       .fn()
@@ -195,7 +204,11 @@ describe("renovar o código não faz o pagamento anterior sumir", () => {
 
   it("a coluna antiga ainda serve de rede para linha sem histórico", async () => {
     porHistorico.mockReturnValue(null);
-    porColuna.mockReturnValue({ id: "fatura-velha", status: "aberta" });
+    porColuna.mockReturnValue({
+      id: "fatura-velha",
+      status: "aberta",
+      provider: "efi",
+    });
 
     const r = await processarAviso(AVISO);
 
@@ -209,7 +222,11 @@ describe("renovar o código não faz o pagamento anterior sumir", () => {
     // Dois códigos vivos ao mesmo tempo não deveriam existir, mas se o
     // cliente pagar o antigo e o novo o dinheiro entra duas vezes. Não dá
     // para creditar dois meses — e alguém precisa saber para devolver.
-    porHistorico.mockReturnValue({ id: "f1", status: "paga" });
+    porHistorico.mockReturnValue({
+      id: "f1",
+      status: "paga",
+      provider: "efi:producao",
+    });
 
     const r = await processarAviso(AVISO);
 
@@ -276,5 +293,71 @@ describe("o corpo do aviso só é guardado quando o aviso é nosso", () => {
 
     expect(r.acao).toBe("quitou");
     expect(registrarPagamento).toHaveBeenCalled();
+  });
+});
+
+describe("o nome do provedor na fatura carrega o AMBIENTE", () => {
+  /**
+   * O defeito que custou um pagamento de verdade em 9/set/2026.
+   *
+   * A fatura grava `efi:producao` — "efi" sozinho não distingue uma cobrança
+   * de teste de uma de verdade. O aviso chega pelo caminho da rota, que só
+   * conhece `efi`. Comparar as duas strings com `=` nunca casa: o cliente
+   * paga, a notificação chega no horário, e nada acontece.
+   *
+   * Nenhum teste pegaria antes — até ali nenhum pagamento real tinha
+   * existido, e o filtro parecia certo lendo o código.
+   */
+  it("aviso de `efi` quita fatura gravada como `efi:producao`", async () => {
+    porHistorico.mockReturnValue({
+      id: "fatura-prod",
+      status: "aberta",
+      provider: "efi:producao",
+    });
+
+    const r = await processarAviso(AVISO);
+
+    expect(r.acao).toBe("quitou");
+    expect(registrarPagamento).toHaveBeenCalledWith(
+      expect.objectContaining({ chargeId: "fatura-prod" })
+    );
+  });
+
+  it("e também a gravada como `efi:homologacao`", async () => {
+    porHistorico.mockReturnValue({
+      id: "fatura-homolog",
+      status: "aberta",
+      provider: "efi:homologacao",
+    });
+
+    const r = await processarAviso(AVISO);
+    expect(r.acao).toBe("quitou");
+  });
+
+  it("mas NÃO quita fatura de outro provedor com o mesmo identificador", async () => {
+    // É para isto que a conferência existe: o prefixo separa `efi` de
+    // `asaas`, e não pode virar "qualquer um serve".
+    porHistorico.mockReturnValue({
+      id: "fatura-asaas",
+      status: "aberta",
+      provider: "asaas",
+    });
+
+    const r = await processarAviso(AVISO);
+
+    expect(r.acao).toBe("sem_fatura");
+    expect(registrarPagamento).not.toHaveBeenCalled();
+  });
+
+  it("nem quando o nome do outro provedor só COMEÇA igual", async () => {
+    // "efirma" não é "efi". Sem o dois-pontos, prefixo não vale.
+    porHistorico.mockReturnValue({
+      id: "fatura-outra",
+      status: "aberta",
+      provider: "efirma",
+    });
+
+    const r = await processarAviso(AVISO);
+    expect(r.acao).toBe("sem_fatura");
   });
 });

@@ -292,19 +292,44 @@ async function acharFatura(
 ): Promise<{ id: string; status: string } | null> {
   const { data: porHistorico } = await db
     .from("subscription_charge")
-    .select("id, status")
-    .eq("provider", provedor)
+    .select("id, status, provider")
     .contains("provider_charge_ids", [providerChargeId])
     .maybeSingle();
 
-  if (porHistorico) return porHistorico;
+  const achada =
+    porHistorico ??
+    (
+      await db
+        .from("subscription_charge")
+        .select("id, status, provider")
+        .eq("provider_charge_id", providerChargeId)
+        .maybeSingle()
+    ).data;
 
-  const { data: porColuna } = await db
-    .from("subscription_charge")
-    .select("id, status")
-    .eq("provider", provedor)
-    .eq("provider_charge_id", providerChargeId)
-    .maybeSingle();
+  if (!achada) return null;
+  return mesmoProvedor(achada.provider, provedor) ? achada : null;
+}
 
-  return porColuna ?? null;
+/**
+ * O provedor do aviso e o gravado na fatura são o mesmo?
+ *
+ * **Comparar com `=` era um defeito que custava pagamento.** A fatura grava
+ * o nome COM o ambiente — `efi:producao` —, porque "efi" sozinho não
+ * distingue uma cobrança de teste de uma de verdade. O aviso chega pelo
+ * caminho da rota, que só conhece `efi`. As duas strings nunca são iguais, e
+ * o efeito é o pior possível: o cliente paga, a notificação chega no
+ * horário, e nada acontece. Resposta 200, "sem_fatura", acesso não estendido
+ * e ninguém sabendo.
+ *
+ * Encontrado em 9/set/2026, com uma cobrança de UM CENTAVO paga de verdade
+ * na virada para produção. Nenhum teste pegaria: até ali, nenhum pagamento
+ * real tinha existido, e o filtro parecia certo lendo o código.
+ *
+ * A comparação por prefixo mantém a distinção que interessa — Asaas não
+ * quita fatura da EFI — sem exigir que os dois lados escrevam o ambiente.
+ * Cruzar ambientes não é risco: o txid é do ambiente que o emitiu, e a
+ * regra 5 ainda pergunta ao provedor antes de quitar.
+ */
+function mesmoProvedor(gravado: string, doAviso: string): boolean {
+  return gravado === doAviso || gravado.startsWith(`${doAviso}:`);
 }
