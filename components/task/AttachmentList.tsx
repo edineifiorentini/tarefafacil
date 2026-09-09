@@ -142,9 +142,34 @@ function ImageAttachmentRow({
   );
 }
 
-export function AttachmentList({ taskId }: { taskId: string }) {
+/**
+ * Filtro da lista.
+ *
+ * **A separação é regra, não organização de tela.** O que está marcado
+ * `entregavel` aparece para o cliente pelo link público (0083); o resto é
+ * material de trabalho — briefing, referência, print, contrato. Misturar os
+ * dois numa lista só foi o que fez a distinção depender de alguém reparar
+ * num ícone.
+ *
+ * `todos` continua existindo para quem monta a lista fora do modal.
+ */
+export type FiltroDeAnexo = "todos" | "internos" | "aprovacao";
+
+export function AttachmentList({
+  taskId,
+  filtro = "todos",
+}: {
+  taskId: string;
+  filtro?: FiltroDeAnexo;
+}) {
   const workspace = useWorkspace();
-  const { data: attachments = [] } = useAttachments(workspace.id, taskId);
+  const { data: todos = [] } = useAttachments(workspace.id, taskId);
+  const attachments =
+    filtro === "todos"
+      ? todos
+      : todos.filter((a) =>
+          filtro === "aprovacao" ? a.entregavel : !a.entregavel
+        );
   const { upload } = useUploadAttachment(workspace.id, taskId);
   const marcar = useMarcarEntregavel(workspace.id, taskId);
   const addLink = useAddAttachmentLink(workspace.id, taskId);
@@ -329,6 +354,14 @@ export function AttachmentList({ taskId }: { taskId: string }) {
             Tentar de novo
           </button>
         </div>
+      ) : null}
+
+      {attachments.length === 0 ? (
+        <p className="text-fg-muted text-[length:var(--text-caption-size)]">
+          {filtro === "aprovacao"
+            ? "Nenhum material publicado para o cliente ainda."
+            : "Nenhum anexo por aqui."}
+        </p>
       ) : null}
 
       {workspace?.id ? <StorageMeter workspaceId={workspace.id} /> : null}

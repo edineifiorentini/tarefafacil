@@ -6,15 +6,12 @@ import {
   IconClock,
   IconLoader2,
   IconPlus,
-  IconRotate,
-  IconTrash,
   IconX,
 } from "@tabler/icons-react";
 import { useRef, useState } from "react";
 import type { ReactNode } from "react";
 
 import { useShell } from "@/components/shell/shell-context";
-import { Button } from "@/components/ui/Button";
 import { Select } from "@/components/ui/Select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
 import { TextInput } from "@/components/ui/TextInput";
@@ -47,9 +44,8 @@ import { TagSelector } from "./TagSelector";
 import { TaskMeetToggle } from "./TaskMeetToggle";
 import { TaskSyncToggle } from "./TaskSyncToggle";
 import { TimeTracking } from "./TimeTracking";
-import { ConfirmDeleteDialog } from "./ConfirmDeleteDialog";
-import { ApprovalHistory } from "./ApprovalHistory";
-import { SharePanel } from "./SharePanel";
+import { TaskActions } from "./TaskActions";
+import { TaskApprovalTab } from "./TaskApprovalTab";
 
 const PRIORITIES = [
   { value: "sem_prioridade", label: "Sem prioridade" },
@@ -78,7 +74,6 @@ export function TaskDetailPanel({ taskId }: { taskId: string }) {
   const { data: sectors = [] } = useSectors(workspace.id);
   const update = useUpdateTask(workspace.id);
   const deleteTask = useDeleteTask(workspace.id);
-  const [confirmandoExclusao, setConfirmandoExclusao] = useState(false);
   const toggleCancel = useToggleTaskCancel(workspace.id);
   const syncEvent = useSyncTaskEvent();
   // Fecha o MODAL, não o painel: a tarefa mora nele desde 9/set/2026, e
@@ -147,30 +142,47 @@ export function TaskDetailPanel({ taskId }: { taskId: string }) {
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="flex flex-col gap-1">
-        <TextInput
-          value={title}
-          onChange={(e) => {
-            setTitle(e.target.value);
-            scheduleSave({ title: e.target.value });
-          }}
-          aria-label="Título da tarefa"
-          placeholder="Título da tarefa"
-          className="border-transparent bg-transparent px-0 text-[length:var(--text-h2-size)] font-semibold hover:border-transparent"
-        />
-        <div className="text-fg-muted flex h-4 items-center gap-1 text-[length:var(--text-caption-size)]">
-          {status === "saving" ? (
-            <>
-              <IconLoader2 size={12} className="animate-spin" aria-hidden />
-              Salvando…
-            </>
-          ) : status === "saved" ? (
-            <>
-              <IconCheck size={12} aria-hidden />
-              Salvo
-            </>
-          ) : null}
+      <div className="flex items-start gap-2">
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
+          <TextInput
+            value={title}
+            onChange={(e) => {
+              setTitle(e.target.value);
+              scheduleSave({ title: e.target.value });
+            }}
+            aria-label="Título da tarefa"
+            placeholder="Título da tarefa"
+            className="border-transparent bg-transparent px-0 text-[length:var(--text-h2-size)] font-semibold hover:border-transparent"
+          />
+          <div className="text-fg-muted flex h-4 items-center gap-1 text-[length:var(--text-caption-size)]">
+            {status === "saving" ? (
+              <>
+                <IconLoader2 size={12} className="animate-spin" aria-hidden />
+                Salvando…
+              </>
+            ) : status === "saved" ? (
+              <>
+                <IconCheck size={12} aria-hidden />
+                Salvo
+              </>
+            ) : null}
+          </div>
         </div>
+
+        {/* Cancelar e excluir saíram do rodapé permanente. Botão destrutivo
+            visível o tempo todo, ao lado dos campos que se edita, é convite
+            a um clique errado que não tem desfazer. */}
+        <TaskActions
+          titulo={task.title}
+          cancelada={cancelled}
+          onAlternarCancelamento={() =>
+            toggleCancel.mutate({ id: taskId, cancel: !cancelled })
+          }
+          onExcluir={() => {
+            deleteTask(task);
+            closeModal();
+          }}
+        />
       </div>
 
       <GcalEditedBadge task={task} />
@@ -182,14 +194,19 @@ export function TaskDetailPanel({ taskId }: { taskId: string }) {
         </div>
       ) : null}
 
-      <Tabs defaultValue="detalhes">
+      {/* "Visão geral" e não "Detalhes": esta aba responde o QUE é a
+          demanda, e as outras três respondem como está sendo feita, o que
+          o cliente vê e o que já aconteceu. "Detalhes" não separava nada —
+          tudo ali é detalhe. */}
+      <Tabs defaultValue="geral">
         <TabsList>
-          <TabsTrigger value="detalhes">Detalhes</TabsTrigger>
+          <TabsTrigger value="geral">Visão geral</TabsTrigger>
           <TabsTrigger value="trabalho">Trabalho</TabsTrigger>
+          <TabsTrigger value="aprovacao">Aprovação</TabsTrigger>
           <TabsTrigger value="atividade">Atividade</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="detalhes">
+        <TabsContent value="geral">
           <div className="grid grid-cols-2 gap-3">
             <Field label="Setor">
               <Select
@@ -443,15 +460,20 @@ export function TaskDetailPanel({ taskId }: { taskId: string }) {
             <SubtaskList taskId={taskId} parentDue={dueDate || null} />
           </Field>
 
-          <Field label="Anexos">
-            <AttachmentList taskId={taskId} />
+          <Field label="Anexos internos">
+            {/* A frase é obrigatória, não decorativa: sem ela a única pista
+                de que o arquivo NÃO vai para o cliente era um ícone de
+                alternância no canto da linha. */}
+            <p className="text-fg-secondary text-[length:var(--text-caption-size)]">
+              Arquivos desta área não são enviados ao cliente. O que vai para
+              aprovação fica na aba Aprovação.
+            </p>
+            <AttachmentList taskId={taskId} filtro="internos" />
           </Field>
+        </TabsContent>
 
-          <SharePanel workspaceId={workspace.id} taskId={taskId} />
-
-          <Field label="Resposta do cliente">
-            <ApprovalHistory taskId={taskId} />
-          </Field>
+        <TabsContent value="aprovacao">
+          <TaskApprovalTab workspaceId={workspace.id} taskId={taskId} />
         </TabsContent>
 
         <TabsContent value="atividade">
@@ -468,37 +490,6 @@ export function TaskDetailPanel({ taskId }: { taskId: string }) {
           </Field>
         </TabsContent>
       </Tabs>
-
-      <div className="border-line mt-2 flex gap-2 border-t pt-4">
-        <Button
-          variant="secondary"
-          size="sm"
-          leadingIcon={cancelled ? IconRotate : IconBan}
-          onClick={() =>
-            toggleCancel.mutate({ id: taskId, cancel: !cancelled })
-          }
-        >
-          {cancelled ? "Reabrir demanda" : "Cancelar demanda"}
-        </Button>
-        <Button
-          variant="danger"
-          size="sm"
-          leadingIcon={IconTrash}
-          onClick={() => setConfirmandoExclusao(true)}
-        >
-          Excluir tarefa
-        </Button>
-      </div>
-
-      <ConfirmDeleteDialog
-        open={confirmandoExclusao}
-        title={task.title}
-        onOpenChange={setConfirmandoExclusao}
-        onConfirm={() => {
-          deleteTask(task);
-          closeModal();
-        }}
-      />
     </div>
   );
 }
