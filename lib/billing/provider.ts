@@ -5,7 +5,7 @@
 // diria "pago" para dinheiro que não entrou, e o acesso seria empurrado de
 // graça — o pior tipo de bug, porque não dá erro em lugar nenhum.
 
-import { lerConfigEfi } from "./efi/config";
+import { descreverConfig, lerConfigEfi } from "./efi/config";
 import { EfiGateway } from "./efi/gateway";
 import { FakeGateway, type PaymentGateway } from "./gateway";
 
@@ -22,7 +22,21 @@ export type ModoDeCobranca =
        */
       modo: "manual";
     }
-  | { modo: "gateway"; nome: string; gateway: PaymentGateway };
+  | {
+      modo: "gateway";
+      nome: string;
+      gateway: PaymentGateway;
+      /**
+       * Retrato da configuração SEM credencial — tamanhos e formatos.
+       *
+       * Existe porque "as credenciais estão erradas" é um diagnóstico que
+       * ninguém consegue confirmar sem ver a variável, e ver a variável é
+       * justamente o que não se deve fazer. Tamanho do client id e bytes do
+       * certificado bastam para comparar dois ambientes, e não servem para
+       * mais nada. Vai junto do erro quando o provedor recusa.
+       */
+      resumo?: Record<string, string | number>;
+    };
 
 /**
  * Decide o modo a partir do ambiente.
@@ -61,7 +75,9 @@ export function resolveProvider(): ModoDeCobranca {
   if (escolhido === "efi") {
     const r = lerConfigEfi();
     if (!r.ok) {
-      console.warn(`[cobrança] BILLING_PROVIDER=efi ignorado: ${r.motivo} Usando cobrança manual.`);
+      console.warn(
+        `[cobrança] BILLING_PROVIDER=efi ignorado: ${r.motivo} Usando cobrança manual.`
+      );
       return { modo: "manual" };
     }
     // O nome carrega o ambiente porque ele aparece no relatório da execução,
@@ -70,6 +86,7 @@ export function resolveProvider(): ModoDeCobranca {
       modo: "gateway",
       nome: `efi:${r.config.ambiente}`,
       gateway: new EfiGateway(r.config),
+      resumo: descreverConfig(r.config),
     };
   }
 

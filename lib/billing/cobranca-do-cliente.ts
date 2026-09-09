@@ -164,14 +164,15 @@ function renovavel(
 async function anotarFalhaDoProvedor(params: {
   chargeId: string;
   workspaceId: string;
-  provedor: string;
+  modo: ReturnType<typeof resolveProvider>;
   erro: unknown;
 }): Promise<void> {
   const motivo =
     params.erro instanceof Error ? params.erro.message : String(params.erro);
+  const provedor = nomeDoProvedor(params.modo);
 
   console.error(
-    `[cobrança] o provedor recusou o código Pix (${params.provedor}): ${motivo}`
+    `[cobrança] o provedor recusou o código Pix (${provedor}): ${motivo}`
   );
 
   await registrarEventoDePlataforma({
@@ -182,8 +183,13 @@ async function anotarFalhaDoProvedor(params: {
     resumo: "o provedor não gerou o código Pix",
     detalhes: {
       workspaceId: params.workspaceId,
-      provedor: params.provedor,
+      provedor,
       motivo,
+      // Sem isto, "a credencial está errada" fica sendo palpite: não dá para
+      // comparar dois ambientes sem ver a variável, e ver a variável é o que
+      // não se deve fazer. Tamanhos e formatos resolvem, e não revelam nada.
+      configuracao:
+        params.modo.modo === "gateway" ? (params.modo.resumo ?? null) : null,
     },
   });
 }
@@ -455,7 +461,7 @@ export async function gerarCobranca(
     await anotarFalhaDoProvedor({
       chargeId: criada.id,
       workspaceId,
-      provedor: nomeDoProvedor(modo),
+      modo,
       erro: e,
     });
     return {
@@ -552,7 +558,7 @@ async function renovarCobranca(
     await anotarFalhaDoProvedor({
       chargeId: linha.id,
       workspaceId,
-      provedor: nomeDoProvedor(modo),
+      modo,
       erro: e,
     });
     return {
