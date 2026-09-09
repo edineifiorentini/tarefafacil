@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { IconChevronDown } from "@tabler/icons-react";
+import { IconChevronDown, IconX } from "@tabler/icons-react";
 import { useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 
@@ -75,9 +75,25 @@ export function QuickAdd({
   const { openModal, closeModal } = useShell();
 
   // Fechado por padrão: o caminho rápido é o que faz este formulário valer.
-  // Quem abriu uma vez costuma abrir de novo, então fica aberto no registro
-  // seguinte — a preferência dura a sessão do painel, não vai para o banco.
-  const [detalhes, setDetalhes] = useState(false);
+  // **Nasce ABERTO desde 9/set/2026.** Fechado fazia sentido no painel de
+  // 400px, onde tudo junto virava rolagem; no modal há espaço, e obrigar um
+  // clique para ver prioridade, cliente e descrição só escondia o
+  // formulário de quem já sabia que ia usá-lo.
+  const [detalhes, setDetalhes] = useState(true);
+
+  // Subtarefas digitadas antes de a demanda existir. Ficam aqui até o
+  // insert, porque `subtask.task_id` aponta para uma tarefa que ainda não
+  // tem id.
+  const [subtarefas, setSubtarefas] = useState<string[]>([]);
+  const [novaSubtarefa, setNovaSubtarefa] = useState("");
+  const [gerarLink, setGerarLink] = useState(false);
+
+  function adicionarSubtarefa() {
+    const t = novaSubtarefa.trim();
+    if (!t) return;
+    setSubtarefas((atuais) => [...atuais, t]);
+    setNovaSubtarefa("");
+  }
 
   const {
     register,
@@ -111,12 +127,27 @@ export function QuickAdd({
 
   function onSubmit(data: QuickAddInput) {
     createTask.mutate(
-      { ...data, due_date: data.due_date || null },
+      { ...data, due_date: data.due_date || null, subtarefas, gerarLink },
       {
         onSuccess: (task) => {
           // Sem isto o botão não dava sinal nenhum de vida e a pessoa ficava
           // sem saber se a tarefa foi criada. O nome do setor no texto é o
           // que confirma que ela foi parar no lugar certo.
+          setSubtarefas([]);
+          setNovaSubtarefa("");
+          setGerarLink(false);
+
+          // A demanda existe mesmo quando o que vinha junto falhou. Dizer
+          // qual parte não veio é melhor que um "criada" que esconde a
+          // metade que faltou.
+          if (task.naoVeio.length > 0) {
+            toast.show({
+              message: `Tarefa criada, mas não foi possível criar ${task.naoVeio.join(" e ")}.`,
+              duration: 8000,
+            });
+            return;
+          }
+
           const setor = sectors.find((x) => x.id === data.sector_id)?.name;
           toast.show({
             message: setor ? `Tarefa criada em ${setor}` : "Tarefa criada",
@@ -320,8 +351,85 @@ export function QuickAdd({
             />
           </Campo>
 
-          {/* Anexo, subtarefa e tag não cabem aqui: precisam da tarefa já
-              salva para se pendurar nela. Ficam no painel de detalhe. */}
+          <Campo label="Subtarefas">
+            <div className="flex flex-col gap-2">
+              {subtarefas.length > 0 ? (
+                <ul className="flex flex-col gap-1">
+                  {subtarefas.map((t, i) => (
+                    <li
+                      key={`${t}-${i}`}
+                      className="border-line flex items-center gap-2 rounded-sm border px-2 py-1"
+                    >
+                      <span className="text-fg min-w-0 flex-1 truncate text-[length:var(--text-small-size)]">
+                        {t}
+                      </span>
+                      <button
+                        type="button"
+                        aria-label={`Remover subtarefa ${t}`}
+                        onClick={() =>
+                          setSubtarefas((atuais) =>
+                            atuais.filter((_, j) => j !== i)
+                          )
+                        }
+                        className="text-fg-muted hover:text-fg rounded-sm p-1"
+                      >
+                        <IconX size={14} stroke={1.5} aria-hidden />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+
+              <div className="flex items-center gap-2">
+                <TextInput
+                  size="sm"
+                  value={novaSubtarefa}
+                  onChange={(e) => setNovaSubtarefa(e.target.value)}
+                  // Enter adiciona a subtarefa e NÃO envia o formulário —
+                  // sem isto, digitar a primeira criaria a tarefa sem as
+                  // outras.
+                  onKeyDown={(e) => {
+                    if (e.key !== "Enter") return;
+                    e.preventDefault();
+                    adicionarSubtarefa();
+                  }}
+                  placeholder="Adicionar subtarefa"
+                  aria-label="Nova subtarefa"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={adicionarSubtarefa}
+                >
+                  Adicionar
+                </Button>
+              </div>
+            </div>
+          </Campo>
+
+          <label className="flex items-start gap-2">
+            <input
+              type="checkbox"
+              checked={gerarLink}
+              onChange={(e) => setGerarLink(e.target.checked)}
+              className="mt-1 h-4 w-4 shrink-0 accent-[var(--fill-brand)]"
+            />
+            <span>
+              <span className="text-fg block text-[length:var(--text-small-size)]">
+                Gerar link de acompanhamento para o cliente
+              </span>
+              <span className="text-fg-secondary block text-[length:var(--text-caption-size)]">
+                Vale 30 dias. O cliente vê só o que for publicado na aba
+                Aprovação — nenhum anexo interno.
+              </span>
+            </span>
+          </label>
+
+          {/* Anexo e tag continuam fora: precisam da tarefa salva para se
+              pendurar nela, e não têm como ser digitados antes. Subtarefa e
+              link entraram porque dá para juntar a informação agora e
+              criá-los logo depois do insert. */}
         </div>
       ) : null}
     </form>

@@ -132,12 +132,26 @@ export function useProjectTasks(workspaceId: string, projectId: string) {
   });
 }
 
+/**
+ * O que a criação leva junto além dos campos da tarefa.
+ *
+ * Fora do schema do formulário de propósito: são AÇÕES pedidas ali, não
+ * colunas de `task`. Misturá-las na validação faria o zod guardar coisas
+ * que nunca vão para a tabela.
+ */
+type ExtrasDaCriacao = {
+  /** Títulos digitados antes de a demanda existir. */
+  subtarefas?: string[];
+  /** Já abrir o acompanhamento para o cliente. */
+  gerarLink?: boolean;
+};
+
 export function useCreateTask(workspaceId: string) {
   const supabase = createClient();
   const qc = useQueryClient();
 
   return useMutation({
-    mutationFn: async (input: QuickAddInput) => {
+    mutationFn: async (input: QuickAddInput & ExtrasDaCriacao) => {
       const { data, error } = await supabase
         .from("task")
         .insert({
@@ -150,7 +164,48 @@ export function useCreateTask(workspaceId: string) {
         .select()
         .single();
       if (error) throw error;
-      return data;
+
+      // **O que vem a seguir só pode nascer DEPOIS da demanda existir**:
+      // `subtask.task_id` e `share_link.entity_id` apontam para ela.
+      //
+      // E falhar aqui NÃO desfaz a tarefa. Ela já está no banco; jogar erro
+      // faria a interface desfazer a criação otimista e sumir com uma
+      // demanda que existe — trocando um problema pequeno por um grande. O
+      // que não veio junto é devolvido para quem chamou avisar.
+      const naoVeio: string[] = [];
+
+      const titulos = (input.subtarefas ?? [])
+        .map((t) => t.trim())
+        .filter(Boolean);
+      if (titulos.length > 0) {
+        const { error: erro } = await supabase.from("subtask").insert(
+          titulos.map((title, i) => ({
+            workspace_id: workspaceId,
+            task_id: data.id,
+            title,
+            position: i,
+          }))
+        );
+        if (erro) naoVeio.push("as subtarefas");
+      }
+
+      if (input.gerarLink) {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        const expira = new Date();
+        expira.setDate(expira.getDate() + 30);
+        const { error: erro } = await supabase.from("share_link").insert({
+          workspace_id: workspaceId,
+          entity_type: "task",
+          entity_id: data.id,
+          expires_at: expira.toISOString(),
+          created_by: user?.id ?? null,
+        });
+        if (erro) naoVeio.push("o link do cliente");
+      }
+
+      return { ...data, naoVeio };
     },
     onMutate: async (input) => {
       await qc.cancelQueries({ queryKey: [TASKS, workspaceId] });
