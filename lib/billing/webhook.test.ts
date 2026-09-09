@@ -10,6 +10,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
  */
 
 const insert = vi.fn();
+/** O corpo do aviso só deve ser gravado depois de casar com uma fatura. */
+const atualizouEvento = vi.fn();
 const registrarPagamento = vi.fn();
 const registrarEvento = vi.fn();
 
@@ -28,7 +30,17 @@ const porColuna = vi.fn();
 vi.mock("@/lib/supabase/admin", () => ({
   createAdminClient: () => ({
     from: (tabela: string) => {
-      if (tabela === "payment_event") return { insert };
+      if (tabela === "payment_event") {
+        return {
+          insert,
+          update: (linha: Record<string, unknown>) => {
+            // O retorno do mock é o resultado do banco: assim um teste
+            // consegue fazer a gravação do corpo FALHAR de verdade.
+            const r = atualizouEvento(linha) ?? { error: null };
+            return { eq: () => ({ eq: async () => r }) };
+          },
+        };
+      }
       return {
         select: () => ({
           eq: () => ({
@@ -64,6 +76,7 @@ const AVISO = {
 
 beforeEach(() => {
   insert.mockReset().mockResolvedValue({ error: null });
+  atualizouEvento.mockReset();
   porHistorico
     .mockReset()
     .mockReturnValue({ id: "fatura-1", status: "aberta" });
@@ -208,5 +221,60 @@ describe("renovar o código não faz o pagamento anterior sumir", () => {
         resumo: "recebeu pagamento de uma fatura que já estava paga",
       })
     );
+  });
+});
+
+describe("o corpo do aviso só é guardado quando o aviso é nosso", () => {
+  /**
+   * O webhook do Pix é registrado por CHAVE, e a chave que recebe as
+   * cobranças do TAFLOW é a mesma que recebe boleto e carnê da empresa: a
+   * EFI notifica todo Pix que cai nela. O corpo carrega nome e documento de
+   * quem pagou — guardá-lo antes de saber de quem é seria acumular dado de
+   * gente que nunca ouviu falar do TAFLOW.
+   */
+  it("a trava de idempotência continua sendo a primeira coisa, e vai sem o corpo", async () => {
+    await processarAviso(AVISO);
+
+    expect(insert).toHaveBeenCalledWith({
+      provider: "efi",
+      external_id: "E123",
+    });
+    // Nada de payload no insert: a linha nasce sem ele.
+    expect(insert.mock.calls[0]?.[0]).not.toHaveProperty("payload");
+  });
+
+  it("Pix que não é do TAFLOW não deixa rastro de quem pagou", async () => {
+    porHistorico.mockReturnValue(null);
+    porColuna.mockReturnValue(null);
+
+    const r = await processarAviso({
+      ...AVISO,
+      payload: { pix: [{ pagador: { nome: "Alguém", cpf: "000" } }] } as never,
+    });
+
+    expect(r.acao).toBe("sem_fatura");
+    // O evento existe (idempotência), o corpo não.
+    expect(insert).toHaveBeenCalled();
+    expect(atualizouEvento).not.toHaveBeenCalled();
+  });
+
+  it("casou com uma fatura nossa: aí sim o corpo serve para conciliar", async () => {
+    const corpo = { pix: [{ txid: "txid-abc", valor: "99.00" }] } as never;
+
+    await processarAviso({ ...AVISO, payload: corpo });
+
+    expect(atualizouEvento).toHaveBeenCalledWith({ payload: corpo });
+  });
+
+  it("falhar em guardar o corpo não derruba a conciliação", async () => {
+    // O pagamento é o fato; perder a cópia do aviso é perder conveniência
+    // de investigação. Recusar o pagamento por causa disso seria trocar um
+    // problema pequeno por um grande.
+    atualizouEvento.mockReturnValue({ error: { message: "banco fora do ar" } });
+
+    const r = await processarAviso(AVISO);
+
+    expect(r.acao).toBe("quitou");
+    expect(registrarPagamento).toHaveBeenCalled();
   });
 });

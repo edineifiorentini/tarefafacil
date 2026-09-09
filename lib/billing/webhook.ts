@@ -90,10 +90,20 @@ export async function processarAviso(
   // REGRA 2, e ela vem antes de qualquer efeito: se este evento já foi
   // registrado, para aqui. O índice único é quem decide, não uma consulta
   // seguida de insert — entre a consulta e o insert cabe o segundo aviso.
+  //
+  // **A linha nasce SEM o corpo, e isso é regra 6.** O webhook do Pix é
+  // registrado por CHAVE, e a chave que recebe as cobranças do TAFLOW é a
+  // mesma que recebe boleto e carnê da empresa: a EFI notifica todo Pix que
+  // cai nela. O corpo de um aviso carrega nome e documento de quem pagou —
+  // guardá-lo antes de saber de quem é seria acumular dado de gente que
+  // nunca ouviu falar do TAFLOW. Ele entra depois, no `guardarCorpo`, e só
+  // quando o aviso casa com uma fatura nossa.
+  //
+  // A ordem não muda: a trava de idempotência continua sendo a primeira
+  // coisa a acontecer. O que mudou foi o que ela leva junto.
   const { error: erroEvento } = await db.from("payment_event").insert({
     provider: aviso.provedor,
     external_id: aviso.externalId,
-    payload: aviso.payload,
   });
 
   if (erroEvento) {
@@ -130,13 +140,19 @@ export async function processarAviso(
 
   if (!fatura) {
     // 200 de propósito (regra 3): pode ser cobrança criada fora daqui, ou de
-    // outro ambiente do mesmo provedor. Reenviar não vai fazer aparecer.
+    // outro ambiente do mesmo provedor, ou — o caso comum em produção — um
+    // Pix que caiu na chave da empresa sem ter nada a ver com o TAFLOW.
+    // Reenviar não vai fazer aparecer, e o corpo NÃO fica guardado.
     return {
       acao: "sem_fatura",
       status: 200,
       detalhe: `nenhuma fatura com ${aviso.providerChargeId}`,
     };
   }
+
+  // Daqui para baixo o aviso é comprovadamente sobre uma fatura nossa, e o
+  // corpo passa a ter uma razão para existir: conciliar o que entrou.
+  await guardarCorpo(db, aviso);
 
   if (fatura.status === "paga") {
     // **Isto não é o reenvio do mesmo aviso** — esse já parou na regra 2,
@@ -228,6 +244,30 @@ export async function processarAviso(
     status: 200,
     detalhe: `acesso estendido até ${resultado.acessoAte}`,
   };
+}
+
+/**
+ * Guarda o corpo do aviso, agora que se sabe que ele é nosso.
+ *
+ * Falha aqui não derruba a conciliação: o pagamento é o fato, e perder a
+ * cópia do aviso é perder conveniência de investigação. Por isso não há
+ * `throw` — o erro vai para o log e o processamento segue.
+ */
+async function guardarCorpo(
+  db: ReturnType<typeof createAdminClient>,
+  aviso: AvisoDePagamento
+): Promise<void> {
+  const { error } = await db
+    .from("payment_event")
+    .update({ payload: aviso.payload })
+    .eq("provider", aviso.provedor)
+    .eq("external_id", aviso.externalId);
+
+  if (error) {
+    console.error(
+      `[webhook/${aviso.provedor}] não guardou o corpo do aviso ${aviso.externalId}: ${error.message}`
+    );
+  }
 }
 
 /**

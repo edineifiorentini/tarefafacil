@@ -122,8 +122,19 @@ export function autenticar(
  * RESSALVA HONESTA: estes formatos vêm da documentação, não de tráfego real.
  * Nenhum provedor está conectado, então nunca chegou um aviso de verdade
  * aqui. Quando o primeiro chegar, é este arquivo que pode precisar de
- * ajuste — e é por isso que o corpo cru inteiro vai para `payment_event`:
- * dá para conferir o que veio sem depender de ter acertado a leitura.
+ * ajuste.
+ *
+ * ONDE OLHAR quando precisar desse ajuste, porque não é mais um lugar só:
+ *
+ *   - corpo que esta função NÃO reconhece sai no log da rota, cru e
+ *     inteiro — é exatamente o caso em que a leitura falhou;
+ *   - corpo reconhecido que casa com uma fatura nossa fica em
+ *     `payment_event`;
+ *   - corpo reconhecido que NÃO casa com fatura nenhuma não fica em lugar
+ *     nenhum, e isso é regra: a chave Pix que recebe as cobranças também
+ *     recebe boleto e carnê da empresa, então boa parte desses avisos é
+ *     sobre pagamento de terceiro. Guardá-los seria colecionar nome e
+ *     documento de gente que não tem nada a ver com o produto.
  */
 export function traduzir(
   provedor: ProvedorDeWebhook,

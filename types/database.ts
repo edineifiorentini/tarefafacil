@@ -1364,7 +1364,16 @@ export type Database = {
           external_id: string;
           payload?: Json | null;
         };
-        Update: never;
+        /**
+         * Só o corpo, e só depois de saber que o aviso é nosso.
+         *
+         * A linha nasce sem `payload` de propósito: a chave Pix que recebe as
+         * cobranças também recebe boleto e carnê da empresa, e a EFI notifica
+         * tudo que cai nela. O corpo carrega dados de quem pagou.
+         */
+        Update: {
+          payload?: Json | null;
+        };
         Relationships: [];
       };
       affiliate: {
