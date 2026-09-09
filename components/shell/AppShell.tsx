@@ -37,7 +37,7 @@ export function AppShell({
 }) {
   const router = useRouter();
   const workspace = useWorkspace();
-  const { mobileNavOpen, setMobileNavOpen } = useShell();
+  const { modal, panel, mobileNavOpen, setMobileNavOpen } = useShell();
   const { abrirNovaTarefa } = useTaskModal();
 
   // Sincronização de entrada do Google por polling (design 9.5, E16).
@@ -90,7 +90,17 @@ export function AppShell({
   }, [router, abrirNovaTarefa]);
 
   return (
-    <div className="flex h-dvh">
+    // **`inert` porque o Radix não estava escondendo o fundo.** Medido em
+    // 9/set/2026 com o modal aberto: os irmãos vazios do `body` ficavam com
+    // `aria-hidden`, e a aplicação inteira — a lista, a navegação, tudo —
+    // continuava sem marca nenhuma. O foco ficava preso (isso o FocusScope
+    // resolve), mas quem navega por leitor de tela ainda passeava pelo que
+    // estava atrás do diálogo.
+    //
+    // `inert` faz as duas coisas de uma vez e é atributo do padrão, não
+    // detalhe interno de biblioteca. O modal e o painel são portais no
+    // `body`, então ficam de fora desta subárvore e continuam alcançáveis.
+    <div className="flex h-dvh" inert={modal !== null || panel !== null}>
       {/* Sidebar — desktop (>=1024px). Vidro perolado, divisão só à direita. */}
       <aside className="tf-glass-edge hidden w-[248px] shrink-0 lg:block">
         <Sidebar
