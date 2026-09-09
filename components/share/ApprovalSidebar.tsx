@@ -1,6 +1,7 @@
 import { IconCheck, IconCircle, IconCircleDot } from "@tabler/icons-react";
 
 import { Avatar } from "@/components/ui/Avatar";
+import { MarkdownBasico } from "@/lib/markdown/basico";
 import type { PublicSubtask } from "@/lib/share/publicTask";
 
 /**
@@ -58,7 +59,10 @@ export function RequestBriefCard({
       <h2 className="ap-titulo-card mb-3">Sobre a solicitação</h2>
 
       {descricao ? (
-        <p className="ap-texto whitespace-pre-wrap">{descricao}</p>
+        // O MESMO renderizador da prévia do editor: se fossem caminhos
+        // diferentes, a prévia acabaria mentindo — e a primeira vez que
+        // isso aparecesse seria com o cliente olhando.
+        <MarkdownBasico texto={descricao} className="ap-texto" />
       ) : null}
 
       {entregaveis.length > 0 ? (

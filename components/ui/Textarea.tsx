@@ -1,11 +1,20 @@
 "use client";
 
 import { useCallback } from "react";
-import type { TextareaHTMLAttributes } from "react";
+import type { Ref, TextareaHTMLAttributes } from "react";
 
 export interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
   autogrow?: boolean;
   error?: boolean;
+  /**
+   * Quem precisa do elemento — o editor de marcação mexe na seleção para
+   * inserir os marcadores no lugar certo.
+   *
+   * Declarada porque este componente JÁ usa uma `ref` própria para o
+   * autogrow: sem compor as duas, quem passasse a sua perderia o ajuste de
+   * altura, ou o contrário.
+   */
+  ref?: Ref<HTMLTextAreaElement>;
 }
 
 function fit(el: HTMLTextAreaElement) {
@@ -18,14 +27,18 @@ export function Textarea({
   error = false,
   className,
   onInput,
+  ref,
   ...rest
 }: TextareaProps) {
-  // Ajusta a altura inicial (conteúdo pré-preenchido) sem effect.
+  // Ajusta a altura inicial (conteúdo pré-preenchido) sem effect, e entrega
+  // o elemento a quem pediu.
   const measure = useCallback(
     (el: HTMLTextAreaElement | null) => {
       if (el && autogrow) fit(el);
+      if (typeof ref === "function") ref(el);
+      else if (ref) ref.current = el;
     },
-    [autogrow]
+    [autogrow, ref]
   );
 
   const handleInput: NonNullable<

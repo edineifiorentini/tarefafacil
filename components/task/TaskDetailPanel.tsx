@@ -17,7 +17,7 @@ import { useShell } from "@/components/shell/shell-context";
 import { Select } from "@/components/ui/Select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
 import { TextInput } from "@/components/ui/TextInput";
-import { Textarea } from "@/components/ui/Textarea";
+import { MarkdownEditor } from "@/components/ui/MarkdownEditor";
 import { useClients } from "@/lib/queries/useClients";
 import { useSyncTaskEvent } from "@/lib/queries/useGcal";
 import { useMembers } from "@/lib/queries/useMembers";
@@ -448,12 +448,11 @@ function TaskDetailForm({
           </Field>
 
           <Field label="Descrição">
-            <Textarea
-              autogrow
+            <MarkdownEditor
               value={description ?? ""}
-              onChange={(e) => {
-                setDescription(e.target.value);
-                scheduleSave({ description: e.target.value || null });
+              onChange={(v) => {
+                setDescription(v);
+                scheduleSave({ description: v || null });
               }}
               placeholder="Adicione detalhes…"
               aria-label="Descrição"

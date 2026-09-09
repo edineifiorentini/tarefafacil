@@ -9,7 +9,7 @@ import { ModalFrame } from "@/components/shell/ModalFrame";
 import { useShell } from "@/components/shell/shell-context";
 import { Button } from "@/components/ui/Button";
 import { Select } from "@/components/ui/Select";
-import { Textarea } from "@/components/ui/Textarea";
+import { MarkdownEditor } from "@/components/ui/MarkdownEditor";
 import { TextInput } from "@/components/ui/TextInput";
 import { useToast } from "@/components/ui/Toast";
 import { useClients } from "@/lib/queries/useClients";
@@ -124,6 +124,7 @@ export function QuickAdd({
   const assigneeId = useWatch({ control, name: "assignee_id" });
   const clientId = useWatch({ control, name: "client_id" });
   const projectId = useWatch({ control, name: "project_id" });
+  const descricao = useWatch({ control, name: "description" });
 
   function onSubmit(data: QuickAddInput) {
     createTask.mutate(
@@ -343,9 +344,10 @@ export function QuickAdd({
           </div>
 
           <Campo label="Descrição">
-            <Textarea
-              {...register("description")}
-              rows={3}
+            <MarkdownEditor
+              value={descricao ?? ""}
+              onChange={(v) => setValue("description", v)}
+              rows={4}
               placeholder="O que precisa ser feito"
               aria-label="Descrição"
             />

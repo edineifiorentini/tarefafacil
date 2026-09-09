@@ -281,15 +281,43 @@ describe("briefing", () => {
   });
 
   it("preserva a quebra de linha do texto do cliente", () => {
-    render(
+    // A quebra vinha de `whitespace-pre-wrap`; desde 9/set/2026 a descrição
+    // passa pelo renderizador de marcação, que a transforma num `<br>`. O
+    // que este caso protege é a QUEBRA continuar existindo — o mecanismo é
+    // detalhe, e prender o teste a ele foi o que o fez falhar sem nada ter
+    // se quebrado.
+    const { container } = render(
       <RequestBriefCard
         descricao={"Primeira linha\nSegunda"}
         entregaveis={[]}
       />
     );
-    expect(screen.getByText(/Primeira linha/)).toHaveClass(
-      "whitespace-pre-wrap"
+    expect(container.querySelectorAll("br")).toHaveLength(1);
+    expect(container.textContent).toContain("Primeira linha");
+    expect(container.textContent).toContain("Segunda");
+  });
+
+  it("a marcação escrita na descrição chega desenhada ao cliente", () => {
+    const { container } = render(
+      <RequestBriefCard
+        descricao={"## Briefing\n- primeiro\n- segundo"}
+        entregaveis={[]}
+      />
     );
+    expect(container.querySelector("h4")?.textContent).toBe("Briefing");
+    expect(container.querySelectorAll("li")).toHaveLength(2);
+  });
+
+  it("HTML digitado na descrição NÃO vira HTML na página do cliente", () => {
+    // A fronteira que mais importa: esta página abre sem login.
+    const { container } = render(
+      <RequestBriefCard
+        descricao={"<script>alert(1)</script>"}
+        entregaveis={[]}
+      />
+    );
+    expect(container.querySelector("script")).toBeNull();
+    expect(container.textContent).toContain("<script>");
   });
 });
 
