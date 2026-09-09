@@ -11,18 +11,18 @@ import { PixCheckout } from "@/components/billing/PixCheckout";
 import { PlanChooser } from "@/components/billing/PlanChooser";
 import { daysLeft } from "@/components/billing/TrialBanner";
 import { formatCentsBRL } from "@/lib/finance/money";
+import { dataLongaDeInstanteBR, dataLongaPuraBR } from "@/lib/utils/fuso";
 import { createClient } from "@/lib/supabase/client";
 import { usePaymentStatus } from "@/lib/queries/usePaymentStatus";
 import { useWorkspace } from "@/lib/queries/useWorkspace";
 import type { BillingPlan } from "@/types/database";
 
-function dataLonga(iso: string): string {
-  return new Date(iso).toLocaleDateString("pt-BR", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  });
-}
+// `dataLonga` morava aqui e tratava as DUAS datas como instante. O
+// `access_expires_at` guarda uma data civil escrita como texto, e
+// `new Date(...).toLocaleDateString()` num navegador brasileiro devolvia o
+// dia anterior — a mesma data aparecia como "13 de outubro" no resumo e
+// "14/10" no card do pagamento. Cada uma tem agora a sua função, e o
+// comentário do porquê mora em `lib/utils/fuso.ts`.
 
 function Linha({
   icon: Icon,
@@ -162,7 +162,7 @@ export function SubscriptionCard() {
           <Linha
             icon={IconCalendarEvent}
             rotulo={acabou ? "Teste terminou em" : "Teste vai até"}
-            valor={dataLonga(workspace.trial_ends_at)}
+            valor={dataLongaDeInstanteBR(workspace.trial_ends_at)}
             chip={
               acabou
                 ? "Terminou"
@@ -178,7 +178,7 @@ export function SubscriptionCard() {
           <Linha
             icon={IconCalendarEvent}
             rotulo="Acesso liberado até"
-            valor={dataLonga(workspace.access_expires_at)}
+            valor={dataLongaPuraBR(workspace.access_expires_at)}
           />
         ) : null}
       </div>

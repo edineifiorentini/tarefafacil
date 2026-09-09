@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { dataDeInstanteBR, dataHoraBR, dataPuraBR } from "./fuso";
+import {
+  dataDeInstanteBR,
+  dataHoraBR,
+  dataLongaDeInstanteBR,
+  dataLongaPuraBR,
+  dataPuraBR,
+} from "./fuso";
 
 /**
  * Estes testes existem por um defeito que passou por typecheck, lint, 825
@@ -48,5 +54,51 @@ describe("data pura (coluna date)", () => {
 
   it("aceita a data com hora colada sem se confundir", () => {
     expect(dataPuraBR("2026-12-31")).toBe("31/12/2026");
+  });
+});
+
+describe("data civil por extenso não anda para trás", () => {
+  /**
+   * O defeito, visto na tela em 9/set/2026 com o MESMO dado escrito de dois
+   * jeitos ao mesmo tempo:
+   *
+   *     resumo da assinatura   "13 de outubro de 2026"
+   *     card do pagamento      "14/10/2026"
+   *
+   * `access_expires_at` é `timestamptz`, mas o que o `settle.ts` grava lá é
+   * o texto de uma data civil. O Postgres guarda meia-noite UTC, e
+   * `new Date(...).toLocaleDateString()` num navegador brasileiro devolve
+   * 21h do dia anterior.
+   */
+  it("meia-noite UTC continua sendo o mesmo dia", () => {
+    expect(dataLongaPuraBR("2026-10-14T00:00:00+00:00")).toBe(
+      "14 de outubro de 2026"
+    );
+  });
+
+  it("aceita a data pura sem hora nenhuma", () => {
+    expect(dataLongaPuraBR("2026-10-14")).toBe("14 de outubro de 2026");
+  });
+
+  it("vira do mês sem escorregar", () => {
+    expect(dataLongaPuraBR("2026-11-01T00:00:00+00:00")).toBe(
+      "01 de novembro de 2026"
+    );
+  });
+});
+
+describe("instante por extenso PRECISA do fuso", () => {
+  it("2h UTC é o dia anterior no Brasil", () => {
+    // `trial_ends_at` é `now() + 7 days` — instante de verdade. Aqui
+    // recortar a string mostraria o dia seguinte e esticaria o teste.
+    expect(dataLongaDeInstanteBR("2026-10-14T02:00:00Z")).toBe(
+      "13 de outubro de 2026"
+    );
+  });
+
+  it("meio-dia UTC é o mesmo dia", () => {
+    expect(dataLongaDeInstanteBR("2026-10-14T12:00:00Z")).toBe(
+      "14 de outubro de 2026"
+    );
   });
 });

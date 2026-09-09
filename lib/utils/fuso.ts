@@ -64,3 +64,46 @@ export function dataDeInstanteBR(iso: string): string {
 export function dataPuraBR(data: string): string {
   return data.slice(0, 10).split("-").reverse().join("/");
 }
+
+/**
+ * "14 de outubro de 2026" a partir de uma DATA CIVIL.
+ *
+ * Irmã por extenso da `dataPuraBR`, e existe pelo mesmo motivo — que
+ * apareceu na tela em 9/set/2026, com o mesmo dado escrito de dois jeitos:
+ *
+ *     resumo da assinatura   "13 de outubro de 2026"
+ *     card do pagamento      "14/10/2026"
+ *
+ * `access_expires_at` é `timestamptz` no banco, mas o que o `settle.ts`
+ * grava lá é o TEXTO de uma data civil ("2026-10-14"). O Postgres guarda
+ * meia-noite UTC; `new Date(...).toLocaleDateString()` no navegador
+ * brasileiro devolve 21h do dia anterior — e o acesso aparece vencendo um
+ * dia antes do que vale.
+ *
+ * `new Date(ano, mês, dia)` é meia-noite LOCAL e a formatação também é
+ * local: as duas pontas se cancelam, e nenhum fuso entra na conta.
+ */
+export function dataLongaPuraBR(data: string): string {
+  const [ano, mes, dia] = data.slice(0, 10).split("-").map(Number);
+  return new Date(ano, mes - 1, dia).toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  });
+}
+
+/**
+ * "14 de outubro de 2026" a partir de um INSTANTE (`timestamptz` de verdade).
+ *
+ * Para o que tem hora — `trial_ends_at` é `now() + interval '7 days'`, e o
+ * dia dele depende do fuso. Usar a irmã civil aqui esticaria ou encurtaria
+ * o teste em um dia na virada da meia-noite.
+ */
+export function dataLongaDeInstanteBR(iso: string): string {
+  return new Intl.DateTimeFormat("pt-BR", {
+    timeZone: FUSO,
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  }).format(new Date(iso));
+}
