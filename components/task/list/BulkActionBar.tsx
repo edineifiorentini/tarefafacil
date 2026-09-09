@@ -58,7 +58,7 @@ export function BulkActionBar({
         aria-label="Ações em lote"
         className="pointer-events-none fixed inset-x-0 bottom-4 z-30 flex justify-center px-4"
       >
-        <div className="tf-glass-strong border-line pointer-events-auto flex flex-wrap items-center gap-2 rounded-md border px-3 py-2 shadow-[var(--shadow-popover)] [animation:tf-rise_var(--dur-base)_var(--ease-out)]">
+        <div className="tf-glass-strong border-line pointer-events-auto flex [animation:tf-rise_var(--dur-base)_var(--ease-out)] flex-wrap items-center gap-2 rounded-md border px-3 py-2 shadow-[var(--shadow-popover)]">
           <span
             aria-live="polite"
             className="tnum text-fg px-1 text-[length:var(--text-small-size)] font-medium whitespace-nowrap"
@@ -144,8 +144,7 @@ export function BulkActionBar({
           <AlertDialog.Overlay className="fixed inset-0 z-50 bg-[var(--overlay)]" />
           <AlertDialog.Content className="tf-glass-strong border-line fixed top-1/2 left-1/2 z-50 w-[min(28rem,92vw)] -translate-x-1/2 -translate-y-1/2 rounded-md border p-5 text-left">
             <AlertDialog.Title className="text-fg text-[length:var(--text-h3-size)] font-semibold">
-              Excluir {quantidade}{" "}
-              {quantidade === 1 ? "demanda" : "demandas"}?
+              Excluir {quantidade} {quantidade === 1 ? "demanda" : "demandas"}?
             </AlertDialog.Title>
             <AlertDialog.Description className="text-fg-secondary mt-2 text-[length:var(--text-small-size)]">
               Isto não tem como desfazer. Se a intenção é tirar do fluxo sem

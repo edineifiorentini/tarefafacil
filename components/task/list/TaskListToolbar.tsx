@@ -220,7 +220,12 @@ function Seletor({
         <span className="truncate">
           <span className="text-fg-secondary">{prefixo}:</span> {atual}
         </span>
-        <IconChevronDown size={14} stroke={2} aria-hidden className="shrink-0" />
+        <IconChevronDown
+          size={14}
+          stroke={2}
+          aria-hidden
+          className="shrink-0"
+        />
       </DropdownMenu.Trigger>
       <DropdownMenu.Portal>
         <DropdownMenu.Content
@@ -317,8 +322,8 @@ function Visualizacoes({
               </Button>
             </div>
             <p className="text-fg-muted text-[length:var(--text-caption-size)]">
-              Guarda busca, filtros, agrupamento e ordenação — neste
-              navegador. Ainda não acompanha entre aparelhos.
+              Guarda busca, filtros, agrupamento e ordenação — neste navegador.
+              Ainda não acompanha entre aparelhos.
             </p>
           </form>
 

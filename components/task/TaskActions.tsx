@@ -2,7 +2,16 @@
 
 import { useState } from "react";
 
-import { IconBan, IconDots, IconRotate, IconTrash } from "@tabler/icons-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+
+import {
+  IconArrowsMaximize,
+  IconBan,
+  IconDots,
+  IconRotate,
+  IconTrash,
+} from "@tabler/icons-react";
 import { DropdownMenu } from "radix-ui";
 
 import { ConfirmDeleteDialog } from "./ConfirmDeleteDialog";
@@ -25,17 +34,23 @@ import { ConfirmDeleteDialog } from "./ConfirmDeleteDialog";
  * demanda escrito, para quem clicar conferir que é a certa.
  */
 export function TaskActions({
+  taskId,
   titulo,
   cancelada,
   onAlternarCancelamento,
   onExcluir,
 }: {
+  taskId: string;
   titulo: string;
   cancelada: boolean;
   onAlternarCancelamento: () => void;
   onExcluir: () => void;
 }) {
   const [confirmando, setConfirmando] = useState(false);
+  const caminho = usePathname();
+  // Já estamos na página cheia? Oferecer "abrir em página cheia" de dentro
+  // dela seria um link que não leva a lugar nenhum.
+  const naPaginaCheia = caminho?.startsWith("/tarefa/") ?? false;
 
   return (
     <>
@@ -56,6 +71,24 @@ export function TaskActions({
             // cima, senão abre atrás e parece que o botão não fez nada.
             className="border-line bg-card z-[95] min-w-[220px] rounded-md border p-1 shadow-[var(--shadow-panel)] data-[state=open]:[animation:tf-pop-in_var(--dur-fast)_var(--ease-out)]"
           >
+            {/* O modal é bom para consulta rápida e criação. Quem passa a
+                tarde dentro de uma demanda merece a tela inteira — e é a
+                MESMA tela, montada com os mesmos componentes. */}
+            {naPaginaCheia ? null : (
+              <>
+                <DropdownMenu.Item asChild>
+                  <Link
+                    href={`/tarefa/${taskId}`}
+                    className="text-fg hover:bg-hover data-[highlighted]:bg-hover flex cursor-pointer items-center gap-2 rounded-sm px-2 py-2 text-[length:var(--text-small-size)] outline-none"
+                  >
+                    <IconArrowsMaximize size={16} stroke={1.5} aria-hidden />
+                    Abrir em página completa
+                  </Link>
+                </DropdownMenu.Item>
+                <DropdownMenu.Separator className="bg-line my-1 h-px" />
+              </>
+            )}
+
             <DropdownMenu.Item
               onSelect={onAlternarCancelamento}
               className="text-fg hover:bg-hover data-[highlighted]:bg-hover flex cursor-pointer items-center gap-2 rounded-sm px-2 py-2 text-[length:var(--text-small-size)] outline-none"

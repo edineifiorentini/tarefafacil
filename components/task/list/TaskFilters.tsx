@@ -260,9 +260,7 @@ function Varios({
                 : "border-line text-fg-secondary hover:border-line-strong"
             }`}
           >
-            {marcado ? (
-              <IconCheck size={12} stroke={2.5} aria-hidden />
-            ) : null}
+            {marcado ? <IconCheck size={12} stroke={2.5} aria-hidden /> : null}
             {o.label}
           </button>
         );

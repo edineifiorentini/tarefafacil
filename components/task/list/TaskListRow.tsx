@@ -189,7 +189,10 @@ export function TaskListRow({
           mesmo espaço de propósito: somar uma coluna só para dois botões que
           quase sempre estão invisíveis desperdiçaria a largura que o título
           precisa. */}
-      <div className="relative flex justify-end" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="relative flex justify-end"
+        onClick={(e) => e.stopPropagation()}
+      >
         <span className="transition-opacity [transition-duration:var(--dur-fast)] group-focus-within:opacity-0 group-hover:opacity-0">
           <TaskDeadline prazo={prazo} />
         </span>

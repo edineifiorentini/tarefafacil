@@ -8,6 +8,7 @@ import { Dialog } from "radix-ui";
 
 import { TrialBanner } from "@/components/billing/TrialBanner";
 import { GcalReconnectBanner } from "@/components/gcal/GcalReconnectBanner";
+import { TaskUrlSync } from "@/components/task/TaskUrlSync";
 import { useTaskModal } from "@/components/task/useTaskModal";
 import { useGcalPoller } from "@/lib/queries/useGcal";
 import { useWorkspace } from "@/lib/queries/useWorkspace";
@@ -145,6 +146,7 @@ export function AppShell({
       {/* Painel de detalhe */}
       <DetailPanel />
       <CenterModal />
+      <TaskUrlSync />
     </div>
   );
 }

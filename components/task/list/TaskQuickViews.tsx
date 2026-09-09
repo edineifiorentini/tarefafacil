@@ -68,7 +68,10 @@ export function TaskQuickViews({
               }`}
               style={
                 ativa
-                  ? { background: "color-mix(in srgb, currentColor 14%, transparent)" }
+                  ? {
+                      background:
+                        "color-mix(in srgb, currentColor 14%, transparent)",
+                    }
                   : undefined
               }
             >

@@ -9,6 +9,8 @@ import {
   IconX,
 } from "@tabler/icons-react";
 import { useRef, useState } from "react";
+
+import { usePathname, useRouter } from "next/navigation";
 import type { ReactNode } from "react";
 
 import { useShell } from "@/components/shell/shell-context";
@@ -80,6 +82,8 @@ export function TaskDetailPanel({ taskId }: { taskId: string }) {
   // `closePanel` virou no-op — excluir deixava o modal aberto mostrando uma
   // tarefa que já não existe.
   const { closeModal } = useShell();
+  const router = useRouter();
+  const caminho = usePathname();
 
   const [status, setStatus] = useState<SaveStatus>("idle");
   const pending = useRef<TablesUpdate<"task">>({});
@@ -173,6 +177,7 @@ export function TaskDetailPanel({ taskId }: { taskId: string }) {
             visível o tempo todo, ao lado dos campos que se edita, é convite
             a um clique errado que não tem desfazer. */}
         <TaskActions
+          taskId={taskId}
           titulo={task.title}
           cancelada={cancelled}
           onAlternarCancelamento={() =>
@@ -181,6 +186,9 @@ export function TaskDetailPanel({ taskId }: { taskId: string }) {
           onExcluir={() => {
             deleteTask(task);
             closeModal();
+            // Na página cheia não há modal para fechar: quem excluiu ficaria
+            // olhando a tela de uma tarefa que acabou de deixar de existir.
+            if (caminho?.startsWith("/tarefa/")) router.push("/lista");
           }}
         />
       </div>
