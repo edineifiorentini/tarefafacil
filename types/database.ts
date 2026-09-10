@@ -637,6 +637,22 @@ export type Database = {
            */
           purged_at: string | null;
           purge_reason: PurgeReason | null;
+          /**
+           * Agrupa as versões de uma mesma peça (0093). A v01 aponta para
+           * si mesma, então nunca há linha órfã.
+           */
+          material_id: string;
+          /**
+           * Número da versão dentro do material.
+           *
+           * **Imutável**: subir arte nova cria linha nova, nunca reescreve
+           * a anterior. É o que faz "o cliente aprovou a v01" continuar
+           * verdadeiro depois da v02.
+           */
+          versao: number;
+          /** Nulo = rascunho, visível só por dentro. */
+          publicado_em: string | null;
+          mensagem_ao_cliente: string | null;
           created_at: string;
         };
         Insert: {
@@ -654,6 +670,10 @@ export type Database = {
           entregavel?: boolean;
           purged_at?: string | null;
           purge_reason?: PurgeReason | null;
+          material_id?: string;
+          versao?: number;
+          publicado_em?: string | null;
+          mensagem_ao_cliente?: string | null;
         };
         Update: {
           /** Publicar é ato explícito, por arquivo (0083). */
@@ -672,6 +692,10 @@ export type Database = {
           purged_at?: string | null;
           purge_reason?: PurgeReason | null;
           created_at?: string;
+          material_id?: string;
+          versao?: number;
+          publicado_em?: string | null;
+          mensagem_ao_cliente?: string | null;
         };
         Relationships: [];
       };
@@ -2142,6 +2166,15 @@ export type Database = {
        * Devolve `null` quando não havia o que renovar: fatura paga,
        * cancelada, ou já renovada por outro pedido no mesmo instante.
        */
+      /**
+       * Libera uma versão para o cliente e tira do ar as anteriores do
+       * mesmo material (0093). Nada é apagado — o que muda é qual versão o
+       * link mostra.
+       */
+      publicar_material: {
+        Args: { p_attachment: string; p_mensagem?: string | null };
+        Returns: boolean;
+      };
       renovar_cobranca: {
         Args: {
           p_charge_id: string;
@@ -2195,6 +2228,16 @@ export type Database = {
           p_decision: "aprovado" | "ajuste";
           p_comment?: string | null;
           p_author?: string | null;
+          /**
+           * A versão que o cliente analisou (0093).
+           *
+           * **Opcional, e continuar opcional é a regra**: link já enviado a
+           * cliente chama esta função com quatro argumentos, e precisa
+           * continuar funcionando. Id que não seja desta demanda, ou que
+           * não esteja publicado, vira nulo — a resposta é gravada assim
+           * mesmo, em vez de deixar alguém sem conseguir aprovar.
+           */
+          p_attachment_id?: string | null;
         };
         Returns: boolean;
       };
