@@ -9,6 +9,7 @@ import {
 import { isPlatformAdmin } from "@/lib/admin/admin";
 import { Providers } from "@/components/providers";
 import { AppShell } from "@/components/shell/AppShell";
+import { TutorialAutoStart } from "@/components/tutorial/TutorialAutoStart";
 import { ShellProvider } from "@/components/shell/shell-context";
 import { AccessExpired } from "@/components/workspace/AccessExpired";
 import { EscolherMarca } from "@/components/onboarding/EscolherMarca";
@@ -42,7 +43,9 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
     .from("app_user")
     // O fuso viaja nesta consulta que já existia: uma ida a menos ao
     // banco, e o cliente recebe o valor pronto em vez de perguntar depois.
-    .select("onboarding_completed_at, timezone")
+    // `tutorial_visto_em` pega carona pelo mesmo motivo que o fuso: uma
+    // ida a menos ao banco, e o cliente recebe o valor pronto.
+    .select("onboarding_completed_at, timezone, tutorial_visto_em")
     .eq("id", user.id)
     .maybeSingle();
   if (perfil && !perfil.onboarding_completed_at) {
@@ -133,36 +136,44 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
         />
       ) : null}
       <FusoProvider fuso={perfil?.timezone ?? FUSO_PADRAO}>
-      <WorkspaceProvider workspace={workspace}>
-        {/* Primeiro acesso: a empresa escolhe a cor antes de entrar (0084).
+        <WorkspaceProvider workspace={workspace}>
+          {/* Primeiro acesso: a empresa escolhe a cor antes de entrar (0084).
             Fica DENTRO do WorkspaceProvider porque a tela precisa da
             empresa, e ANTES da casca porque ela substitui o app, não se
             sobrepõe — quem ainda não escolheu não tem o que fazer atrás
             dela. `brand_escolhida_em` nulo é o único gatilho: a cor sozinha
             não distingue "não perguntei" de "escolheu o padrão". */}
-        {workspace.brand_escolhida_em === null ? (
-          <EscolherMarca />
-        ) : (
-        <PomodoroProvider>
-          <ShellProvider>
-            <AppShell
-              sectors={sectors ?? []}
-              workspaces={workspaces}
-              isAdmin={admin}
-              commercialOpen={
-                cookieStore.get(NAV_COMMERCIAL_COOKIE)?.value === "1"
-              }
-              // `!== "0"` e não `=== "1"`: os setores nascem ABERTOS.
-              // Quem nunca tocou no botão não tem cookie, e não pode
-              // perder de vista a lista que organiza o trabalho todo.
-              sectorsOpen={cookieStore.get(NAV_SECTORS_COOKIE)?.value !== "0"}
-            >
-              {children}
-            </AppShell>
-          </ShellProvider>
-        </PomodoroProvider>
-        )}
-      </WorkspaceProvider>
+          {workspace.brand_escolhida_em === null ? (
+            <EscolherMarca />
+          ) : (
+            <PomodoroProvider>
+              <ShellProvider>
+                <AppShell
+                  sectors={sectors ?? []}
+                  workspaces={workspaces}
+                  isAdmin={admin}
+                  commercialOpen={
+                    cookieStore.get(NAV_COMMERCIAL_COOKIE)?.value === "1"
+                  }
+                  // `!== "0"` e não `=== "1"`: os setores nascem ABERTOS.
+                  // Quem nunca tocou no botão não tem cookie, e não pode
+                  // perder de vista a lista que organiza o trabalho todo.
+                  sectorsOpen={
+                    cookieStore.get(NAV_SECTORS_COOKIE)?.value !== "0"
+                  }
+                >
+                  {/* Dentro da casca porque o guia abre no modal dela — e
+                  DEPOIS do seletor de cor, que substitui o app inteiro:
+                  os dois na mesma tela seriam duas esperas empilhadas. */}
+                  <TutorialAutoStart
+                    jaViu={perfil?.tutorial_visto_em !== null}
+                  />
+                  {children}
+                </AppShell>
+              </ShellProvider>
+            </PomodoroProvider>
+          )}
+        </WorkspaceProvider>
       </FusoProvider>
     </Providers>
   );

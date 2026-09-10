@@ -4,6 +4,7 @@ import {
   IconBuildingStore,
   IconCamera,
   IconChevronDown,
+  IconHelp,
   IconKey,
   IconLogout,
   IconMenu2,
@@ -17,6 +18,7 @@ import { DropdownMenu } from "radix-ui";
 import { useState } from "react";
 
 import { useTaskModal } from "@/components/task/useTaskModal";
+import { useTutorial } from "@/components/tutorial/useTutorial";
 import { Avatar } from "@/components/ui/Avatar";
 import { NotificationBell } from "@/components/workspace/NotificationBell";
 import { useCurrentUserId, useMembers } from "@/lib/queries/useMembers";
@@ -94,6 +96,7 @@ export function TopBar({ isAdmin }: { isAdmin: boolean }) {
   const router = useRouter();
   const workspace = useWorkspace();
   const { setMobileNavOpen } = useShell();
+  const { abrirTutorial } = useTutorial();
   const { abrirNovaTarefa } = useTaskModal();
   const { data: myId } = useCurrentUserId();
   const { data: members = [] } = useMembers(workspace.id);
@@ -170,6 +173,21 @@ export function TopBar({ isAdmin }: { isAdmin: boolean }) {
         >
           <IconSearch size={20} stroke={1.75} />
         </Link>
+
+        {/* Ao lado da busca porque é onde se procura ajuda, e antes do
+            sino porque o sino é sobre o que ACONTECEU — este é sobre como
+            as coisas funcionam. Fica para sempre: serve tanto a quem chegou
+            hoje quanto a quem usa há seis meses e esqueceu como funciona o
+            link do cliente. */}
+        <button
+          type="button"
+          onClick={abrirTutorial}
+          aria-label="Como usar o TAFLOW"
+          title="Como usar o TAFLOW"
+          className="text-fg-secondary hover:bg-hover hover:text-fg inline-flex h-11 w-11 items-center justify-center rounded-sm transition-colors [transition-duration:var(--dur-fast)]"
+        >
+          <IconHelp size={20} stroke={1.75} />
+        </button>
 
         <NotificationBell />
 

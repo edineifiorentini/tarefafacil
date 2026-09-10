@@ -309,6 +309,13 @@ export type Database = {
           timezone: string;
           /** Quando a pessoa terminou o cadastro. Null = falta preencher. */
           onboarding_completed_at: string | null;
+          /**
+           * Quando a pessoa viu (ou fechou) o guia de boas-vindas (0097).
+           *
+           * Nulo é o único gatilho da abertura automática. Abrir já carimba:
+           * fechar na hora é uma resposta, e não um adiamento.
+           */
+          tutorial_visto_em: string | null;
           created_at: string;
         };
         Insert: {
@@ -329,6 +336,7 @@ export type Database = {
           locale?: string;
           timezone?: string;
           onboarding_completed_at?: string | null;
+          tutorial_visto_em?: string | null;
           created_at?: string;
         };
         Relationships: [];

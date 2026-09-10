@@ -18,6 +18,16 @@ Datas no formato dia/mês/ano.
 
 ## 10/set/2026
 
+**Um guia dentro do sistema.** O botão de interrogação, ao lado da busca,
+abre um passo a passo do que não é evidente: a diferença entre setor,
+projeto e cliente; o ciclo de aprovação; o que o link do cliente mostra e o
+que ele esconde; por que subtarefa não vira compromisso na agenda; como o
+espaço da empresa funciona. Quem entra pela primeira vez encontra o guia
+aberto — e pode fechá-lo e usar o sistema na hora, sem percorrer nada.
+
+Ele explica as decisões, não os botões: cada tela já diz o que faz, e o que
+ninguém adivinha é o motivo por trás das regras.
+
 **Os campos de prioridade, responsável, cliente e projeto voltaram a
 funcionar na nova tarefa.** Eles abriam a lista de opções ATRÁS da própria
 janela, e pareciam mortos. Valia para qualquer lista de escolha dentro de
