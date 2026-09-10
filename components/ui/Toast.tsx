@@ -89,7 +89,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
           // precisa. Este token inverte entre os temas (grafite no claro,
           // quase-branco no escuro), então contrasta com a página nos dois.
           // Verde está fora: é reservado a dado financeiro positivo.
-          className="fixed bottom-4 left-1/2 z-[100] flex max-w-[calc(100vw-2rem)] -translate-x-1/2 [animation:tf-toast-in_var(--dur-base)_var(--ease-out)] items-center gap-1 rounded-md bg-[var(--button-primary-bg)] p-1 shadow-[var(--shadow-card-hover)]"
+          className="fixed bottom-4 left-1/2 z-[var(--z-aviso)] flex max-w-[calc(100vw-2rem)] -translate-x-1/2 [animation:tf-toast-in_var(--dur-base)_var(--ease-out)] items-center gap-1 rounded-md bg-[var(--button-primary-bg)] p-1 shadow-[var(--shadow-card-hover)]"
         >
           {clicavel ? (
             // A superfície inteira é o alvo — quem quer ver a tarefa clica no

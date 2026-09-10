@@ -1402,3 +1402,26 @@ button:not(:disabled),
     animation: none;
   }
 }
+
+/* ---------------------------------------------------------- popovers
+   Todo popover do Radix — Select, DropdownMenu, Popover, Tooltip,
+   HoverCard, Menubar — sai por este mesmo invólucro. Elevá-lo aqui vale
+   para os 51 componentes que os usam de uma vez, inclusive os que ninguém
+   abriu ainda dentro de um modal.
+
+   **Uma regra, e não 51 edições.** A ordem certa não é opinião de cada
+   tela: um popover pertence à superfície que o convocou e tem de pintar
+   por cima dela. Escrito componente a componente, isso vira 51 chances de
+   alguém escolher o número errado — foi assim que os campos da nova tarefa
+   passaram a abrir atrás do modal.
+
+   `!important` é necessário: o Radix escreve `z-index` inline no
+   invólucro, e folha de estilo não vence style de atributo sem ele.
+
+   Efeito colateral bem-vindo: o invólucro passa a ser contexto de
+   empilhamento, então os `z-50` que já estão dentro dos conteúdos viram
+   locais — deixam de disputar com o resto da página e não precisam ser
+   caçados um por um. */
+[data-radix-popper-content-wrapper] {
+  z-index: var(--z-popover) !important;
+}

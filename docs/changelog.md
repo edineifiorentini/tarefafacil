@@ -18,6 +18,12 @@ Datas no formato dia/mês/ano.
 
 ## 10/set/2026
 
+**Os campos de prioridade, responsável, cliente e projeto voltaram a
+funcionar na nova tarefa.** Eles abriam a lista de opções ATRÁS da própria
+janela, e pareciam mortos. Valia para qualquer lista de escolha dentro de
+uma janela — o conserto foi na ordem de sobreposição do sistema inteiro, não
+só nesses quatro.
+
 **Material de aprovação agora tem versão.** Antes, subir a arte corrigida
 substituía a anterior no lugar — e o "aprovado" que o cliente tinha dado
 continuava lá, agora apontando para um arquivo que ele nunca viu. Cada envio

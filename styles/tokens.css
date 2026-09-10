@@ -148,6 +148,33 @@
   --font-weight-semibold: 600;
   --font-weight-bold: 680;
 
+  /* ------------------------------------------------------ empilhamento
+     A escada de sobreposição, escrita de uma vez só.
+
+     **Ela existe porque a ordem estava espalhada por 74 componentes.** Cada
+     tela escolheu um número quando precisou, e ninguém tinha como saber que
+     `z-50` — o valor de todo popover do app — passou a ficar ABAIXO do
+     modal no dia em que o modal nasceu com 85. O sintoma, encontrado em
+     10/set/2026: os campos de prioridade, responsável, cliente e projeto da
+     nova tarefa abriam a lista atrás do próprio modal, e pareciam mortos.
+
+     A regra que a escada guarda: **popover vem acima de qualquer
+     superfície**, porque ele é sempre convocado por uma. É o único degrau
+     que não pode ser escolhido caso a caso. */
+  --z-conteudo: 10;
+  --z-grudado: 30;
+  --z-navegacao: 40;
+  --z-painel: 50;
+  --z-modal-fundo: 80;
+  --z-modal: 85;
+  /* Confirmação nasce DE DENTRO do modal e precisa cobri-lo. */
+  --z-confirmacao-fundo: 90;
+  --z-confirmacao: 95;
+  --z-popover: 200;
+  /* O aviso é a última palavra: ele reporta o resultado do que estava
+     acontecendo em qualquer um dos degraus acima. */
+  --z-aviso: 300;
+
   /* Movimento (7.8) — janela de 180–260ms com curva suave */
   --dur-fast: 140ms;
   --dur-base: 200ms;
@@ -228,7 +255,6 @@
      chega perto da manchete. Mexer aqui exige medir o contraste. */
   --auth-shard-fill: rgba(245, 247, 242, 0.15);
   --auth-shard-edge: rgba(245, 247, 242, 0.36);
-
 
   /* Halo do foco e do scanner. É DECORAÇÃO: quem indica o foco de verdade
      é `--auth-focus-ring`, que muda com o tema.
@@ -622,9 +648,9 @@
     --text-muted: #7d8799;
     --text-on-brand: #ffffff;
     /* Tinta vira nuvem no escuro: grafite sobre fundo escuro some. */
-  --marca-tinta: #f5f7f2; /* cloud white */
-  --marca-acento: #c7ff38;
-  --logo-plate: rgba(255, 255, 255, 0.92);
+    --marca-tinta: #f5f7f2; /* cloud white */
+    --marca-acento: #c7ff38;
+    --logo-plate: rgba(255, 255, 255, 0.92);
     --logo-plate-pad: 6px;
     --border: rgba(255, 255, 255, 0.08);
     --border-strong: rgba(255, 255, 255, 0.14);
