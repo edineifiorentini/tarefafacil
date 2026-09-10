@@ -22,6 +22,7 @@ function resposta(
     decision,
     comment,
     author_name: "Cliente",
+    attachment_id: null,
     created_at,
   };
 }

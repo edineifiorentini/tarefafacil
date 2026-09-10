@@ -1,7 +1,6 @@
 "use client";
 
 import { IconCheck, IconPencil } from "@tabler/icons-react";
-import { useQuery } from "@tanstack/react-query";
 import { parseISO } from "date-fns";
 
 import {
@@ -9,9 +8,8 @@ import {
   approvalState,
   revisionCount,
 } from "@/lib/share/approval";
-import { createClient } from "@/lib/supabase/client";
+import { useTaskApprovals } from "@/lib/queries/useApprovals";
 import { useWorkspace } from "@/lib/queries/useWorkspace";
-import type { TaskApproval } from "@/types/database";
 
 function quando(iso: string): string {
   return parseISO(iso).toLocaleString("pt-BR", {
@@ -19,26 +17,6 @@ function quando(iso: string): string {
     month: "2-digit",
     hour: "2-digit",
     minute: "2-digit",
-  });
-}
-
-function useTaskApprovals(workspaceId: string, taskId: string) {
-  const supabase = createClient();
-  return useQuery({
-    queryKey: ["taskApprovals", taskId],
-    queryFn: async (): Promise<TaskApproval[]> => {
-      const { data, error } = await supabase
-        .from("task_approval")
-        .select("*")
-        .eq("workspace_id", workspaceId)
-        .eq("task_id", taskId)
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data;
-    },
-    // O cliente responde quando quer; enquanto o painel está aberto, vale
-    // olhar de vez em quando.
-    refetchInterval: 30_000,
   });
 }
 

@@ -71,6 +71,8 @@ export function MediaArea({
           onEscolher={setAtual}
         />
 
+        <RecadoDaVersao arquivo={arquivos[indice]} />
+
         <p
           className="ap-meta border-t px-4 py-3"
           style={{ borderColor: "var(--ap-linha)" }}
@@ -78,6 +80,44 @@ export function MediaArea({
           O download será liberado após a aprovação desta versão.
         </p>
       </div>
+    </div>
+  );
+}
+
+/**
+ * O que mudou nesta versão, na voz de quem produziu (0093).
+ *
+ * **"Versão 1" não aparece, e é de propósito.** Numerar o primeiro envio
+ * não informa nada — o cliente não tem com o que comparar — e ainda sugere
+ * um processo do qual ele não participou. A partir da segunda o número
+ * responde a pergunta que ele realmente tem: "isto já é a correção que eu
+ * pedi?".
+ *
+ * O recado é texto puro, escrito num campo comum e desenhado como texto:
+ * nada aqui interpreta marcação, nem HTML.
+ */
+function RecadoDaVersao({ arquivo }: { arquivo: PublicDeliverable }) {
+  const mostrarVersao = arquivo.versao > 1;
+  if (!mostrarVersao && !arquivo.mensagemAoCliente) return null;
+
+  return (
+    <div
+      className="flex flex-col gap-1 border-t px-4 py-3"
+      style={{ borderColor: "var(--ap-linha)" }}
+    >
+      {mostrarVersao ? (
+        <p
+          className="text-[length:var(--text-caption-size)] font-medium"
+          style={{ color: "var(--ap-tinta)" }}
+        >
+          Versão {arquivo.versao}
+        </p>
+      ) : null}
+      {arquivo.mensagemAoCliente ? (
+        <p className="ap-texto whitespace-pre-wrap">
+          {arquivo.mensagemAoCliente}
+        </p>
+      ) : null}
     </div>
   );
 }

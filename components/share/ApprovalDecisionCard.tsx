@@ -32,6 +32,7 @@ export function ApprovalDecisionCard({
   token,
   demanda,
   totalDeMateriais,
+  versaoId,
   ultimaDecisao,
   ultimaEm,
 }: {
@@ -48,6 +49,17 @@ export function ApprovalDecisionCard({
    * arquivos ficaram de fora.
    */
   totalDeMateriais: number;
+  /**
+   * A versão que esta resposta carimba (0093), quando não há dúvida de qual é.
+   *
+   * **Nulo quando há mais de um material publicado**, e isso é a resposta
+   * certa, não uma falta. A aprovação é da DEMANDA — sempre foi (0064) — e
+   * o clique não escolheu arquivo nenhum; apontar um deles inventaria uma
+   * precisão que não houve. Com uma peça só, não há ambiguidade: é dela que
+   * o cliente está falando, e é isso que faz "ele aprovou a v01" continuar
+   * verdadeiro depois de a v02 subir.
+   */
+  versaoId: string | null;
   ultimaDecisao: Decisao | null;
   ultimaEm: string | null;
 }) {
@@ -74,6 +86,7 @@ export function ApprovalDecisionCard({
       p_decision: decisao,
       p_comment: comentario.trim() || null,
       p_author: nome.trim() || null,
+      p_attachment_id: versaoId,
     });
 
     setEnviando(false);
@@ -124,10 +137,11 @@ export function ApprovalDecisionCard({
           </div>
         </div>
 
-        {/* Nenhum botão de download aqui. A liberação do arquivo final
-            depende de o sistema saber QUAL versão foi aprovada, e o modelo
-            atual não guarda versão de anexo — está no roadmap. Prometer o
-            download e não entregar seria pior que não prometer. */}
+        {/* Continua sem botão de download, e agora por outro motivo. A
+            versão aprovada o banco já sabe (0093); o que não existe é a
+            regra de negócio do que "liberar o final" significa — arquivo
+            aberto, marca d'água removida, prazo. Isso é decisão do dono,
+            não invenção de tela. */}
       </section>
     );
   }

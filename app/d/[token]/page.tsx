@@ -1,6 +1,7 @@
 import { IconCalendar, IconEyeOff } from "@tabler/icons-react";
 import type { Metadata } from "next";
 
+import { versaoDaAprovacao } from "@/lib/aprovacao/ciclo";
 import { ApprovalDecisionCard } from "@/components/share/ApprovalDecisionCard";
 import { ApprovalPageHeader } from "@/components/share/ApprovalPageHeader";
 import {
@@ -11,11 +12,7 @@ import {
 import { MediaArea } from "@/components/share/MediaArea";
 import { readSharedTask } from "@/lib/share/publicTask";
 import { createAdminClient } from "@/lib/supabase/admin";
-import {
-  dataDeInstanteBR,
-  dataHoraBR,
-  dataPuraBR,
-} from "@/lib/utils/fuso";
+import { dataDeInstanteBR, dataHoraBR, dataPuraBR } from "@/lib/utils/fuso";
 
 /**
  * A área pública de aprovação. Quem abre não tem conta.
@@ -142,7 +139,9 @@ export default async function SharedTaskPage({
               <IconCalendar size={14} stroke={1.75} aria-hidden />
               Atualizado em {dataHoraBR(view.updatedAt)}
             </span>
-            {view.dueDate ? <span>Prazo: {dataPuraBR(view.dueDate)}</span> : null}
+            {view.dueDate ? (
+              <span>Prazo: {dataPuraBR(view.dueDate)}</span>
+            ) : null}
           </p>
         </header>
 
@@ -184,9 +183,12 @@ export default async function SharedTaskPage({
                 token={token}
                 demanda={view.title}
                 totalDeMateriais={view.entregaveis.length}
+                versaoId={versaoDaAprovacao(view.entregaveis)}
                 ultimaDecisao={view.lastDecision}
                 ultimaEm={
-                  view.lastDecisionAt ? dataDeInstanteBR(view.lastDecisionAt) : null
+                  view.lastDecisionAt
+                    ? dataDeInstanteBR(view.lastDecisionAt)
+                    : null
                 }
               />
             )}

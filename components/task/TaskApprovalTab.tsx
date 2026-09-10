@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 
-import { AttachmentList } from "./AttachmentList";
+import { ApprovalMaterials } from "./ApprovalMaterials";
 import { ApprovalHistory } from "./ApprovalHistory";
 import { SharePanel } from "./SharePanel";
 
@@ -32,9 +32,9 @@ export function TaskApprovalTab({
     <div className="flex flex-col gap-6">
       <Secao
         titulo="Materiais para aprovação"
-        apoio="O cliente vê estes arquivos pelo link. Anexos internos não aparecem aqui."
+        apoio="Enviar deixa a peça em rascunho. O cliente só vê depois de publicada."
       >
-        <AttachmentList taskId={taskId} filtro="aprovacao" />
+        <ApprovalMaterials workspaceId={workspaceId} taskId={taskId} />
       </Secao>
 
       <Secao

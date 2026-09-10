@@ -37,6 +37,8 @@ function arquivo(p: Partial<PublicDeliverable>): PublicDeliverable {
     tipo: "imagem",
     sizeBytes: 240_000,
     retiradoEm: null,
+    versao: 1,
+    mensagemAoCliente: null,
     ...p,
   };
 }
@@ -321,6 +323,66 @@ describe("briefing", () => {
   });
 });
 
+// ------------------------------------------------------- versão e recado
+describe("a versão que o cliente está vendo", () => {
+  it("no primeiro envio NÃO diz 'versão 1'", () => {
+    render(
+      <MediaArea
+        token={TOKEN}
+        arquivos={[arquivo({ versao: 1 })]}
+        aprovado={false}
+      />
+    );
+    expect(screen.queryByText(/Versão 1/)).not.toBeInTheDocument();
+  });
+
+  it("da segunda em diante diz qual é", () => {
+    render(
+      <MediaArea
+        token={TOKEN}
+        arquivos={[arquivo({ versao: 2 })]}
+        aprovado={false}
+      />
+    );
+    expect(screen.getByText("Versão 2")).toBeInTheDocument();
+  });
+
+  it("mostra o recado que acompanha a peça", () => {
+    render(
+      <MediaArea
+        token={TOKEN}
+        arquivos={[
+          arquivo({ versao: 2, mensagemAoCliente: "aumentei o logo" }),
+        ]}
+        aprovado={false}
+      />
+    );
+    expect(screen.getByText("aumentei o logo")).toBeInTheDocument();
+  });
+
+  /**
+   * O recado é escrito num campo comum por quem produz, e chega aqui como
+   * texto. Desenhado como texto, marcação não vira elemento — a mesma
+   * garantia que a descrição da demanda já tinha.
+   */
+  it("recado com HTML aparece como texto, não como elemento", () => {
+    const { container } = render(
+      <MediaArea
+        token={TOKEN}
+        arquivos={[
+          arquivo({
+            versao: 2,
+            mensagemAoCliente: "<script>alert(1)</script> pronto",
+          }),
+        ]}
+        aprovado={false}
+      />
+    );
+    expect(container.querySelector("script")).toBeNull();
+    expect(container.textContent).toContain("<script>");
+  });
+});
+
 // -------------------------------------------------------------- decisão
 describe("decisão do cliente", () => {
   function montar(
@@ -333,6 +395,7 @@ describe("decisão do cliente", () => {
         token={TOKEN}
         demanda="Campanha conscientização"
         totalDeMateriais={3}
+        versaoId={null}
         ultimaDecisao={null}
         ultimaEm={null}
         {...over}
@@ -379,6 +442,7 @@ describe("decisão do cliente", () => {
       p_decision: "aprovado",
       p_comment: null,
       p_author: null,
+      p_attachment_id: null,
     });
     expect(await screen.findByText("Aprovação registrada")).toBeInTheDocument();
   });
@@ -415,7 +479,29 @@ describe("decisão do cliente", () => {
       p_decision: "ajuste",
       p_comment: "Trocar a cor do fundo",
       p_author: "Maria",
+      p_attachment_id: null,
     });
+  });
+
+  /**
+   * O ponto todo da 0093: a resposta precisa dizer O QUE foi aprovado. Sem
+   * este carimbo, "o cliente aprovou" continuaria apontando para o que
+   * estivesse publicado no dia em que alguém fosse conferir.
+   */
+  it("com uma peça publicada, a resposta carimba a versão", async () => {
+    montar({ versaoId: "aaaaaaaa-1111-1111-1111-111111111111" });
+    await userEvent.click(
+      screen.getByRole("button", { name: /Aprovar esta versão/ })
+    );
+    await userEvent.click(
+      screen.getByRole("button", { name: /Confirmar aprovação/ })
+    );
+    expect(rpc).toHaveBeenCalledWith(
+      "record_task_approval",
+      expect.objectContaining({
+        p_attachment_id: "aaaaaaaa-1111-1111-1111-111111111111",
+      })
+    );
   });
 
   it("link expirado no meio do caminho vira mensagem, não silêncio", async () => {

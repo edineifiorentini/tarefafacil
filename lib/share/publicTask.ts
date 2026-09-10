@@ -62,6 +62,16 @@ export type PublicDeliverable = {
   /** Só para exibir "2,4 MB". Não é usado para autorizar nada. */
   sizeBytes: number | null;
   /**
+   * Qual versão desta peça está no ar (0093).
+   *
+   * O cliente precisa saber que está olhando a segunda tentativa: sem isso,
+   * quem pediu ajuste na semana passada abre o link, vê uma arte e não tem
+   * como saber se é a corrigida ou a mesma de antes.
+   */
+  versao: number;
+  /** O recado que acompanha ESTA versão — "ajustei o rodapé". */
+  mensagemAoCliente: string | null;
+  /**
    * Quando o arquivo saiu do servidor por prazo (0086), se saiu.
    *
    * O item continua na lista de propósito. Sumir com ele deixaria o cliente
@@ -180,9 +190,14 @@ export async function readSharedTask(token: string): Promise<ShareResult> {
       .order("position", { ascending: true }),
     // Só `entregavel`. O filtro é aqui, no servidor, e não na tela: máscara
     // visual não é controle de acesso (§15).
+    // `entregavel` continua sendo o filtro, e desde a 0093 ele quer dizer
+    // "É ESTA a versão publicada": publicar a v02 tira a v01 do ar na mesma
+    // transação. O link mostra a peça atual, nunca a pilha.
     db
       .from("attachment")
-      .select("id, filename, mime_type, kind, size_bytes, purged_at")
+      .select(
+        "id, filename, mime_type, kind, size_bytes, purged_at, versao, mensagem_ao_cliente"
+      )
       .eq("task_id", link.entity_id)
       .eq("entregavel", true)
       .eq("kind", "file")
@@ -233,6 +248,8 @@ export async function readSharedTask(token: string): Promise<ShareResult> {
         tipo: classificar(a.mime_type),
         sizeBytes: a.size_bytes,
         retiradoEm: a.purged_at,
+        versao: a.versao,
+        mensagemAoCliente: a.mensagem_ao_cliente,
       })),
       updatedAt: task.updated_at,
       orgName: org?.name ?? null,

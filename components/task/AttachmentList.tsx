@@ -8,7 +8,7 @@ import {
   IconLoader2,
   IconPaperclip,
   IconPhoto,
-  IconEye,
+  IconSend,
   IconTrash,
 } from "@tabler/icons-react";
 import { useRef, useState } from "react";
@@ -22,7 +22,7 @@ import {
   useAttachmentImageUrl,
   useAttachments,
   useDeleteAttachment,
-  useMarcarEntregavel,
+  useEnviarParaAprovacao,
   useSignedUrl,
   useUploadAttachment,
 } from "@/lib/queries/useAttachments";
@@ -48,14 +48,14 @@ function ImageAttachmentRow({
   attachment,
   onOpen,
   onDelete,
-  onToggleEntregavel,
+  onParaAprovacao,
 }: {
   attachment: Attachment;
   onOpen: () => void;
   onDelete: () => void;
   /** Imagem é o que o criativo costuma ser — sem isto o botão faltaria
       justamente no arquivo que mais precisa dele. */
-  onToggleEntregavel: () => void;
+  onParaAprovacao: () => void;
 }) {
   const { data: url, isError } = useAttachmentImageUrl(
     attachment.storage_key,
@@ -114,21 +114,12 @@ function ImageAttachmentRow({
       </HoverCard.Root>
       <button
         type="button"
-        onClick={onToggleEntregavel}
-        aria-pressed={attachment.entregavel}
-        title={
-          attachment.entregavel
-            ? "O cliente vê esta imagem no link público"
-            : "Mostrar ao cliente no link público"
-        }
-        aria-label={`${attachment.entregavel ? "Ocultar do" : "Mostrar no"} link do cliente: ${attachment.filename}`}
-        className={`shrink-0 transition-opacity ${
-          attachment.entregavel
-            ? "text-fg-link opacity-100"
-            : "text-fg-muted hover:text-fg opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
-        }`}
+        onClick={onParaAprovacao}
+        title="Mover para a aba Aprovação como rascunho"
+        aria-label={`Enviar para aprovação: ${attachment.filename}`}
+        className="text-fg-muted hover:text-fg shrink-0 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
       >
-        <IconEye size={14} stroke={1.5} />
+        <IconSend size={14} stroke={1.5} />
       </button>
       <button
         type="button"
@@ -145,15 +136,20 @@ function ImageAttachmentRow({
 /**
  * Filtro da lista.
  *
- * **A separação é regra, não organização de tela.** O que está marcado
- * `entregavel` aparece para o cliente pelo link público (0083); o resto é
- * material de trabalho — briefing, referência, print, contrato. Misturar os
- * dois numa lista só foi o que fez a distinção depender de alguém reparar
- * num ícone.
+ * **A separação é regra, não organização de tela.** O material do cliente
+ * tem trilha própria (0096) e tela própria — `ApprovalMaterials`, que sabe
+ * de versão, publicação e resposta. Aqui fica o material de trabalho:
+ * briefing, referência, print, contrato. Misturar os dois numa lista só foi
+ * o que fez a distinção depender de alguém reparar num ícone.
+ *
+ * **`aprovacao` saiu de propósito.** Enquanto existiu, esta lista sabia
+ * marcar `entregavel` e mais nada — publicar sem carimbar data nem tirar a
+ * versão anterior do ar, que é o estado inconsistente que a 0093 veio
+ * acabar. Deixar a opção viva seria deixar o caminho velho aberto.
  *
  * `todos` continua existindo para quem monta a lista fora do modal.
  */
-export type FiltroDeAnexo = "todos" | "internos" | "aprovacao";
+export type FiltroDeAnexo = "todos" | "internos";
 
 export function AttachmentList({
   taskId,
@@ -165,13 +161,9 @@ export function AttachmentList({
   const workspace = useWorkspace();
   const { data: todos = [] } = useAttachments(workspace.id, taskId);
   const attachments =
-    filtro === "todos"
-      ? todos
-      : todos.filter((a) =>
-          filtro === "aprovacao" ? a.entregavel : !a.entregavel
-        );
+    filtro === "todos" ? todos : todos.filter((a) => !a.para_aprovacao);
   const { upload } = useUploadAttachment(workspace.id, taskId);
-  const marcar = useMarcarEntregavel(workspace.id, taskId);
+  const paraAprovacao = useEnviarParaAprovacao(workspace.id, taskId);
   const addLink = useAddAttachmentLink(workspace.id, taskId);
   const del = useDeleteAttachment(workspace.id, taskId);
   const signedUrl = useSignedUrl();
@@ -255,8 +247,8 @@ export function AttachmentList({
               attachment={a}
               onOpen={() => void openAttachment(a)}
               onDelete={() => del.mutate(a.id)}
-              onToggleEntregavel={() =>
-                marcar.mutate({ id: a.id, entregavel: !a.entregavel })
+              onParaAprovacao={() =>
+                paraAprovacao.mutate({ id: a.id, paraAprovacao: true })
               }
             />
           );
@@ -286,30 +278,21 @@ export function AttachmentList({
                 />
               ) : null}
             </button>
-            {/* Só arquivo: link externo já é público por natureza, e o
-                cliente pode abri-lo sem nós no meio. */}
-            {a.kind === "file" ? (
-              <button
-                type="button"
-                onClick={() =>
-                  marcar.mutate({ id: a.id, entregavel: !a.entregavel })
-                }
-                aria-pressed={a.entregavel}
-                title={
-                  a.entregavel
-                    ? "O cliente vê este arquivo no link público"
-                    : "Mostrar ao cliente no link público"
-                }
-                aria-label={`${a.entregavel ? "Ocultar do" : "Mostrar no"} link do cliente: ${a.filename}`}
-                className={`shrink-0 transition-opacity ${
-                  a.entregavel
-                    ? "text-fg-link opacity-100"
-                    : "text-fg-muted hover:text-fg opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
-                }`}
-              >
-                <IconEye size={14} stroke={1.5} />
-              </button>
-            ) : null}
+            {/* Link externo entra também: o Drive é a saída de quem bate
+                na cota (§14), e material grande é justamente o que vai para
+                o cliente. Ele não ganha versão — o arquivo não é nosso —,
+                mas pertence à trilha como qualquer outra peça. */}
+            <button
+              type="button"
+              onClick={() =>
+                paraAprovacao.mutate({ id: a.id, paraAprovacao: true })
+              }
+              title="Mover para a aba Aprovação como rascunho"
+              aria-label={`Enviar para aprovação: ${a.filename}`}
+              className="text-fg-muted hover:text-fg shrink-0 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
+            >
+              <IconSend size={14} stroke={1.5} />
+            </button>
             <button
               type="button"
               onClick={() => del.mutate(a.id)}
@@ -358,9 +341,7 @@ export function AttachmentList({
 
       {attachments.length === 0 ? (
         <p className="text-fg-muted text-[length:var(--text-caption-size)]">
-          {filtro === "aprovacao"
-            ? "Nenhum material publicado para o cliente ainda."
-            : "Nenhum anexo por aqui."}
+          Nenhum anexo por aqui.
         </p>
       ) : null}
 

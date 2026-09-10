@@ -16,6 +16,42 @@ Datas no formato dia/mês/ano.
 
 ---
 
+## 10/set/2026
+
+**Material de aprovação agora tem versão.** Antes, subir a arte corrigida
+substituía a anterior no lugar — e o "aprovado" que o cliente tinha dado
+continuava lá, agora apontando para um arquivo que ele nunca viu. Cada envio
+passa a ser uma versão própria: v01, v02, v03, cada uma com a resposta que o
+cliente deu a ela.
+
+Na aba **Aprovação** de cada demanda você vê a peça, em que pé ela está e o
+histórico completo — "v02 aguardando o cliente", "v01 ajustes pedidos", com o
+que ele escreveu ao lado.
+
+**Enviar não publica mais.** O arquivo entra como rascunho: você revisa,
+escreve um recado ao cliente se quiser ("aumentei o logo") e só então aperta
+publicar. Enquanto isso o cliente continua vendo a versão anterior, ou nada,
+se ainda não houve nenhuma. Antes, marcar o arquivo já o colocava no ar — um
+passo a menos e um acidente a mais.
+
+**O cliente vê qual versão está olhando.** A partir da segunda, a página de
+aprovação diz "Versão 2" e mostra o recado que acompanha a peça. Quem pediu
+ajuste na semana passada abre o link e sabe se aquilo já é a correção.
+
+**A resposta dele fica amarrada à versão.** "O cliente aprovou" passou a ter
+sujeito: aprovou a v02. Subir uma v03 faz a demanda voltar a aguardar, como
+deveria — e o que ele aprovou antes continua registrado onde estava. Numa
+demanda com mais de uma peça publicada a aprovação continua sendo da demanda
+inteira, como sempre foi.
+
+**Anexo de trabalho e material do cliente ficaram em listas separadas de
+verdade.** Briefing, referência e contrato ficam na aba Trabalho; o que vai
+para o cliente vive na aba Aprovação, com o ciclo inteiro. Um anexo que você
+já subiu em Trabalho pode ser enviado para aprovação pelo botão da linha —
+ele entra como rascunho, sem ir para o cliente.
+
+---
+
 ## 4/set/2026
 
 **A tolerância de pagamento virou ajuste do painel.** É quantos dias o

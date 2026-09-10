@@ -653,6 +653,15 @@ export type Database = {
           /** Nulo = rascunho, visível só por dentro. */
           publicado_em: string | null;
           mensagem_ao_cliente: string | null;
+          /**
+           * A peça pertence à trilha de aprovação do cliente (0096).
+           *
+           * **Não é o mesmo que `entregavel`.** Aquele diz se ESTA versão é
+           * a que o cliente vê agora; este diz de quem é a peça. Uma v01
+           * substituída continua sendo material do cliente, e um rascunho
+           * ainda não publicado já é.
+           */
+          para_aprovacao: boolean;
           created_at: string;
         };
         Insert: {
@@ -674,6 +683,7 @@ export type Database = {
           versao?: number;
           publicado_em?: string | null;
           mensagem_ao_cliente?: string | null;
+          para_aprovacao?: boolean;
         };
         Update: {
           /** Publicar é ato explícito, por arquivo (0083). */
@@ -696,6 +706,7 @@ export type Database = {
           versao?: number;
           publicado_em?: string | null;
           mensagem_ao_cliente?: string | null;
+          para_aprovacao?: boolean;
         };
         Relationships: [];
       };
@@ -1634,6 +1645,15 @@ export type Database = {
           comment: string | null;
           /** O nome digitado pelo visitante. Não é identificação. */
           author_name: string | null;
+          /**
+           * A VERSÃO que o cliente analisou (0093).
+           *
+           * Nula nas respostas anteriores à migration e nas que chegam por
+           * link antigo — e também quando a demanda tinha mais de uma peça
+           * publicada, porque aí a aprovação é da demanda e não de um
+           * arquivo. O histórico não é reescrito com um palpite.
+           */
+          attachment_id: string | null;
           created_at: string;
         };
         // Quem grava é `record_task_approval`, não o cliente.

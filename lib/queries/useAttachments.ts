@@ -13,7 +13,17 @@ import { sanitizeFilename, validateFile } from "@/lib/utils/file-type";
 import type { Attachment } from "@/types/database";
 
 const BUCKET = "attachments";
-const MAX_PER_TASK = 20;
+
+/**
+ * Teto de linhas por demanda.
+ *
+ * **Subiu de 20 para 60 na 0093**, e não por generosidade: versão agora é
+ * LINHA. Uma demanda com quatro peças e cinco idas e vindas bate em vinte
+ * sem ter vinte arquivos, e a pessoa ficaria travada no meio de um ciclo
+ * de aprovação. Quem protege o servidor é a cota por empresa (§14), que
+ * conta bytes; este número existe só para uma lista continuar legível.
+ */
+const MAX_PER_TASK = 60;
 
 function attachmentsKey(workspaceId: string, taskId: string) {
   return ["attachments", workspaceId, taskId] as const;
@@ -93,13 +103,47 @@ export function useAttachments(workspaceId: string, taskId: string) {
   });
 }
 
+/**
+ * Para onde o arquivo vai ao ser enviado.
+ *
+ * O padrão — objeto vazio — é o de sempre: anexo de trabalho, primeira
+ * versão de si mesmo. Quem envia pela aba de aprovação pede a trilha do
+ * cliente; quem sobe uma correção informa de que peça ela é versão.
+ */
+export type DestinoDoEnvio = {
+  /** Nasce na trilha do cliente, como RASCUNHO — o cliente não vê (0096). */
+  paraAprovacao?: boolean;
+  /** Nova versão de uma peça que já existe. */
+  material?: { id: string; proximaVersao: number };
+};
+
+/**
+ * Duas pessoas subindo a v02 da mesma peça no mesmo minuto.
+ *
+ * O índice único `(material_id, versao)` da 0093 recusa a segunda, e é
+ * exatamente para isso que ele existe — sem ele as duas nasceriam "v02" e
+ * o histórico passaria a mentir. Aqui o erro do banco vira frase.
+ */
+function traduzirErroDeVersao(erro: { code?: string; message: string }) {
+  if (erro.code === "23505") {
+    return new Error(
+      "Alguém publicou uma versão desta peça agora. Recarregue e envie de novo."
+    );
+  }
+  return new Error(erro.message);
+}
+
 export function useUploadAttachment(workspaceId: string, taskId: string) {
   const supabase = createClient();
   const qc = useQueryClient();
   const key = attachmentsKey(workspaceId, taskId);
 
   const upload = useCallback(
-    async (file: File, onProgress: (fraction: number) => void) => {
+    async (
+      file: File,
+      onProgress: (fraction: number) => void,
+      destino: DestinoDoEnvio = {}
+    ) => {
       const current = qc.getQueryData<Attachment[]>(key) ?? [];
       if (current.length >= MAX_PER_TASK) {
         throw new Error(`Máximo de ${MAX_PER_TASK} anexos por tarefa`);
@@ -157,8 +201,19 @@ export function useUploadAttachment(workspaceId: string, taskId: string) {
         mime_type: validation.mime,
         size_bytes: file.size,
         uploaded_by: user?.id ?? null,
+        // Peça nova não manda `material_id`: o gatilho da 0095 a aponta
+        // para si mesma. Mandar `undefined` daqui seria repetir no
+        // aplicativo uma regra que o banco já garante para todo mundo que
+        // escreve nesta tabela.
+        ...(destino.material
+          ? {
+              material_id: destino.material.id,
+              versao: destino.material.proximaVersao,
+            }
+          : {}),
+        ...(destino.paraAprovacao ? { para_aprovacao: true } : {}),
       });
-      if (error) throw error;
+      if (error) throw traduzirErroDeVersao(error);
 
       await Promise.all([
         qc.invalidateQueries({ queryKey: key }),
@@ -181,9 +236,12 @@ export function useAddAttachmentLink(workspaceId: string, taskId: string) {
     mutationFn: async ({
       url,
       filename,
+      paraAprovacao = false,
     }: {
       url: string;
       filename: string;
+      /** Link do Drive enviado como material do cliente (0096). */
+      paraAprovacao?: boolean;
     }) => {
       const { error } = await supabase.from("attachment").insert({
         workspace_id: workspaceId,
@@ -191,6 +249,7 @@ export function useAddAttachmentLink(workspaceId: string, taskId: string) {
         kind: "link",
         external_url: url,
         filename,
+        ...(paraAprovacao ? { para_aprovacao: true } : {}),
       });
       if (error) throw error;
     },
@@ -285,14 +344,13 @@ export function useSignedUrl() {
 }
 
 /**
- * Marca (ou desmarca) um anexo como entregável ao cliente (0083).
+ * Tira do ar a versão que o cliente está vendo (0083, 0093).
  *
- * **É um ato de publicação, não uma etiqueta.** Marcado, o arquivo passa a
- * sair pelo link público da demanda — por isso a tela precisa deixar isso
- * explícito, e por isso o padrão no banco é `false`.
- *
- * Só arquivo: link externo já é público por natureza e o cliente pode
- * abri-lo sem nós no meio.
+ * **Publicar não passa mais por aqui.** Desde a 0093 quem publica é
+ * `publicar_material`, que precisa carimbar a data, guardar o recado e
+ * tirar as versões anteriores do ar — três coisas que um `update` de um
+ * campo não faz. O que sobrou para este é o caminho de volta: parar de
+ * mostrar, sem apagar nada e sem perder o histórico.
  */
 export function useMarcarEntregavel(workspaceId: string, taskId: string) {
   const supabase = createClient();
@@ -303,6 +361,73 @@ export function useMarcarEntregavel(workspaceId: string, taskId: string) {
       const { error } = await supabase
         .from("attachment")
         .update({ entregavel: p.entregavel })
+        .eq("id", p.id)
+        // Empresa no WHERE, não só na permissão.
+        .eq("workspace_id", workspaceId);
+      if (error) throw error;
+    },
+    onSettled: () =>
+      qc.invalidateQueries({ queryKey: attachmentsKey(workspaceId, taskId) }),
+  });
+}
+
+// ---------------------------------------------------------------- ciclo
+
+/**
+ * Publica uma versão para o cliente (0093).
+ *
+ * Vai por RPC e não por `update` porque publicar são três escritas que
+ * precisam acontecer juntas: a versão anterior sai do ar, esta entra, e a
+ * data de publicação é carimbada uma única vez — republicar a mesma peça
+ * não reescreve quando ela foi ao ar pela primeira vez.
+ *
+ * A mensagem é opcional e pertence à VERSÃO, não à demanda: "ajustei o
+ * texto do rodapé" só faz sentido ao lado da peça em que o rodapé mudou.
+ */
+export function usePublicarMaterial(workspaceId: string, taskId: string) {
+  const supabase = createClient();
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (p: { id: string; mensagem: string | null }) => {
+      const { data, error } = await supabase.rpc("publicar_material", {
+        p_attachment: p.id,
+        p_mensagem: p.mensagem,
+      });
+      if (error) throw error;
+      // `false` é a resposta para uma peça que a RLS não deixa ver — de
+      // outra empresa, ou apagada entre abrir a tela e clicar.
+      if (data === false) {
+        throw new Error(
+          "Esta peça não está mais disponível. Recarregue a página."
+        );
+      }
+    },
+    onSettled: () => {
+      void qc.invalidateQueries({
+        queryKey: attachmentsKey(workspaceId, taskId),
+      });
+    },
+  });
+}
+
+/**
+ * Move um anexo de trabalho para a trilha do cliente (0096).
+ *
+ * **Não publica.** A peça passa a aparecer na aba de aprovação como
+ * rascunho, e o cliente continua sem ver nada — publicar segue sendo o ato
+ * explícito que o dono pediu. É o atalho de quem anexou a arte em
+ * "Trabalho" por estar ali e agora quer enviá-la.
+ */
+export function useEnviarParaAprovacao(workspaceId: string, taskId: string) {
+  const supabase = createClient();
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (p: { id: string; paraAprovacao: boolean }) => {
+      const { error } = await supabase
+        .from("attachment")
+        .update({ para_aprovacao: p.paraAprovacao })
         .eq("id", p.id)
         // Empresa no WHERE, não só na permissão.
         .eq("workspace_id", workspaceId);
