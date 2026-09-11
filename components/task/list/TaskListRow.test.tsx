@@ -194,3 +194,38 @@ describe("abrir a demanda", () => {
     expect(props.onOpen).not.toHaveBeenCalled();
   });
 });
+
+describe("prazo reprogramado (0099)", () => {
+  it("a célula marca a reprogramação e diz o original a quem não vê a marca", () => {
+    montar({
+      task: tarefa({
+        due_date: "2030-01-20",
+        prazo_original: "2030-01-10",
+        prazo_motivo: "aguardando_cliente",
+      }),
+    });
+    expect(
+      screen.getByText(
+        ", reprogramado — original 10 jan, Aguardando retorno do cliente"
+      )
+    ).toBeInTheDocument();
+  });
+
+  it("prazo igual ao original não é reprogramação", () => {
+    montar({
+      task: tarefa({ due_date: "2030-01-20", prazo_original: "2030-01-20" }),
+    });
+    expect(screen.queryByText(/reprogramado/)).not.toBeInTheDocument();
+  });
+
+  it("cancelada não carrega a marca", () => {
+    montar({
+      task: tarefa({
+        due_date: "2030-01-20",
+        prazo_original: "2030-01-10",
+        cancelled_at: "2026-09-02T10:00:00-03:00",
+      }),
+    });
+    expect(screen.queryByText(/reprogramado/)).not.toBeInTheDocument();
+  });
+});

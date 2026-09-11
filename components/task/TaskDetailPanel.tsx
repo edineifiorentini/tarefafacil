@@ -2,13 +2,15 @@
 
 import {
   IconBan,
+  IconCalendar,
+  IconCalendarRepeat,
   IconCheck,
   IconClock,
   IconLoader2,
   IconPlus,
   IconX,
 } from "@tabler/icons-react";
-import { useRef, useState } from "react";
+import { useId, useRef, useState } from "react";
 
 import { usePathname, useRouter } from "next/navigation";
 import type { ReactNode } from "react";
@@ -50,6 +52,15 @@ import { TaskActions } from "./TaskActions";
 import { TaskApprovalTab } from "./TaskApprovalTab";
 import { ordenarDestinos, type DestinoId } from "@/lib/tarefas/destinos";
 import { DestinosSelector } from "./destinos/DestinosSelector";
+import { Button } from "@/components/ui/Button";
+import { dataPuraBR } from "@/lib/utils/fuso";
+import { useTaskActivity } from "@/lib/queries/useTaskActivity";
+import {
+  ehDataDePrazoPlausivel,
+  foiReprogramada,
+  rotuloDoMotivo,
+} from "@/lib/tarefas/reprogramacao";
+import { ReprogramarPrazoDialog } from "./prazo/ReprogramarPrazoDialog";
 
 const PRIORITIES = [
   { value: "sem_prioridade", label: "Sem prioridade" },
@@ -154,31 +165,63 @@ function TaskDetailForm({
   const [destinos, setDestinos] = useState<DestinoId[]>(
     ordenarDestinos(task.destinos ?? [])
   );
+  // Reprogramação (0099). A contagem vem do histórico — a mesma consulta da
+  // aba Atividade, que por isso já abre pronta.
+  const [reprogramando, setReprogramando] = useState(false);
+  // O campo de data fica aberto enquanto o PRIMEIRO prazo é escolhido, e só
+  // vira botão quando o foco sai dele: trocar no primeiro dígito tiraria o
+  // campo da mão de quem ainda digita o ano.
+  const [definindoPrazo, setDefinindoPrazo] = useState(!task.due_date);
+  const ajudaDoPrazoId = useId();
+  // Controlada para o "Ver na Atividade", na legenda do prazo, abrir a aba.
+  const [aba, setAba] = useState("geral");
+  const { data: atividade = [] } = useTaskActivity(taskId);
+  const vezesReprogramada = atividade.filter(
+    (a) => a.field === "due_date" && a.old_value !== null
+  ).length;
+  const reprogramada =
+    vezesReprogramada > 0 ||
+    foiReprogramada({
+      due_date: dueDate || null,
+      prazo_original: task.prazo_original,
+    });
   const { data: projects = [] } = useProjects(workspace.id, sectorId);
   const { data: members = [] } = useMembers(workspace.id);
   const { data: clients = [] } = useClients(workspace.id);
 
   const cancelled = task.cancelled_at !== null;
 
+  function salvarPendente() {
+    const p = pending.current;
+    pending.current = {};
+    update.mutate(
+      { id: taskId, patch: p },
+      {
+        onSuccess: () => {
+          setStatus("saved");
+          // Reflete a edição no evento do Google, se a tarefa sincroniza.
+          if (task.gcal_sync) void syncEvent(taskId);
+        },
+        onError: () => setStatus("idle"),
+      }
+    );
+  }
+
   function scheduleSave(patch: TablesUpdate<"task">) {
     pending.current = { ...pending.current, ...patch };
     setStatus("saving");
     window.clearTimeout(timer.current);
-    timer.current = window.setTimeout(() => {
-      const p = pending.current;
-      pending.current = {};
-      update.mutate(
-        { id: taskId, patch: p },
-        {
-          onSuccess: () => {
-            setStatus("saved");
-            // Reflete a edição no evento do Google, se a tarefa sincroniza.
-            if (task.gcal_sync) void syncEvent(taskId);
-          },
-          onError: () => setStatus("idle"),
-        }
-      );
-    }, 800);
+    timer.current = window.setTimeout(salvarPendente, 800);
+  }
+
+  function abrirReprogramacao() {
+    // Um primeiro prazo ainda esperando o salvamento chegaria ao banco
+    // DEPOIS da reprogramação e a desfaria. Grava antes de abrir a janela.
+    if ("due_date" in pending.current) {
+      window.clearTimeout(timer.current);
+      salvarPendente();
+    }
+    setReprogramando(true);
   }
 
   return (
@@ -243,7 +286,7 @@ function TaskDetailForm({
           demanda, e as outras três respondem como está sendo feita, o que
           o cliente vê e o que já aconteceu. "Detalhes" não separava nada —
           tudo ali é detalhe. */}
-      <Tabs defaultValue="geral">
+      <Tabs value={aba} onValueChange={setAba}>
         <TabsList>
           <TabsTrigger value="geral">Visão geral</TabsTrigger>
           <TabsTrigger value="trabalho">Trabalho</TabsTrigger>
@@ -334,17 +377,66 @@ function TaskDetailForm({
 
           <Field label="Prazo">
             <div className="flex flex-wrap items-center gap-2">
-              <div className="w-44">
-                <TextInput
-                  type="date"
-                  value={dueDate ?? ""}
-                  onChange={(e) => {
-                    setDueDate(e.target.value);
-                    scheduleSave({ due_date: e.target.value || null });
-                  }}
-                  aria-label="Data do prazo"
-                />
-              </div>
+              {dueDate && !definindoPrazo ? (
+                // Com prazo definido, a data não edita em silêncio: mudar um
+                // prazo que já existe é reprogramar, e pede motivo (0099).
+                <>
+                  <button
+                    type="button"
+                    onClick={abrirReprogramacao}
+                    aria-label={`Prazo: ${dataPuraBR(dueDate)}. Reprogramar prazo`}
+                    aria-describedby={ajudaDoPrazoId}
+                    className="border-line-strong bg-card text-fg hover:bg-hover tnum inline-flex h-10 w-44 items-center justify-between gap-2 rounded-sm border px-3 text-[length:var(--text-body-size)] transition-colors [transition-duration:var(--dur-fast)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-ring)]"
+                  >
+                    {dataPuraBR(dueDate)}
+                    <IconCalendar
+                      size={18}
+                      stroke={1.5}
+                      aria-hidden
+                      className="text-fg-muted"
+                    />
+                  </button>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    leadingIcon={IconCalendarRepeat}
+                    onClick={abrirReprogramacao}
+                  >
+                    Reprogramar prazo
+                  </Button>
+                  {reprogramada ? (
+                    <span className="text-fg inline-flex items-center gap-1 rounded-full border border-[var(--chip-selected-border)] bg-[var(--chip-selected-bg)] px-2 py-0.5 text-[length:var(--text-caption-size)] font-medium">
+                      <IconCalendarRepeat size={12} stroke={1.5} aria-hidden />
+                      {vezesReprogramada > 1
+                        ? `Reprogramado ${vezesReprogramada}×`
+                        : "Reprogramado"}
+                    </span>
+                  ) : null}
+                </>
+              ) : (
+                <div className="w-44">
+                  <TextInput
+                    type="date"
+                    value={dueDate ?? ""}
+                    onChange={(e) => {
+                      const valor = e.target.value;
+                      setDueDate(valor);
+                      // Enquanto o ano é digitado, o campo passa por 0002,
+                      // 0020 e 0202, e o primeiro prazo gravado vira o
+                      // original para sempre (0099). Só data inteira grava.
+                      if (!valor || ehDataDePrazoPlausivel(valor)) {
+                        scheduleSave({ due_date: valor || null });
+                      }
+                    }}
+                    onBlur={() => {
+                      if (ehDataDePrazoPlausivel(dueDate)) {
+                        setDefinindoPrazo(false);
+                      }
+                    }}
+                    aria-label="Data do prazo"
+                  />
+                </div>
+              )}
 
               {/* Horário é opt-in: só aparece quando há data e o usuário pede. */}
               {dueDate && !timeOpen ? (
@@ -431,6 +523,55 @@ function TaskDetailForm({
                 </>
               ) : null}
             </div>
+            {reprogramada && task.prazo_original ? (
+              <p
+                id={ajudaDoPrazoId}
+                className="text-fg-secondary mt-1.5 text-[length:var(--text-caption-size)]"
+              >
+                <span className="text-fg font-medium">
+                  Prazo original:{" "}
+                  <span className="tnum">
+                    {dataPuraBR(task.prazo_original)}
+                  </span>
+                </span>
+                {rotuloDoMotivo(task.prazo_motivo)
+                  ? ` · ${rotuloDoMotivo(task.prazo_motivo)}`
+                  : ""}
+                .{" "}
+                <button
+                  type="button"
+                  onClick={() => setAba("atividade")}
+                  className="text-fg-link rounded-xs hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-ring)]"
+                >
+                  Ver na Atividade
+                </button>
+              </p>
+            ) : dueDate && !definindoPrazo ? (
+              <p
+                id={ajudaDoPrazoId}
+                className="text-fg-muted mt-1.5 text-[length:var(--text-caption-size)]"
+              >
+                Depois do primeiro prazo, a data só muda por aqui — com motivo.
+                O prazo original fica guardado.
+              </p>
+            ) : null}
+            <ReprogramarPrazoDialog
+              open={reprogramando}
+              onOpenChange={setReprogramando}
+              tarefa={{
+                id: task.id,
+                title: title || task.title,
+                due_date: dueDate || null,
+                prazo_original: task.prazo_original,
+                completed_at: task.completed_at,
+                cancelled_at: task.cancelled_at,
+              }}
+              onReprogramado={(novo) => {
+                setDueDate(novo ?? "");
+                // Sem prazo, o próximo é escolhido de novo no campo.
+                if (!novo) setDefinindoPrazo(true);
+              }}
+            />
             <TaskMeetToggle taskId={taskId} />
           </Field>
 

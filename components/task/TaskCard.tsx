@@ -8,6 +8,7 @@ import { AssigneeAvatar } from "./AssigneeAvatar";
 import { DueChip } from "./DueChip";
 import { PriorityBadge } from "./PriorityBadge";
 import { DestinosIcones } from "./destinos/DestinosIcones";
+import { foiReprogramada } from "@/lib/tarefas/reprogramacao";
 
 // Card de tarefa dentro do Board. Borda de 1px, cantos suaves, com tags e
 // progresso das subtarefas (forma moderna).
@@ -72,7 +73,14 @@ export function TaskCard({
       {hasMeta ? (
         <div className="mt-2 flex flex-wrap items-center gap-2">
           {task.due_date ? (
-            <DueChip date={task.due_date} time={task.due_time} />
+            <DueChip
+              date={task.due_date}
+              time={task.due_time}
+              reprogramadoDe={
+                foiReprogramada(task) ? task.prazo_original : null
+              }
+              motivo={task.prazo_motivo}
+            />
           ) : null}
           {!closed ? <PriorityBadge priority={task.priority} /> : null}
           <span className="ml-auto">

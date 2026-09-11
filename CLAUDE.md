@@ -131,6 +131,18 @@ Radix UI · TanStack Query · dnd-kit · Zod · Storybook 9 · Vitest · Playwri
     Rodar `TZ=UTC npm run test` de propósito é a sonda que acha esta classe
     de defeito — e é assim que os dois acima apareceram.
 
+16. **Prazo que já existe só muda com motivo** (0099, 11/set/2026). Todo
+    caminho da interface que troca a data de uma demanda que JÁ TEM prazo
+    passa por `ReprogramarPrazoDialog` e pela função `reprogramar_prazo`
+    — hoje, a data da tarefa aberta e o soltar no Calendário. Criar a
+    demanda e o "É para hoje" definem o PRIMEIRO prazo e não pedem motivo.
+
+    `task.prazo_original` é o primeiro prazo e um gatilho o trava: não tente
+    gravá-lo. Um `update` direto em `due_date` não quebra — o gatilho
+    registra "motivo não informado" —, mas esconde o porquê e aparece no
+    relatório. Um caminho novo que mude prazo sem a janela é defeito, não
+    atalho.
+
 ## Cores
 
 **A cor da marca é escolha da empresa** (0071), e o padrão desde a 0084 é

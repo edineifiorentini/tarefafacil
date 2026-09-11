@@ -2,11 +2,13 @@ import {
   IconAlertTriangle,
   IconCalendar,
   IconCalendarOff,
+  IconCalendarRepeat,
   IconCheck,
   IconClock,
 } from "@tabler/icons-react";
 
 import type { PrazoDaLinha, TomDoPrazo } from "@/lib/task/deadline";
+import { textosDaReprogramacao } from "@/lib/tarefas/reprogramacao";
 
 /**
  * O prazo da linha, com a data por extenso na dica.
@@ -47,18 +49,39 @@ const VISUAL: Record<
   sem_prazo: { icone: IconCalendarOff, cor: "var(--text-muted)" },
 };
 
-export function TaskDeadline({ prazo }: { prazo: PrazoDaLinha }) {
+export function TaskDeadline({
+  prazo,
+  reprogramadoDe = null,
+  motivo = null,
+}: {
+  prazo: PrazoDaLinha;
+  /**
+   * O prazo original, quando a demanda foi reprogramada (0099). A célula
+   * ganha a marca, e o original e o motivo vão para a dica e para o texto do
+   * leitor de tela — com as mesmas palavras do chip da Hoje e do Quadro.
+   */
+  reprogramadoDe?: string | null;
+  motivo?: string | null;
+}) {
   const { icone: Icone, cor, fundo } = VISUAL[prazo.tom];
+  const repro = reprogramadoDe
+    ? textosDaReprogramacao(reprogramadoDe, motivo)
+    : null;
+  const dica = [prazo.titulo, repro?.dica].filter(Boolean).join(". ");
 
   return (
     <span
-      title={prazo.titulo ?? undefined}
+      title={dica || undefined}
       className="tnum inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[length:var(--text-caption-size)] whitespace-nowrap"
       style={{ color: cor, background: fundo ?? "transparent" }}
     >
       {Icone ? <Icone size={12} stroke={1.75} aria-hidden /> : null}
       {prazo.texto}
+      {repro ? (
+        <IconCalendarRepeat size={12} stroke={1.75} aria-hidden />
+      ) : null}
       {prazo.titulo ? <span className="sr-only">. {prazo.titulo}</span> : null}
+      {repro ? <span className="sr-only">{repro.leitor}</span> : null}
     </span>
   );
 }

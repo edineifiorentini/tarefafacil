@@ -472,6 +472,14 @@ export type Database = {
       task: {
         Row: {
           /**
+           * O PRIMEIRO prazo definido (0099). Preenchido e travado por
+           * gatilho: nunca muda, nem com reprogramações. Base da
+           * pontualidade no prazo original.
+           */
+          prazo_original: string | null;
+          /** Motivo da última reprogramação (0099), repetido para as listas. */
+          prazo_motivo: string | null;
+          /**
            * Onde a demanda vai ser publicada (0098). Ids do catálogo em
            * `lib/tarefas/destinos.ts`, na ordem do catálogo, sem repetição.
            * Vazio é "sem destino", nunca nulo.
@@ -510,6 +518,9 @@ export type Database = {
         };
         Insert: {
           destinos?: string[];
+          /** Travado por gatilho (0099): o que vier aqui é ignorado. */
+          prazo_original?: string | null;
+          prazo_motivo?: string | null;
           id?: string;
           workspace_id: string;
           sector_id: string;
@@ -543,6 +554,9 @@ export type Database = {
         };
         Update: {
           destinos?: string[];
+          /** Travado por gatilho (0099): o que vier aqui é ignorado. */
+          prazo_original?: string | null;
+          prazo_motivo?: string | null;
           id?: string;
           workspace_id?: string;
           sector_id?: string;
@@ -785,6 +799,9 @@ export type Database = {
       };
       task_activity: {
         Row: {
+          /** Por que o prazo mudou (0099). Só em linhas de due_date. */
+          motivo: string | null;
+          observacao: string | null;
           id: string;
           workspace_id: string;
           task_id: string;
@@ -802,6 +819,8 @@ export type Database = {
           field: string;
           old_value?: string | null;
           new_value?: string | null;
+          motivo?: string | null;
+          observacao?: string | null;
           created_at?: string;
         };
         Update: {
@@ -812,6 +831,8 @@ export type Database = {
           field?: string;
           old_value?: string | null;
           new_value?: string | null;
+          motivo?: string | null;
+          observacao?: string | null;
           created_at?: string;
         };
         Relationships: [];
@@ -2209,6 +2230,19 @@ export type Database = {
        */
       publicar_material: {
         Args: { p_attachment: string; p_mensagem?: string | null };
+        Returns: boolean;
+      };
+      /**
+       * Muda um prazo que JÁ EXISTE, com motivo (0099). `false` é recusa:
+       * motivo fora dos cinco de escolha, demanda sem prazo, data igual.
+       */
+      reprogramar_prazo: {
+        Args: {
+          p_task: string;
+          p_prazo: string | null;
+          p_motivo: string;
+          p_observacao?: string | null;
+        };
         Returns: boolean;
       };
       renovar_cobranca: {

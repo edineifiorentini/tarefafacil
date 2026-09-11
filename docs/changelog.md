@@ -18,6 +18,24 @@ Datas no formato dia/mês/ano.
 
 ## 11/set/2026
 
+**Prazo agora muda com motivo, e o prazo original fica guardado.** Na
+tarefa, o prazo ganhou o botão "Reprogramar prazo": escolha a nova data, o
+motivo — cliente pediu mudança, aguardando retorno do cliente, mudança de
+escopo, imprevisto da equipe ou outro — e, se quiser, uma observação, como
+"combinado pelo WhatsApp em 10/09". Arrastar a demanda para outro dia no
+Calendário abre a mesma janela.
+
+A demanda mostra "Reprogramado" junto do prazo, com a data original e o
+motivo; a aba Atividade guarda cada reprogramação com quem, quando e por
+quê. Nas listas, o chip do prazo ganha uma marca, e passar o mouse mostra o
+prazo original.
+
+Nos relatórios, o cartão "Prazos reprogramados" mostra a pontualidade nos
+dois prazos: no combinado, que é o atual, e no original, que não perdoa
+nada. A diferença entre os dois é quanto da pontualidade veio de renegociar
+a data. O mesmo cartão soma as reprogramações do período por motivo.
+Mudanças feitas pelo Google Agenda ficam registradas com motivo automático.
+
 **Agora dá para dizer onde cada demanda vai ser publicada.** Ao criar a
 tarefa, logo abaixo do prazo, escolha os destinos: Instagram, Facebook,
 TikTok, YouTube, WhatsApp e Site ficam à vista, e em "Outros" estão

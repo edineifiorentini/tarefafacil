@@ -79,6 +79,11 @@ export type Indicadores = {
   entreguesComPrazo: number;
   /** Das que tinham prazo, quantas saíram até ele. */
   entreguesNoPrazo: number;
+  /**
+   * No PRIMEIRO prazo (0099). Reprogramar não perdoa: é o número que
+   * mostra quanto da pontualidade veio de renegociar a data.
+   */
+  entreguesNoPrazoOriginal: number;
   /** Entregues que não tinham prazo nenhum — fora da conta de pontualidade. */
   entreguesSemPrazo: number;
   /** Abertas e vencidas AGORA. Retrato, não período. */
@@ -102,6 +107,7 @@ const ZERO: Indicadores = {
   entregues: 0,
   entreguesComPrazo: 0,
   entreguesNoPrazo: 0,
+  entreguesNoPrazoOriginal: 0,
   entreguesSemPrazo: 0,
   atrasadasAgora: 0,
   emAtencaoAgora: 0,
@@ -149,6 +155,11 @@ export function indicadoresDe(
         else {
           ind.entreguesComPrazo++;
           if (entregueEm <= t.due_date) ind.entreguesNoPrazo++;
+          // Sem original (demanda anterior à 0099 sem histórico), o atual
+          // é o melhor que se sabe.
+          if (entregueEm <= (t.prazo_original ?? t.due_date)) {
+            ind.entreguesNoPrazoOriginal++;
+          }
         }
       }
       continue;
@@ -183,6 +194,24 @@ export function taxaDePontualidade(ind: {
 }): number | null {
   if (ind.entreguesComPrazo <= 0) return null;
   return Math.round((ind.entreguesNoPrazo / ind.entreguesComPrazo) * 100);
+}
+
+/**
+ * Pontualidade no PRIMEIRO prazo (0099).
+ *
+ * Ao lado de `taxaDePontualidade`, que usa o prazo combinado — o atual. Os
+ * dois juntos contam a história inteira: uma equipe com 86% no combinado e
+ * 71% no original entregou no prazo que renegociou, mas renegociou bastante.
+ * A mesma regra do vizinho: "—" é não haver entrega com prazo, nunca zero.
+ */
+export function taxaDePontualidadeOriginal(ind: {
+  entreguesComPrazo: number;
+  entreguesNoPrazoOriginal: number;
+}): number | null {
+  if (ind.entreguesComPrazo <= 0) return null;
+  return Math.round(
+    (ind.entreguesNoPrazoOriginal / ind.entreguesComPrazo) * 100
+  );
 }
 
 // ---------------------------------------------------------------------------

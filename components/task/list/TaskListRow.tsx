@@ -15,6 +15,7 @@ import { DropdownMenu } from "radix-ui";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { useFuso } from "@/lib/queries/useFuso";
 import { descreverPrazo } from "@/lib/task/deadline";
+import { foiReprogramada } from "@/lib/tarefas/reprogramacao";
 import type { Sector, Task } from "@/types/database";
 
 import { ConfirmDeleteDialog } from "../ConfirmDeleteDialog";
@@ -196,7 +197,14 @@ export function TaskListRow({
         onClick={(e) => e.stopPropagation()}
       >
         <span className="transition-opacity [transition-duration:var(--dur-fast)] group-focus-within:opacity-0 group-hover:opacity-0">
-          <TaskDeadline prazo={prazo} />
+          <TaskDeadline
+            prazo={prazo}
+            // Cancelada saiu do fluxo: o chip de status já disse tudo.
+            reprogramadoDe={
+              !cancelada && foiReprogramada(task) ? task.prazo_original : null
+            }
+            motivo={task.prazo_motivo}
+          />
         </span>
 
         <span className="absolute inset-y-0 right-0 flex items-center gap-1 opacity-0 transition-opacity [transition-duration:var(--dur-fast)] group-focus-within:opacity-100 group-hover:opacity-100">

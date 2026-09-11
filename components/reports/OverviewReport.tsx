@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import {
   IconAlertTriangle,
+  IconCalendarRepeat,
   IconChartBar,
   IconChartLine,
   IconClock,
@@ -24,6 +25,7 @@ import { useCurrentUserId, useMembers } from "@/lib/queries/useMembers";
 import { useSectors } from "@/lib/queries/useSectors";
 import { useTasks } from "@/lib/queries/useTasks";
 import { useFuso } from "@/lib/queries/useFuso";
+import { useReprogramacoesDoPeriodo } from "@/lib/queries/useTaskActivity";
 import { useWorkspace } from "@/lib/queries/useWorkspace";
 import { montarCSV, nomeDoArquivo } from "@/lib/reports/csv";
 import { urlDaLista, type Drill } from "@/lib/reports/drill";
@@ -35,6 +37,7 @@ import {
   riscoDePrazo,
   serieDeFluxo,
   taxaDePontualidade,
+  taxaDePontualidadeOriginal,
   variacaoDeDias,
   variacaoEmPontos,
   variacaoPercentual,
@@ -47,8 +50,10 @@ import {
   rotuloDoPeriodo,
   type Granularidade,
 } from "@/lib/reports/periodo";
+import { reprogramacoesDoPeriodo } from "@/lib/reports/reprogramacoes";
 import { linhasPorSetor, ROTULO_DE_SAUDE } from "@/lib/reports/setores";
 
+import { DeadlineRescheduleCard } from "./DeadlineRescheduleCard";
 import { DeadlineRiskCard } from "./DeadlineRiskCard";
 import { DemandFlowChart } from "./DemandFlowChart";
 import { OperationalInsights } from "./OperationalInsights";
@@ -74,7 +79,10 @@ import type { FiltrosDoRelatorio } from "./useReportFilters";
  * seria trocar kilobytes por megabytes. O agregado é calculado no servidor
  * e volta pronto.
  *
- * Uma requisição, não uma por cartão.
+ * Uma requisição, não uma por cartão — com uma exceção pequena: as
+ * reprogramações de prazo (0099) vêm direto de `task_activity`, mas só as
+ * linhas de prazo com motivo, por um índice parcial. São dezenas de linhas,
+ * não o histórico inteiro.
  */
 
 function baixarCSV(conteudo: string, nome: string) {
@@ -154,7 +162,13 @@ export function OverviewReport({
   );
 
   const dados = useMemo(() => {
-    const ind = indicadoresDe(visiveis, filtros.periodo, agora, undefined, fuso);
+    const ind = indicadoresDe(
+      visiveis,
+      filtros.periodo,
+      agora,
+      undefined,
+      fuso
+    );
     const anterior = filtros.comparar
       ? indicadoresDe(
           visiveis,
@@ -183,6 +197,7 @@ export function OverviewReport({
       ind,
       anterior,
       pontual: taxaDePontualidade(ind),
+      pontualOriginal: taxaDePontualidadeOriginal(ind),
       pontualAnterior: anterior ? taxaDePontualidade(anterior) : null,
       risco: riscoDePrazo(ind),
       pontos,
@@ -211,7 +226,8 @@ export function OverviewReport({
     ],
     queryFn: async (): Promise<RespostaDasEtapas> => {
       const p = new URLSearchParams();
-      if (filtros.sectorIds.length) p.set("setores", filtros.sectorIds.join(","));
+      if (filtros.sectorIds.length)
+        p.set("setores", filtros.sectorIds.join(","));
       if (filtros.assigneeIds.length) {
         p.set("responsaveis", filtros.assigneeIds.join(","));
       }
@@ -223,6 +239,25 @@ export function OverviewReport({
     // pisca a tela de quem voltou de outra aba do navegador.
     refetchOnWindowFocus: false,
   });
+
+  // Reprogramações do período (0099), cortadas pelas mesmas demandas que o
+  // resto da tela mostra — escopo e filtros incluídos.
+  const reprogramacoesDoBanco = useReprogramacoesDoPeriodo(
+    workspace.id,
+    filtros.periodo
+  );
+  const reprogramacoes = useMemo(
+    () =>
+      reprogramacoesDoBanco.data
+        ? reprogramacoesDoPeriodo(
+            reprogramacoesDoBanco.data,
+            new Set(visiveis.map((t) => t.id)),
+            filtros.periodo,
+            fuso
+          )
+        : undefined,
+    [reprogramacoesDoBanco.data, visiveis, filtros.periodo, fuso]
+  );
 
   const insights = useMemo(
     () =>
@@ -315,7 +350,10 @@ export function OverviewReport({
 
   const { ind, anterior, pontual, pontualAnterior } = dados;
   const semNada =
-    ind.criadas === 0 && ind.entregues === 0 && dados.risco.comPrazo === 0 && dados.risco.semPrazo === 0;
+    ind.criadas === 0 &&
+    ind.entregues === 0 &&
+    dados.risco.comPrazo === 0 &&
+    dados.risco.semPrazo === 0;
 
   // Quando a comparação está ligada mas o período anterior não tem base, o
   // cartão DIZ isso em vez de mostrar um selo. Ausência de dado nunca vira
@@ -380,7 +418,8 @@ export function OverviewReport({
               }
               trendLabel="vs. período anterior"
               trendNote={
-                anterior && variacaoPercentual(ind.criadas, anterior.criadas) === null
+                anterior &&
+                variacaoPercentual(ind.criadas, anterior.criadas) === null
                   ? semBase
                   : undefined
               }
@@ -400,7 +439,8 @@ export function OverviewReport({
               }
               trendLabel="vs. período anterior"
               trendNote={
-                anterior && variacaoPercentual(ind.entregues, anterior.entregues) === null
+                anterior &&
+                variacaoPercentual(ind.entregues, anterior.entregues) === null
                   ? semBase
                   : undefined
               }
@@ -433,7 +473,7 @@ export function OverviewReport({
               }
               hint={
                 ind.entreguesComPrazo > 0
-                  ? `${ind.entreguesNoPrazo} de ${ind.entreguesComPrazo} demandas com prazo foram entregues pontualmente. As ${ind.entreguesSemPrazo} sem prazo ficam fora da conta.`
+                  ? `${ind.entreguesNoPrazo} de ${ind.entreguesComPrazo} demandas com prazo foram entregues até o prazo combinado — o atual, depois das reprogramações. As ${ind.entreguesSemPrazo} sem prazo ficam fora da conta. No prazo original, sem perdoar reprogramação: ${dados.pontualOriginal}%.`
                   : "Nenhuma entrega do período tinha prazo definido — não há pontualidade a apurar."
               }
             />
@@ -451,7 +491,9 @@ export function OverviewReport({
               value={String(ind.atrasadasAgora)}
               tone="var(--status-overdue-fg)"
               trendNote={
-                filtros.comparar ? "Retrato de agora, não do período" : undefined
+                filtros.comparar
+                  ? "Retrato de agora, não do período"
+                  : undefined
               }
               hint={`Demandas abertas cujo prazo já passou — contadas hoje, não dentro do período, e por isso sem comparação. Não inclui as que foram entregues com atraso: essas contam na pontualidade. ${ind.emAtencaoAgora} exigem atenção nos próximos dias.`}
             />
@@ -479,7 +521,8 @@ export function OverviewReport({
               }
               trendNote={
                 anterior &&
-                variacaoDeDias(ind.tempoMedioDias, anterior.tempoMedioDias) === null
+                variacaoDeDias(ind.tempoMedioDias, anterior.tempoMedioDias) ===
+                  null
                   ? semBase
                   : undefined
               }
@@ -569,6 +612,24 @@ export function OverviewReport({
             </ChartCard>
           </div>
 
+          <ChartCard
+            icon={IconCalendarRepeat}
+            title="Prazos reprogramados"
+            subtitle="Pontualidade no prazo combinado e no original"
+          >
+            <DeadlineRescheduleCard
+              base={ind.entreguesComPrazo}
+              noPrazo={ind.entreguesNoPrazo}
+              noPrazoOriginal={ind.entreguesNoPrazoOriginal}
+              pontual={pontual}
+              pontualOriginal={dados.pontualOriginal}
+              reprogramacoes={reprogramacoes}
+              carregando={reprogramacoesDoBanco.isPending}
+              erro={reprogramacoesDoBanco.isError}
+              onTentarDeNovo={() => void reprogramacoesDoBanco.refetch()}
+            />
+          </ChartCard>
+
           {/* 3 — detalhamento */}
           <ChartCard
             icon={IconChartBar}
@@ -615,6 +676,7 @@ function OverviewSkeleton() {
         <SkeletonCard className="h-72" />
         <SkeletonCard className="h-72" />
       </div>
+      <SkeletonCard className="h-64" />
     </div>
   );
 }

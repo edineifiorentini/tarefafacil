@@ -6,6 +6,7 @@ import {
   riscoDePrazo,
   serieDeFluxo,
   taxaDePontualidade,
+  taxaDePontualidadeOriginal,
   variacaoDeDias,
   variacaoEmPontos,
   variacaoPercentual,
@@ -404,9 +405,9 @@ describe("aplicarFiltro", () => {
   ];
 
   it("sem filtro devolve tudo", () => {
-    expect(aplicarFiltro(lista, { sectorIds: [], assigneeIds: [] })).toHaveLength(
-      3
-    );
+    expect(
+      aplicarFiltro(lista, { sectorIds: [], assigneeIds: [] })
+    ).toHaveLength(3);
   });
 
   it("filtra por setor", () => {
@@ -428,5 +429,48 @@ describe("aplicarFiltro", () => {
     });
     expect(r).toHaveLength(1);
     expect(r[0].assignee_id).toBeNull();
+  });
+});
+
+describe("indicadoresDe — pontualidade no prazo original (0099)", () => {
+  it("reprogramar salva a pontualidade combinada, e não a original", () => {
+    // O crachá do Conselho Tutelar: prazo 09/09, reprogramado para 18/09,
+    // entregue no dia 15. No prazo que foi combinado; fora do primeiro.
+    const ind = indicadoresDe(
+      [
+        tarefa({
+          due_date: "2026-09-18",
+          prazo_original: "2026-09-09",
+          completed_at: "2026-09-15T10:00:00-03:00",
+        }),
+      ],
+      SETEMBRO,
+      AGORA
+    );
+    expect(taxaDePontualidade(ind)).toBe(100);
+    expect(taxaDePontualidadeOriginal(ind)).toBe(0);
+  });
+
+  it("sem prazo original registrado, o atual faz as vezes do original", () => {
+    const ind = indicadoresDe(
+      [
+        tarefa({
+          due_date: "2026-09-10",
+          completed_at: "2026-09-10T18:00:00-03:00",
+        }),
+      ],
+      SETEMBRO,
+      AGORA
+    );
+    expect(taxaDePontualidadeOriginal(ind)).toBe(100);
+  });
+
+  it("sem entrega com prazo é nulo, nunca zero", () => {
+    const ind = indicadoresDe(
+      [tarefa({ completed_at: "2026-09-10T18:00:00-03:00" })],
+      SETEMBRO,
+      AGORA
+    );
+    expect(taxaDePontualidadeOriginal(ind)).toBeNull();
   });
 });

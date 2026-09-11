@@ -34,12 +34,13 @@ import { IconButton } from "@/components/ui/IconButton";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { useProjects } from "@/lib/queries/useProjects";
 import { useSectors } from "@/lib/queries/useSectors";
-import { useTasks, useUpdateTask } from "@/lib/queries/useTasks";
+import { useTasks } from "@/lib/queries/useTasks";
 import { useWorkspace } from "@/lib/queries/useWorkspace";
 import { weekSegments, type ProjectSegment } from "@/lib/utils/calendar-bars";
 import { WEEKDAYS, monthGrid } from "@/lib/utils/calendar-grid";
 import { projectStatusLabels } from "@/lib/validation/project";
 import type { Project, Sector, Task } from "@/types/database";
+import { ReprogramarPrazoDialog } from "@/components/task/prazo/ReprogramarPrazoDialog";
 
 function dayKey(d: Date) {
   return format(d, "yyyy-MM-dd");
@@ -271,11 +272,19 @@ export function CalendarView() {
   const { data: tasks = [] } = useTasks(workspace.id);
   const { data: projects = [] } = useProjects(workspace.id);
   const { data: sectors = [] } = useSectors(workspace.id);
-  const update = useUpdateTask(workspace.id);
   const { abrirTarefa } = useTaskModal();
 
   const [month, setMonth] = useState(() => startOfMonth(new Date()));
   const [layers, setLayers] = useState({ tasks: true, projects: true });
+  // Soltar a demanda em outro dia muda um prazo que já existe: é
+  // reprogramar, e pede motivo (0099). Nada muda até a confirmação.
+  const [reprogramando, setReprogramando] = useState<{
+    tarefa: Task;
+    novoDia: string;
+  } | null>(null);
+  // Separado do conteúdo: fechar a janela não pode esvaziá-la no meio da
+  // animação de saída.
+  const [janelaAberta, setJanelaAberta] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } })
@@ -307,10 +316,11 @@ export function CalendarView() {
   function onDragEnd(event: DragEndEvent) {
     const { active, over } = event;
     if (!over) return;
-    update.mutate({
-      id: String(active.id),
-      patch: { due_date: String(over.id) },
-    });
+    const tarefa = tasks.find((t) => t.id === String(active.id));
+    const novoDia = String(over.id);
+    if (!tarefa || tarefa.due_date === novoDia) return;
+    setReprogramando({ tarefa, novoDia });
+    setJanelaAberta(true);
   }
 
   function toggleLayer(layer: "tasks" | "projects") {
@@ -319,6 +329,12 @@ export function CalendarView() {
 
   return (
     <div className="flex h-full flex-col p-6">
+      <ReprogramarPrazoDialog
+        open={janelaAberta}
+        onOpenChange={setJanelaAberta}
+        tarefa={reprogramando?.tarefa ?? null}
+        novaDataSugerida={reprogramando?.novoDia ?? null}
+      />
       <div className="mb-4 flex flex-wrap items-center gap-3">
         {/* first-letter e não capitalize: `capitalize` deixava "Agosto De
             2026". Sentence case — só a primeira letra sobe. */}

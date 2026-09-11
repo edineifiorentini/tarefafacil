@@ -6,6 +6,10 @@ import { useCallback } from "react";
 import { useToast } from "@/components/ui/Toast";
 import { createClient } from "@/lib/supabase/client";
 import { ordenarDestinos } from "@/lib/tarefas/destinos";
+import {
+  REPROGRAMACAO_RECUSADA,
+  type MotivoDeEscolha,
+} from "@/lib/tarefas/reprogramacao";
 import { estimateToMinutes, type QuickAddInput } from "@/lib/validation/task";
 import type { Task, TablesUpdate } from "@/types/database";
 
@@ -95,6 +99,10 @@ function optimisticTask(
     service: null,
     estimate_minutes: null,
     destinos: [],
+    // O gatilho da 0099 faz o primeiro prazo virar o original; a linha
+    // otimista já nasce assim para não piscar "reprogramado".
+    prazo_original: input.due_date,
+    prazo_motivo: null,
     created_at: now,
     updated_at: now,
     // Por último, para os opcionais do "Mais detalhes" cobrirem os padrões
@@ -564,5 +572,85 @@ export function useMoveTask(workspaceId: string) {
       ctx?.snapshots.forEach(([key, data]) => qc.setQueryData(key, data));
     },
     onSettled: () => qc.invalidateQueries({ queryKey: [TASKS, workspaceId] }),
+  });
+}
+
+// ----------------------------------------------------- reprogramar prazo
+
+/**
+ * Muda um prazo que já existe, com motivo (0099).
+ *
+ * Vai por RPC e não pelo `useUpdateTask` porque o motivo precisa chegar ao
+ * histórico NA MESMA transação da data: a função guarda o motivo numa
+ * configuração da transação, troca a data, e o gatilho grava os dois
+ * juntos. Um `update` comum registraria "motivo não informado".
+ *
+ * Otimista como o resto: o prazo novo aparece na hora, e o prazo original
+ * — se ainda não existia — passa a ser o atual, como o gatilho fará.
+ */
+export function useReprogramarPrazo(workspaceId: string) {
+  const supabase = createClient();
+  const qc = useQueryClient();
+  const syncEvent = useSyncTaskEvent();
+
+  return useMutation({
+    mutationFn: async (p: {
+      id: string;
+      prazo: string | null;
+      motivo: MotivoDeEscolha;
+      observacao: string | null;
+    }) => {
+      const { data, error } = await supabase.rpc("reprogramar_prazo", {
+        p_task: p.id,
+        p_prazo: p.prazo,
+        p_motivo: p.motivo,
+        p_observacao: p.observacao,
+      });
+      if (error) throw error;
+      // `false`: a demanda perdeu o prazo, ou ganhou exatamente esta data,
+      // entre abrir a janela e confirmar — ou a RLS não deixou.
+      if (data === false) throw new Error(REPROGRAMACAO_RECUSADA);
+    },
+    onMutate: async (p) => {
+      await qc.cancelQueries({ queryKey: [TASKS, workspaceId] });
+      const snapshots = qc.getQueriesData<Task[]>({
+        queryKey: [TASKS, workspaceId],
+      });
+      const aplicar = (t: Task): Task =>
+        t.id === p.id
+          ? {
+              ...t,
+              due_date: p.prazo,
+              prazo_motivo: p.motivo,
+              prazo_original: t.prazo_original ?? t.due_date,
+            }
+          : t;
+      qc.setQueriesData<Task[]>({ queryKey: [TASKS, workspaceId] }, (data) =>
+        data?.map(aplicar)
+      );
+      const prevDetail = qc.getQueryData<Task>(taskKey(workspaceId, p.id));
+      if (prevDetail) {
+        qc.setQueryData<Task>(taskKey(workspaceId, p.id), aplicar(prevDetail));
+      }
+      // Como no concluir: quem sincroniza com o Google leva a data nova
+      // para o evento.
+      const hadSync = !!(
+        findInSnapshots(snapshots, p.id)?.gcal_sync ?? prevDetail?.gcal_sync
+      );
+      return { snapshots, prevDetail, hadSync };
+    },
+    onError: (_erro, p, ctx) => {
+      ctx?.snapshots.forEach(([key, data]) => qc.setQueryData(key, data));
+      if (ctx?.prevDetail) {
+        qc.setQueryData(taskKey(workspaceId, p.id), ctx.prevDetail);
+      }
+    },
+    onSettled: (_d, erro, p, ctx) => {
+      void qc.invalidateQueries({ queryKey: [TASKS, workspaceId] });
+      void qc.invalidateQueries({ queryKey: taskKey(workspaceId, p.id) });
+      // O histórico ganhou uma linha com o motivo.
+      void qc.invalidateQueries({ queryKey: ["taskActivity", p.id] });
+      if (!erro && ctx?.hadSync) void syncEvent(p.id);
+    },
   });
 }

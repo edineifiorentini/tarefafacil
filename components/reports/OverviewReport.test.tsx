@@ -2,11 +2,17 @@ import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
-import { indicadoresDe, riscoDePrazo, serieDeFluxo } from "@/lib/reports/overview";
+import {
+  indicadoresDe,
+  riscoDePrazo,
+  serieDeFluxo,
+} from "@/lib/reports/overview";
 import { baldesDo, type Periodo } from "@/lib/reports/periodo";
+import { reprogramacoesDoPeriodo } from "@/lib/reports/reprogramacoes";
 import { linhasPorSetor } from "@/lib/reports/setores";
 import type { Task } from "@/types/database";
 
+import { DeadlineRescheduleCard } from "./DeadlineRescheduleCard";
 import { DeadlineRiskCard } from "./DeadlineRiskCard";
 import { DemandFlowChart } from "./DemandFlowChart";
 import { SectorDetailTable } from "./SectorDetailTable";
@@ -66,9 +72,7 @@ describe("DeadlineRiskCard", () => {
       AGORA
     );
 
-    render(
-      <DeadlineRiskCard risco={riscoDePrazo(ind)} onVerRisco={vi.fn()} />
-    );
+    render(<DeadlineRiskCard risco={riscoDePrazo(ind)} onVerRisco={vi.fn()} />);
 
     // O donut fala só das que têm prazo.
     expect(screen.getByRole("img")).toHaveAccessibleName(
@@ -83,9 +87,7 @@ describe("DeadlineRiskCard", () => {
 
   it("sem nenhuma demanda com prazo, diz isso em vez de desenhar um donut vazio", () => {
     const ind = indicadoresDe([tarefa({}), tarefa({})], SETEMBRO, AGORA);
-    render(
-      <DeadlineRiskCard risco={riscoDePrazo(ind)} onVerRisco={vi.fn()} />
-    );
+    render(<DeadlineRiskCard risco={riscoDePrazo(ind)} onVerRisco={vi.fn()} />);
     expect(
       screen.getByText(/não há risco de prazo a calcular/)
     ).toBeInTheDocument();
@@ -94,7 +96,11 @@ describe("DeadlineRiskCard", () => {
 
   it("clicar numa fatia leva ao drill correspondente", async () => {
     const aoVerFatia = vi.fn();
-    const ind = indicadoresDe([tarefa({ due_date: "2026-09-19" })], SETEMBRO, AGORA);
+    const ind = indicadoresDe(
+      [tarefa({ due_date: "2026-09-19" })],
+      SETEMBRO,
+      AGORA
+    );
 
     render(
       <DeadlineRiskCard
@@ -264,5 +270,95 @@ describe("SectorDetailTable", () => {
     );
     expect(screen.getAllByText("—").length).toBeGreaterThan(0);
     expect(screen.queryByText("0%")).not.toBeInTheDocument();
+  });
+});
+
+describe("DeadlineRescheduleCard", () => {
+  const porMotivo = reprogramacoesDoPeriodo(
+    [
+      {
+        task_id: "a",
+        motivo: "cliente_pediu_mudanca",
+        created_at: "2026-09-05T10:00:00-03:00",
+      },
+      {
+        task_id: "b",
+        motivo: "aguardando_cliente",
+        created_at: "2026-09-06T10:00:00-03:00",
+      },
+      {
+        task_id: "b",
+        motivo: "aguardando_cliente",
+        created_at: "2026-09-12T10:00:00-03:00",
+      },
+    ],
+    new Set(["a", "b"]),
+    SETEMBRO,
+    "America/Sao_Paulo"
+  );
+
+  function montar(
+    p: Partial<Parameters<typeof DeadlineRescheduleCard>[0]> = {}
+  ) {
+    render(
+      <DeadlineRescheduleCard
+        base={14}
+        noPrazo={12}
+        noPrazoOriginal={10}
+        pontual={86}
+        pontualOriginal={71}
+        reprogramacoes={porMotivo}
+        carregando={false}
+        erro={false}
+        onTentarDeNovo={vi.fn()}
+        {...p}
+      />
+    );
+  }
+
+  it("mostra os dois prazos lado a lado, com a base de cada número", () => {
+    montar();
+    expect(screen.getByText("86%")).toBeInTheDocument();
+    expect(screen.getByText("No prazo combinado")).toBeInTheDocument();
+    expect(screen.getByText("12 de 14 entregas")).toBeInTheDocument();
+    expect(screen.getByText("71%")).toBeInTheDocument();
+    expect(screen.getByText("No prazo original")).toBeInTheDocument();
+    expect(screen.getByText("10 de 14 entregas")).toBeInTheDocument();
+    // A diferença dita em entregas, e o tamanho dela em pontos.
+    expect(
+      screen.getByText(
+        /2 entregas só ficaram no prazo porque o prazo mudou: 15 p.p./
+      )
+    ).toBeInTheDocument();
+  });
+
+  it("lista os motivos do mais frequente ao menos", () => {
+    montar();
+    const itens = screen.getAllByRole("listitem");
+    expect(itens[0]).toHaveTextContent("Aguardando retorno do cliente");
+    expect(itens[0]).toHaveTextContent("2");
+    expect(itens[1]).toHaveTextContent("Cliente pediu mudança");
+    expect(
+      screen.getByText("3 reprogramações em 2 demandas")
+    ).toBeInTheDocument();
+  });
+
+  it("sem entrega com prazo, '—' em vez de 0%", () => {
+    montar({
+      base: 0,
+      noPrazo: 0,
+      noPrazoOriginal: 0,
+      pontual: null,
+      pontualOriginal: null,
+    });
+    expect(screen.getAllByText("—")).toHaveLength(2);
+    expect(screen.queryByText("0%")).not.toBeInTheDocument();
+  });
+
+  it("período sem reprogramação diz isso, em vez de mostrar uma lista vazia", () => {
+    montar({ reprogramacoes: { total: 0, demandas: 0, porMotivo: [] } });
+    expect(
+      screen.getByText("Nenhum prazo foi reprogramado neste período.")
+    ).toBeInTheDocument();
   });
 });

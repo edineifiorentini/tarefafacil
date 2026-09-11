@@ -17,6 +17,7 @@ import { DueChip } from "./DueChip";
 import { PriorityBadge } from "./PriorityBadge";
 import { SectorDot } from "./SectorDot";
 import { DestinosIcones } from "./destinos/DestinosIcones";
+import { foiReprogramada } from "@/lib/tarefas/reprogramacao";
 
 // Linha de tarefa — 48px. A linha toda é alvo de clique (abre detalhe),
 // exceto o checkbox (design 8.2).
@@ -109,7 +110,12 @@ export function TaskRow({
         {sector ? <SectorDot color={sector.color} name={sector.name} /> : null}
         {!closed ? <PriorityBadge priority={task.priority} /> : null}
         {task.due_date ? (
-          <DueChip date={task.due_date} time={task.due_time} />
+          <DueChip
+            date={task.due_date}
+            time={task.due_time}
+            reprogramadoDe={foiReprogramada(task) ? task.prazo_original : null}
+            motivo={task.prazo_motivo}
+          />
         ) : onSetToday && !closed ? (
           <button
             type="button"

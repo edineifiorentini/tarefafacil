@@ -2624,3 +2624,22 @@ abaixo do nome. Ficou de fora, esperando uso real dizer se vale:
   aceite de termos de cada marca.
 - **Kwai.** Não há logo aberta com esse nome (só a da Kuaishou, dona do
   app), então ficou fora do catálogo.
+
+---
+
+## Reprogramação de prazo — próximos passos (11/set/2026)
+
+A 0099 fez o prazo mudar só com motivo e guardou o primeiro prazo. Ficou de
+fora, de propósito:
+
+- **Estado "Aguardando o cliente".** Tira a demanda de "Atrasada" na Hoje e
+  nos alertas enquanto a resposta depende do cliente — para quando nem a
+  data nova se sabe. Mexe na Hoje, nos alertas e nos relatórios, por isso
+  veio depois. Recomendado pelo próprio protótipo como próxima etapa.
+- **Pontualidade no prazo original nas tabelas de setor e equipe.** O
+  cálculo já existe (`taxaDePontualidadeOriginal`); a primeira versão mostra
+  só na visão geral.
+- **Bloqueio no banco.** Hoje a trava é da interface: um caminho novo que
+  grave `due_date` direto fica registrado como "motivo não informado", mas
+  não é impedido — a sincronia do Google precisa gravar sem perguntar. Se um
+  dia houver API pública de escrita, reavaliar.
