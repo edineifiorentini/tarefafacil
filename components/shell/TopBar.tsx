@@ -267,6 +267,12 @@ export function TopBar({ isAdmin }: { isAdmin: boolean }) {
         <button
           type="button"
           onClick={() => abrirNovaTarefa()}
+          // Abaixo de `sm` o rótulo visível some e sobra só o ícone de "+".
+          // Sem este nome o leitor de tela anunciava apenas "botão" — o
+          // `span` escondido com `hidden` sai da árvore de acessibilidade.
+          // Encontrado em 11/set/2026 conferindo a nova tarefa no painel
+          // estreito.
+          aria-label="Nova tarefa"
           className="tf-sheen inline-flex h-11 items-center gap-2 rounded-sm bg-[var(--button-primary-bg)] px-4 text-[length:var(--text-small-size)] font-medium whitespace-nowrap text-[var(--button-primary-fg)] shadow-[var(--shadow-peek)] transition-colors [transition-duration:var(--dur-fast)] hover:bg-[var(--button-primary-bg-hover)]"
         >
           <IconPlus size={18} stroke={2} aria-hidden />

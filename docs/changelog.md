@@ -31,6 +31,11 @@ conserto foi medido nas oito cores de marca e nos dois temas, e todas
 passam com folga. Na marca TAFLOW, no escuro, os contadores ficam em acid
 lime.
 
+**O botão de nova tarefa ganhou nome para leitor de tela.** Em telas
+estreitas ele mostra só o "+", e quem navega com leitor de tela ouvia apenas
+"botão", sem saber o que ele fazia. Agora ele é anunciado como "Nova
+tarefa".
+
 ---
 
 ## 10/set/2026
