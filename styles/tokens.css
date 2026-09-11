@@ -385,6 +385,19 @@
 
   /* Preenchimentos (barras de progresso, chips) */
   --fill-brand: var(--brand-200);
+  /* Fundo sólido da marca com algo legível em cima: contador do sino e do
+     chat, chip ativo, caixa marcada. Existe porque esses seis lugares usavam
+     `--brand-600` com a tinta do botão primário — e no escuro a tinta vira
+     escura enquanto o 600 continua escuro. Medido em 11/set/2026 com
+     `lib/utils/contrast.ts`: 10 das 16 combinações de marca e tema
+     reprovavam, a TAFLOW no escuro com 1.17:1 (o sino "cinza").
+
+     Claro: 700 + branco. Escuro: 300 + tinta escura. São os degraus que o
+     sistema já usa para link em cada tema. As 16 combinações passam — pior
+     texto 5.47:1, pior selo contra a página 5.10:1. Quem mexer na rampa
+     roda `lib/design/contraste-do-destaque.test.ts`, não o olho. */
+  --fill-brand-strong: var(--brand-700);
+  --fill-brand-strong-fg: #ffffff;
   --fill-track: rgba(var(--graphite-rgb), 0.07);
 
   /* Anel de foco (11.2) */
@@ -542,6 +555,8 @@
 
   /* Preenchimentos */
   --fill-brand: color-mix(in srgb, var(--brand-400) 38%, transparent);
+  --fill-brand-strong: var(--brand-300);
+  --fill-brand-strong-fg: #101828;
   --fill-track: rgba(255, 255, 255, 0.08);
 
   /* Anel de foco — brand-400 é visível sobre superfícies escuras */
@@ -661,6 +676,8 @@
     --surface-today: color-mix(in srgb, var(--brand-400) 26%, transparent);
     --surface-hover: color-mix(in srgb, var(--brand-400) 8%, transparent);
     --fill-brand: color-mix(in srgb, var(--brand-400) 38%, transparent);
+    --fill-brand-strong: var(--brand-300);
+    --fill-brand-strong-fg: #101828;
     --fill-track: rgba(255, 255, 255, 0.08);
     --focus-ring: var(--brand-400);
     --status-overdue-fg: #fca5a5;
@@ -843,6 +860,8 @@
   --surface-today: var(--brand-100);
   --surface-hover: color-mix(in srgb, var(--brand-600) 5%, transparent);
   --fill-brand: var(--brand-200);
+  --fill-brand-strong: var(--brand-700);
+  --fill-brand-strong-fg: #ffffff;
   --focus-ring: var(--brand-600);
   --status-info-fg: var(--brand-700);
   --status-info-bg: var(--brand-50);
@@ -854,6 +873,8 @@
    acima. */
 [data-theme="dark"][data-brand],
 [data-theme="dark"] [data-brand] {
+  --fill-brand-strong: var(--brand-300);
+  --fill-brand-strong-fg: #101828;
   --text-link: var(--brand-300);
   --surface-selected: color-mix(in srgb, var(--brand-400) 18%, transparent);
   --surface-today: color-mix(in srgb, var(--brand-400) 26%, transparent);
@@ -866,6 +887,8 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"])[data-brand],
   :root:not([data-theme="light"]) [data-brand] {
+    --fill-brand-strong: var(--brand-300);
+    --fill-brand-strong-fg: #101828;
     --text-link: var(--brand-300);
     --surface-selected: color-mix(in srgb, var(--brand-400) 18%, transparent);
     --surface-today: color-mix(in srgb, var(--brand-400) 26%, transparent);

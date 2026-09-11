@@ -301,7 +301,7 @@ export function ChatView({ initialChannelId }: { initialChannelId?: string }) {
                 <span
                   className={`tnum shrink-0 rounded-full px-1.5 text-[length:var(--text-caption-size)] font-medium ${
                     u.mentionsMe
-                      ? "bg-[var(--brand-600)] text-[var(--button-primary-fg)]"
+                      ? "bg-[var(--fill-brand-strong)] text-[var(--fill-brand-strong-fg)]"
                       : "bg-sunken text-fg-secondary"
                   }`}
                 >
@@ -439,7 +439,7 @@ function FiltroChip({
       aria-pressed={active}
       className={`rounded-full px-2.5 py-0.5 text-[length:var(--text-caption-size)] whitespace-nowrap transition-colors [transition-duration:var(--dur-fast)] ${
         active
-          ? "bg-[var(--brand-600)] font-medium text-[var(--button-primary-fg)]"
+          ? "bg-[var(--fill-brand-strong)] font-medium text-[var(--fill-brand-strong-fg)]"
           : "bg-sunken text-fg-secondary hover:text-fg"
       }`}
     >

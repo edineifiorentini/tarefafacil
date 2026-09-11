@@ -159,7 +159,7 @@ function NavItem({
         {badge > 0 ? (
           <span
             aria-label={`${badge} não lidas`}
-            className="tnum shrink-0 rounded-full bg-[var(--brand-600)] px-1.5 text-[length:var(--text-caption-size)] font-medium text-[var(--button-primary-fg)]"
+            className="tnum shrink-0 rounded-full bg-[var(--fill-brand-strong)] px-1.5 text-[length:var(--text-caption-size)] font-medium text-[var(--fill-brand-strong-fg)]"
           >
             {badge > 99 ? "99+" : badge}
           </span>

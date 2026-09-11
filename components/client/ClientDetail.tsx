@@ -154,7 +154,7 @@ export function ClientDetail({ clientId }: { clientId: string }) {
             </div>
             <div className="bg-sunken h-2 w-full overflow-hidden rounded-full">
               <div
-                className="h-full rounded-full bg-[var(--brand-600)] transition-[width] [transition-duration:var(--dur-base)]"
+                className="h-full rounded-full bg-[var(--fill-brand-strong)] transition-[width] [transition-duration:var(--dur-base)]"
                 style={{ width: `${progressPct}%` }}
               />
             </div>

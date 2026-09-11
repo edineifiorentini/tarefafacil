@@ -116,7 +116,7 @@ export function NewGroupDialog({
                             aria-hidden
                             className={`inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-xs border ${
                               marcado
-                                ? "border-transparent bg-[var(--brand-600)] text-[var(--button-primary-fg)]"
+                                ? "border-transparent bg-[var(--fill-brand-strong)] text-[var(--fill-brand-strong-fg)]"
                                 : "border-line"
                             }`}
                           >

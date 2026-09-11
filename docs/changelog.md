@@ -16,6 +16,23 @@ Datas no formato dia/mês/ano.
 
 ---
 
+## 11/set/2026
+
+**Os contadores voltaram a aparecer no modo escuro.** O número de
+notificações no sino, o contador de mensagens do Chat e o de menções sumiam
+no escuro — o círculo e o número ficavam quase da cor do fundo. O mesmo
+acontecia com o ponto de "não lida" nas notificações, o filtro ativo do
+Chat, as caixas marcadas ao montar um grupo e a barra de progresso de
+entregas do cliente.
+
+Não era só a marca TAFLOW: no escuro, quase todas as cores de marca tinham
+o problema, e no claro o teal e o verde deixavam o número difícil de ler. O
+conserto foi medido nas oito cores de marca e nos dois temas, e todas
+passam com folga. Na marca TAFLOW, no escuro, os contadores ficam em acid
+lime.
+
+---
+
 ## 10/set/2026
 
 **Um guia dentro do sistema.** O botão de interrogação, ao lado da busca,

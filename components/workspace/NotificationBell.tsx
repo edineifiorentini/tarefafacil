@@ -208,7 +208,7 @@ export function NotificationBell() {
           {count > 0 ? (
             <span
               aria-hidden
-              className="tnum absolute -top-0.5 -right-0.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--brand-600)] px-1 text-[length:var(--text-caption-size)] font-medium text-[var(--button-primary-fg)]"
+              className="tnum absolute -top-0.5 -right-0.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--fill-brand-strong)] px-1 text-[length:var(--text-caption-size)] font-medium text-[var(--fill-brand-strong-fg)]"
             >
               {count > 9 ? "9+" : count}
             </span>
@@ -309,7 +309,7 @@ export function NotificationBell() {
                     {!item.readAt ? (
                       <span
                         aria-hidden
-                        className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-[var(--brand-600)]"
+                        className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-[var(--fill-brand-strong)]"
                       />
                     ) : null}
                   </button>
