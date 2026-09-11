@@ -797,6 +797,42 @@ export type Database = {
         };
         Relationships: [];
       };
+      /**
+       * Violações da CSP em modo relatório, somadas (0101). Vida curta: sai
+       * quando a política passar a valer de verdade.
+       */
+      csp_report: {
+        Row: {
+          id: string;
+          directive: string;
+          /** Só a origem, ou 'inline'/'eval'. Nunca o endereço completo. */
+          blocked_origin: string;
+          /** O FORMATO da rota: '/d/:id'. Endereço aqui carrega token. */
+          document_path: string;
+          ocorrencias: number;
+          primeiro_em: string;
+          ultimo_em: string;
+        };
+        Insert: {
+          id?: string;
+          directive: string;
+          blocked_origin: string;
+          document_path: string;
+          ocorrencias?: number;
+          primeiro_em?: string;
+          ultimo_em?: string;
+        };
+        Update: {
+          id?: string;
+          directive?: string;
+          blocked_origin?: string;
+          document_path?: string;
+          ocorrencias?: number;
+          primeiro_em?: string;
+          ultimo_em?: string;
+        };
+        Relationships: [];
+      };
       task_activity: {
         Row: {
           /** Por que o prazo mudou (0099). Só em linhas de due_date. */
@@ -2244,6 +2280,15 @@ export type Database = {
           p_observacao?: string | null;
         };
         Returns: boolean;
+      };
+      /** Soma uma violação de CSP (0101). Só a chave secreta executa. */
+      registrar_csp: {
+        Args: {
+          p_directive: string;
+          p_origem: string;
+          p_rota: string;
+        };
+        Returns: undefined;
       };
       renovar_cobranca: {
         Args: {

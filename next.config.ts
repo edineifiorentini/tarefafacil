@@ -1,5 +1,7 @@
 import type { NextConfig } from "next";
 
+import { ROTA_DO_RELATORIO, montarCsp } from "./lib/seguranca/csp";
+
 /**
  * Cabeçalhos de segurança (11/set/2026).
  *
@@ -25,10 +27,12 @@ import type { NextConfig } from "next";
  *   produto não usa. Não quebra o envio de foto: `<input type="file">` não
  *   passa por esta política.
  *
- * A Content-Security-Policy NÃO entra aqui ainda, e é decisão: ela precisa
- * listar cada origem que o app carrega (fontes do Google, Supabase, imagens
- * assinadas) e uma lista incompleta quebra a tela em produção sem erro
- * visível. Fica como passo seguinte, medida com a tela aberta.
+ * - **Content-Security-Policy em MODO RELATÓRIO** (0101). Ela não bloqueia
+ *   nada: o navegador só avisa o que bloquearia, e os avisos caem em
+ *   `/api/csp`. É a fase de medição — uma CSP escrita de cabeça quebra tela
+ *   em produção sem erro visível (a imagem some, o botão não responde, e o
+ *   log do servidor não registra nada). O porquê de cada diretiva está em
+ *   `lib/seguranca/csp.ts`, junto com a decisão sobre nonce.
  */
 const cabecalhosDeSeguranca = [
   { key: "X-Frame-Options", value: "SAMEORIGIN" },
@@ -37,6 +41,19 @@ const cabecalhosDeSeguranca = [
   {
     key: "Permissions-Policy",
     value: "camera=(), microphone=(), geolocation=()",
+  },
+  {
+    key: "Content-Security-Policy-Report-Only",
+    value: montarCsp(
+      process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
+      process.env.NODE_ENV === "development"
+    ),
+  },
+  // O par moderno do `report-uri`. Os dois convivem porque a troca ainda
+  // não terminou nos navegadores.
+  {
+    key: "Reporting-Endpoints",
+    value: `csp="${ROTA_DO_RELATORIO}"`,
   },
 ];
 

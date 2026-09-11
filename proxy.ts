@@ -80,7 +80,11 @@ export async function proxy(request: NextRequest) {
     path.startsWith("/api/signups") ||
     // Cron da Vercel: chega sem sessão e se autentica pelo CRON_SECRET, que a
     // própria rota confere. Sem segredo configurado ela responde 401.
-    path.startsWith("/api/cron/");
+    path.startsWith("/api/cron/") ||
+    // Relatório da CSP (0101): quem reporta é o navegador de quem visita, e
+    // ele não manda sessão. A rota não lê nada e só soma um contador, com
+    // limite de tamanho e sem guardar endereço em claro.
+    path.startsWith("/api/csp");
 
   if (!user && !isPublic) {
     const url = request.nextUrl.clone();
