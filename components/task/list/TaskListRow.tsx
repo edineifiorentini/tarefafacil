@@ -22,6 +22,7 @@ import { CELULA, GRADE } from "./grade";
 import { TaskAssignee } from "./TaskAssignee";
 import { TaskDeadline } from "./TaskDeadline";
 import { TaskStatusChip } from "./TaskStatusChip";
+import { DestinosIcones } from "../destinos/DestinosIcones";
 
 /**
  * Uma demanda na Lista.
@@ -138,6 +139,7 @@ export function TaskListRow({
         >
           {task.title}
         </button>
+        <DestinosIcones destinos={task.destinos} className="mt-0.5" />
         {secundaria ? (
           <span className="text-fg-muted truncate text-[length:var(--text-caption-size)]">
             {secundaria}

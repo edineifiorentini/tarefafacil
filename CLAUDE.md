@@ -156,6 +156,12 @@ Verde NÃO significa "concluído". Concluído é cinza + check + texto riscado.
 Verde é reservado a **dado financeiro positivo** e à série de faturamento.
 Setores nunca usam verde.
 
+**Logo de marca não é cor de interface** (0098, 11/set/2026). As logos dos
+destinos de publicação usam as cores oficiais de cada rede — o verde do
+WhatsApp inclusive —, porque mudá-las seria adulterar a marca. Elas moram em
+`--logo-*` no `tokens.css` e servem só para isso: nenhum estado, botão ou
+dado usa essas cores, e nenhuma logo é repintada com a cor da empresa.
+
 ## Direção visual (ago/2026)
 
 Pearl claro, minimalista, sóbrio. Proporção alvo: ~80% superfície sólida,

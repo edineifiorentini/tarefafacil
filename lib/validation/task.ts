@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { DESTINO_IDS } from "@/lib/tarefas/destinos";
+
 export const taskPriorities = [
   "sem_prioridade",
   "baixa",
@@ -37,6 +39,11 @@ export const quickAddSchema = z.object({
   project_id: z.string().uuid().nullable().optional(),
   service: z.string().trim().max(120).nullable().optional(),
   description: z.string().trim().max(5000).nullable().optional(),
+  /**
+   * Onde a demanda vai ser publicada (0098). Só ids do catálogo: a trava do
+   * banco recusaria o resto, e é melhor recusar aqui, antes da viagem.
+   */
+  destinos: z.array(z.enum(DESTINO_IDS)).max(DESTINO_IDS.length).optional(),
   /** Vem em horas do formulário; o banco guarda minutos. */
   estimate_hours: z.string().optional(),
 });

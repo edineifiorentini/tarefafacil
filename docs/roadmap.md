@@ -2603,3 +2603,24 @@ aceitos.
    que o dono registrou era o primeiro vencimento, por volta de 9/set.
 3. **Cupons** — o bloqueio é mais fundo do que a tela deles diz: não há
    checkout nenhum, então não há onde o cupom ser ignorado ou respeitado.
+
+---
+
+## Destinos de publicação — o que ficou para depois (11/set/2026)
+
+A primeira versão (0098) grava onde a demanda vai sair e mostra as logos
+abaixo do nome. Ficou de fora, esperando uso real dizer se vale:
+
+- **Filtrar a Lista por destino** — "tudo que vai para o Instagram esta
+  semana". O índice GIN em `task.destinos` já existe para isso.
+- **Mostrar ao cliente, no link de aprovação, onde a peça vai sair.**
+- **Lista de destinos própria por empresa.** Hoje a lista é do sistema, e a
+  trava do banco (`destinos_validos`) é fixa. Por empresa exigiria tabela e
+  troca da trava.
+- **Logos dos kits oficiais das marcas.** As atuais vêm da Simple Icons
+  (CC0), com o degradê do Instagram aproximado, e o LinkedIn é do Tabler — a
+  coleção aberta não o tem. A Meta pede que as logos venham do centro de
+  marca dela, sem modificação; trocar exige baixar os kits, o que pode pedir
+  aceite de termos de cada marca.
+- **Kwai.** Não há logo aberta com esse nome (só a da Kuaishou, dona do
+  app), então ficou fora do catálogo.

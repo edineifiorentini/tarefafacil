@@ -148,6 +148,37 @@
   --font-weight-semibold: 600;
   --font-weight-bold: 680;
 
+  /* --------------------------------------------------- logos das redes
+     As cores OFICIAIS das marcas que aparecem como destino de publicação
+     (0098). Não mudam com o tema nem com a cor da empresa: são identidade de
+     terceiros, e mudá-las seria adulterar a logo.
+
+     **Exceção registrada à regra do verde.** O verde do WhatsApp aparece na
+     interface, e isso não fere "verde é dado financeiro": logo de marca não
+     é cor de estado. Decidido pelo dono em 11/set/2026, ao pedir as logos
+     reais em vez de ícones monocromáticos.
+
+     TikTok, X e Threads não estão aqui: são pretos na marca e têm versão
+     branca oficial, então seguem a cor do texto. O branco é o interno
+     vazado de Facebook, YouTube, Telegram e LinkedIn — sem ele, no tema
+     escuro o vazado mostraria o fundo escuro.
+
+     O degradê do Instagram é aproximado: a Meta não publica as cores fora
+     dos arquivos oficiais. */
+  --logo-branco: #ffffff;
+  --logo-instagram-1: #ffd600;
+  --logo-instagram-2: #ff7a00;
+  --logo-instagram-3: #ff0069;
+  --logo-instagram-4: #d300c5;
+  --logo-instagram-5: #7638fa;
+  --logo-facebook: #0866ff;
+  --logo-tiktok-ciano: #25f4ee;
+  --logo-tiktok-vermelho: #fe2c55;
+  --logo-youtube: #ff0000;
+  --logo-whatsapp: #25d366;
+  --logo-telegram: #26a5e4;
+  --logo-linkedin: #0a66c2;
+
   /* ------------------------------------------------------ empilhamento
      A escada de sobreposição, escrita de uma vez só.
 
@@ -398,6 +429,8 @@
      roda `lib/design/contraste-do-destaque.test.ts`, não o olho. */
   --fill-brand-strong: var(--brand-700);
   --fill-brand-strong-fg: #ffffff;
+  --chip-selected-bg: var(--brand-100);
+  --chip-selected-border: color-mix(in srgb, var(--brand-700) 22%, transparent);
   --fill-track: rgba(var(--graphite-rgb), 0.07);
 
   /* Anel de foco (11.2) */
@@ -557,6 +590,8 @@
   --fill-brand: color-mix(in srgb, var(--brand-400) 38%, transparent);
   --fill-brand-strong: var(--brand-300);
   --fill-brand-strong-fg: #101828;
+  --chip-selected-bg: color-mix(in srgb, var(--brand-400) 18%, transparent);
+  --chip-selected-border: color-mix(in srgb, var(--brand-300) 35%, transparent);
   --fill-track: rgba(255, 255, 255, 0.08);
 
   /* Anel de foco — brand-400 é visível sobre superfícies escuras */
@@ -678,6 +713,12 @@
     --fill-brand: color-mix(in srgb, var(--brand-400) 38%, transparent);
     --fill-brand-strong: var(--brand-300);
     --fill-brand-strong-fg: #101828;
+    --chip-selected-bg: color-mix(in srgb, var(--brand-400) 18%, transparent);
+    --chip-selected-border: color-mix(
+      in srgb,
+      var(--brand-300) 35%,
+      transparent
+    );
     --fill-track: rgba(255, 255, 255, 0.08);
     --focus-ring: var(--brand-400);
     --status-overdue-fg: #fca5a5;
@@ -862,6 +903,8 @@
   --fill-brand: var(--brand-200);
   --fill-brand-strong: var(--brand-700);
   --fill-brand-strong-fg: #ffffff;
+  --chip-selected-bg: var(--brand-100);
+  --chip-selected-border: color-mix(in srgb, var(--brand-700) 22%, transparent);
   --focus-ring: var(--brand-600);
   --status-info-fg: var(--brand-700);
   --status-info-bg: var(--brand-50);
@@ -875,6 +918,8 @@
 [data-theme="dark"] [data-brand] {
   --fill-brand-strong: var(--brand-300);
   --fill-brand-strong-fg: #101828;
+  --chip-selected-bg: color-mix(in srgb, var(--brand-400) 18%, transparent);
+  --chip-selected-border: color-mix(in srgb, var(--brand-300) 35%, transparent);
   --text-link: var(--brand-300);
   --surface-selected: color-mix(in srgb, var(--brand-400) 18%, transparent);
   --surface-today: color-mix(in srgb, var(--brand-400) 26%, transparent);
@@ -889,6 +934,12 @@
   :root:not([data-theme="light"]) [data-brand] {
     --fill-brand-strong: var(--brand-300);
     --fill-brand-strong-fg: #101828;
+    --chip-selected-bg: color-mix(in srgb, var(--brand-400) 18%, transparent);
+    --chip-selected-border: color-mix(
+      in srgb,
+      var(--brand-300) 35%,
+      transparent
+    );
     --text-link: var(--brand-300);
     --surface-selected: color-mix(in srgb, var(--brand-400) 18%, transparent);
     --surface-today: color-mix(in srgb, var(--brand-400) 26%, transparent);

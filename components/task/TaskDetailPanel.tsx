@@ -48,6 +48,8 @@ import { TaskSyncToggle } from "./TaskSyncToggle";
 import { TimeTracking } from "./TimeTracking";
 import { TaskActions } from "./TaskActions";
 import { TaskApprovalTab } from "./TaskApprovalTab";
+import { ordenarDestinos, type DestinoId } from "@/lib/tarefas/destinos";
+import { DestinosSelector } from "./destinos/DestinosSelector";
 
 const PRIORITIES = [
   { value: "sem_prioridade", label: "Sem prioridade" },
@@ -148,6 +150,9 @@ function TaskDetailForm({
   const [service, setService] = useState(task.service ?? "");
   const [estimateHours, setEstimateHours] = useState(
     task.estimate_minutes ? String(task.estimate_minutes / 60) : ""
+  );
+  const [destinos, setDestinos] = useState<DestinoId[]>(
+    ordenarDestinos(task.destinos ?? [])
   );
   const { data: projects = [] } = useProjects(workspace.id, sectorId);
   const { data: members = [] } = useMembers(workspace.id);
@@ -301,6 +306,17 @@ function TaskDetailForm({
                 scheduleSave({ client_id: cid });
               }}
               aria-label="Cliente"
+            />
+          </Field>
+
+          <Field label="Onde vai ser publicado">
+            <DestinosSelector
+              tituloVisivel={false}
+              value={destinos}
+              onChange={(ids) => {
+                setDestinos(ids);
+                scheduleSave({ destinos: ids });
+              }}
             />
           </Field>
 

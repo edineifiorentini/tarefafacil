@@ -5,6 +5,7 @@ import { useCallback } from "react";
 
 import { useToast } from "@/components/ui/Toast";
 import { createClient } from "@/lib/supabase/client";
+import { ordenarDestinos } from "@/lib/tarefas/destinos";
 import { estimateToMinutes, type QuickAddInput } from "@/lib/validation/task";
 import type { Task, TablesUpdate } from "@/types/database";
 
@@ -45,6 +46,11 @@ function extrasFrom(input: QuickAddInput) {
     ...(input.project_id ? { project_id: input.project_id } : {}),
     ...(input.service ? { service: input.service } : {}),
     ...(input.description ? { description: input.description } : {}),
+    // Normalizado aqui, uma vez: o insert e a linha otimista recebem a
+    // mesma ordem, e a fileira de logos não pisca trocando de lugar.
+    ...(input.destinos?.length
+      ? { destinos: ordenarDestinos(input.destinos) }
+      : {}),
     ...(estimate !== null ? { estimate_minutes: estimate } : {}),
   };
 }
@@ -88,6 +94,7 @@ function optimisticTask(
     cancelled_at: null,
     service: null,
     estimate_minutes: null,
+    destinos: [],
     created_at: now,
     updated_at: now,
     // Por último, para os opcionais do "Mais detalhes" cobrirem os padrões

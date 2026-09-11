@@ -18,6 +18,19 @@ Datas no formato dia/mês/ano.
 
 ## 11/set/2026
 
+**Agora dá para dizer onde cada demanda vai ser publicada.** Ao criar a
+tarefa, logo abaixo do prazo, escolha os destinos: Instagram, Facebook,
+TikTok, YouTube, WhatsApp e Site ficam à vista, e em "Outros" estão
+LinkedIn, X, Threads, Telegram, e-mail, impresso, rádio, TV, mídia exterior
+e release para imprensa. Dá para escolher vários, ou nenhum.
+
+Depois de criada, a demanda mostra as logos das redes abaixo do nome — na
+Hoje, na Lista e no Quadro. Passando o mouse, cada logo diz o nome da rede.
+Para mudar, abra a tarefa: os destinos ficam na Visão geral.
+
+Os destinos se mantêm de uma tarefa para a próxima, como o setor e o
+cliente: quem lança a semana de posts do Instagram marca uma vez só.
+
 **Os contadores voltaram a aparecer no modo escuro.** O número de
 notificações no sino, o contador de mensagens do Chat e o de menções sumiam
 no escuro — o círculo e o número ficavam quase da cor do fundo. O mesmo

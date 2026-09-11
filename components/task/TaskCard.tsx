@@ -7,6 +7,7 @@ import type { Tag as TagType, Task } from "@/types/database";
 import { AssigneeAvatar } from "./AssigneeAvatar";
 import { DueChip } from "./DueChip";
 import { PriorityBadge } from "./PriorityBadge";
+import { DestinosIcones } from "./destinos/DestinosIcones";
 
 // Card de tarefa dentro do Board. Borda de 1px, cantos suaves, com tags e
 // progresso das subtarefas (forma moderna).
@@ -48,6 +49,8 @@ export function TaskCard({
       >
         {task.title}
       </p>
+
+      <DestinosIcones destinos={task.destinos} className="mt-1.5" />
 
       {cancelled ? (
         <span className="text-fg-muted mt-1 inline-flex items-center gap-1 text-[length:var(--text-caption-size)]">

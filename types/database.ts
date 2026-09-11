@@ -471,6 +471,12 @@ export type Database = {
       };
       task: {
         Row: {
+          /**
+           * Onde a demanda vai ser publicada (0098). Ids do catálogo em
+           * `lib/tarefas/destinos.ts`, na ordem do catálogo, sem repetição.
+           * Vazio é "sem destino", nunca nulo.
+           */
+          destinos: string[];
           id: string;
           workspace_id: string;
           sector_id: string;
@@ -503,6 +509,7 @@ export type Database = {
           updated_at: string;
         };
         Insert: {
+          destinos?: string[];
           id?: string;
           workspace_id: string;
           sector_id: string;
@@ -535,6 +542,7 @@ export type Database = {
           updated_at?: string;
         };
         Update: {
+          destinos?: string[];
           id?: string;
           workspace_id?: string;
           sector_id?: string;

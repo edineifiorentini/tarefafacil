@@ -23,6 +23,8 @@ import { quickAddSchema, type QuickAddInput } from "@/lib/validation/task";
 
 import { SectorForm } from "@/components/sector/SectorForm";
 
+import { DestinosSelector } from "./destinos/DestinosSelector";
+
 /** "Nenhum" precisa de um valor: Radix Select não aceita item com value "". */
 const NENHUM = "__none__";
 
@@ -116,6 +118,7 @@ export function QuickAdd({
       service: "",
       description: "",
       estimate_hours: "",
+      destinos: [],
     },
   });
 
@@ -125,6 +128,7 @@ export function QuickAdd({
   const clientId = useWatch({ control, name: "client_id" });
   const projectId = useWatch({ control, name: "project_id" });
   const descricao = useWatch({ control, name: "description" });
+  const destinos = useWatch({ control, name: "destinos" });
 
   function onSubmit(data: QuickAddInput) {
     createTask.mutate(
@@ -245,6 +249,16 @@ export function QuickAdd({
           Criar
         </Button>
       </div>
+
+      {/* Na faixa principal, e não em "Mais detalhes": o dono pediu que desse
+          para escolher sem abrir nada (11/set/2026). FORA de `Campo`, que é
+          um label e reencaminharia o clique dos chips. Sobrevive ao `reset`
+          do envio, como setor e cliente: quem lança a semana de posts do
+          Instagram não quer marcar o Instagram sete vezes. */}
+      <DestinosSelector
+        value={destinos ?? []}
+        onChange={(ids) => setValue("destinos", ids)}
+      />
 
       <button
         type="button"

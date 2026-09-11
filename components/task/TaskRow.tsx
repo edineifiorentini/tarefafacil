@@ -16,6 +16,7 @@ import { ConfirmDeleteDialog } from "./ConfirmDeleteDialog";
 import { DueChip } from "./DueChip";
 import { PriorityBadge } from "./PriorityBadge";
 import { SectorDot } from "./SectorDot";
+import { DestinosIcones } from "./destinos/DestinosIcones";
 
 // Linha de tarefa — 48px. A linha toda é alvo de clique (abre detalhe),
 // exceto o checkbox (design 8.2).
@@ -59,7 +60,7 @@ export function TaskRow({
   const closed = done || cancelled;
 
   return (
-    <div className="group hover:bg-hover flex h-14 items-center gap-3 rounded-md px-3">
+    <div className="group hover:bg-hover flex min-h-14 items-center gap-3 rounded-md px-3 py-1.5">
       {onSelectChange ? (
         <Checkbox
           checked={!!selected}
@@ -77,19 +78,24 @@ export function TaskRow({
       <button
         type="button"
         onClick={onOpen}
-        className="flex min-w-0 flex-1 items-center gap-2 text-left"
+        className="flex min-w-0 flex-1 flex-col items-start gap-0.5 text-left"
       >
-        <span
-          className={`truncate ${closed ? "text-done line-through" : "text-fg"}`}
-        >
-          {task.title}
-        </span>
-        {cancelled ? (
-          <span className="text-fg-muted inline-flex shrink-0 items-center gap-1 text-[length:var(--text-caption-size)]">
-            <IconBan size={12} stroke={2} aria-hidden />
-            Cancelada
+        <span className="flex max-w-full min-w-0 items-center gap-2">
+          <span
+            className={`truncate ${closed ? "text-done line-through" : "text-fg"}`}
+          >
+            {task.title}
           </span>
-        ) : null}
+          {cancelled ? (
+            <span className="text-fg-muted inline-flex shrink-0 items-center gap-1 text-[length:var(--text-caption-size)]">
+              <IconBan size={12} stroke={2} aria-hidden />
+              Cancelada
+            </span>
+          ) : null}
+        </span>
+        {/* Abaixo do nome, como aprovado. Sem destino não desenha nada, e
+            a linha fica com a altura de sempre. */}
+        <DestinosIcones destinos={task.destinos} />
       </button>
       <div className="flex shrink-0 items-center gap-2">
         {task.gcal_external_edit_at ? (
